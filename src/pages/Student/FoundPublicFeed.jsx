@@ -22,60 +22,69 @@ const FoundPublicFeed = () => {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-      <header className="pb-6 border-b-2 border-blue-900">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Campus Found Property Registry</h1>
-        <p className="text-slate-500 mt-2 text-lg">
-          Official database of property recovered on university grounds. Verification of ownership is required for all returns.
+    <div className="space-y-10">
+      <header>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Found Items
+        </h1>
+        <p className="text-slate-500 mt-2 text-base font-medium max-w-2xl">
+          Browse the registry of items found on campus. If you see something that belongs to you, you can submit a recovery claim.
         </p>
       </header>
       
       {loading ? (
-        <div className="flex justify-center p-20">
-          <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-900 rounded-full animate-spin"></div>
+        <div className="flex justify-center py-12">
+          <div className="w-8 h-8 border-2 border-slate-200 border-t-brand-primary rounded-full animate-spin"></div>
         </div>
       ) : items.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-16 text-center shadow-sm">
-          <p className="text-slate-400 font-medium font-sans">No found items are currently public. Check back later!</p>
+        <div className="app-card p-12 text-center bg-slate-50/50 border-dashed">
+          <p className="text-slate-400 font-medium">No found items registered yet.</p>
+          <p className="text-xs text-slate-400 mt-1">Check back later or report your lost item to be notified of a match.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
           {items.map(item => (
-            <div key={item.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden flex flex-col md:flex-row items-stretch shadow-sm hover:border-slate-300 transition-all group">
-              <div className="w-full md:w-64 h-48 bg-slate-100 flex items-center justify-center p-2 border-b md:border-b-0 md:border-r border-slate-100 relative overflow-hidden">
+            <div key={item.id} className="app-card group overflow-hidden flex flex-col sm:flex-row items-stretch min-h-[160px]">
+              <div className="w-full sm:w-48 bg-slate-100 flex items-center justify-center relative shrink-0">
                 {item.safe_photo_url ? (
-                  <img src={item.safe_photo_url} alt={item.category} className="w-full h-full object-cover rounded shadow-inner transition-transform group-hover:scale-105" />
+                  <img src={item.safe_photo_url} alt={item.category} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="text-4xl opacity-20">📦</div>
+                  <div className="flex flex-col items-center gap-1 opacity-20">
+                    <span className="text-3xl">📦</span>
+                  </div>
                 )}
+                <div className="absolute top-2 left-2">
+                  <span className="bg-slate-900/80 backdrop-blur-sm text-white px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider">
+                    {item.category}
+                  </span>
+                </div>
               </div>
               
-              <div className="flex-grow p-6 flex flex-col justify-between">
+              <div className="flex-grow p-5 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-bold text-slate-800 tracking-tight uppercase group-hover:text-blue-900 transition-colors uppercase">{item.category}</h3>
-                    <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded text-[10px] font-black tracking-widest uppercase shadow-sm">ID: #REG-{item.id}</span>
-                  </div>
-                  <p className="text-slate-500 text-sm mb-4 leading-relaxed line-clamp-2 italic font-serif">"{item.description}"</p>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-xs font-bold uppercase tracking-tighter font-sans">
-                    <div className="text-slate-400">
-                      <span className="block text-[8px] font-black opacity-60 mb-1">Location Found</span>
-                      <span className="text-slate-600 border-b border-slate-100">{item.location}</span>
-                    </div>
-                    <div className="text-slate-400">
-                      <span className="block text-[8px] font-black opacity-60 mb-1">Registry Date</span>
-                      <span className="text-slate-600 border-b border-slate-100">{new Date(item.found_time).toLocaleDateString()}</span>
+                    <h3 className="text-lg font-bold text-slate-900">{item.category}</h3>
+                    <div className="text-right">
+                      <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Found On</span>
+                      <span className="text-[10px] font-semibold text-slate-500">{new Date(item.found_time).toLocaleDateString()}</span>
                     </div>
                   </div>
+                  <p className="text-slate-500 text-sm italic mb-4 line-clamp-1">
+                    "{item.description}"
+                  </p>
                 </div>
                 
-                <div className="mt-6 pt-4 border-t border-slate-50 flex justify-end">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    <span className="text-sm">📍</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider">{item.location}</span>
+                  </div>
+
                   <Link 
-                    to={`/claim/${item.id}`} 
-                    className="bg-blue-900 text-white px-8 py-2.5 rounded font-black text-[10px] uppercase tracking-[0.2em] shadow-md hover:bg-black transition-all active:scale-95 no-underline"
+                    to={`/submit-claim/${item.id}`} 
+                    className="btn-primary py-2 px-4 text-xs w-full sm:w-auto text-center"
                   >
-                    Initiate Recovery Claim
+                    Claim Item
                   </Link>
                 </div>
               </div>
@@ -86,5 +95,7 @@ const FoundPublicFeed = () => {
     </div>
   );
 };
+
+
 
 export default FoundPublicFeed;

@@ -26,103 +26,107 @@ const UserVerification = () => {
       await apiClient.put(`/admin/users/${userId}/verify`, { is_verified: !currentStatus });
       fetchUsers(); // Refresh the list
     } catch (err) {
-      alert('Failed to update verification status.');
+      console.error('Failed to update verification status.');
     }
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 space-y-4 font-sans">
-      <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-900 rounded-full animate-spin"></div>
-      <p className="text-slate-400 font-black tracking-widest text-[10px] uppercase underline decoration-slate-100 italic">Authenticating Secure Identity Registry...</p>
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="w-8 h-8 border-2 border-slate-200 border-t-brand-primary rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4 pb-8 border-b-2 border-slate-200">
-        <div className="space-y-2">
-          <Link to="/admin" className="text-xs font-black text-slate-400 hover:text-blue-900 transition-colors uppercase tracking-[0.2em] flex items-center gap-1 no-underline">
-            <span>←</span> Back to Staff Hub
-          </Link>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Student Identity Portal</h1>
-          <p className="text-slate-500 text-lg font-medium italic">
-            Review academic enrollment and proof of identity to authorize system permissions.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-10">
+      <header className="space-y-4">
+        <Link to="/admin" className="text-sm font-semibold text-brand-primary hover:underline flex items-center gap-1">
+          ← Back to Dashboard
+        </Link>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Verify Students</h1>
+        <p className="text-slate-500 text-base font-medium max-w-2xl">
+          Review student ID documentation and authorize accounts for campus recovery services.
+        </p>
+      </header>
 
-      <section className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-600 rounded-full animate-pulse"></span>
-            ACTIVE STUDENT REGISTRY
+      <section className="app-card overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+            Student Directory
           </h2>
-          <span className="text-[10px] font-bold text-slate-400">Total Registered: {users.length}</span>
+          <span className="text-xs font-bold text-slate-400">
+            {users.length} Users
+          </span>
         </div>
 
         {users.length === 0 ? (
-          <div className="p-24 text-center">
-            <div className="text-6xl mb-6 opacity-10">🛡️</div>
-            <p className="text-slate-400 font-medium font-sans italic">No student accounts awaiting review in the centralized database.</p>
+          <div className="p-20 text-center">
+            <p className="text-slate-400 font-medium">No users found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto font-sans">
+          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">ID</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Email Identity</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Student #</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Proof of Enrollment</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Auth Status</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right">Actions</th>
+                <tr className="border-b border-slate-100 text-slate-400">
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">User</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">ID Number</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Documentation</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {users.map(user => (
                   <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-5">
-                      <span className="text-slate-400 font-black text-xs">#{user.id}</span>
+                      <div className="font-bold text-slate-700 text-sm">{user.email}</div>
+                      <div className="text-[10px] text-slate-400 font-semibold uppercase">{user.role}</div>
+                    </td>
+                    <td className="px-6 py-5 whitespace-nowrap">
+                      <code className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                        {user.student_id_number || 'N/A'}
+                      </code>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="font-bold text-slate-700 text-sm group-hover:text-blue-900 transition-colors uppercase tracking-tight">{user.email}</div>
+                      <div className="flex justify-center">
+                        {user.verification_proof_url ? (
+                          <a 
+                            href={user.verification_proof_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="text-[10px] font-bold text-brand-primary hover:underline flex items-center gap-1"
+                          >
+                            View Document ↗
+                          </a>
+                        ) : (
+                          <span className="text-[10px] font-medium text-slate-300">No Document</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-5">
-                      <code className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs border border-slate-200">{user.student_id_number || 'N/A'}</code>
-                    </td>
-                    <td className="px-6 py-5">
-                      {user.verification_proof_url ? (
-                        <a 
-                          href={user.verification_proof_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="bg-blue-50 text-blue-900 px-3 py-1 rounded text-[10px] font-black tracking-widest uppercase border border-blue-100 hover:bg-blue-900 hover:text-white transition-all shadow-sm flex items-center gap-1 w-fit no-underline"
-                        >
-                          OPEN PROOF <span>↗</span>
-                        </a>
-                      ) : (
-                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic opacity-50">Unlinked</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-inset ${
-                        user.is_verified ? 'bg-emerald-50 text-emerald-700 ring-emerald-200 shadow-emerald-100' : 'bg-slate-50 text-slate-400 ring-slate-200'
-                      }`}>
-                        <span className={`w-1 h-1 rounded-full ${user.is_verified ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`}></span>
-                        {user.is_verified ? 'VERIFIED' : 'UNVERIFIED'}
-                      </span>
+                      <div className="flex justify-center">
+                        <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                          user.is_verified ? 'bg-green-50 text-green-600 border-green-100' : 'bg-slate-50 text-slate-400 border-slate-100'
+                        }`}>
+                          {user.is_verified ? 'Verified' : 'Pending'}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <button 
-                        onClick={() => toggleVerification(user.id, user.is_verified)} 
-                        className={`font-black text-[10px] uppercase tracking-[0.2em] px-5 py-2.5 rounded shadow-md group-hover:shadow-lg transition-all active:scale-95 ${
-                          user.is_verified 
-                            ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-900 hover:text-white' 
-                            : 'bg-emerald-600 text-white hover:bg-black'
-                        }`}
-                      >
-                        {user.is_verified ? 'Revoke Auth' : 'Approve Identity'}
-                      </button>
+                      {user.is_verified ? (
+                        <button 
+                          onClick={() => toggleVerification(user.id, user.is_verified)} 
+                          className="text-[10px] font-bold text-red-500 hover:text-red-700 hover:underline"
+                        >
+                          Revoke
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => toggleVerification(user.id, user.is_verified)} 
+                          className="btn-primary py-1.5 px-3 text-[10px]"
+                        >
+                          Verify Account
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -134,5 +138,7 @@ const UserVerification = () => {
     </div>
   );
 };
+
+
 
 export default UserVerification;

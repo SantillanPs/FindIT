@@ -22,7 +22,7 @@ const ClaimReview = () => {
   };
 
   const handleReview = async (claimId, status) => {
-    const notes = window.prompt(`Add staff notes for this ${status} decision:`, '');
+    const notes = window.prompt(`Finalize Audit: Provide staff justification for this ${status} decision:`, '');
     if (notes === null) return;
 
     try {
@@ -30,88 +30,94 @@ const ClaimReview = () => {
         status: status,
         admin_notes: notes
       });
-      alert(`Claim ${status} successfully.`);
       fetchPendingClaims();
     } catch (err) {
-      alert('Review submission failed.');
+      console.error('Review submission failed.');
     }
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 space-y-4 font-sans">
-      <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-900 rounded-full animate-spin"></div>
-      <p className="text-slate-400 font-black tracking-widest text-[10px] uppercase underline decoration-slate-100 italic">Compiling Evidence Review Queue...</p>
+    <div className="flex flex-col items-center justify-center p-24 space-y-6 text-center">
+      <div className="w-12 h-12 border-2 border-slate-200 border-t-university-navy rounded-full animate-spin"></div>
+      <p className="text-slate-400 font-bold tracking-[0.2em] text-[10px] uppercase animate-pulse">Compiling Evidence Dossiers...</p>
     </div>
   );
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4 pb-8 border-b-2 border-slate-200">
-        <div className="space-y-2">
-          <Link to="/admin" className="text-xs font-black text-slate-400 hover:text-blue-900 transition-colors uppercase tracking-[0.2em] flex items-center gap-1 no-underline">
-            <span>←</span> Back to Staff Hub
+    <div className="space-y-12">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 border-b border-slate-200 pb-8 relative">
+        <div className="absolute -left-4 top-0 w-1 h-3/4 bg-university-gold opacity-50 rounded-full"></div>
+        <div className="space-y-3">
+          <Link to="/admin" className="inline-flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-university-navy transition-colors uppercase tracking-[0.2em] no-underline group">
+            <span className="group-hover:-translate-x-1 transition-transform">←</span> Command Center
           </Link>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Ownership Proof Desk</h1>
-          <p className="text-slate-500 text-lg font-medium italic">
-            Analyze student evidence against confidential staff recovery notes to validate property claims.
+          <h1 className="text-4xl md:text-5xl font-bold text-university-navy tracking-tight">Ownership Verification Desk</h1>
+          <p className="text-slate-500 text-lg font-medium max-w-2xl">
+            Critical analysis of student-submitted evidence against internal staff logs for formalized property release authorization.
           </p>
         </div>
       </div>
 
       {claims.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-24 text-center shadow-inner">
-          <div className="text-6xl mb-6 opacity-10">⚖️</div>
-          <p className="text-slate-400 font-medium font-sans italic max-w-sm mx-auto">No pending property claims awaiting administrative adjudication.</p>
+        <div className="uni-card p-32 text-center bg-slate-50/30">
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
+            <span className="text-5xl grayscale opacity-20">⚖️</span>
+          </div>
+          <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Queue Cleared</p>
+          <p className="text-slate-500 mt-2 text-sm italic">There are currently no property claims awaiting administrative adjudication.</p>
         </div>
       ) : (
-        <section className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden ring-1 ring-slate-100">
-          <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></span>
-              ADJUDICATION QUEUE
-            </h2>
-            <span className="text-[10px] font-bold text-slate-400">Claims in Review: {claims.length}</span>
+        <section className="uni-card overflow-hidden">
+          <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-university-crimson rounded-full animate-bounce"></div>
+              <h2 className="text-xs font-black text-university-navy uppercase tracking-[0.2em]">
+                Pending Adjudication Queue
+              </h2>
+            </div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">
+              Staff Action Required: {claims.length}
+            </span>
           </div>
 
-          <div className="overflow-x-auto font-sans">
+          <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest min-w-[200px]">Item & Context</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest min-w-[250px]">Confidential Staff Notes</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest min-w-[300px]">Student Submitted Proof</th>
-                  <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right">Administrative Actions</th>
+                <tr className="bg-white text-slate-400 border-b border-slate-100">
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest min-w-[180px]">Case Identity</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest min-w-[280px]">Internal Staff Context</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest min-w-[320px]">Student Ownership Proof</th>
+                  <th className="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-right">Decision</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {claims.map(claim => (
-                  <tr key={claim.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex flex-col gap-2">
-                        <div className="text-xs font-black text-slate-400 tracking-widest uppercase">REG-ID: #{claim.found_item_id}</div>
-                        {claim.similarity_score !== null ? (
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-inset w-fit ${
-                            claim.similarity_score >= 0.8 ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 
-                            claim.similarity_score >= 0.6 ? 'bg-amber-50 text-amber-700 ring-amber-200' : 
-                            'bg-red-50 text-red-700 ring-red-200'
+                  <tr key={claim.id} className="hover:bg-slate-50/30 transition-colors group/row">
+                    <td className="px-8 py-8 align-top">
+                      <div className="space-y-3">
+                        <div className="font-bold text-university-navy text-sm font-serif italic">Case #C-{claim.id.toString().padStart(5, '0')}</div>
+                        <div className="text-[10px] font-black text-slate-300 tracking-widest uppercase">Ref: #REG-{claim.found_item_id}</div>
+                        {claim.similarity_score !== null && (
+                          <div className={`inline-flex items-center px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm ${
+                            claim.similarity_score >= 0.8 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
+                            claim.similarity_score >= 0.6 ? 'bg-amber-50 text-university-gold border-amber-100' : 
+                            'bg-red-50 text-university-crimson border-red-100'
                           }`}>
-                            {claim.similarity_score >= 0.8 ? 'High' : claim.similarity_score >= 0.6 ? 'Medium' : 'Low'} AI Rank
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic opacity-50">Direct Claim</span>
+                            AI Rank: {Math.round(claim.similarity_score * 100)}%
+                          </div>
                         )}
-                        <div className="text-[9px] font-bold text-slate-400 mt-2 font-mono">{new Date(claim.created_at).toLocaleDateString()} Log</div>
+                        <div className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Filing: {new Date(claim.created_at).toLocaleDateString()}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="text-sm text-slate-600 bg-slate-50 p-4 rounded border border-slate-100 italic leading-relaxed shadow-inner">
-                        <span className="block text-[8px] font-black uppercase tracking-widest text-slate-400 not-italic mb-2 opacity-60">Finder Confidential Log</span>
-                        {claim.found_item_private_notes || 'No private staff notes available for this registry entry.'}
+                    <td className="px-8 py-8 align-top">
+                      <div className="bg-university-ivory p-6 rounded-2xl border border-slate-100 italic font-serif text-university-navy/70 leading-relaxed shadow-inner group-hover/row:border-university-navy/20 transition-colors">
+                        <span className="block text-[10px] font-black uppercase tracking-widest text-slate-400 not-italic mb-3 opacity-60">Finder's Confidential Report</span>
+                        "{claim.found_item_private_notes || 'No confidential staff annotations found for this record.'}"
                       </div>
                     </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="space-y-4">
-                        <div className="text-sm text-slate-800 font-medium leading-relaxed">
+                    <td className="px-8 py-8 align-top">
+                      <div className="space-y-6">
+                        <div className="text-sm text-slate-600 font-medium leading-relaxed font-sans px-2">
                           {claim.proof_description}
                         </div>
                         {claim.proof_photo_url && (
@@ -120,27 +126,27 @@ const ClaimReview = () => {
                               href={claim.proof_photo_url} 
                               target="_blank" 
                               rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-2 bg-blue-50 text-blue-900 px-3 py-1.5 rounded text-[10px] font-black tracking-widest uppercase border border-blue-100 hover:bg-blue-900 hover:text-white transition-all shadow-sm no-underline"
+                              className="inline-flex items-center gap-2 bg-white text-university-navy px-4 py-2 rounded-xl text-[9px] font-black tracking-widest uppercase border border-slate-200 hover:border-university-navy hover:shadow-lg transition-all no-underline"
                             > 
-                              <span>🖼️</span> VIEW ATTACHED MEDIA <span>↗</span>
+                              <span>📎</span> View Attached Media <span className="text-xs">↗</span>
                             </a>
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-5 align-top text-right">
-                      <div className="flex flex-col gap-2">
+                    <td className="px-8 py-8 align-top text-right">
+                      <div className="flex flex-col gap-3">
                         <button 
                           onClick={() => handleReview(claim.id, 'approved')} 
-                          className="bg-emerald-600 text-white px-5 py-2.5 rounded font-black text-[10px] uppercase tracking-[0.2em] shadow-md hover:bg-black transition-all active:scale-95"
+                          className="bg-university-navy text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all active:scale-95 whitespace-nowrap"
                         >
                           Authorize Release
                         </button>
                         <button 
                           onClick={() => handleReview(claim.id, 'rejected')} 
-                          className="bg-white text-red-700 ring-1 ring-inset ring-red-200 px-5 py-2.5 rounded font-black text-[10px] uppercase tracking-[0.2em] shadow-sm hover:bg-red-50 transition-all active:scale-95"
+                          className="bg-white text-university-crimson border border-university-crimson/20 px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm hover:bg-university-crimson hover:text-white transition-all active:scale-95 whitespace-nowrap"
                         >
-                          Decline Request
+                          Decline Claim
                         </button>
                       </div>
                     </td>
@@ -154,5 +160,6 @@ const ClaimReview = () => {
     </div>
   );
 };
+
 
 export default ClaimReview;

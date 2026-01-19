@@ -27,105 +27,132 @@ const Register = () => {
 
     try {
       await apiClient.post('/auth/register', payload);
-      alert('Registration successful! Please login.');
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(err.response?.data?.detail || 'Registration failed. Please check your details.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card fade-in" style={{ maxWidth: '480px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>👋</span>
-          <h2 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.75rem' }}>Join FindIT</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Create an account to start reporting and claiming items.</p>
+    <div className="min-h-screen bg-modern bg-slate-50 flex items-center justify-center p-6 py-12">
+      <div className="app-card w-full max-w-lg p-8 sm:p-10">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-primary text-white rounded-2xl mb-4 shadow-lg">
+            <span className="text-3xl">📝</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Create Account
+          </h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">
+            Join the FindIT community
+          </p>
         </div>
 
-        {error && <div className="error-msg" style={{ textAlign: 'center' }}>{error}</div>}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex gap-2">
+            <span>⚠️</span> {error}
+          </div>
+        )}
         
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Campus Email</label>
-            <input 
-              type="email" 
-              placeholder="e.g. name@student.edu"
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                Email
+              </label>
+              <input 
+                type="email" 
+                placeholder="university.edu"
+                className="input-field"
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+                Password
+              </label>
+              <input 
+                type="password" 
+                placeholder="••••••••"
+                className="input-field"
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required 
+              />
+            </div>
           </div>
-          <div className="form-group">
-            <label>Password</label>
-            <input 
-              type="password" 
-              placeholder="Min. 8 characters"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-            />
-          </div>
-          <div className="form-group">
-            <label>Account Type</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
+
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+              Account Type
+            </label>
+            <select 
+              value={role} 
+              onChange={(e) => setRole(e.target.value)}
+              className="input-field font-semibold"
+            >
               <option value="student">Student</option>
-              <option value="admin">Campus Admin / Staff</option>
+              <option value="admin">Staff / Faculty</option>
             </select>
           </div>
 
           {role === 'student' && (
-            <div style={{ 
-              padding: '1.5rem', 
-              background: 'var(--primary-light)', 
-              borderRadius: '12px', 
-              marginBottom: '2rem', 
-              border: '1px solid #dbeafe' 
-            }}>
-              <h4 style={{ marginBottom: '1rem', color: 'var(--primary-dark)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Verification Details
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+              <h4 className="text-xs font-bold text-brand-accent uppercase tracking-wider">
+                Student Verification
               </h4>
-              <div className="form-group">
-                <label>Student ID Number</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-slate-500 ml-1">ID Number</label>
                 <input 
                   type="text" 
-                  placeholder="e.g. 2024-XXXXX"
+                  placeholder="e.g. 2026-10293"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-primary/10"
                   value={studentId} 
                   onChange={(e) => setStudentId(e.target.value)} 
                   required={role === 'student'} 
                 />
               </div>
-              <div className="form-group" style={{ marginBottom: 0 }}>
-                <label>Proof of Enrollment (URL)</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-bold text-slate-500 ml-1">ID Proof (URL)</label>
                 <input 
                   type="text" 
-                  placeholder="Link to your COR or ID photo"
+                  placeholder="Link to ID photo"
+                  className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-brand-primary/10"
                   value={proofUrl} 
                   onChange={(e) => setProofUrl(e.target.value)} 
                   required={role === 'student'} 
                 />
-                <small style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block', marginTop: '0.4rem' }}>
-                  Please provide a valid cloud link to your COR.
-                </small>
               </div>
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '0.5rem' }}>
-            {loading ? 'Processing...' : 'Create Account'}
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>Create Account <span>→</span></>
+            )}
           </button>
         </form>
         
-        <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--surface-border)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Already have an account? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: '600' }}>Sign In</Link>
+        <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+          <p className="text-slate-500 text-sm font-medium">
+            Already have an account? <Link to="/login" className="text-brand-primary font-bold hover:underline">Sign In</Link>
           </p>
         </div>
       </div>
     </div>
   );
 };
+
+
 
 export default Register;

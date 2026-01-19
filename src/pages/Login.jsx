@@ -25,57 +25,84 @@ const Login = () => {
       login(response.data.access_token, response.data.user);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid login credentials');
+      setError(err.response?.data?.detail || 'Invalid email or password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card fade-in">
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem' }}>🔍</span>
-          <h2 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.75rem' }}>Welcome to FindIT</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>The campus central for lost and found reunions.</p>
+    <div className="min-h-screen bg-modern bg-slate-50 flex items-center justify-center p-6 pb-24">
+      <div className="app-card w-full max-w-md p-8 sm:p-10">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-primary text-white rounded-2xl mb-4 shadow-lg">
+            <span className="text-3xl">🔑</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Sign In
+          </h1>
+          <p className="text-slate-500 text-sm font-medium mt-1">
+            Access your FindIT account
+          </p>
         </div>
 
-        {error && <div className="error-msg" style={{ textAlign: 'center' }}>{error}</div>}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm font-medium flex gap-2">
+            <span>⚠️</span> {error}
+          </div>
+        )}
         
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Campus Email</label>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+              Email Address
+            </label>
             <input 
-              placeholder="e.g. name@student.edu"
+              placeholder="e.g. name@university.edu"
               type="email" 
+              className="input-field"
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
             />
           </div>
-          <div className="form-group">
-            <label>Password</label>
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">
+              Password
+            </label>
             <input 
               placeholder="••••••••"
               type="password" 
+              className="input-field"
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required 
             />
           </div>
-          <button type="submit" disabled={loading} className="btn-primary" style={{ marginTop: '1rem' }}>
-            {loading ? 'Authenticating...' : 'Sign In'}
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>Sign In <span>→</span></>
+            )}
           </button>
         </form>
         
-        <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid var(--surface-border)' }}>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            New to FindIT? <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '600' }}>Create an Account</Link>
+        <div className="mt-8 pt-8 border-t border-slate-100 text-center">
+          <p className="text-slate-500 text-sm font-medium">
+            Don't have an account? <Link to="/register" className="text-brand-primary font-bold hover:underline">Register now</Link>
           </p>
         </div>
       </div>
     </div>
   );
 };
+
+
 
 export default Login;

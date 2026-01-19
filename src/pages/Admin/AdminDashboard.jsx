@@ -41,118 +41,89 @@ const AdminDashboard = () => {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-20 space-y-4">
-      <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-900 rounded-full animate-spin"></div>
-      <p className="text-slate-400 font-bold tracking-widest text-xs uppercase underline decoration-slate-200">Initializing Coordination Center...</p>
+    <div className="flex flex-col items-center justify-center p-24">
+      <div className="w-10 h-10 border-2 border-slate-200 border-t-brand-primary rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-500">
-      <header className="pb-6 border-b-2 border-blue-900">
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Staff Coordination Center</h1>
-        <p className="text-slate-500 mt-2 text-lg">
-          Centralized administrative portal for campus property recovery and identity verification.
+    <div className="space-y-10">
+      <header>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Staff Dashboard</h1>
+        <p className="text-slate-500 mt-2 text-base font-medium">
+          Manage identity verifications, review claims, and audit item matches.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Match Analysis Queue */}
-        <div className="bg-white p-8 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-indigo-600 transition-all group-hover:w-3"></div>
-          <div className="flex justify-between items-start mb-6">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Queue A: Discovery</span>
-            <span className="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider font-sans">{stats.matches} Matches</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-3 tracking-tight">Automated Analysis</h3>
-          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-            Review potential matches identified by the AI system between lost and found registries.
-          </p>
-          <Link to="/admin/discovery" className="block w-full text-center bg-indigo-600 text-white py-3 rounded font-bold text-sm shadow-md hover:bg-black transition-all hover:-translate-y-1">
-            Analyze Results
-          </Link>
-        </div>
-
-        {/* Verification Queue */}
-        <div className="bg-white p-8 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-emerald-600 transition-all group-hover:w-3"></div>
-          <div className="flex justify-between items-start mb-6">
-            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Queue B: Verification</span>
-            <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider font-sans">{stats.verifications} Pending</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-3 tracking-tight">Identity Services</h3>
-          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-            Review student identity proof and academic enrollment details for account authorization.
-          </p>
-          <Link to="/admin/verify" className="block w-full text-center bg-emerald-600 text-white py-3 rounded font-bold text-sm shadow-md hover:bg-black transition-all hover:-translate-y-1">
-            Open Registry
-          </Link>
-        </div>
-
-        {/* Claims Queue */}
-        <div className="bg-white p-8 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-1.5 h-full bg-blue-900 transition-all group-hover:w-3"></div>
-          <div className="flex justify-between items-start mb-6">
-            <span className="text-[10px] font-black text-blue-900 uppercase tracking-[0.2em]">Queue C: Ownership</span>
-            <span className="bg-blue-50 text-blue-900 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider font-sans">{stats.claims} Unreviewed</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-800 mb-3 tracking-tight">Property Release</h3>
-          <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-            Validate ownership evidence provided by students against staff notes for property release.
-          </p>
-          <Link to="/admin/claims" className="block w-full text-center bg-blue-900 text-white py-3 rounded font-bold text-sm shadow-md hover:bg-black transition-all hover:-translate-y-1">
-            Manage Queue
-          </Link>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard 
+          label="Pending Matches" 
+          count={stats.matches} 
+          description="AI-identified matches waiting for your approval."
+          color="indigo"
+          link="/admin/discovery"
+        />
+        <StatCard 
+          label="Verifications" 
+          count={stats.verifications} 
+          description="Students waiting for membership verification."
+          color="amber"
+          link="/admin/verify"
+        />
+        <StatCard 
+          label="Claim Reviews" 
+          count={stats.claims} 
+          description="Submitted proof of ownership for found items."
+          color="red"
+          link="/admin/claims"
+        />
       </div>
 
-      <section className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h2 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-            <span className="w-2 h-2 bg-blue-900 rounded-full animate-pulse"></span>
-            Recent Registry Activity
-          </h2>
-          <span className="text-[10px] font-bold text-slate-400">Total Entries: {stats.totalItems}</span>
+      <section className="app-card overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Recent Item Registry</h2>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-sm">
+            Total: {stats.totalItems} Items
+          </span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50 text-slate-400 font-sans">
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest underline decoration-slate-200 decoration-2">Registry ID</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest underline decoration-slate-200 decoration-2">Category</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest underline decoration-slate-200 decoration-2">Location</th>
-                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest underline decoration-slate-200 decoration-2">Status</th>
+              <tr className="border-b border-slate-100 text-slate-400">
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Item ID</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Category</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Location</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-sans">
+            <tbody className="divide-y divide-slate-50">
               {items.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-20 text-center text-slate-400 font-medium">No active registry entries found.</td>
+                  <td colSpan="4" className="px-6 py-12 text-center text-slate-400 font-medium italic">
+                    No registry entries found.
+                  </td>
                 </tr>
               ) : (
                 items.slice(0, 10).map(item => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition-colors group">
+                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-4">
-                      <div className="font-bold text-slate-700 text-sm italic group-hover:not-italic group-hover:text-blue-900 transition-all">#L&F-{item.id}</div>
+                      <div className="font-bold text-slate-700 text-xs">#REG-{item.id.toString().padStart(5, '0')}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] font-black inline-block uppercase tracking-tighter ring-1 ring-slate-200 shadow-sm">{item.category}</div>
+                      <span className="bg-slate-100 text-slate-500 px-2 py-1 rounded text-[10px] font-bold capitalize">
+                        {item.category}
+                      </span>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-slate-500 text-sm font-medium">{item.location}</div>
+                    <td className="px-6 py-4 text-xs font-semibold text-slate-500">
+                      {item.location}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ring-1 ring-inset ${
-                        item.status === 'released' ? 'bg-slate-50 text-slate-400 ring-slate-200' : 
-                        item.status === 'claimed' ? 'bg-amber-50 text-amber-600 ring-amber-200 shadow-amber-100' : 
-                        'bg-blue-50 text-blue-700 ring-blue-200 shadow-blue-100'
+                    <td className="px-6 py-4 flex justify-center">
+                      <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                        item.status === 'released' ? 'bg-slate-50 text-slate-400 border-slate-100' : 
+                        item.status === 'claimed' ? 'bg-amber-50 text-brand-accent border-amber-100' : 
+                        'bg-indigo-50 text-brand-primary border-indigo-100'
                       }`}>
-                        <span className={`w-1 h-1 rounded-full ${
-                          item.status === 'released' ? 'bg-slate-300' : 
-                          item.status === 'claimed' ? 'bg-amber-500' : 
-                          'bg-blue-500'
-                        }`}></span>
                         {item.status}
                       </span>
                     </td>
@@ -162,14 +133,40 @@ const AdminDashboard = () => {
             </tbody>
           </table>
         </div>
-        {items.length > 10 && (
-          <div className="p-4 bg-slate-50 border-t border-slate-100 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
-            Detailed registry pagination coming soon
-          </div>
-        )}
       </section>
     </div>
   );
 };
+
+const StatCard = ({ label, count, description, color, link }) => {
+  const themes = {
+    indigo: 'border-brand-primary bg-indigo-50/10 hover:bg-indigo-50/20',
+    amber: 'border-brand-accent bg-amber-50/10 hover:bg-amber-50/20',
+    red: 'border-red-500 bg-red-50/10 hover:bg-red-50/20'
+  };
+
+  const btnThemes = {
+    indigo: 'btn-primary w-full',
+    amber: 'btn-accent w-full',
+    red: 'bg-red-500 text-white w-full py-2.5 rounded-xl font-semibold text-sm hover:bg-red-600 transition-all'
+  };
+
+  return (
+    <div className={`app-card p-6 border-t-4 transition-all ${themes[color]}`}>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-lg font-bold text-slate-900 leading-none">{label}</h3>
+        <span className="text-xl font-extrabold text-slate-800">{count}</span>
+      </div>
+      <p className="text-slate-500 text-sm mb-6 leading-relaxed flex-grow">
+        {description}
+      </p>
+      <Link to={link} className={btnThemes[color]}>
+        Manage Queue
+      </Link>
+    </div>
+  );
+};
+
+
 
 export default AdminDashboard;

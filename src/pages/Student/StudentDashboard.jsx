@@ -24,91 +24,93 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="space-y-10 fade-in">
-      <header className="pb-6 border-b border-slate-200">
-        <h1 className="text-3xl font-extrabold text-blue-900 tracking-tight">University Lost & Found Registry</h1>
-        <p className="text-slate-500 mt-2 text-lg font-medium">Official student portal for reporting and identifying personal property on campus.</p>
+    <div className="space-y-10">
+      <header>
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          Welcome back, {user?.email.split('@')[0]}
+        </h1>
+        <p className="text-slate-500 mt-2 text-base font-medium">
+          Manage your lost items and help others by reporting what you've found on campus.
+        </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white p-8 rounded-lg border-l-4 border-blue-900 shadow-sm transition-all hover:shadow-md border border-slate-200">
-          <div className="text-xs font-bold text-blue-900 uppercase tracking-widest mb-2">Service A: Missing Property</div>
-          <h3 className="text-xl font-bold text-slate-800 mb-3">File a Lost Report</h3>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-            Provide a detailed description of your missing item for cross-reference in our central database.
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="app-card p-6 flex flex-col group border-l-4 border-l-brand-primary">
+          <div className="mb-4">
+            <span className="inline-block p-3 bg-indigo-50 text-brand-primary rounded-xl text-2xl group-hover:scale-110 transition-transform">
+              🎒
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Report Lost Item</h3>
+          <p className="text-slate-500 text-sm mb-6 flex-grow">
+            Lost something? Provide some details and we'll check our registry for possible matches.
           </p>
           <Link 
             to="/report/lost" 
-            className={`block w-full text-center py-3 px-4 rounded font-bold transition-all shadow-sm ${!user?.is_verified ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-blue-900 text-white hover:bg-blue-800 hover:-translate-y-0.5'}`}
+            className={`btn-primary text-center ${!user?.is_verified ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            Submit Official Report
+            Report Loss
           </Link>
         </div>
 
-        <div className="bg-white p-8 rounded-lg border-l-4 border-emerald-600 shadow-sm transition-all hover:shadow-md border border-slate-200">
-          <div className="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-2">Service B: Found Property</div>
-          <h3 className="text-xl font-bold text-slate-800 mb-3">Register a Found Item</h3>
-          <p className="text-slate-500 text-sm mb-6 leading-relaxed">
-            Report an item you have recovered to initiate the identification and return workflow.
+        <div className="app-card p-6 flex flex-col group border-l-4 border-l-brand-accent">
+          <div className="mb-4">
+            <span className="inline-block p-3 bg-amber-50 text-brand-accent rounded-xl text-2xl group-hover:scale-110 transition-transform">
+              ✨
+            </span>
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Report Found Item</h3>
+          <p className="text-slate-500 text-sm mb-6 flex-grow">
+            Found something? Register it here so the rightful owner can claim it back.
           </p>
           <Link 
             to="/report/found" 
-            className={`block w-full text-center py-3 px-4 rounded font-bold transition-all shadow-sm ${!user?.is_verified ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700 hover:-translate-y-0.5'}`}
+            className={`btn-accent text-center ${!user?.is_verified ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            Complete Found Registry
+            Register Found Item
           </Link>
         </div>
       </div>
 
-      <section>
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Active Property Reports</h2>
-          <Link to="/my-claims" className="text-sm font-bold text-blue-900 hover:underline flex items-center gap-1">
-            VIEW CLAIM HISTORY <span>→</span>
+      <section className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-bold text-slate-900">Your Reports</h2>
+          <Link to="/my-claims" className="text-sm font-semibold text-brand-primary hover:underline">
+            View All history
           </Link>
         </div>
 
         {loading ? (
-          <div className="flex justify-center p-20">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-blue-900 rounded-full animate-spin"></div>
+          <div className="flex justify-center py-12">
+            <div className="w-8 h-8 border-2 border-slate-200 border-t-brand-primary rounded-full animate-spin"></div>
           </div>
         ) : lostReports.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-16 text-center shadow-sm">
-            <div className="text-4xl mb-4 opacity-20">📦</div>
-            <p className="text-slate-400 font-medium">You haven't reported any lost items yet. Submissions will appear here for tracking.</p>
+          <div className="app-card p-12 text-center bg-slate-50/50 border-dashed">
+            <p className="text-slate-400 font-medium">No active reports found.</p>
+            <p className="text-xs text-slate-400 mt-1">When you report a lost item, it will show up here.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3">
             {lostReports.map(report => (
-              <div key={report.id} className="bg-white border border-slate-200 rounded-lg p-5 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm hover:border-slate-300 transition-colors">
-                <div className="flex items-center gap-4 w-full sm:w-auto">
-                  <div className="w-12 h-12 rounded bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl shadow-inner">
-                    📦
+              <div key={report.id} className="app-card p-4 flex items-center justify-between group app-card-hover">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-xl">
+                    📁
                   </div>
                   <div>
-                    <div className="font-bold text-slate-800 text-lg leading-tight">{report.category}</div>
-                    <div className="text-sm text-slate-400 font-medium mt-1 truncate max-w-[200px] md:max-w-md">{report.description}</div>
+                    <div className="font-bold text-slate-900">{report.category}</div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                      REF-{report.id.toString().padStart(4, '0')} &bull; {report.status}
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-8 w-full sm:w-auto justify-between sm:justify-end">
-                  <div className="text-right">
-                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-tighter mb-1">Status</div>
-                    <span className={`px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest ${
-                      report.status === 'matched' ? 'bg-indigo-100 text-indigo-700' :
-                      report.status === 'claimed' ? 'bg-blue-100 text-blue-700' :
-                      'bg-slate-100 text-slate-600'
-                    }`}>
-                      {report.status}
-                    </span>
-                  </div>
-                  <Link 
-                    to={`/lost/${report.id}/matches`} 
-                    className="bg-slate-800 text-white px-5 py-2.5 rounded text-xs font-black shadow-sm hover:bg-black transition-all active:scale-95 no-underline"
-                  >
-                    CROSS-REFERENCE
-                  </Link>
-                </div>
+                <Link 
+                  to={`/lost/${report.id}/matches`} 
+                  className="btn-ghost"
+                >
+                  See Matches
+                </Link>
               </div>
             ))}
           </div>
@@ -117,5 +119,7 @@ const StudentDashboard = () => {
     </div>
   );
 };
+
+
 
 export default StudentDashboard;

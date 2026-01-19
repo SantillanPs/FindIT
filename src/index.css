@@ -1,18 +1,56 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'Outfit';
-  src: url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@theme {
+  --font-sans: "Inter", sans-serif;
+  
+  --color-brand-primary: #4f46e5;    /* Indigo 600 */
+  --color-brand-secondary: #6366f1;  /* Indigo 500 */
+  --color-brand-accent: #f59e0b;     /* Amber 500 */
+  --color-brand-background: #f8fafc; /* Slate 50 */
+  --color-brand-surface: #ffffff;
 }
 
 @layer base {
   body {
-    @apply bg-slate-100 text-slate-900 font-sans antialiased;
-    font-family: 'Outfit', 'Inter', sans-serif;
+    @apply font-sans bg-brand-background text-slate-900 antialiased;
   }
 }
 
-@theme {
-  --color-university-blue: #1e3a8a;
-  --color-university-dark: #172554;
+@layer components {
+  .app-card {
+    @apply bg-white rounded-2xl border border-slate-200 shadow-sm transition-all duration-300;
+  }
+  
+  .app-card-hover {
+    @apply hover:shadow-md hover:border-brand-primary/20 hover:-translate-y-1;
+  }
+
+  .btn-primary {
+    @apply bg-brand-primary text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:bg-brand-secondary hover:shadow-md transition-all active:scale-95 disabled:opacity-50;
+  }
+
+  .btn-accent {
+    @apply bg-brand-accent text-white px-6 py-2.5 rounded-xl font-semibold text-sm shadow-sm hover:brightness-110 transition-all active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply text-slate-500 hover:bg-slate-100 px-4 py-2 rounded-xl font-medium text-sm transition-all;
+  }
+
+  .input-field {
+    @apply w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:bg-white focus:ring-2 focus:ring-brand-primary/10 focus:border-brand-primary outline-none transition-all;
+  }
+
+  .glass-header {
+    @apply bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200/60;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
