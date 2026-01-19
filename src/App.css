@@ -1,6 +1,6 @@
-/* App.css - Simplified */
+/* App.css - Dark Mode */
 .bg-modern {
-  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.03), transparent),
-              radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.03), transparent);
+  background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.05), transparent),
+              radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.05), transparent);
   background-attachment: fixed;
 }

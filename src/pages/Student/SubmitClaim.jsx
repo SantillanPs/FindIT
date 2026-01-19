@@ -20,16 +20,15 @@ const SubmitClaim = () => {
 
   const fetchItem = async () => {
     try {
-      // Students use the public feed endpoint to see basic info
       const response = await apiClient.get('/found/public');
       const foundItem = response.data.find(i => i.id === parseInt(itemId));
       if (foundItem) {
         setItem(foundItem);
       } else {
-        setError('Item not found or no longer available for claiming.');
+        setError('Registry entry not found or no longer available.');
       }
     } catch (err) {
-      setError('Could not fetch item details.');
+      setError('System error retrieving item context.');
     } finally {
       setLoading(false);
     }
@@ -38,7 +37,7 @@ const SubmitClaim = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user?.is_verified) {
-      setError('You must be verified by an admin to submit a claim.');
+      setError('Authorized verification required for this action.');
       return;
     }
     setSubmitting(true);
@@ -50,63 +49,95 @@ const SubmitClaim = () => {
         proof_description: proof,
         proof_photo_url: proofPhotoUrl
       });
-      alert('Claim submitted successfully! Staff will review your proof.');
       navigate('/my-claims');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to submit claim. Does the item have "in_custody" status?');
+      setError(err.response?.data?.detail || 'Submission failure. Please verify record status.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (loading) return <div>Loading item details...</div>;
-  if (error && !item) return <div className="alert alert-warning">{error} <Link to="/student">Back</Link></div>;
+  if (loading) return (
+    <div className="flex justify-center py-20">
+      <div className="w-8 h-8 border-2 border-slate-700 border-t-brand-primary rounded-full animate-spin"></div>
+    </div>
+  );
 
   return (
-    <div className="auth-card" style={{ maxWidth: '600px' }}>
-      <h1>Submit Ownership Claim</h1>
-      
-      <div className="card" style={{ marginBottom: '1.5rem', backgroundColor: '#f8fafc' }}>
-        <p><strong>Item:</strong> {item.category}</p>
-        <p><strong>Found At:</strong> {item.location_zone}</p>
-        <p><strong>Public Description:</strong> {item.description}</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-10">
+      <header className="space-y-4">
+        <Link to="/public-feed" className="text-sm font-semibold text-brand-primary hover:text-brand-secondary flex items-center gap-1 transition-colors">
+          ← Back to Registry
+        </Link>
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Ownership Claim</h1>
+        <p className="text-slate-400 text-base font-medium">
+          Provide identification evidence to initiate the property recovery process.
+        </p>
+      </header>
 
-      <p style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--secondary)' }}>
-        Provide detailed proof that this item belongs to you. Mention specific marks, settings, or contents that only the owner would know.
-      </p>
-
-      {error && <div className="error-msg">{error}</div>}
-
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Proof of Ownership</label>
-          <textarea 
-            rows="5"
-            placeholder="E.g. It has a 'Home' sticker on the back left corner. The lock code is 1234."
-            value={proof}
-            onChange={(e) => setProof(e.target.value)}
-            required
-          />
+      {error && !item ? (
+        <div className="app-card p-10 bg-rose-500/10 border-rose-500/20 text-rose-400 text-center font-bold">
+          {error}
         </div>
+      ) : (
+        <div className="space-y-10">
+          <div className="app-card p-6 bg-brand-primary/5 border-brand-primary/20 flex flex-col sm:flex-row gap-6 items-center">
+             <div className="w-24 h-24 bg-slate-900 rounded-2xl flex items-center justify-center shrink-0 border border-brand-border">
+                <span className="text-4xl">📦</span>
+             </div>
+             <div>
+               <div className="text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-1">Authenticated Registry Context</div>
+               <h3 className="text-xl font-bold text-white mb-1">{item.category}</h3>
+               <p className="text-sm text-slate-400 italic">"Found near {item.location_zone}"</p>
+             </div>
+          </div>
 
-        <div className="form-group">
-          <label>Proof Photo (URL) (Optional)</label>
-          <input 
-            type="text"
-            placeholder="Optional link to a photo for proof (e.g., you holding the item)"
-            value={proofPhotoUrl}
-            onChange={(e) => setProofPhotoUrl(e.target.value)}
-          />
-          <small style={{ color: 'var(--secondary)', fontSize: '0.75rem' }}>This photo will only be visible to admin staff.</small>
+          <form onSubmit={handleSubmit} className="app-card p-8 space-y-8">
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                Proprietary description
+              </label>
+              <textarea 
+                rows="4"
+                placeholder="Describe specific markings, content, or settings only you would know..."
+                className="input-field min-h-[120px]"
+                value={proof}
+                onChange={(e) => setProof(e.target.value)}
+                required
+              />
+              <p className="text-[10px] text-slate-500 font-medium px-1 leading-relaxed">
+                Include details like serial numbers, distinctive wear, or internal contents.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+                Evidence Link (Optional)
+              </label>
+              <input 
+                type="text"
+                placeholder="URL to photo proof (e.g. proof of purchase, photo with item)"
+                className="input-field"
+                value={proofPhotoUrl}
+                onChange={(e) => setProofPhotoUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="pt-4 border-t border-brand-border flex flex-col sm:flex-row items-center justify-between gap-6">
+              <p className="text-[10px] text-slate-500 font-bold max-w-xs leading-relaxed uppercase tracking-wider">
+                This claim will be reviewed by staff for verification.
+              </p>
+              <button 
+                type="submit" 
+                disabled={submitting || !user?.is_verified} 
+                className="btn-primary w-full sm:w-auto px-10 py-3.5"
+              >
+                {submitting ? 'Submitting...' : !user?.is_verified ? 'Verification Required' : 'Formalize Claim'}
+              </button>
+            </div>
+          </form>
         </div>
-        <button type="submit" className="btn-primary" disabled={submitting || !user?.is_verified}>
-          {submitting ? 'Submitting Claim...' : !user?.is_verified ? 'Verification Required' : 'Submit Claim'}
-        </button>
-        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
-          <Link to="/public-feed" style={{ fontSize: '0.9rem' }}>Cancel</Link>
-        </div>
-      </form>
+      )}
     </div>
   );
 };

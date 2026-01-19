@@ -10,7 +10,12 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     db_user = db.query(database.User).filter(database.User.email == user.email).first()
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+    
+    if user.student_id_number:
+        existing_student = db.query(database.User).filter(database.User.student_id_number == user.student_id_number).first()
+        if existing_student:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Student ID number already registered")
     
     hashed_password = auth.get_password_hash(user.password)
     new_user = database.User(

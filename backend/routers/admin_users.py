@@ -12,6 +12,28 @@ def list_users(
 ):
     return db.query(database.User).filter(database.User.role == database.UserRole.STUDENT).all()
 
+@router.get("/stats")
+def get_admin_stats(
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    # Total active lost items (not matched/resolved)
+    total_lost = db.query(database.LostItem).filter(database.LostItem.status == database.ItemStatus.REPORTED.value).count()
+    
+    # Total items currently in registry (reported or in custody)
+    total_found = db.query(database.FoundItem).filter(
+        database.FoundItem.status.in_([database.ItemStatus.REPORTED.value, database.ItemStatus.IN_CUSTODY.value])
+    ).count()
+    
+    # Total pending verification claims
+    total_claims = db.query(database.Claim).filter(database.Claim.status == database.ClaimStatus.PENDING.value).count()
+    
+    return {
+        "total_lost": total_lost,
+        "total_found": total_found,
+        "total_claims": total_claims
+    }
+
 @router.put("/users/{user_id}/verify", response_model=schemas.UserResponse)
 def verify_user(
     user_id: int, 
