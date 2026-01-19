@@ -4,6 +4,8 @@ import numpy as np
 
 class AIService:
     _model = None
+    # BAAI/bge-m3 produces 1024-dimensional vectors
+    EMBEDDING_DIM = 1024
 
     @classmethod
     def get_model(cls):
