@@ -55,7 +55,7 @@ class FoundItemPublic(FoundItemBase):
 
 class FoundItemDetail(FoundItemPublic):
     private_admin_notes: str
-    finder_id: int
+    finder_id: Optional[int] = None
     embedding: Optional[str] = None
     released_to_id: Optional[int] = None
     released_by_name: Optional[str] = None

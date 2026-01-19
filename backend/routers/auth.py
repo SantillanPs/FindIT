@@ -8,22 +8,24 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
-    db_user = db.query(database.User).filter(database.User.email == user.email).first()
+    email_lower = user.email.lower()
+    db_user = db.query(database.User).filter(database.User.email == email_lower).first()
     if db_user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     
-    if user.student_id_number:
-        existing_student = db.query(database.User).filter(database.User.student_id_number == user.student_id_number).first()
+    student_id = user.student_id_number.strip() if user.student_id_number else None
+    if student_id:
+        existing_student = db.query(database.User).filter(database.User.student_id_number == student_id).first()
         if existing_student:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Student ID number already registered")
     
     hashed_password = auth.get_password_hash(user.password)
     new_user = database.User(
-        email=user.email,
+        email=email_lower,
         hashed_password=hashed_password,
         role=user.role,
         is_verified=(user.role == database.UserRole.ADMIN),  # Admins auto-verified
-        student_id_number=user.student_id_number,
+        student_id_number=student_id,
         verification_proof_url=user.verification_proof_url
     )
     db.add(new_user)
