@@ -7,6 +7,32 @@ from ai_service import AIService
 
 router = APIRouter(tags=["Lost Items"])
 
+def _calculate_hybrid_score(base_score, lost_item, found_item):
+    """
+    Combines AI semantic score with metadata (location/time) boosts and penalties.
+    """
+    final_score = base_score
+    
+    # 1. Location Boost (+0.15)
+    if lost_item.location_zone and found_item.location_zone:
+        if lost_item.location_zone == found_item.location_zone:
+            final_score += 0.15
+        else:
+            final_score -= 0.05
+
+    # 2. Time Penalty
+    if lost_item.last_seen_time and found_item.found_time:
+        delta = abs((lost_item.last_seen_time - found_item.found_time).days)
+        if delta <= 2:
+            final_score += 0.05 # Close in time boost
+        elif delta > 14:
+            final_score -= 0.20 # Large gap penalty
+        elif delta > 7:
+            final_score -= 0.10 # Week gap penalty
+            
+    # Clamp results to reasonable range [0.01, 0.99]
+    return max(0.01, min(0.99, final_score))
+
 @router.post("/lost/report", response_model=schemas.LostItemResponse)
 def report_lost_item(
     item: schemas.LostItemCreate,
@@ -52,7 +78,8 @@ def get_matches_for_lost_item(
 
     lost_embedding = AIService.get_embedding_list(lost_item.embedding)
     
-    time_window = timedelta(days=3)
+    # Relaxed time window for hybrid scoring: +/- 14 days
+    time_window = timedelta(days=14)
     start_time = lost_item.last_seen_time - time_window
     end_time = lost_item.last_seen_time + time_window
 
@@ -63,20 +90,23 @@ def get_matches_for_lost_item(
         database.FoundItem.found_time <= end_time
     )
 
-    if lost_item.location_zone:
-        query = query.filter(database.FoundItem.location_zone == lost_item.location_zone)
-
+    # Note: We removed the hard location filter here so Hybrid Scoring can handle 
+    # the location boost/penalty probabilisticly.
     found_candidates = query.all()
     
     suggestions = []
     for found in found_candidates:
         if found.embedding:
             found_embedding = AIService.get_embedding_list(found.embedding)
-            score = AIService.calculate_similarity(lost_embedding, found_embedding)
-            suggestions.append(schemas.MatchSuggestion(
-                item=found,
-                similarity_score=score
-            ))
+            base_score = AIService.calculate_similarity(lost_embedding, found_embedding)
+            hybrid_score = _calculate_hybrid_score(base_score, lost_item, found)
+            
+            # For students, only show items with a decent hybrid confidence
+            if hybrid_score >= 0.4:
+                suggestions.append(schemas.MatchSuggestion(
+                    item=found,
+                    similarity_score=hybrid_score
+                ))
     
     suggestions.sort(key=lambda x: x.similarity_score, reverse=True)
     return suggestions
@@ -110,7 +140,8 @@ def admin_get_all_global_matches(
             if not lost.embedding: continue
             
             lost_emb = AIService.get_embedding_list(lost.embedding)
-            score = AIService.calculate_similarity(found_emb, lost_emb)
+            base_score = AIService.calculate_similarity(found_emb, lost_emb)
+            score = _calculate_hybrid_score(base_score, lost, found)
             
             # Threshold to avoid noise, but keep it low enough for manual review
             if score >= 0.3: 
@@ -214,7 +245,8 @@ def admin_get_matches_for_found_item(
     for lost in lost_candidates:
         if lost.embedding:
             lost_embedding = AIService.get_embedding_list(lost.embedding)
-            score = AIService.calculate_similarity(found_embedding, lost_embedding)
+            base_score = AIService.calculate_similarity(found_embedding, lost_embedding)
+            score = _calculate_hybrid_score(base_score, lost, found_item)
             suggestions.append({
                 "item": {
                     "id": lost.id,
