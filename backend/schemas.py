@@ -109,7 +109,7 @@ class AdminMatchSuggestion(BaseModel):
     similarity_score: float
 
 class GlobalMatchGroup(BaseModel):
-    found_item: FoundItemPublic
+    found_item: FoundItemDetail
     top_matches: list[AdminMatchSuggestion]
     max_score: float
 
@@ -127,6 +127,8 @@ class ClaimResponse(BaseModel):
     proof_photo_url: Optional[str] = None
     status: str
     found_item_private_notes: Optional[str] = None
+    found_item_category: Optional[str] = None
+    found_item_description: Optional[str] = None
     admin_notes: Optional[str] = None
     similarity_score: Optional[float] = None  # AI context for admins
     created_at: datetime

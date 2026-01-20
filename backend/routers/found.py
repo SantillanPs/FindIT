@@ -26,6 +26,13 @@ def report_found_item(
     db.refresh(new_item)
     return new_item
 
+@router.get("/found/my-reports", response_model=list[schemas.FoundItemPublic])
+def list_my_found_reports(
+    db: Session = Depends(auth.get_db),
+    current_user: database.User = Depends(auth.get_current_user)
+):
+    return db.query(database.FoundItem).filter(database.FoundItem.finder_id == current_user.id).all()
+
 @router.get("/found/public", response_model=list[schemas.FoundItemPublic])
 def list_public_found_items(db: Session = Depends(auth.get_db)):
     return db.query(database.FoundItem).filter(

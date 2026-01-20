@@ -137,7 +137,8 @@ def admin_get_all_global_matches(
                     "description": found.description,
                     "location_zone": found.location_zone,
                     "found_time": found.found_time,
-                    "status": found.status
+                    "status": found.status,
+                    "private_admin_notes": found.private_admin_notes
                 },
                 "top_matches": matches,
                 "max_score": matches[0]['similarity_score']

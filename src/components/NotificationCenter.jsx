@@ -32,76 +32,76 @@ const NotificationCenter = () => {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div className="relative inline-block">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        style={{ 
-          background: 'none', 
-          border: 'none', 
-          cursor: 'pointer', 
-          fontSize: '1.2rem',
-          position: 'relative'
-        }}
+        className="relative p-2 rounded-xl bg-slate-800/50 border border-brand-border hover:bg-slate-700/50 transition-all group"
       >
-        🔔
+        <span className="text-xl group-hover:scale-110 transition-transform inline-block">🔔</span>
         {unreadCount > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '-5px',
-            right: '-5px',
-            background: 'var(--danger)',
-            color: 'white',
-            borderRadius: '50%',
-            padding: '2px 6px',
-            fontSize: '0.6rem'
-          }}>
+          <span className="absolute -top-1 -right-1 bg-brand-primary text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-brand-primary/20 min-w-[20px] text-center">
             {unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '100%',
-          width: '300px',
-          backgroundColor: 'white',
-          border: '1px solid #e2e8f0',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-          zIndex: 1000,
-          maxHeight: '400px',
-          overflowY: 'auto',
-          padding: '0.5rem'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px solid #f1f5f9' }}>
-            <h4 style={{ margin: 0 }}>Notifications</h4>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>
-          </div>
-          {notifications.length === 0 ? (
-            <p style={{ textAlign: 'center', padding: '1rem', color: '#64748b' }}>No notifications yet.</p>
-          ) : (
-            notifications.map(n => (
-              <div 
-                key={n.id} 
-                style={{ 
-                  padding: '0.75rem', 
-                  borderBottom: '1px solid #f1f5f9',
-                  backgroundColor: n.is_read ? 'transparent' : '#f0f9ff',
-                  cursor: 'pointer'
-                }}
-                onClick={() => markAsRead(n.id)}
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setIsOpen(false)}
+          ></div>
+          <div className="absolute right-0 mt-3 w-80 max-h-[480px] bg-slate-900 border border-brand-border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="p-4 border-b border-brand-border bg-slate-950/50 flex justify-between items-center">
+              <h4 className="text-sm font-bold text-white uppercase tracking-widest">Notifications</h4>
+              <button 
+                onClick={() => setIsOpen(false)} 
+                className="text-slate-500 hover:text-white transition-colors"
               >
-                <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{n.title}</div>
-                <div style={{ fontSize: '0.8rem', color: '#475569', marginTop: '0.2rem' }}>{n.message}</div>
-                <div style={{ fontSize: '0.65rem', color: '#94a3b8', marginTop: '0.4rem' }}>
-                  {new Date(n.created_at).toLocaleString()}
+                <span className="text-lg">✕</span>
+              </button>
+            </div>
+
+            <div className="overflow-y-auto custom-scrollbar">
+              {notifications.length === 0 ? (
+                <div className="p-10 text-center">
+                  <div className="text-3xl mb-3 opacity-20">📭</div>
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">All caught up</p>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ) : (
+                <div className="divide-y divide-brand-border/30">
+                  {notifications.map(n => (
+                    <div 
+                      key={n.id} 
+                      className={`p-4 hover:bg-white/5 transition-colors cursor-pointer relative ${n.is_read ? 'opacity-60' : ''}`}
+                      onClick={() => markAsRead(n.id)}
+                    >
+                      {!n.is_read && (
+                        <div className="absolute top-5 right-4 w-2 h-2 bg-brand-primary rounded-full shadow-sm shadow-brand-primary/50"></div>
+                      )}
+                      <div className="font-bold text-xs text-slate-100 mb-1 pr-4">{n.title}</div>
+                      <div className="text-[11px] text-slate-400 leading-relaxed mb-2 line-clamp-2 italic">
+                        "{n.message}"
+                      </div>
+                      <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                        {new Date(n.created_at).toLocaleDateString()} • {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="p-3 border-t border-brand-border bg-slate-950/50 text-center">
+              <button 
+                className="text-[10px] font-bold text-brand-primary uppercase tracking-widest hover:text-brand-secondary transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Close Panel
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

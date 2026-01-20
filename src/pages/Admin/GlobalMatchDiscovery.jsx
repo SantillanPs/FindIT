@@ -93,22 +93,50 @@ const GlobalMatchDiscovery = () => {
               </div>
               
               <div className="p-6 space-y-8">
-                <div className="bg-slate-900 border-l-4 border-brand-primary rounded-r-xl p-5 italic text-slate-300 text-sm leading-relaxed shadow-inner">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 not-italic mb-2 opacity-60">Found Item Description</span>
-                  "{group.found_item.description}"
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-5 h-5 rounded-full bg-brand-secondary/20 flex items-center justify-center text-[10px] text-brand-secondary font-black">1</div>
+                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Master Record: The Finding</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-slate-900 border-l-4 border-brand-primary rounded-r-xl p-5 text-slate-300 text-sm leading-relaxed shadow-inner">
+                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 not-italic mb-2 opacity-60">Public Finding Description</span>
+                    <div className="italic mb-3">"{group.found_item.description}"</div>
+                    <div className="flex flex-wrap gap-3 mt-4 border-t border-brand-border/20 pt-3">
+                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-brand-primary">📍</span> {group.found_item.location_zone}
+                       </div>
+                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          <span className="text-brand-primary">📅</span> {new Date(group.found_item.found_time).toLocaleDateString()}
+                       </div>
+                    </div>
+                  </div>
+                  <div className="bg-slate-950/50 border-l-4 border-brand-secondary rounded-r-xl p-5 text-slate-400 text-sm leading-relaxed shadow-inner">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-secondary not-italic opacity-60">Finder's Secret Proof</span>
+                      <span className="text-[8px] bg-brand-secondary/10 text-brand-secondary px-1.5 py-0.5 rounded-full font-black border border-brand-secondary/20">STAFF ONLY</span>
+                    </div>
+                    <div className="font-semibold text-slate-200">
+                      <span className="text-brand-secondary/50 mr-2">[INTERNAL NOTE]:</span>
+                      {group.found_item.private_admin_notes || "No additional notes provided by finder."}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Matching Loss Reports</h5>
+                <div className="space-y-4 pt-4 border-t border-brand-border/30">
+                  <div className="flex items-center gap-2">
+                     <div className="w-5 h-5 rounded-full bg-brand-primary/20 flex items-center justify-center text-[10px] text-brand-primary font-black">2</div>
+                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Candidates: Potential Owners</h5>
+                  </div>
                   
                   <div className="overflow-hidden border border-brand-border rounded-xl bg-slate-900/20">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-900 text-slate-500 border-b border-brand-border">
-                          <th className="px-6 py-3 text-[10px] font-bold uppercase">Similarity</th>
-                          <th className="px-6 py-3 text-[10px] font-bold uppercase">Report Details</th>
-                          <th className="px-6 py-3 text-[10px] font-bold uppercase">Confidential Proof</th>
-                          <th className="px-6 py-3 text-[10px] font-bold uppercase text-right">Action</th>
+                        <tr className="bg-slate-900/80 text-slate-400 border-b border-brand-border/50">
+                          <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em]">Match</th>
+                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em]">Lost Report Details</th>
+                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em]">Confidential Verification</th>
+                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-right">Operation</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-brand-border/50">
@@ -121,13 +149,25 @@ const GlobalMatchDiscovery = () => {
                                 {Math.round(m.similarity_score * 100)}%
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-slate-300 text-xs italic leading-relaxed">
-                              "{m.item.description}"
-                              <div className="text-[8px] text-slate-500 uppercase font-bold mt-1">📍 {m.item.location_zone}</div>
+                            <td className="px-6 py-4">
+                              <div className="text-slate-300 text-[11px] font-medium leading-relaxed italic mb-2">
+                                "{m.item.description}"
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-brand-border/20 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                  <span>📍</span> {m.item.location_zone}
+                                </div>
+                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-brand-border/20 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                  <span>📅</span> {new Date(m.item.last_seen_time).toLocaleDateString()}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-6 py-4">
-                              <div className="text-slate-500 text-[10px] leading-relaxed">
-                                {m.item.private_proof_details}
+                              <div className="bg-slate-950/40 border border-brand-border/30 rounded-lg p-2.5 shadow-inner">
+                                <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 opacity-50">Student Claim Evidence</div>
+                                <div className="text-slate-200 text-xs font-medium leading-relaxed italic">
+                                  "{m.item.private_proof_details || "No proof provided."}"
+                                </div>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right">

@@ -73,16 +73,16 @@ const ClaimReview = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-brand-border text-slate-500">
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Ownership Case</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Internal Notes</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Student Proof</th>
+                <tr className="border-b border-brand-border text-slate-500 bg-slate-900/20">
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest w-40">Case Info</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Found Item Details</th>
+                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Student Ownership Proof</th>
                   <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-brand-border/50">
                 {claims.map(claim => (
-                  <tr key={claim.id} className="hover:bg-white/5 transition-colors">
+                  <tr key={claim.id} className="hover:bg-white/5 transition-colors group">
                     <td className="px-6 py-6 align-top">
                       <div className="space-y-2">
                         <div className="font-bold text-slate-100 text-sm">#C-{claim.id.toString().padStart(4, '0')}</div>
@@ -97,24 +97,38 @@ const ClaimReview = () => {
                         <div className="text-[9px] font-medium text-slate-600">{new Date(claim.created_at).toLocaleDateString()}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-6 align-top">
-                      <div className="bg-slate-900 p-4 rounded-xl border border-brand-border text-slate-400 text-xs leading-relaxed italic shadow-inner">
-                        "{claim.found_item_private_notes || 'No confidential notes provided.'}"
+                    <td className="px-6 py-6 align-top max-w-xs">
+                      <div className="space-y-3">
+                        <div>
+                          <span className="text-[9px] font-bold text-brand-primary uppercase tracking-widest block mb-1">Category</span>
+                          <div className="text-xs font-bold text-white">{claim.found_item_category}</div>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Public Description</span>
+                          <div className="text-xs text-slate-300 leading-relaxed line-clamp-3">{claim.found_item_description}</div>
+                        </div>
+                        <div className="bg-slate-900/60 p-3 rounded-lg border border-brand-border shadow-inner">
+                          <span className="text-[9px] font-bold text-amber-500/80 uppercase tracking-widest block mb-1">Confidential Notes</span>
+                          <div className="text-[11px] text-slate-400 italic">"{claim.found_item_private_notes || 'No notes.'}"</div>
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-6 align-top">
+                    <td className="px-6 py-6 align-top border-l border-brand-border/30 bg-white/5">
                       <div className="space-y-4">
-                        <div className="text-xs text-slate-300 leading-relaxed font-medium">
-                          {claim.proof_description}
+                        <div>
+                          <span className="text-[9px] font-bold text-brand-secondary uppercase tracking-widest block mb-1">Student's Input</span>
+                          <div className="text-xs text-white leading-relaxed font-medium bg-slate-950/40 p-3 rounded-lg border border-brand-border/20">
+                            {claim.proof_description}
+                          </div>
                         </div>
                         {claim.proof_photo_url && (
                           <a 
                             href={claim.proof_photo_url} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="inline-flex items-center gap-2 bg-brand-primary/10 text-brand-primary px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-brand-primary/20 hover:bg-brand-primary/20 transition-all no-underline"
+                            className="inline-flex items-center gap-2 bg-brand-primary/10 text-brand-primary px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-brand-primary/20 hover:bg-brand-primary/20 transition-all no-underline w-full justify-center"
                           > 
-                            <span>📎</span> View Attachment ↗
+                            <span>📎</span> View Proof Image ↗
                           </a>
                         )}
                       </div>
@@ -123,13 +137,13 @@ const ClaimReview = () => {
                       <div className="flex flex-col gap-2">
                         <button 
                           onClick={() => handleReview(claim.id, 'approved')} 
-                          className="btn-primary py-2 px-4 text-[10px] uppercase tracking-widest"
+                          className="btn-primary py-2 px-4 text-[10px] uppercase tracking-widest shadow-lg shadow-brand-primary/10"
                         >
-                          Approve Recovery
+                          Approve recovery
                         </button>
                         <button 
                           onClick={() => handleReview(claim.id, 'rejected')} 
-                          className="bg-transparent text-rose-500 hover:text-rose-400 font-bold text-[10px] uppercase tracking-widest py-2 transition-all"
+                          className="bg-transparent text-slate-500 hover:text-rose-400 font-bold text-[10px] uppercase tracking-widest py-2 transition-all"
                         >
                           Decline
                         </button>

@@ -65,9 +65,17 @@ const MyClaims = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-900 rounded-xl border border-brand-border italic text-xs text-slate-400 leading-relaxed shadow-inner">
-                    <span className="block text-[9px] font-bold uppercase tracking-widest text-slate-600 not-italic mb-2 opacity-60">Submitted Evidence</span>
-                    "{claim.evidence_description}"
+                  <div className="p-4 bg-slate-900 rounded-xl border border-brand-border text-xs text-slate-400 leading-relaxed shadow-inner">
+                    <div className="flex justify-between items-center mb-2">
+                       <span className="text-[9px] font-bold uppercase tracking-widest text-slate-600 not-italic opacity-60">Your Evidence</span>
+                       {claim.found_item_category && <span className="text-[10px] bg-brand-primary/20 text-brand-primary px-1.5 py-0.5 rounded font-bold uppercase">{claim.found_item_category}</span>}
+                    </div>
+                    <div className="mb-2 text-white font-medium italic">"{claim.proof_description}"</div>
+                    {claim.found_item_description && (
+                      <div className="text-[10px] text-slate-500 border-t border-brand-border/30 pt-2 mt-2">
+                        <span className="font-bold uppercase tracking-tighter">Registry Item:</span> {claim.found_item_description}
+                      </div>
+                    )}
                   </div>
                   
                   {claim.admin_notes && (
