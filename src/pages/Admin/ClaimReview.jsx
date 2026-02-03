@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
+import EmptyState from '../../components/EmptyState';
 
 const ClaimReview = () => {
   const [claims, setClaims] = useState([]);
@@ -22,7 +24,7 @@ const ClaimReview = () => {
   };
 
   const handleReview = async (claimId, status) => {
-    const notes = window.prompt(`Finalize Decision: Provide internal notes for this ${status} verdict:`, '');
+    const notes = window.prompt(`Review Claim: Provide a reason for this ${status} decision (shown to user):`, '');
     if (notes === null) return;
 
     try {
@@ -36,127 +38,130 @@ const ClaimReview = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 15, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: 'spring', damping: 25, stiffness: 100 }
+    }
+  };
+
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20">
-      <div className="w-8 h-8 border-2 border-slate-700 border-t-brand-primary rounded-full animate-spin"></div>
+    <div className="flex justify-center py-32">
+      <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="space-y-10">
-      <header className="space-y-4">
-        <Link to="/admin" className="text-sm font-semibold text-brand-primary hover:text-brand-secondary flex items-center gap-1 transition-colors">
-          ← Back to Dashboard
-        </Link>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Review Claims</h1>
-        <p className="text-slate-400 text-base font-medium max-w-2xl">
-          Evaluate ownership proof submitted by students for recovered items.
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-10"
+    >
+      <motion.header className="space-y-4 text-left" variants={itemVariants}>
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Review Pending Claims</h1>
+        <p className="text-slate-500 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
+          Carefully check the student's proof against the actual item details. Only approve if you are confident they are the owner.
         </p>
-      </header>
+      </motion.header>
 
-      {claims.length === 0 ? (
-        <div className="app-card p-24 text-center bg-slate-900/40 border-dashed">
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No pending claims</p>
-          <p className="text-slate-600 mt-2 text-sm italic">The verification queue is currently empty.</p>
-        </div>
-      ) : (
-        <section className="app-card overflow-hidden">
-          <div className="p-6 border-b border-brand-border flex justify-between items-center bg-slate-900/40">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-              Verification Queue
-            </h2>
-            <span className="text-xs font-bold text-slate-500">
-              {claims.length} Records Pending
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-brand-border text-slate-500 bg-slate-900/20">
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest w-40">Case Info</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Found Item Details</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest">Student Ownership Proof</th>
-                  <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-border/50">
-                {claims.map(claim => (
-                  <tr key={claim.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="px-6 py-6 align-top">
-                      <div className="space-y-2">
-                        <div className="font-bold text-slate-100 text-sm">#C-{claim.id.toString().padStart(4, '0')}</div>
-                        <div className="text-[10px] font-bold text-slate-500 tracking-wider">REF-{claim.found_item_id}</div>
-                        {claim.similarity_score !== null && (
-                          <div className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border ${
-                            claim.similarity_score >= 0.8 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
-                          }`}>
+      <AnimatePresence>
+        {claims.length === 0 ? (
+          <motion.div variants={itemVariants}>
+            <EmptyState 
+                title="All caught up!"
+                message="There are no pending claims to review at the moment."
+            />
+          </motion.div>
+        ) : (
+          <div className="space-y-6">
+            {claims.map((claim) => (
+              <motion.div 
+                key={claim.id} 
+                variants={itemVariants}
+                layout
+                className="glass-panel p-5 sm:p-8 rounded-[1.5rem] md:rounded-[2rem] border border-white/5 relative overflow-hidden flex flex-col lg:flex-row gap-6 md:gap-10"
+              >
+                {/* Left: Item Context */}
+                <div className="lg:w-1/3 space-y-6 text-left">
+                  <div className="flex items-center gap-4">
+                     <span className="px-3 py-1 bg-uni-500/10 text-uni-400 border border-uni-500/20 text-[9px] font-black rounded-lg uppercase tracking-widest">Claim #{claim.id}</span>
+                     {claim.similarity_score !== null && (
+                        <span className={`px-3 py-1 text-[9px] font-black rounded-lg border uppercase tracking-widest ${claim.similarity_score > 0.7 ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-white/5 text-slate-500 border-white/10'}`}>
                             {Math.round(claim.similarity_score * 100)}% Match
-                          </div>
-                        )}
-                        <div className="text-[9px] font-medium text-slate-600">{new Date(claim.created_at).toLocaleDateString()}</div>
+                        </span>
+                     )}
+                  </div>
+
+                  <div className="space-y-1">
+                     <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Found Item Reported</p>
+                     <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">{claim.found_item_category}</h3>
+                     <p className="text-slate-400 text-[11px] md:text-xs italic leading-relaxed">"{claim.found_item_description}"</p>
+                  </div>
+
+                  <div className="p-4 bg-uni-500/5 rounded-2xl border border-uni-500/10">
+                    <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest mb-2">Staff Private Notes</p>
+                    <p className="text-slate-300 text-[11px] font-bold leading-relaxed italic">
+                        {claim.found_item_private_notes || "No identifying notes added by staff."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: Student's Proof & Action */}
+                <div className="lg:w-2/3 flex flex-col gap-8 justify-between">
+                    <div className="bg-white/5 p-4 md:p-6 rounded-[1.2rem] md:rounded-[1.5rem] border border-white/5 text-left">
+                       <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">Student's Narrative & Proof</p>
+                       <p className="text-white text-base md:text-lg font-bold italic mb-6 leading-relaxed">"{claim.proof_description}"</p>
+                       
+                       {claim.proof_photo_url && (
+                         <a 
+                             href={claim.proof_photo_url} 
+                             target="_blank" 
+                             rel="noopener noreferrer"
+                             className="inline-flex items-center gap-2 text-[10px] font-black text-uni-400 hover:text-white uppercase tracking-widest transition-colors"
+                         >
+                             <i className="fa-solid fa-paperclip"></i> View Proof Document ↗
+                         </a>
+                       )}
+                    </div>
+
+                   <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6 border-t border-white/5">
+                       <div className="text-left w-full sm:w-auto">
+                          <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Submitted By</p>
+                          <p className="text-white font-black text-[11px] uppercase tracking-widest truncate max-w-[200px]">User ID: {claim.user_id}</p>
+                       </div>
+                      <div className="flex gap-4 w-full sm:w-auto">
+                         <button 
+                            onClick={() => handleReview(claim.id, 'rejected')}
+                            className="flex-1 sm:flex-none px-8 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl border border-red-500/20 transition-all"
+                         >
+                            Reject
+                         </button>
+                         <button 
+                            onClick={() => handleReview(claim.id, 'approved')}
+                            className="flex-1 sm:flex-none px-10 py-3 bg-uni-600 hover:bg-uni-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-uni-500/20 transition-all"
+                         >
+                            Approve
+                         </button>
                       </div>
-                    </td>
-                    <td className="px-6 py-6 align-top max-w-xs">
-                      <div className="space-y-3">
-                        <div>
-                          <span className="text-[9px] font-bold text-brand-primary uppercase tracking-widest block mb-1">Category</span>
-                          <div className="text-xs font-bold text-white">{claim.found_item_category}</div>
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Public Description</span>
-                          <div className="text-xs text-slate-300 leading-relaxed line-clamp-3">{claim.found_item_description}</div>
-                        </div>
-                        <div className="bg-slate-900/60 p-3 rounded-lg border border-brand-border shadow-inner">
-                          <span className="text-[9px] font-bold text-amber-500/80 uppercase tracking-widest block mb-1">Confidential Notes</span>
-                          <div className="text-[11px] text-slate-400 italic">"{claim.found_item_private_notes || 'No notes.'}"</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-6 align-top border-l border-brand-border/30 bg-white/5">
-                      <div className="space-y-4">
-                        <div>
-                          <span className="text-[9px] font-bold text-brand-secondary uppercase tracking-widest block mb-1">Student's Input</span>
-                          <div className="text-xs text-white leading-relaxed font-medium bg-slate-950/40 p-3 rounded-lg border border-brand-border/20">
-                            {claim.proof_description}
-                          </div>
-                        </div>
-                        {claim.proof_photo_url && (
-                          <a 
-                            href={claim.proof_photo_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="inline-flex items-center gap-2 bg-brand-primary/10 text-brand-primary px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-wider uppercase border border-brand-primary/20 hover:bg-brand-primary/20 transition-all no-underline w-full justify-center"
-                          > 
-                            <span>📎</span> View Proof Image ↗
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-6 align-top text-right">
-                      <div className="flex flex-col gap-2">
-                        <button 
-                          onClick={() => handleReview(claim.id, 'approved')} 
-                          className="btn-primary py-2 px-4 text-[10px] uppercase tracking-widest shadow-lg shadow-brand-primary/10"
-                        >
-                          Approve recovery
-                        </button>
-                        <button 
-                          onClick={() => handleReview(claim.id, 'rejected')} 
-                          className="bg-transparent text-slate-500 hover:text-rose-400 font-bold text-[10px] uppercase tracking-widest py-2 transition-all"
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                   </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      )}
-    </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

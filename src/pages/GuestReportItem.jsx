@@ -1,33 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
-import { useAuth } from '../../context/AuthContext';
+import apiClient from '../api/client';
 
-const ReportLostItem = () => {
+const GuestReportItem = () => {
   const [formData, setFormData] = useState({
     category: '',
     description: '',
     location_zone: '',
-    private_proof_details: ''
+    private_proof_details: '',
+    contact_email: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.is_verified) {
-      setError('Institutional verification required for loss documentation.');
-      return;
-    }
     setLoading(true);
     setError('');
 
     try {
-      await apiClient.post('/lost/report', formData);
-      navigate('/student');
+      await apiClient.post('/lost/report/guest', formData);
+      setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.detail || 'Handover report failed. Protocol error.');
     } finally {
@@ -52,17 +48,65 @@ const ReportLostItem = () => {
     }
   };
 
+  if (success) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-2xl mx-auto py-20 text-center space-y-8"
+      >
+        <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-10 border border-green-500/30">
+          <i className="fa-solid fa-check text-4xl text-green-400"></i>
+        </div>
+        <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Report Received</h1>
+        <p className="text-slate-400 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-md mx-auto">
+          We've registered your lost item. Our AI is already scanning the registry for matches.
+        </p>
+        <div className="p-8 glass-panel rounded-3xl border border-white/5 space-y-4">
+          <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest text-left">What happens next?</p>
+          <ul className="text-left space-y-4">
+            <li className="flex gap-4">
+              <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-black shrink-0">1</span>
+              <p className="text-xs text-slate-300 font-bold leading-relaxed">Check your email for a confirmation link.</p>
+            </li>
+            <li className="flex gap-4">
+              <span className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-[10px] font-black shrink-0">2</span>
+              <p className="text-xs text-slate-300 font-bold leading-relaxed">Create an account to track matches and claim items.</p>
+            </li>
+          </ul>
+        </div>
+        <div className="pt-10 flex flex-col sm:flex-row gap-4 justify-center">
+          <button 
+            onClick={() => navigate('/register')}
+            className="bg-uni-600 hover:bg-uni-500 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-xl shadow-uni-500/20"
+          >
+            Create Account
+          </button>
+          <button 
+            onClick={() => navigate('/')}
+            className="bg-white/5 hover:bg-white/10 text-white px-10 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all border border-white/5"
+          >
+            Back to Home
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="max-w-4xl mx-auto space-y-10"
+      className="max-w-4xl mx-auto space-y-10 py-10"
     >
       <motion.header className="space-y-4 text-left" variants={itemVariants}>
-        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">Report a Lost Item</h1>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-uni-500/10 text-uni-400 text-[8px] font-black uppercase tracking-widest border border-uni-500/20 mb-4">
+          <i className="fa-solid fa-bolt"></i> Guest Rapid Report
+        </div>
+        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase leading-none">Emergency Loss Report</h1>
         <p className="text-slate-500 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-          Complete the form below with as much detail as possible. Our system will automatically cross-reference this with all found items.
+          Don't waste time on registration. Tell us what you lost, and we'll start matching it immediately.
         </p>
       </motion.header>
       
@@ -108,17 +152,31 @@ const ReportLostItem = () => {
 
           <div className="space-y-3">
             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-              Where did you last see it?
+              Your Email Address
             </label>
             <input 
-              type="text"
-              placeholder="e.g. Science Library, Student Union..."
+              type="email"
+              placeholder="Where should we contact you?"
               className="input-field bg-white/5 border-white/10 text-white font-bold text-[11px] tracking-widest"
-              value={formData.location_zone}
-              onChange={(e) => setFormData({...formData, location_zone: e.target.value})}
+              value={formData.contact_email}
+              onChange={(e) => setFormData({...formData, contact_email: e.target.value})}
               required
             />
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+            Where did you last see it?
+          </label>
+          <input 
+            type="text"
+            placeholder="e.g. Science Library, Student Union..."
+            className="input-field bg-white/5 border-white/10 text-white font-bold text-[11px] tracking-widest"
+            value={formData.location_zone}
+            onChange={(e) => setFormData({...formData, location_zone: e.target.value})}
+            required
+          />
         </div>
 
         <div className="space-y-3">
@@ -154,16 +212,16 @@ const ReportLostItem = () => {
         </div>
 
         <div className="pt-8 md:pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-           <Link to="/student" className="order-2 md:order-1 text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-widest transition-all">
+           <Link to="/" className="order-2 md:order-1 text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-widest transition-all">
               Cancel
            </Link>
            <div className="order-1 md:order-2 flex gap-4 w-full md:w-auto">
               <button 
                 type="submit" 
                 className="w-full md:w-auto bg-uni-600 hover:bg-uni-500 text-white px-12 py-4 rounded-xl md:rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20 hover:scale-[1.02] disabled:opacity-30 disabled:hover:scale-100" 
-                disabled={loading || !user?.is_verified}
+                disabled={loading}
               >
-                {loading ? 'Submitting...' : 'Submit Report'}
+                {loading ? 'Submitting...' : 'Submit Rapid Report'}
               </button>
            </div>
         </div>
@@ -172,4 +230,4 @@ const ReportLostItem = () => {
   );
 };
 
-export default ReportLostItem;
+export default GuestReportItem;

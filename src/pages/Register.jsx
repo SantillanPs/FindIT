@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  const [fullName, setFullName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [proofUrl, setProofUrl] = useState('');
   const [error, setError] = useState('');
@@ -21,6 +23,7 @@ const Register = () => {
       email, 
       password, 
       role,
+      full_name: fullName,
       student_id_number: role === 'student' ? studentId : null,
       verification_proof_url: role === 'student' ? proofUrl : null
     };
@@ -36,48 +39,59 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-background bg-modern flex items-center justify-center p-6 py-12">
-      <div className="app-card w-full max-w-lg p-8 sm:p-10 bg-brand-surface/80 backdrop-blur-2xl">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-primary text-slate-950 rounded-2xl mb-4 shadow-lg shadow-brand-primary/20">
-            <span className="text-3xl">📝</span>
+    <div className="flex items-center justify-center min-h-[90vh] px-4 py-20 relative">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] md:w-[600px] h-[350px] md:h-[600px] bg-accent-default/5 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-0 right-0 w-64 md:w-96 h-64 md:h-96 bg-uni-500/10 blur-[60px] md:blur-[100px] rounded-full pointer-events-none"></div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel w-full max-w-xl p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 relative overflow-hidden z-10 my-10"
+      >
+        <div className="text-left mb-8 md:mb-10">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
+             <div className="w-8 h-8 md:w-10 md:h-10 bg-accent-default rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl text-white shadow-lg shadow-accent-default/20">
+                <i className="fa-solid fa-user-plus"></i>
+             </div>
+             <h1 className="text-2xl md:text-3xl font-display font-black text-white uppercase tracking-tighter">Create Account</h1>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Create Account
-          </h1>
-          <p className="text-slate-400 text-sm font-medium mt-1">
-            Join the FindIT community
+          <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-relaxed">
+            Join the university lost & found network. Register your account to start reporting and claiming items.
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-3 rounded-xl text-sm font-medium flex gap-2">
-            <span>⚠️</span> {error}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center rounded-2xl"
+            >
+               {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-                Email
-              </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2 text-left">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
               <input 
+                placeholder="id@univ.edu"
                 type="email" 
-                placeholder="university.edu"
                 className="input-field"
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required 
               />
             </div>
-            <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-                Password
-              </label>
+            <div className="space-y-2 text-left">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
               <input 
-                type="password" 
                 placeholder="••••••••"
+                type="password" 
                 className="input-field"
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
@@ -86,69 +100,104 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-              Account Type
-            </label>
-            <select 
-              value={role} 
-              onChange={(e) => setRole(e.target.value)}
-              className="input-field font-semibold"
-            >
-              <option value="student">Student</option>
-              <option value="admin">Staff / Faculty</option>
-            </select>
+          <div className="space-y-2 text-left">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label>
+            <input 
+              placeholder="e.g. Juan De La Cruz"
+              type="text" 
+              className="input-field"
+              value={fullName} 
+              onChange={(e) => setFullName(e.target.value)} 
+              required 
+            />
           </div>
 
-          {role === 'student' && (
-            <div className="p-5 bg-slate-900/40 rounded-2xl border border-brand-border space-y-4 shadow-inner">
-              <h4 className="text-xs font-bold text-brand-primary uppercase tracking-wider">
-                Identity Proof
-              </h4>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-slate-500 ml-1">ID Number</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. 2026-10293"
-                  className="input-field bg-slate-900/80"
-                  value={studentId} 
-                  onChange={(e) => setStudentId(e.target.value)} 
-                  required={role === 'student'} 
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-bold text-slate-500 ml-1">ID Proof (URL)</label>
-                <input 
-                  type="text" 
-                  placeholder="Link to ID photo"
-                  className="input-field bg-slate-900/80"
-                  value={proofUrl} 
-                  onChange={(e) => setProofUrl(e.target.value)} 
-                  required={role === 'student'} 
-                />
-              </div>
+          <div className="space-y-2 text-left">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Select Role</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                <button 
+                    type="button"
+                    onClick={() => setRole('student')}
+                    className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border transition-all ${role === 'student' ? 'bg-uni-600 border-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'}`}
+                >
+                    Student
+                </button>
+                <button 
+                    type="button"
+                    onClick={() => setRole('admin')}
+                    className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border transition-all ${role === 'admin' ? 'bg-uni-600 border-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'}`}
+                >
+                    Staff / Admin
+                </button>
             </div>
-          )}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {role === 'student' && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-6 pt-4 text-left"
+              >
+                <div className="p-8 bg-white/5 rounded-3xl border border-white/5 space-y-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <i className="fa-solid fa-id-card text-uni-400"></i>
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Student Verification</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">Student ID Number</label>
+                    <input 
+                      placeholder="e.g. 2026-0001"
+                      type="text" 
+                      className="input-field bg-black/20"
+                      value={studentId} 
+                      onChange={(e) => setStudentId(e.target.value)} 
+                      required={role === 'student'} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Identification (URL)</label>
+                    <input 
+                      placeholder="Link to your ID photo"
+                      type="text" 
+                      className="input-field bg-black/20"
+                      value={proofUrl} 
+                      onChange={(e) => setProofUrl(e.target.value)} 
+                      required={role === 'student'} 
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <button 
             type="submit" 
             disabled={loading} 
-            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
+            className="w-full bg-accent-default hover:bg-accent-light text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-lg shadow-accent-default/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4 flex items-center justify-center gap-3"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Creating Account...
+              </>
             ) : (
-              <>Create Account <span>→</span></>
+              <>
+                Initialize Account
+                <i className="fa-solid fa-check"></i>
+              </>
             )}
           </button>
         </form>
         
-        <div className="mt-8 pt-8 border-t border-brand-border text-center">
-          <p className="text-slate-500 text-sm font-medium">
-            Already have an account? <Link to="/login" className="text-brand-primary font-bold hover:text-brand-secondary transition-colors">Sign In</Link>
+        <div className="mt-10 pt-8 border-t border-white/5 text-center">
+          <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">
+            Already registered in the system? <br />
+            <Link to="/login" className="text-accent-default hover:text-white transition-colors font-bold mt-3 inline-block">Secure Login</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

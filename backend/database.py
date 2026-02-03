@@ -30,6 +30,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String, default=UserRole.STUDENT.value)
@@ -53,6 +54,10 @@ class FoundItem(Base):
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
     
+    # Direct Identification (Optional)
+    identified_student_id = Column(String, nullable=True) # ID number found on item
+    identified_name = Column(String, nullable=True) # Name found on item
+    
     # Release Metadata
     released_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     released_by_name = Column(String, nullable=True)
@@ -74,7 +79,8 @@ class LostItem(Base):
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
     
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    contact_email = Column(String, nullable=True) # For guest reports
     owner = relationship("User", back_populates="lost_items")
 
 class AuditLog(Base):

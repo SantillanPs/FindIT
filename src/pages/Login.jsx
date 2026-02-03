@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,11 +11,15 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    const queryParams = new URLSearchParams(location.search);
+    const redirectPath = queryParams.get('redirect') || '/';
     
     const formData = new FormData();
     formData.append('username', email);
@@ -23,7 +28,7 @@ const Login = () => {
     try {
       const response = await apiClient.post('/auth/login', formData);
       login(response.data.access_token, response.data.user);
-      navigate('/');
+      navigate(redirectPath);
     } catch (err) {
       setError(err.response?.data?.detail || 'Invalid email or password.');
     } finally {
@@ -32,73 +37,98 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-brand-background bg-modern flex items-center justify-center p-6 pb-24">
-      <div className="app-card w-full max-w-md p-8 sm:p-10 bg-brand-surface/80 backdrop-blur-2xl">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand-primary text-slate-950 rounded-2xl mb-4 shadow-lg shadow-brand-primary/20">
-            <span className="text-3xl">🔑</span>
+    <div className="flex items-center justify-center min-h-[80vh] px-4 relative">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/3 w-32 md:w-64 h-32 md:h-64 bg-accent-default/10 blur-[60px] md:blur-[100px] rounded-full pointer-events-none"></div>
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-panel w-full max-w-md p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 relative overflow-hidden z-10 my-8"
+      >
+        <div className="text-left mb-8 md:mb-10">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
+             <div className="w-8 h-8 md:w-10 md:h-10 bg-uni-600 rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl text-white shadow-lg shadow-uni-500/20">
+                <i className="fa-solid fa-lock"></i>
+             </div>
+             <h1 className="text-2xl md:text-3xl font-display font-black text-white uppercase tracking-tighter">FindIT Login</h1>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            Sign In
-          </h1>
-          <p className="text-slate-400 text-sm font-medium mt-1">
-            Access your FindIT account
+          <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-relaxed">
+            Welcome back. Please sign in to access your reports and manage your belongings.
           </p>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-rose-500/10 border border-rose-500/20 text-rose-400 px-4 py-3 rounded-xl text-sm font-medium flex gap-2">
-            <span>⚠️</span> {error}
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center rounded-2xl"
+            >
+               {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-              Email Address
-            </label>
-            <input 
-              placeholder="e.g. name@university.edu"
-              type="email" 
-              className="input-field"
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-            />
+          <div className="space-y-2 text-left">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+            <div className="relative">
+                <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input 
+                  placeholder="university.id@edu.ph"
+                  type="email" 
+                  className="input-field pl-12"
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                />
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
-              Password
-            </label>
-            <input 
-              placeholder="••••••••"
-              type="password" 
-              className="input-field"
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-            />
+          
+          <div className="space-y-2 text-left">
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Secure Password</label>
+            <div className="relative">
+                <i className="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                <input 
+                  placeholder="••••••••••••"
+                  type="password" 
+                  className="input-field pl-12"
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                />
+            </div>
           </div>
 
           <button 
             type="submit" 
             disabled={loading} 
-            className="btn-primary w-full py-3.5 flex items-center justify-center gap-2"
+            className="w-full bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-lg shadow-uni-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4 flex items-center justify-center gap-3"
           >
             {loading ? (
-              <div className="w-5 h-5 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin"></div>
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Authenticating...
+              </>
             ) : (
-              <>Sign In <span>→</span></>
+              <>
+                Continue to Dashboard
+                <i className="fa-solid fa-arrow-right"></i>
+              </>
             )}
           </button>
         </form>
         
-        <div className="mt-8 pt-8 border-t border-brand-border text-center">
-          <p className="text-slate-500 text-sm font-medium">
-            Don't have an account? <Link to="/register" className="text-brand-primary font-bold hover:text-brand-secondary transition-colors">Register now</Link>
+        <div className="mt-10 pt-8 border-t border-white/5 text-center">
+          <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest">
+            Identity registry not yet initialized? <br />
+            <Link to="/register" className="text-uni-400 hover:text-white transition-colors font-bold mt-3 inline-block">Create Private Account</Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 
 const ReleaseLogging = () => {
@@ -42,73 +43,96 @@ const ReleaseLogging = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: 'spring', damping: 25, stiffness: 100 }
+    }
+  };
+
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-24">
-      <div className="w-8 h-8 border-2 border-slate-700 border-t-brand-primary rounded-full animate-spin"></div>
+    <div className="flex justify-center py-32">
+      <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>
   );
 
   return (
-    <div className="max-w-2xl mx-auto space-y-10">
-      <header className="space-y-4">
-        <Link to="/admin" className="text-sm font-semibold text-brand-primary hover:text-brand-secondary transition-colors inline-flex items-center gap-1">
-          ← Back to Dashboard
-        </Link>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight">Final Handover</h1>
-        <p className="text-slate-400 text-base font-medium">
-          Record the final physical transfer of the item to its owner.
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="max-w-3xl mx-auto space-y-10"
+    >
+      <motion.header className="space-y-4 text-left" variants={itemVariants}>
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Log Item Return</h1>
+        <p className="text-slate-500 text-sm font-bold uppercase tracking-widest leading-relaxed">
+          Record the return of an item to its owner. This and will mark the item as successfully returned.
         </p>
-      </header>
+      </motion.header>
 
-      <div className="space-y-6">
-        <div className="app-card p-8 border-t-4 border-t-brand-primary bg-brand-primary/5">
-          <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-6">Item Information</h3>
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Category</span>
-              <p className="text-xl font-bold text-white tracking-tight">{item.category}</p>
-            </div>
-            <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Registry ID</span>
-              <p className="text-xl font-bold text-brand-primary tabular-nums">#REG-{item.id.toString().padStart(4, '0')}</p>
-            </div>
-            <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Current Status</span>
-              <p className="text-xs font-bold text-brand-primary uppercase tracking-widest flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-brand-primary rounded-full animate-pulse"></span>
-                {item.status}
-              </p>
-            </div>
-            <div>
-              <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Authenticated By</span>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">System ID: {item.finder_id}</p>
-            </div>
+      <motion.div className="space-y-12" variants={containerVariants}>
+        {/* Item Summary Card */}
+        <motion.div 
+          variants={itemVariants}
+          className="glass-panel p-10 rounded-[2.5rem] border border-white/5 relative overflow-hidden text-left"
+        >
+          <div className="absolute -top-4 -right-4 w-64 h-64 bg-uni-500/5 blur-[80px] rounded-full pointer-events-none"></div>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 relative z-10">
+             <div className="flex items-center gap-6">
+                <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-3xl">
+                   📦
+                </div>
+                <div>
+                   <span className="text-uni-400 text-[9px] font-black uppercase tracking-widest block mb-1">Item to Return</span>
+                   <p className="text-3xl font-black text-white uppercase tracking-tight">{item.category}</p>
+                </div>
+             </div>
+             <div className="text-left md:text-right border-l md:border-l-0 md:border-r border-white/10 pl-6 md:pl-0 md:pr-6">
+                <span className="text-slate-500 text-[9px] font-black uppercase tracking-widest block mb-1">Database ID</span>
+                <p className="text-3xl font-black text-uni-400 tabular-nums tracking-tighter shadow-sm">#{item.id}</p>
+             </div>
           </div>
-        </div>
+        </motion.div>
 
-        <form onSubmit={handleSubmit} className="app-card p-8 space-y-8">
-          <div className="space-y-6">
+        {/* Action Form */}
+        <motion.form 
+          onSubmit={handleSubmit} 
+          variants={itemVariants}
+          className="glass-panel p-10 space-y-10 rounded-[2.5rem] bg-white/5 border border-white/5 text-left"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                Recipient User ID
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                Returning to (Student ID)
               </label>
               <input 
                 type="number" 
-                placeholder="Unique system ID of the student"
-                className="input-field"
+                placeholder="Enter the recipient's student ID"
+                className="input-field font-bold text-[11px] tracking-widest"
                 value={formData.released_to_id}
                 onChange={(e) => setFormData({...formData, released_to_id: e.target.value})}
                 required
               />
             </div>
             <div className="space-y-3">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
-                Staff Authorization Name
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                Handed over by (Staff)
               </label>
               <input 
                 type="text" 
-                placeholder="Full official name of staff member"
-                className="input-field"
+                placeholder="Name of the staff releasing the item"
+                className="input-field font-bold text-[11px] tracking-widest"
                 value={formData.released_by_name}
                 onChange={(e) => setFormData({...formData, released_by_name: e.target.value})}
                 required
@@ -116,21 +140,21 @@ const ReleaseLogging = () => {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-brand-border flex flex-col sm:flex-row items-center gap-6 justify-between">
+          <div className="pt-10 border-t border-white/5 flex flex-col sm:flex-row items-center gap-8 justify-between">
+            <Link to="/admin" className="text-[10px] font-black text-slate-700 hover:text-white transition-colors uppercase tracking-widest">
+                Cancel
+            </Link>
             <button 
               type="submit" 
-              className="btn-primary w-full sm:w-auto px-10 py-4" 
+              className="bg-uni-600 hover:bg-uni-500 text-white w-full sm:w-auto px-12 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20" 
               disabled={submitting}
             >
-              {submitting ? 'Recording...' : 'Authorize Final Release'}
+              {submitting ? 'Logging...' : 'Confirm Return'}
             </button>
-            <Link to="/admin" className="text-xs font-bold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest">
-              Void Transaction
-            </Link>
           </div>
-        </form>
-      </div>
-    </div>
+        </motion.form>
+      </motion.div>
+    </motion.div>
   );
 };
 

@@ -13,22 +13,48 @@ def _calculate_hybrid_score(base_score, lost_item, found_item):
     """
     final_score = base_score
     
-    # 1. Location Boost (+0.15)
+    # 0. Information Density Check (Zombie Report Penalty)
+    # Penalize findings that have almost no information to verify
+    found_desc_len = len(found_item.description.strip())
+    if found_desc_len < 5:
+        final_score -= 0.35 # Severe penalty for empty/tiny descriptions
+    elif found_desc_len < 15:
+        final_score -= 0.10 # Light penalty for very vague descriptions
+        
+    if not found_item.location_zone or found_item.location_zone.strip() in ["", "Unknown", "none"]:
+        final_score -= 0.10 # Penalty for missing found location
+        
+    if not found_item.private_admin_notes or len(found_item.private_admin_notes.strip()) < 3:
+        final_score -= 0.05 # Small penalty for missing finder proof (Master Record)
+    
+    # 1. Location Weighting
     if lost_item.location_zone and found_item.location_zone:
         if lost_item.location_zone == found_item.location_zone:
-            final_score += 0.15
+            final_score += 0.15 # Exact match boost
         else:
-            final_score -= 0.05
+            final_score -= 0.10 # Mismatch penalty (per user request)
 
-    # 2. Time Penalty
+    # 2. Time Weighting
     if lost_item.last_seen_time and found_item.found_time:
         delta = abs((lost_item.last_seen_time - found_item.found_time).days)
         if delta <= 2:
-            final_score += 0.05 # Close in time boost
+            final_score += 0.05 # Immediate match boost
         elif delta > 14:
-            final_score -= 0.20 # Large gap penalty
-        elif delta > 7:
-            final_score -= 0.10 # Week gap penalty
+            final_score -= 0.20 # Severe gap penalty
+        elif delta > 5:
+            final_score -= 0.10 # Reduced confidence gap (per user request)
+
+    # 3. Secret Proof Cross-Check (Manual precision layer)
+    # This helps penalize mismatches that AI might miss if description is long
+    if lost_item.private_proof_details and found_item.private_admin_notes:
+        s1 = set(w for w in lost_item.private_proof_details.lower().split() if len(w) > 2)
+        s2 = set(w for w in found_item.private_admin_notes.lower().split() if len(w) > 2)
+        
+        if s1 and s2:
+            if s1.intersection(s2):
+                final_score += 0.05 # Boost for shared secret keywords
+            else:
+                final_score -= 0.05 # Small penalty for completely different secrets (per user request)
             
     # Clamp results to reasonable range [0.01, 0.99]
     return max(0.01, min(0.99, final_score))
@@ -39,12 +65,35 @@ def report_lost_item(
     db: Session = Depends(auth.get_db),
     current_user: database.User = Depends(verified_student_required)
 ):
-    combined_text = f"{item.category}: {item.description}"
+    # Deep Secret Matching: Include private proof in the embedding for better semantic matching
+    combined_text = f"{item.category}: {item.description}. Proof: {item.private_proof_details}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     new_item = database.LostItem(
         **item.model_dump(),
         user_id=current_user.id,
+        embedding=embedding_json
+    )
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+    return new_item
+
+@router.post("/lost/report/guest", response_model=schemas.LostItemResponse)
+def report_lost_item_guest(
+    item: schemas.LostItemCreate,
+    db: Session = Depends(auth.get_db)
+):
+    if not item.contact_email:
+        raise HTTPException(status_code=400, detail="Contact email is required for guest reports")
+
+    # Deep Secret Matching: Include private proof in the embedding for better semantic matching
+    combined_text = f"{item.category}: {item.description}. Proof: {item.private_proof_details}"
+    embedding_json = AIService.generate_embedding(combined_text)
+
+    new_item = database.LostItem(
+        **item.model_dump(),
+        user_id=None,
         embedding=embedding_json
     )
     db.add(new_item)
@@ -154,7 +203,8 @@ def admin_get_all_global_matches(
                         "last_seen_time": lost.last_seen_time,
                         "private_proof_details": lost.private_proof_details,
                         "status": lost.status,
-                        "user_id": lost.user_id
+                        "user_id": lost.user_id,
+                        "contact_email": lost.contact_email
                     },
                     "similarity_score": score
                 })
@@ -256,7 +306,8 @@ def admin_get_matches_for_found_item(
                     "last_seen_time": lost.last_seen_time,
                     "private_proof_details": lost.private_proof_details,
                     "status": lost.status,
-                    "user_id": lost.user_id
+                    "user_id": lost.user_id,
+                    "contact_email": lost.contact_email
                 },
                 "similarity_score": score
             })

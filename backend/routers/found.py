@@ -13,7 +13,8 @@ def report_found_item(
     db: Session = Depends(auth.get_db),
     current_user: database.User = Depends(verified_student_required)
 ):
-    combined_text = f"{item.category}: {item.description}"
+    # Deep Secret Matching: Include private notes in the embedding for better semantic matching
+    combined_text = f"{item.category}: {item.description}. Private Info: {item.private_admin_notes}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     new_item = database.FoundItem(
@@ -24,6 +25,25 @@ def report_found_item(
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
+
+    # AUTO-NOTIFY Logic
+    target_user = None
+    if item.identified_student_id:
+        target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
+    elif item.identified_name:
+        # Search for exact name match (case-insensitive)
+        target_user = db.query(database.User).filter(database.User.full_name.ilike(item.identified_name)).first()
+
+    if target_user:
+        notification = database.Notification(
+            user_id=target_user.id,
+            title="Important: An Item with Your Name/ID was Found",
+            message=f"A '{item.category}' was recovered at {item.location_zone} that appears to belong to you. Please visit the office to verify and claim it.",
+            found_item_id=new_item.id
+        )
+        db.add(notification)
+        db.commit()
+
     return new_item
 
 @router.get("/found/my-reports", response_model=list[schemas.FoundItemPublic])

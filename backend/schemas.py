@@ -8,6 +8,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: Optional[str] = "student"
+    full_name: Optional[str] = None
     student_id_number: Optional[str] = None
     verification_proof_url: Optional[str] = None
 
@@ -18,6 +19,7 @@ class UserResponse(UserBase):
     id: int
     role: str
     is_verified: bool
+    full_name: Optional[str] = None
     student_id_number: Optional[str] = None
     verification_proof_url: Optional[str] = None
 
@@ -45,16 +47,22 @@ class FoundItemBase(BaseModel):
 
 class FoundItemCreate(FoundItemBase):
     private_admin_notes: str
+    identified_student_id: Optional[str] = None
+    identified_name: Optional[str] = None
 
 class FoundItemPublic(FoundItemBase):
     id: int
     status: str
+    identified_student_id: Optional[str] = None
+    identified_name: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 class FoundItemDetail(FoundItemPublic):
     private_admin_notes: str
+    identified_student_id: Optional[str] = None
+    identified_name: Optional[str] = None
     finder_id: Optional[int] = None
     embedding: Optional[str] = None
     released_to_id: Optional[int] = None
@@ -77,11 +85,13 @@ class LostItemBase(BaseModel):
 
 class LostItemCreate(LostItemBase):
     private_proof_details: str
+    contact_email: Optional[EmailStr] = None
 
 class LostItemResponse(LostItemBase):
     id: int
     status: str
-    user_id: int
+    user_id: Optional[int] = None
+    contact_email: Optional[str] = None
     embedding: Optional[str] = None
 
     class Config:
@@ -95,7 +105,8 @@ class LostItemPublic(BaseModel):
     last_seen_time: Optional[datetime] = None
     private_proof_details: str
     status: str
-    user_id: int
+    user_id: Optional[int] = None
+    contact_email: Optional[str] = None
 
     class Config:
         from_attributes = True

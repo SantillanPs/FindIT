@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
+import EmptyState from '../../components/EmptyState';
 
 const GlobalMatchDiscovery = () => {
   const [matchGroups, setMatchGroups] = useState([]);
@@ -13,7 +14,7 @@ const GlobalMatchDiscovery = () => {
       const resp = await apiClient.get('/admin/matches/all');
       setMatchGroups(resp.data);
     } catch (err) {
-      console.error('Failed to fetch global matches');
+      console.error('Failed to fetch matches');
     } finally {
       setLoading(false);
     }
@@ -24,7 +25,7 @@ const GlobalMatchDiscovery = () => {
   }, []);
 
   const handleConnectMatch = async (foundItemId, lostItemId) => {
-    if (!window.confirm("Authorize this match? Notifications will be sent to both parties.")) return;
+    if (!window.confirm("Connect these reports? Both users will be notified so they can coordinate the return.")) return;
     setConnectingId(`${foundItemId}-${lostItemId}`);
     try {
       await apiClient.post('/admin/matches/connect', { found_item_id: foundItemId, lost_item_id: lostItemId });
@@ -36,161 +37,165 @@ const GlobalMatchDiscovery = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { type: 'spring', damping: 25, stiffness: 100 }
+    }
+  };
+
   if (loading) return (
-    <div className="flex flex-col items-center justify-center p-24 space-y-6 text-center">
-      <div className="w-12 h-12 border-2 border-slate-700 border-t-brand-primary rounded-full animate-spin"></div>
-      <p className="text-slate-500 font-bold tracking-widest text-[10px] uppercase animate-pulse">Scanning registry for matches...</p>
+    <div className="flex flex-col items-center justify-center p-32 space-y-6 text-center">
+      <div className="w-12 h-12 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
+      <p className="text-slate-500 font-black tracking-widest text-[10px] uppercase animate-pulse">Running AI Match Search...</p>
     </div>
   );
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-col md:flex-row justify-between items-start gap-6">
-        <div className="space-y-3">
-          <Link to="/admin" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-brand-primary transition-colors uppercase tracking-wider no-underline group">
-            <span className="group-hover:-translate-x-1 transition-transform">←</span> Staff Dashboard
-          </Link>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Pending Matches</h1>
-          <p className="text-slate-400 text-base font-medium max-w-2xl">
-            Review items that potentially match existing loss reports.
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+      className="space-y-12"
+    >
+      <motion.header className="flex flex-col md:flex-row justify-between items-start gap-8" variants={itemVariants}>
+        <div className="space-y-4 text-left">
+          <h1 className="text-3xl font-black text-white tracking-tight uppercase">AI-Suggested Matches</h1>
+          <p className="text-slate-500 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
+            Our AI compares found items with student lost reports. Review these suggestions and connect them if they look like a match.
           </p>
         </div>
         <button 
           onClick={fetchGlobalMatches} 
-          className="btn-accent flex items-center gap-2"
+          className="bg-white/5 hover:bg-white/10 text-white px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all flex items-center gap-3"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"></path><path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path><path d="M3 22v-6h6"></path><path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
-          Refresh Feed
+          <i className="fa-solid fa-rotate"></i>
+          Re-scan Reports
         </button>
-      </header>
+      </motion.header>
 
-      {matchGroups.length === 0 ? (
-        <div className="app-card p-24 text-center bg-slate-900/40 border-dashed">
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">No pending matches discovered</p>
-          <p className="text-slate-600 mt-2 text-sm">The system will notify you when new potential matches are found.</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          {matchGroups.map(group => (
-            <div key={group.found_item.id} className="app-card overflow-hidden group">
-              <div className="bg-slate-900 px-6 py-5 border-b border-brand-border flex flex-col sm:flex-row justify-between items-center gap-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-brand-primary text-slate-950 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                    REF-{group.found_item.id.toString().padStart(4, '0')}
+      <AnimatePresence>
+        {matchGroups.length === 0 ? (
+          <motion.div variants={itemVariants}>
+            <EmptyState 
+                title="No matches found yet"
+                message="We couldn't find any strong matches between lost reports and found items."
+            />
+          </motion.div>
+        ) : (
+          <div className="space-y-12">
+            {matchGroups.map((group) => (
+              <motion.div 
+                key={group.found_item.id} 
+                variants={itemVariants}
+                className="glass-panel rounded-[2.5rem] overflow-hidden border border-white/5 bg-slate-950/20"
+              >
+                {/* Header: Found Item */}
+                <div className="p-6 md:p-8 border-b border-white/5 bg-white/5 flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
+                  <div className="flex items-center gap-4 md:gap-6 text-left w-full md:w-auto">
+                     <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-xl md:text-2xl shadow-inner shrink-0">
+                        📦
+                     </div>
+                     <div>
+                        <div className="flex items-center gap-2 md:gap-3 mb-1">
+                            <span className="text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest">Found Item</span>
+                            <span className="text-slate-600 text-[9px] md:text-[10px] font-black">#{group.found_item.id}</span>
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">{group.found_item.category}</h3>
+                     </div>
                   </div>
-                  <div className="text-xl font-bold text-white tracking-tight">
-                    {group.found_item.category}
+                  <div className="text-center md:text-right w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-white/5">
+                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Match Confidence</p>
+                      <p className={`text-3xl md:text-4xl font-black tracking-tighter ${group.max_score >= 0.8 ? 'text-green-400' : 'text-uni-400'}`}>
+                        {Math.round(group.max_score * 100)}%
+                      </p>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Confidence Score</div>
-                    <div className={`text-2xl font-black tabular-nums ${group.max_score >= 0.8 ? 'text-emerald-400' : 'text-brand-primary'}`}>
-                      {Math.round(group.max_score * 100)}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-6 space-y-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-brand-secondary/20 flex items-center justify-center text-[10px] text-brand-secondary font-black">1</div>
-                  <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Master Record: The Finding</h4>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-slate-900 border-l-4 border-brand-primary rounded-r-xl p-5 text-slate-300 text-sm leading-relaxed shadow-inner">
-                    <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 not-italic mb-2 opacity-60">Public Finding Description</span>
-                    <div className="italic mb-3">"{group.found_item.description}"</div>
-                    <div className="flex flex-wrap gap-3 mt-4 border-t border-brand-border/20 pt-3">
-                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <span className="text-brand-primary">📍</span> {group.found_item.location_zone}
-                       </div>
-                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                          <span className="text-brand-primary">📅</span> {new Date(group.found_item.found_time).toLocaleDateString()}
-                       </div>
-                    </div>
-                  </div>
-                  <div className="bg-slate-950/50 border-l-4 border-brand-secondary rounded-r-xl p-5 text-slate-400 text-sm leading-relaxed shadow-inner">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-brand-secondary not-italic opacity-60">Finder's Secret Proof</span>
-                      <span className="text-[8px] bg-brand-secondary/10 text-brand-secondary px-1.5 py-0.5 rounded-full font-black border border-brand-secondary/20">STAFF ONLY</span>
-                    </div>
-                    <div className="font-semibold text-slate-200">
-                      <span className="text-brand-secondary/50 mr-2">[INTERNAL NOTE]:</span>
-                      {group.found_item.private_admin_notes || "No additional notes provided by finder."}
-                    </div>
-                  </div>
-                </div>
+                <div className="p-8 space-y-10">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-left">
+                      <div className="space-y-4">
+                         <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Description by finder</p>
+                         <p className="text-white text-[13px] md:text-sm font-bold italic leading-relaxed border-l-2 border-white/10 pl-4 py-1">"{group.found_item.description}"</p>
+                         <div className="flex flex-wrap gap-4 md:gap-6 pt-2">
+                             <div className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <i className="fa-solid fa-location-dot text-uni-500"></i> {group.found_item.location_zone}
+                             </div>
+                             <div className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                <i className="fa-solid fa-calendar text-uni-500"></i> {new Date(group.found_item.found_time).toLocaleDateString()}
+                             </div>
+                         </div>
+                      </div>
+                      <div className="p-5 md:p-6 bg-uni-500/5 rounded-2xl md:rounded-3xl border border-uni-500/10">
+                         <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest mb-3">Internal Staff Notes</p>
+                         <p className="text-slate-300 text-[11px] md:text-xs font-bold leading-relaxed italic">
+                            {group.found_item.private_admin_notes || "No extra identifying details recorded."}
+                         </p>
+                      </div>
+                   </div>
 
-                <div className="space-y-4 pt-4 border-t border-brand-border/30">
-                  <div className="flex items-center gap-2">
-                     <div className="w-5 h-5 rounded-full bg-brand-primary/20 flex items-center justify-center text-[10px] text-brand-primary font-black">2</div>
-                     <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Candidates: Potential Owners</h5>
-                  </div>
-                  
-                  <div className="overflow-hidden border border-brand-border rounded-xl bg-slate-900/20">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-900/80 text-slate-400 border-b border-brand-border/50">
-                          <th className="px-6 py-4 text-[9px] font-black uppercase tracking-[0.2em]">Match</th>
-                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em]">Lost Report Details</th>
-                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em]">Confidential Verification</th>
-                          <th className="px-6 py-3 text-[9px] font-black uppercase tracking-[0.2em] text-right">Operation</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-brand-border/50">
-                        {group.top_matches.map(m => (
-                          <tr key={m.item.id} className="hover:bg-white/5 transition-colors group/row">
-                            <td className="px-6 py-4">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-bold tabular-nums border ${
-                                m.similarity_score >= 0.8 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-brand-primary/10 text-brand-primary border-brand-primary/20'
-                              }`}>
-                                {Math.round(m.similarity_score * 100)}%
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="text-slate-300 text-[11px] font-medium leading-relaxed italic mb-2">
-                                "{m.item.description}"
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-brand-border/20 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                  <span>📍</span> {m.item.location_zone}
+                   {/* Potential Matches */}
+                   <div className="space-y-6 pt-10 border-t border-white/5">
+                      <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-left">Potential matches from lost reports</h4>
+                      
+                       <div className="grid grid-cols-1 gap-4">
+                          {group.top_matches.map((m) => (
+                             <div key={m.item.id} className="glass-panel-simple p-5 sm:p-6 rounded-[1.5rem] md:rounded-3xl border border-white/5 group/row hover:bg-white/5 transition-all flex flex-col lg:flex-row gap-6 md:gap-8 items-start lg:items-center">
+                                <div className="flex flex-col items-start shrink-0">
+                                   <span className={`px-4 py-2 rounded-xl text-[10px] md:text-[11px] font-black tabular-nums border ${
+                                     m.similarity_score >= 0.8 ? 'bg-green-500/10 text-green-400 border-green-500/30' : 'bg-uni-500/10 text-uni-400 border-uni-500/30'
+                                   }`}>
+                                     {Math.round(m.similarity_score * 100)}% Match
+                                   </span>
                                 </div>
-                                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-950/50 border border-brand-border/20 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                  <span>📅</span> {new Date(m.item.last_seen_time).toLocaleDateString()}
+ 
+                                <div className="flex-grow text-left">
+                                   <p className="text-slate-300 text-[13px] md:text-sm font-bold italic mb-4 leading-relaxed group-hover/row:text-white transition-colors">"{m.item.description}"</p>
+                                   <div className="flex flex-wrap gap-4">
+                                      <div className="text-[8px] md:text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 md:gap-2">
+                                         <i className="fa-solid fa-location-dot"></i> {m.item.location_zone}
+                                      </div>
+                                      <div className="text-[8px] md:text-[9px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-1.5 md:gap-2">
+                                         <i className="fa-solid fa-calendar"></i> {new Date(m.item.last_seen_time).toLocaleDateString()}
+                                      </div>
+                                   </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="bg-slate-950/40 border border-brand-border/30 rounded-lg p-2.5 shadow-inner">
-                                <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 opacity-50">Student Claim Evidence</div>
-                                <div className="text-slate-200 text-xs font-medium leading-relaxed italic">
-                                  "{m.item.private_proof_details || "No proof provided."}"
+ 
+                                <div className="w-full lg:w-64 shrink-0 text-left bg-black/40 p-4 rounded-2xl border border-white/5">
+                                   <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest mb-1.5">User's Private Proof</p>
+                                   <p className="text-slate-500 text-[9px] md:text-[10px] font-bold line-clamp-2 italic">"{m.item.private_proof_details || "None provided."}"</p>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-right">
-                              <button 
-                                disabled={connectingId === `${group.found_item.id}-${m.item.id}`}
-                                onClick={() => handleConnectMatch(group.found_item.id, m.item.id)}
-                                className="btn-primary py-1.5 px-3 text-[9px] whitespace-nowrap disabled:opacity-30"
-                              >
-                                {connectingId === `${group.found_item.id}-${m.item.id}` ? 'Processing...' : 'Confirm Match'}
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+ 
+                                <div className="shrink-0 w-full lg:w-auto">
+                                   <button 
+                                     disabled={connectingId === `${group.found_item.id}-${m.item.id}`}
+                                     onClick={() => handleConnectMatch(group.found_item.id, m.item.id)}
+                                     className="w-full lg:w-auto bg-uni-600 hover:bg-uni-500 text-white px-8 py-3 rounded-xl text-[9px] md:text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-uni-500/10 disabled:opacity-30"
+                                   >
+                                     {connectingId === `${group.found_item.id}-${m.item.id}` ? 'Connecting...' : 'Connect Them'}
+                                   </button>
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 

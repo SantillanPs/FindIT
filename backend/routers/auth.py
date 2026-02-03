@@ -22,6 +22,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     hashed_password = auth.get_password_hash(user.password)
     new_user = database.User(
         email=email_lower,
+        full_name=user.full_name,
         hashed_password=hashed_password,
         role=user.role,
         is_verified=(user.role == database.UserRole.ADMIN),  # Admins auto-verified
