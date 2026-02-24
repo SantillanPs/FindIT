@@ -17,19 +17,19 @@ def seed_data():
     # Data to seed users
     users = [
         {
-            "email": "admin@findit.edu",
+            "email": "admin@nemsu.edu.ph",
             "password": "pass",
             "role": database.UserRole.ADMIN.value,
             "is_verified": True
         },
         {
-            "email": "verified@student.edu",
+            "email": "verified@nemsu.edu.ph",
             "password": "pass",
             "role": database.UserRole.STUDENT.value,
             "is_verified": True
         },
         {
-            "email": "new@student.edu",
+            "email": "new@nemsu.edu.ph",
             "password": "pass",
             "role": database.UserRole.STUDENT.value,
             "is_verified": False
@@ -49,36 +49,44 @@ def seed_data():
 
     # Seed Found Items
     print("Seeding found items with embeddings...")
-    admin_user = db.query(database.User).filter(database.User.email == "admin@findit.edu").first()
+    admin_user = db.query(database.User).filter(database.User.email == "admin@nemsu.edu.ph").first()
     
     found_items = [
         {
+            "item_name": "Backpack",
+            "category": "Bags",
+            "description": "Blue Jansport backpack with several notebooks.",
+            "location_zone": "Library 2nd Floor",
+            "found_time": datetime.utcnow() - timedelta(hours=5),
+            "safe_photo_url": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800",
+            "contact_full_name": "Security Desk B"
+        },
+        {
+            "item_name": "Scientific Calculator",
             "category": "Electronics",
-            "description": "Space Gray iPad with a blue keyboard case.",
-            "location_zone": "Engineering Hall",
-            "status": database.ItemStatus.IN_CUSTODY.value,
-            "private_admin_notes": "Small dent on back, serial ends in 99X."
+            "description": "Casio fx-991EX, silver color.",
+            "location_zone": "Building C Room 402",
+            "found_time": datetime.utcnow() - timedelta(days=1),
+            "safe_photo_url": "https://images.unsplash.com/photo-1574607383476-f517f260d30b?w=800",
+            "contact_full_name": "Canteen Counter"
         },
         {
-            "category": "Electronics",
-            "description": "Black Dell Laptop with a university sticker on the lid.",
-            "location_zone": "Library 2F",
-            "status": database.ItemStatus.REPORTED.value,
-            "private_admin_notes": "Sticker is from the Robotics Club."
+            "item_name": "Water Bottle",
+            "category": "Other",
+            "description": "Hydroflask 32oz, olive green color.",
+            "location_zone": "Gymnasium Entrance",
+            "found_time": datetime.utcnow() - timedelta(hours=2),
+            "safe_photo_url": "https://images.unsplash.com/photo-1602143302326-455bc4dd2493?w=800",
+            "contact_full_name": "Physical Ed Office"
         },
         {
-            "category": "Wallets & Keys",
-            "description": "Brown leather wallet with several cards.",
-            "location_zone": "Student Center",
-            "status": database.ItemStatus.IN_CUSTODY.value,
-            "private_admin_notes": "Contains a driver's license for a student named Alex."
-        },
-        {
+            "item_name": "Calculus Textbook",
             "category": "Books",
-            "description": "Advanced Mathematics textbook, blue cover.",
-            "location_zone": "Cafeteria",
-            "status": database.ItemStatus.REPORTED.value,
-            "private_admin_notes": "Name 'Sarah' written on the inside cover."
+            "description": "Stewart Calculus 8th Edition, hardbound.",
+            "location_zone": "Auditorium Row F",
+            "found_time": datetime.utcnow() - timedelta(days=2),
+            "safe_photo_url": "https://images.unsplash.com/photo-1544716124-05952d83ff44?w=800",
+            "contact_full_name": "Staff Lounge"
         }
     ]
 
@@ -88,7 +96,13 @@ def seed_data():
         embedding_json = AIService.generate_embedding(combined_text)
         
         new_item = database.FoundItem(
-            **item_data,
+            item_name=item_data["item_name"],
+            category=item_data["category"],
+            description=item_data["description"],
+            location_zone=item_data["location_zone"],
+            found_time=item_data["found_time"],
+            safe_photo_url=item_data["safe_photo_url"],
+            contact_full_name=item_data["contact_full_name"],
             finder_id=admin_user.id,
             embedding=embedding_json,
             found_time=datetime.utcnow()

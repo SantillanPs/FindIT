@@ -100,8 +100,8 @@ const MatchResults = () => {
                   <div>
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                       <div className="space-y-1">
-                        <div className="text-[9px] md:text-[10px] font-black text-uni-400 uppercase tracking-widest mb-1">Item Preview</div>
-                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight">{item.category} recovered</h3>
+                        <div className="text-[9px] md:text-[10px] font-black text-uni-400 uppercase tracking-widest mb-1">{item.category} recovered</div>
+                        <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight">{item.item_name}</h3>
                       </div>
                       <div className={`px-3 md:px-4 py-1.5 rounded-full text-[9px] md:text-[10px] font-black tracking-widest border uppercase ${
                         similarity_score >= 0.8 ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-uni-500/10 text-uni-400 border-uni-500/20'

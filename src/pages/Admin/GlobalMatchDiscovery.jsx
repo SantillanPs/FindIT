@@ -136,12 +136,6 @@ const GlobalMatchDiscovery = () => {
                              </div>
                          </div>
                       </div>
-                      <div className="p-5 md:p-6 bg-uni-500/5 rounded-2xl md:rounded-3xl border border-uni-500/10">
-                         <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest mb-3">Internal Staff Notes</p>
-                         <p className="text-slate-300 text-[11px] md:text-xs font-bold leading-relaxed italic">
-                            {group.found_item.private_admin_notes || "No extra identifying details recorded."}
-                         </p>
-                      </div>
                    </div>
 
                    {/* Potential Matches */}

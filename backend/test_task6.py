@@ -40,7 +40,7 @@ def test_task6():
 
     # 2. Complete flow to CLAIMED status
     print("\nFinder reporting a Found Item...")
-    found_data = {"category": "Wallets", "description": "Brown leather wallet", "location_zone": "Cafeteria", "private_admin_notes": "Contains a student ID for Sarah Smith."}
+    found_data = {"category": "Wallets", "description": "Brown leather wallet", "location_zone": "Cafeteria"}
     found_id = requests.post(f"{BASE_URL}/found/report", json=found_data, headers=finder_headers).json().get("id")
 
     print("\nOwner submitting a claim...")

@@ -22,8 +22,7 @@ def test_task4():
     found_data = {
         "category": "Bags",
         "description": "A bright red backpack with black straps",
-        "location_zone": "Student Center",
-        "private_admin_notes": "Contains a math textbook."
+        "location_zone": "Student Center"
     }
     requests.post(f"{BASE_URL}/found/report", json=found_data, headers=headers)
 
@@ -32,8 +31,7 @@ def test_task4():
     noise_data = {
         "category": "Wallets",
         "description": "Small blue leather wallet",
-        "location_zone": "Library",
-        "private_admin_notes": "ID inside: John Doe."
+        "location_zone": "Library"
     }
     requests.post(f"{BASE_URL}/found/report", json=noise_data, headers=headers)
 

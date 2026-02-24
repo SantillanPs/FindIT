@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
+import ImageUpload from '../components/ImageUpload';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -79,11 +80,13 @@ const Register = () => {
             <div className="space-y-2 text-left">
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
               <input 
-                placeholder="id@univ.edu"
+                placeholder="yourname@nemsu.edu.ph"
                 type="email" 
                 className="input-field"
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
+                pattern="[a-zA-Z0-9._%+-]+@nemsu\.edu\.ph"
+                title="Please use your institutional email (@nemsu.edu.ph)"
                 required 
               />
             </div>
@@ -157,15 +160,14 @@ const Register = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Identification (URL)</label>
-                    <input 
-                      placeholder="Link to your ID photo"
-                      type="text" 
-                      className="input-field bg-black/20"
-                      value={proofUrl} 
-                      onChange={(e) => setProofUrl(e.target.value)} 
-                      required={role === 'student'} 
+                    <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Institutional ID (Required for Verification)</label>
+                    <ImageUpload 
+                      value={proofUrl}
+                      onUploadSuccess={(url) => setProofUrl(url)}
                     />
+                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-2 italic text-left">
+                       Your ID will be reviewed by staff to verify your student status.
+                    </p>
                   </div>
                 </div>
               </motion.div>

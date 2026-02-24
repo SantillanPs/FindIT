@@ -1,6 +1,7 @@
 import requests
+from datetime import datetime
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 def test_task5():
     # Helper to Ensure user exists
@@ -24,13 +25,15 @@ def test_task5():
 
     # 2. Finder reports an item
     print("\nFinder reporting a Found Item...")
-    found_data = {
-        "category": "Electronics",
-        "description": "Black Bose Headphones",
-        "location_zone": "Gym",
-        "private_admin_notes": "Left ear cushion is slightly torn."
+    found_item = {
+        "item_name": "iPhone 13",
+        "description": "Blue iPhone 13 in a clear case",
+        "category": "Cellphone",
+        "location_zone": "Library",
+        "found_time": datetime.utcnow().isoformat(),
+        "contact_full_name": "Staff Member"
     }
-    resp = requests.post(f"{BASE_URL}/found/report", json=found_data, headers=finder_headers)
+    resp = requests.post(f"{BASE_URL}/found/report", json=found_item, headers=finder_headers)
     found_id = resp.json().get("id")
     print(f"Found Item ID: {found_id}")
 

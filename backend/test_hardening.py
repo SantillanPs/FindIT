@@ -36,7 +36,7 @@ def test_hardening():
 
     # 3. Verify Verification Gate
     print("\nTesting verification gate...")
-    found_data = {"category": "Electronics", "description": "iPhone 13", "location_zone": "Library", "private_admin_notes": "Black case"}
+    found_data = {"category": "Cell Phones", "description": "iPhone 13", "location_zone": "Library"}
     resp = requests.post(f"{BASE_URL}/found/report", json=found_data, headers=student_headers)
     if resp.status_code == 403:
         print("SUCCESS: Unverified student blocked from reporting.")
@@ -70,22 +70,22 @@ def test_hardening():
     # 6. Matching Pre-filters
     print("\nTesting matching pre-filters...")
     # Report a lost item in a DIFFERENT category
-    lost_data = {"category": "Books", "description": "Math textbook", "location_zone": "Library", "private_proof_details": "My name on p1"}
+    lost_data = {"category": "Book", "description": "Math textbook", "location_zone": "Library", "private_proof_details": "My name on p1"}
     lost_report = requests.post(f"{BASE_URL}/lost/report", json=lost_data, headers=student_headers).json()
     lost_id = lost_report["id"]
     
     matches = requests.get(f"{BASE_URL}/lost/{lost_id}/matches", headers=student_headers).json()
-    print(f"Matches for 'Books' when only 'Electronics' exists: {len(matches)}")
+    print(f"Matches for 'Book' when only 'Cellphone' exists: {len(matches)}")
     if len(matches) == 0:
         print("SUCCESS: Pre-filter blocked non-matching category.")
     else:
         print("FAILED: Pre-filter did not block non-matching category.")
 
     # Report matching lost item
-    lost_data_match = {"category": "Electronics", "description": "Phone", "location_zone": "Library", "private_proof_details": "FaceID"}
+    lost_data_match = {"category": "Cellphone", "description": "Phone", "location_zone": "Library", "private_proof_details": "FaceID"}
     lost_report_match = requests.post(f"{BASE_URL}/lost/report", json=lost_data_match, headers=student_headers).json()
     matches_match = requests.get(f"{BASE_URL}/lost/{lost_report_match['id']}/matches", headers=student_headers).json()
-    print(f"Matches for 'Electronics': {len(matches_match)}")
+    print(f"Matches for 'Cellphone': {len(matches_match)}")
     if len(matches_match) > 0:
         print("SUCCESS: Found match after pre-filter.")
     else:

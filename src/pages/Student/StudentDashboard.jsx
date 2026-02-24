@@ -93,7 +93,7 @@ const StudentDashboard = () => {
                 <ActivityItem 
                   key={report.id}
                   type="lost"
-                  title={report.category}
+                  title={report.item_name}
                   subtitle={`FILE-${report.id.toString().padStart(4, '0')}`}
                   status={report.status}
                   actionLabel="Check Matches"
@@ -129,7 +129,7 @@ const StudentDashboard = () => {
                 <ActivityItem 
                   key={item.id}
                   type="found"
-                  title={item.category}
+                  title={item.item_name}
                   subtitle={`REF-${item.id.toString().padStart(4, '0')}`}
                   status={item.status}
                 />

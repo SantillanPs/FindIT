@@ -38,6 +38,11 @@ class User(Base):
     student_id_number = Column(String, unique=True, index=True, nullable=True)
     verification_proof_url = Column(String, nullable=True)
     
+    # Reputation System
+    integrity_points = Column(Integer, default=0) # Earned by returning items
+    fraud_strikes = Column(Integer, default=0)    # Penalized for fake claims
+    is_blacklisted = Column(Boolean, default=False)
+    
     found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder")
     notifications = relationship("Notification", back_populates="user")
 
@@ -45,6 +50,7 @@ class FoundItem(Base):
     __tablename__ = "found_items"
 
     id = Column(Integer, primary_key=True, index=True)
+    item_name = Column(String, index=True)
     category = Column(String, index=True)
     description = Column(Text)
     location_zone = Column(String)
@@ -58,12 +64,17 @@ class FoundItem(Base):
     identified_student_id = Column(String, nullable=True) # ID number found on item
     identified_name = Column(String, nullable=True) # Name found on item
     
+    # Ownership/Tracking
+    finder_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Modified to be nullable for guests
+    contact_full_name = Column(String, nullable=True) # Modified from contact_email for guest reports
+    
     # Release Metadata
     released_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    released_to_name = Column(String, nullable=True) # For walk-ins without accounts
+    released_to_id_number = Column(String, nullable=True) # Official school ID for logging
     released_by_name = Column(String, nullable=True)
     released_at = Column(DateTime, nullable=True)
     
-    finder_id = Column(Integer, ForeignKey("users.id"))
     finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
     released_to = relationship("User", foreign_keys=[released_to_id])
 
@@ -71,16 +82,18 @@ class LostItem(Base):
     __tablename__ = "lost_items"
 
     id = Column(Integer, primary_key=True, index=True)
+    item_name = Column(String, index=True)
     category = Column(String, index=True)
     description = Column(Text)
     location_zone = Column(String)
     last_seen_time = Column(DateTime, default=datetime.utcnow)
-    private_proof_details = Column(Text)
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
     
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    contact_email = Column(String, nullable=True) # For guest reports
+    guest_full_name = Column(String, nullable=True)
+    guest_email = Column(String, nullable=True)
+    tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
     owner = relationship("User", back_populates="lost_items")
 
 class AuditLog(Base):
@@ -124,7 +137,10 @@ class Claim(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     found_item_id = Column(Integer, ForeignKey("found_items.id"))
-    student_id = Column(Integer, ForeignKey("users.id"))
+    student_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    guest_full_name = Column(String, nullable=True)
+    guest_email = Column(String, nullable=True)
+    tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest tracking
     proof_description = Column(Text)
     proof_photo_url = Column(String, nullable=True)
     status = Column(String, default=ClaimStatus.PENDING.value)
@@ -133,6 +149,18 @@ class Claim(Base):
     
     found_item = relationship("FoundItem")
     student = relationship("User", back_populates="claims")
+
+class CategoryStat(Base):
+    __tablename__ = "category_stats"
+    category_id = Column(String, primary_key=True)
+    hit_count = Column(Integer, default=0)
+
+class OtherSuggestion(Base):
+    __tablename__ = "other_suggestions"
+    id = Column(Integer, primary_key=True, index=True)
+    suggested_name = Column(String, unique=True)
+    hit_count = Column(Integer, default=1)
+    last_reported_at = Column(DateTime, default=datetime.utcnow)
 
 def init_db():
     Base.metadata.create_all(bind=engine)

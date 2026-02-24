@@ -9,40 +9,36 @@ def seed_complex_matches():
     
     # 1. High Match: iPhone 15 Pro
     found_iphone = database.FoundItem(
-        category="Electronics",
+        category="Cellphone",
         description="Found an iPhone 15 Pro, titanium blue, near the cafeteria.",
-        location_zone="Cafeteria",
-        private_admin_notes="Has a cracked screen protector. IMEI: 12345",
-        status="reported",
-        embedding=AIService.generate_embedding("Electronics: Found an iPhone 15 Pro, titanium blue, near the cafeteria.")
+        location_zone="Library 2nd Floor",
+        embedding=AIService.generate_embedding("Cell Phones: Found an iPhone 15 Pro, titanium blue, near the cafeteria.")
     )
     lost_iphone = database.LostItem(
-        category="Electronics",
+        category="Cellphone",
         description="Lost my new iPhone 15 Pro (Blue Titanium) somewhere near the dining area.",
         location_zone="Cafeteria",
         private_proof_details="Wallpaper is a photo of a golden retriever.",
         status="reported",
         user_id=2,
-        embedding=AIService.generate_embedding("Electronics: Lost my new iPhone 15 Pro (Blue Titanium) somewhere near the dining area.")
+        embedding=AIService.generate_embedding("Cell Phones: Lost my new iPhone 15 Pro (Blue Titanium) somewhere near the dining area.")
     )
     
     # 2. Medium Match: Scientific Calculator
     found_calc = database.FoundItem(
-        category="Stationery",
+        category="Book",
         description="Casio Scientific Calculator, black.",
-        location_zone="Engineering Hall",
-        private_admin_notes="Student name 'Juan' scratched on back.",
-        status="reported",
-        embedding=AIService.generate_embedding("Stationery: Casio Scientific Calculator, black.")
+        location_zone="Student Center Cafeteria",
+        embedding=AIService.generate_embedding("Books & Stationery: Casio Scientific Calculator, black.")
     )
     lost_calc = database.LostItem(
-        category="Stationery",
+        category="Book",
         description="Lost my black calculator (Casio) in the engineering building.",
         location_zone="Engineering Hall",
         private_proof_details="Has an 'Engineering' sticker.",
         status="reported",
         user_id=2,
-        embedding=AIService.generate_embedding("Stationery: Lost my black calculator (Casio) in the engineering building.")
+        embedding=AIService.generate_embedding("Books & Stationery: Lost my black calculator (Casio) in the engineering building.")
     )
     
     db.add(found_iphone)

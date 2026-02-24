@@ -9,6 +9,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import GuestReportItem from './pages/GuestReportItem';
+import GuestReportFound from './pages/GuestReportFound';
 
 // Student Pages
 import StudentDashboard from './pages/Student/StudentDashboard';
@@ -17,7 +18,9 @@ import ReportLostItem from './pages/Student/ReportLostItem';
 import FoundPublicFeed from './pages/Student/FoundPublicFeed';
 import MatchResults from './pages/Student/MatchResults';
 import SubmitClaim from './pages/Student/SubmitClaim';
+import ClaimStatus from './pages/Student/ClaimStatus';
 import MyClaims from './pages/Student/MyClaims';
+import LostReportStatus from './pages/Student/LostReportStatus';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -49,6 +52,11 @@ const AppContent = () => {
           user?.role === 'admin' ? <Navigate to="/admin" replace /> : <Navigate to="/student" replace />
         } />
         <Route path="/report-lost-guest" element={<GuestReportItem />} />
+        <Route path="/report-found-guest" element={<GuestReportFound />} />
+        <Route path="/submit-claim/:itemId" element={<SubmitClaim />} />
+        <Route path="/claim-status/:trackingId" element={<ClaimStatus />} />
+        <Route path="/report/lost" element={<ReportLostItem />} />
+        <Route path="/lost-report-status/:trackingId" element={<LostReportStatus />} />
 
         <Route element={<GuestRoute />}>
           <Route path="/login" element={<Login />} />
@@ -66,9 +74,7 @@ const AppContent = () => {
           {/* Verified-Only Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={['student']} requireVerification={true} />}>
             <Route path="/report/found" element={<ReportFoundItem />} />
-            <Route path="/report/lost" element={<ReportLostItem />} />
             <Route path="/lost/:reportId/matches" element={<MatchResults />} />
-            <Route path="/submit-claim/:itemId" element={<SubmitClaim />} />
           </Route>
 
           {/* Admin Routes */}

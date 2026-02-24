@@ -1,4 +1,5 @@
 import requests
+from datetime import datetime
 
 BASE_URL = "http://127.0.0.1:8000/api/v1"
 
@@ -13,10 +14,11 @@ def test_match_details():
 
     print("\nCreating a matching lost item report...")
     lost_data = {
-        "category": "Electronics",
-        "description": "Space Gray iPad",
-        "location_zone": "Engineering Hall",
-        "private_proof_details": "This is my private proof: It has a blue keyboard case."
+        "item_name": "iPhone 13",
+        "description": "Lost my blue iPhone 13",
+        "category": "Cellphone",
+        "location_zone": "Library",
+        "last_seen_time": datetime.utcnow().isoformat()
     }
     # Using verified student for lost report
     student_login = requests.post(f"{BASE_URL}/auth/login", data={"username": "verified@student.edu", "password": "pass"})

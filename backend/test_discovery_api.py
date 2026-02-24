@@ -21,7 +21,7 @@ def test_discovery_api():
             found_item = first_group.get("found_item", {})
             print(f"Found Item ID: {found_item.get('id')}")
             print(f"Found Item Category: {found_item.get('category')}")
-            print(f"Found Item Private Notes: {found_item.get('private_admin_notes')}")
+            # Removed private notes check
         else:
             print("No match groups found.")
     else:

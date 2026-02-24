@@ -24,6 +24,18 @@ def migrate():
             print("Adding full_name to users table...")
             cursor.execute("ALTER TABLE users ADD COLUMN full_name TEXT")
         
+        if 'integrity_points' not in columns:
+            print("Adding integrity_points to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN integrity_points INTEGER DEFAULT 0")
+            
+        if 'fraud_strikes' not in columns:
+            print("Adding fraud_strikes to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN fraud_strikes INTEGER DEFAULT 0")
+            
+        if 'is_blacklisted' not in columns:
+            print("Adding is_blacklisted to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN is_blacklisted BOOLEAN DEFAULT 0")
+        
         # In case other columns are missing from recent updates
         # FoundItem additions?
         cursor.execute("PRAGMA table_info(found_items)")

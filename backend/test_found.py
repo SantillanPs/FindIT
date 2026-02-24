@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 def test_found_items():
     # 1. Login as Student
@@ -13,10 +13,9 @@ def test_found_items():
     # 2. Report Found Item
     print("\nReporting Found Item...")
     found_data = {
-        "category": "Electronics",
+        "category": "Cellphone",
         "description": "Blue wireless earbuds in a black case",
-        "location_zone": "Library 2nd Floor",
-        "private_admin_notes": "Serial number: SN12345. Case has a small scratch."
+        "category": "Wallets", "description": "Brown leather wallet", "location_zone": "Cafeteria"
     }
     resp = requests.post(f"{BASE_URL}/found/report", json=found_data, headers=student_headers)
     print(f"Report Status: {resp.status_code}")

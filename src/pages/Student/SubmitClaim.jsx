@@ -2,16 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
+import ImageUpload from '../../components/ImageUpload';
 import { useAuth } from '../../context/AuthContext';
 
 const SubmitClaim = () => {
   const { itemId } = useParams();
   const [item, setItem] = useState(null);
   const [proof, setProof] = useState('');
-  const [proofPhotoUrl, setProofPhotoUrl] = useState('');
+  const [proofPhotoUrl, setProofPhotoUrl] = useState(''); // Added missing state
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  
+  // Guest State
+  const [guestName, setGuestName] = useState('');
+  const [guestEmail, setGuestEmail] = useState('');
+  const [trackingId, setTrackingId] = useState('');
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -37,22 +44,30 @@ const SubmitClaim = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user?.is_verified) {
-      setError('Authorized institutional verification required for this action.');
-      return;
-    }
     setSubmitting(true);
     setError('');
 
     try {
-      await apiClient.post('/claims/submit', {
+      const payload = {
         found_item_id: parseInt(itemId),
         proof_description: proof,
         proof_photo_url: proofPhotoUrl
-      });
-      navigate('/my-claims');
+      };
+
+      if (!user) {
+        payload.guest_full_name = guestName;
+        payload.guest_email = guestEmail;
+      }
+
+      const response = await apiClient.post('/claims/submit', payload);
+      
+      if (!user && response.data.tracking_id) {
+        setTrackingId(response.data.tracking_id);
+      } else {
+        navigate('/my-claims');
+      }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Submission failure. Protocol violation.');
+      setError(err.response?.data?.detail || 'Submission failure. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -81,6 +96,40 @@ const SubmitClaim = () => {
     </div>
   );
 
+  if (trackingId) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-2xl mx-auto glass-panel p-12 md:p-20 text-center space-y-10 rounded-[2.5rem] border-uni-500/20 shadow-2xl shadow-uni-500/10"
+      >
+        <div className="w-24 h-24 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-uni-500/20">
+            <i className="fa-solid fa-check text-4xl text-uni-400"></i>
+        </div>
+        <div className="space-y-4">
+            <h2 className="text-3xl font-black text-white uppercase tracking-tight">Claim Submitted Successfully</h2>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs leading-relaxed max-w-sm mx-auto">
+                We've sent a tracking link to <span className="text-white">{guestEmail}</span>. Please save the link below to check your status.
+            </p>
+        </div>
+
+        <div className="p-6 bg-slate-950 rounded-2xl border border-white/10 space-y-3">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Your Magic Tracking Link</span>
+            <p className="text-uni-400 font-black tracking-widest text-[11px] break-all select-all">
+                {window.location.origin}/claim-status/{trackingId}
+            </p>
+        </div>
+
+        <div className="pt-6">
+            <Link to="/" className="inline-flex items-center gap-3 bg-white text-black px-10 py-4 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all">
+                Return to Registry
+                <i className="fa-solid fa-arrow-right text-[10px]"></i>
+            </Link>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       initial="hidden"
@@ -89,9 +138,9 @@ const SubmitClaim = () => {
       className="max-w-3xl mx-auto space-y-10"
     >
       <motion.header className="space-y-4 text-left" variants={itemVariants}>
-        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">Claim This Item</h1>
-        <p className="text-slate-500 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed">
-          If you believe this item belongs to you, please provide proof of ownership. A staff member will review your claim.
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Submit Claim</h1>
+        <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest leading-relaxed">
+          Provide identification and proof of ownership to recover your item.
         </p>
       </motion.header>
 
@@ -100,26 +149,28 @@ const SubmitClaim = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel p-20 bg-red-500/5 border-red-500/20 text-red-500 text-center font-black uppercase tracking-widest text-[11px] rounded-[2rem]"
+            className="p-12 bg-red-500/5 border border-red-500/20 text-red-500 text-center font-black uppercase tracking-widest text-[11px] rounded-[2rem]"
           >
-            <i className="fa-solid fa-triangle-exclamation text-2xl mb-4 block"></i>
             {error}
           </motion.div>
         ) : (
           <motion.div className="space-y-10" variants={containerVariants}>
-            {/* Item Preview */}
+            {/* Item Preview - Clean Logic */}
             <motion.div 
               variants={itemVariants}
-              className="glass-panel p-6 sm:p-8 bg-uni-500/5 border-uni-500/20 rounded-[1.5rem] md:rounded-[2rem] flex flex-col sm:flex-row gap-6 md:gap-8 items-center text-left"
+              className="p-8 bg-white/5 border border-white/10 rounded-[2rem] flex flex-col sm:flex-row gap-8 items-center text-left"
             >
-               <div className="w-16 h-16 md:w-24 md:h-24 bg-slate-900 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 border border-white/5 shadow-inner">
-                  <span className="text-3xl md:text-5xl">📦</span>
+               <div className="w-24 h-24 bg-slate-950 rounded-2xl flex items-center justify-center shrink-0 border border-white/5 overflow-hidden">
+                  {item.safe_photo_url ? (
+                    <img src={item.safe_photo_url} alt="" className="w-full h-full object-cover opacity-80" />
+                  ) : (
+                    <span className="text-4xl opacity-20">📦</span>
+                  )}
                </div>
-               <div className="text-center sm:text-left">
-                 <div className="text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Item Details</div>
-                 <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight mb-2 font-displayLeading-tight">{item.category} recovered</h3>
-                 <p className="text-[10px] md:text-[11px] text-slate-500 font-black uppercase tracking-widest">
-                   Found near <span className="text-white italic">{item.location_zone}</span> on {new Date(item.found_time).toLocaleDateString()}
+               <div className="text-center sm:text-left space-y-1">
+                 <h3 className="text-2xl font-black text-white uppercase tracking-tight">{item.item_name}</h3>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                   Found near {item.location_zone} • {new Date(item.found_time).toLocaleDateString()}
                  </p>
                </div>
             </motion.div>
@@ -128,54 +179,79 @@ const SubmitClaim = () => {
             <motion.form 
               onSubmit={handleSubmit} 
               variants={itemVariants}
-              className="glass-panel p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8 rounded-[2rem] md:rounded-[2.5rem] bg-white/5 border border-white/5 text-left"
+              className="p-8 md:p-12 space-y-10 rounded-[2.5rem] bg-slate-900/40 border border-white/10 text-left backdrop-blur-sm"
             >
+              {/* Guest Identity Section */}
+              {!user && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
+                        <input 
+                            type="text"
+                            required
+                            placeholder="Your real name"
+                            className="input-field py-4 text-[11px] font-bold tracking-widest"
+                            value={guestName}
+                            onChange={(e) => setGuestName(e.target.value)}
+                        />
+                    </div>
+                    <div className="space-y-3">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">University Email</label>
+                        <input 
+                            type="email"
+                            required
+                            placeholder="yourname@nemsu.edu.ph"
+                            className="input-field py-4 text-[11px] font-bold tracking-widest"
+                            value={guestEmail}
+                            onChange={(e) => setGuestEmail(e.target.value)}
+                            pattern="[a-zA-Z0-9._%+-]+@nemsu\.edu\.ph"
+                            title="Please use your institutional email (@nemsu.edu.ph)"
+                        />
+                    </div>
+                </div>
+              )}
+
               <div className="space-y-3">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  How do we know it's yours?
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  How do you know this is yours?
                 </label>
                 <textarea 
                   rows="4"
-                  placeholder="Unique features, contents, or serial number..."
+                  placeholder="Describe unique details (e.g., lock screen photo, internal contents, stickers, serial numbers)..."
                   className="input-field min-h-[140px] text-[11px] font-bold tracking-widest pt-4 resize-none"
                   value={proof}
                   onChange={(e) => setProof(e.target.value)}
                   required
                 />
-                <p className="text-[8px] md:text-[9px] text-slate-600 font-black uppercase tracking-widest px-1 leading-relaxed italic">
-                  Example: Cracked screen, specific stickers, or contents inside.
-                </p>
               </div>
 
               <div className="space-y-3">
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
-                  Supporting Document Link (Optional)
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  Supporting Photo (Receipt/Old item photo)
                 </label>
-                <input 
-                  type="text"
-                  placeholder="Link to a photo of your receipt, ID, or the item in your possession..."
-                  className="input-field font-bold text-[11px] tracking-widest"
+                <ImageUpload 
                   value={proofPhotoUrl}
-                  onChange={(e) => setProofPhotoUrl(e.target.value)}
+                  onUploadSuccess={(url) => setProofPhotoUrl(url)}
                 />
               </div>
 
-              <div className="pt-8 md:pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
-                <Link to="/public-feed" className="order-2 md:order-1 text-[10px] font-black text-slate-700 hover:text-white uppercase tracking-widest transition-all">
+              {error && (
+                <p className="text-[10px] font-bold text-red-500 bg-red-500/5 px-4 py-3 rounded-lg border border-red-500/10 uppercase tracking-widest">
+                  {error}
+                </p>
+              )}
+
+              <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+                <Link to="/" className="text-[10px] font-black text-slate-600 hover:text-white uppercase tracking-widest transition-all">
                     Cancel
                 </Link>
-                <div className="order-1 md:order-2 flex flex-col sm:flex-row items-center gap-6 w-full md:w-auto">
-                    <p className="hidden md:block text-[9px] text-slate-600 font-black uppercase tracking-widest max-w-[200px] text-right leading-relaxed italic">
-                        Staff will review this claim. You'll be notified of the decision.
-                    </p>
-                    <button 
-                        type="submit" 
-                        disabled={submitting || !user?.is_verified} 
-                        className="bg-uni-600 hover:bg-uni-500 text-white w-full md:w-auto px-12 py-4 rounded-xl md:rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20 hover:scale-[1.02] disabled:opacity-30"
-                    >
-                        {submitting ? 'Submitting...' : 'Submit Claim'}
-                    </button>
-                </div>
+                <button 
+                    type="submit" 
+                    disabled={submitting} 
+                    className="bg-white text-black px-12 py-5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all shadow-xl active:scale-95 disabled:opacity-30 w-full md:w-auto"
+                >
+                    {submitting ? 'Submitting Claim...' : 'Submit Claim'}
+                </button>
               </div>
             </motion.form>
           </motion.div>

@@ -18,7 +18,7 @@ def cleanup_and_add_unique():
     
     print("Adding a new unique lost report...")
     unique_data = {
-        "category": "Electronics",
+        "category": "Cellphone",
         "description": "MacBook Air with a custom laser engraving",
         "location_zone": "Engineering Hall",
         "private_proof_details": "Unique Proof: The engraving says 'Property of Admin' on the bottom.",

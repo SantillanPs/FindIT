@@ -50,7 +50,8 @@ const Landing = () => {
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.location_zone.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
@@ -97,13 +98,13 @@ const Landing = () => {
             className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4"
           >
             <button 
-                onClick={() => navigate(user ? '/report-lost' : '/report-lost-guest')}
+                onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
                 className="bg-uni-600 hover:bg-uni-500 text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl shadow-uni-500/20 hover:scale-[1.05]"
             >
                 Report a lost item
             </button>
             <button 
-                onClick={() => navigate(user ? '/report-found' : '/login')}
+                onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
                 className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-[1.05]"
             >
                 I found something
@@ -155,7 +156,7 @@ const Landing = () => {
                    </div>
 
                    <p className="text-slate-400 text-xs font-bold leading-relaxed line-clamp-2">
-                     A {item.category} recovered at {item.location_zone}.
+                     A {item.item_name} recovered at {item.location_zone}.
                    </p>
 
                    <div className="pt-6 border-t border-white/5 flex gap-3">
@@ -200,16 +201,29 @@ const Landing = () => {
                   />
               </div>
               <select 
-                className="input-field sm:w-48 font-black uppercase text-[10px] tracking-widest"
+                className="input-field sm:w-64 font-black uppercase text-[10px] tracking-widest"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="all">Every Category</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Books">Books</option>
-                <option value="Personal Effects">Personal Effects</option>
+                <option value="Cellphone">Cellphone</option>
+                <option value="Laptop">Laptop</option>
+                <option value="Tablet">Tablet</option>
+                <option value="ID Card">ID Card</option>
+                <option value="Wallet">Wallet</option>
+                <option value="Bag / Backpack">Bag / Backpack</option>
                 <option value="Keys">Keys</option>
+                <option value="Headphones / Earbuds">Headphones / Earbuds</option>
+                <option value="Watch / Wearable">Watch / Wearable</option>
+                <option value="Water Bottle">Water Bottle</option>
+                <option value="Umbrella">Umbrella</option>
+                <option value="Eyewear">Eyewear</option>
+                <option value="Book">Book</option>
+                <option value="Notebook">Notebook</option>
+                <option value="Stationery">Stationery</option>
+                <option value="Clothing">Clothing</option>
                 <option value="Accessories">Accessories</option>
+                <option value="Other">Other</option>
               </select>
            </div>
         </div>
@@ -253,9 +267,10 @@ const Landing = () => {
                             </div>
                         </div>
                         <div className="p-8 text-left flex flex-col flex-grow">
-                            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-3 group-hover:text-uni-400 transition-colors">
-                                {item.category} recovered
+                            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-1 group-hover:text-uni-400 transition-colors">
+                                {item.item_name}
                             </h3>
+                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">{item.category} recovered</div>
                             <p className="text-slate-400 text-xs italic line-clamp-2 leading-relaxed mb-8 flex-grow">"{item.description}"</p>
                             <div className="flex items-center justify-between pt-6 border-t border-white/5">
                                 <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
@@ -270,6 +285,79 @@ const Landing = () => {
                 ))}
             </div>
         )}
+      </section>
+
+      {/* Hall of Integrity / Leaderboard Section */}
+      <section className="max-w-7xl mx-auto px-4 py-20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-uni-500/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
+        
+        <div className="flex flex-col md:flex-row gap-16 items-center">
+            <div className="md:w-1/2 space-y-8 text-left">
+                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
+                    <i className="fa-solid fa-trophy"></i>
+                    Honor System Active
+                </div>
+                <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
+                <p className="text-slate-400 text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
+                    Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
+                </p>
+                <div className="flex items-center gap-6 pt-4 border-t border-white/5">
+                    <div className="flex -space-x-3">
+                        {[1,2,3,4].map(i => (
+                            <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-black text-white italic">
+                                S{i}
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
+                        <span className="text-white">124+ Students</span> <br/>
+                        Recognized this semester
+                    </p>
+                </div>
+            </div>
+
+            <div className="md:w-1/2 w-full">
+                <div className="glass-panel p-8 md:p-10 rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-md relative">
+                    <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl">Top List</div>
+                    
+                    <div className="space-y-6">
+                        {[
+                            { email: 'm***n@university.edu', points: 125, rank: 1, icon: '👑' },
+                            { email: 's***j@university.edu', points: 90, rank: 2, icon: '🔥' },
+                            { email: 'a***p@university.edu', points: 75, rank: 3, icon: '✨' },
+                            { email: 'p***z@university.edu', points: 40, rank: 4, icon: '🛡️' },
+                            { email: 'k***l@university.edu', points: 35, rank: 5, icon: '🔰' }
+                        ].map((student, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${
+                                        i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 
+                                        i === 1 ? 'bg-slate-400/20 text-slate-400 border border-slate-400/20' :
+                                        i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/20' :
+                                        'bg-white/5 text-slate-500 border border-white/5'
+                                    }`}>
+                                        {student.rank}
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[11px] font-black text-white tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
+                                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                        <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.points} IP</p>
+                                        <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+                                            <div className="h-full bg-uni-400" style={{ width: `${(student.points/125)*100}%` }}></div>
+                                        </div>
+                                    </div>
+                                    <span className="text-xl">{student.icon}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
       </section>
 
       {/* Item Detail Modal */}
@@ -310,14 +398,14 @@ const Landing = () => {
                             <span className="px-4 py-1 bg-uni-500/10 text-uni-400 text-[10px] font-black rounded-full border border-uni-500/20 uppercase tracking-widest">{selectedItem.category}</span>
                             <span className="px-4 py-1 bg-white/5 text-slate-400 text-[10px] font-black rounded-full border border-white/5 uppercase tracking-widest">{selectedItem.location_zone}</span>
                         </div>
-                        <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 font-display leading-[0.9]">Item <br />Recovered</h3>
+                        <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 font-display leading-[0.9]">{selectedItem.item_name}</h3>
                         <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8">Logged on {new Date(selectedItem.found_time).toLocaleDateString()}</p>
                         <p className="text-slate-200 mb-10 text-lg leading-relaxed font-bold italic border-l-4 border-uni-500 pl-6 py-2">"{selectedItem.description}"</p>
                     </div>
 
                     <div className="space-y-4">
                         <button 
-                            onClick={() => navigate(`/login?redirect=/submit-claim/${selectedItem.id}`)}
+                            onClick={() => navigate(`/submit-claim/${selectedItem.id}`)}
                             className="w-full bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-uni-500/20 transition-all hover:scale-[1.02]"
                         >
                             This is mine

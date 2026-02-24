@@ -27,10 +27,7 @@ def test_task3():
     # 3. Report Found Item
     print("\nReporting Found Item (this will trigger AI embedding generation)...")
     found_data = {
-        "category": "Keys",
-        "description": "Keychain with a small silver bell",
-        "location_zone": "Cafeteria",
-        "private_admin_notes": "Found near the trash can."
+        "category": "Phones", "description": "iPhone 13 found.", "location_zone": "Building B"
     }
     resp = requests.post(f"{BASE_URL}/found/report", json=found_data, headers=student_headers)
     print(f"Report Status: {resp.status_code}")

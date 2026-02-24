@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "backend": "backend\\venv\\Scripts\\python backend/main.py",
+    "dev": "powershell -File scripts/kill_port.ps1 -Port 5173 && vite --host",
+    "backend": "powershell -File scripts/kill_port.ps1 -Port 8000 && backend\\venv\\Scripts\\python backend/main.py",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -14,9 +14,11 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
     "framer-motion": "^12.29.0",
+    "lucide-react": "^0.575.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.12.0",
+    "recharts": "^3.7.0",
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {

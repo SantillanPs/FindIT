@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import datetime
 
@@ -11,6 +11,24 @@ class UserCreate(UserBase):
     full_name: Optional[str] = None
     student_id_number: Optional[str] = None
     verification_proof_url: Optional[str] = None
+
+    @validator('email')
+    def validate_nemsu_email(cls, v):
+        if not v.endswith('@nemsu.edu.ph'):
+            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
+        return v
+
+class UpgradeGuestRequest(BaseModel):
+    email: EmailStr
+    full_name: str
+    student_id_number: str
+    password: Optional[str] = None
+
+    @validator('email')
+    def validate_nemsu_email(cls, v):
+        if not v.endswith('@nemsu.edu.ph'):
+            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
+        return v
 
 class UserLogin(UserBase):
     password: str
@@ -39,20 +57,22 @@ class TokenData(BaseModel):
 
 # Found Item Schemas
 class FoundItemBase(BaseModel):
-    category: str
+    item_name: str
+    category: Optional[str] = None
     description: str
     location_zone: str
     found_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
 
 class FoundItemCreate(FoundItemBase):
-    private_admin_notes: str
+    contact_full_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
 
 class FoundItemPublic(FoundItemBase):
     id: int
     status: str
+    contact_full_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
 
@@ -60,12 +80,14 @@ class FoundItemPublic(FoundItemBase):
         from_attributes = True
 
 class FoundItemDetail(FoundItemPublic):
-    private_admin_notes: str
+    private_admin_notes: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
     finder_id: Optional[int] = None
     embedding: Optional[str] = None
     released_to_id: Optional[int] = None
+    released_to_name: Optional[str] = None
+    released_to_id_number: Optional[str] = None
     released_by_name: Optional[str] = None
     released_at: Optional[datetime] = None
 
@@ -73,25 +95,39 @@ class ItemRelease(BaseModel):
     released_to_id: int
     released_by_name: str
 
+class ItemDirectRelease(BaseModel):
+    released_to_name: str
+    released_to_id_number: str
+    released_by_name: str
+
 class CustodyUpdate(BaseModel):
     notes: Optional[str] = None
 
 # Lost Item Schemas
 class LostItemBase(BaseModel):
-    category: str
+    item_name: str
+    category: Optional[str] = None
     description: str
     location_zone: str
     last_seen_time: Optional[datetime] = None
 
 class LostItemCreate(LostItemBase):
-    private_proof_details: str
-    contact_email: Optional[EmailStr] = None
+    guest_full_name: Optional[str] = None
+    guest_email: Optional[EmailStr] = None
+
+    @validator('guest_email')
+    def validate_nemsu_email(cls, v):
+        if v and not v.endswith('@nemsu.edu.ph'):
+            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
+        return v
 
 class LostItemResponse(LostItemBase):
     id: int
     status: str
     user_id: Optional[int] = None
-    contact_email: Optional[str] = None
+    guest_full_name: Optional[str] = None
+    guest_email: Optional[str] = None
+    tracking_id: Optional[str] = None
     embedding: Optional[str] = None
 
     class Config:
@@ -99,14 +135,16 @@ class LostItemResponse(LostItemBase):
 
 class LostItemPublic(BaseModel):
     id: int
-    category: str
+    item_name: str
+    category: Optional[str] = None
     description: str
     location_zone: str
     last_seen_time: Optional[datetime] = None
-    private_proof_details: str
     status: str
     user_id: Optional[int] = None
-    contact_email: Optional[str] = None
+    guest_full_name: Optional[str] = None
+    guest_email: Optional[str] = None
+    tracking_id: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -129,11 +167,22 @@ class ClaimCreate(BaseModel):
     found_item_id: int
     proof_description: str
     proof_photo_url: Optional[str] = None
+    guest_full_name: Optional[str] = None
+    guest_email: Optional[EmailStr] = None
+
+    @validator('guest_email')
+    def validate_nemsu_email(cls, v):
+        if v and not v.endswith('@nemsu.edu.ph'):
+            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
+        return v
 
 class ClaimResponse(BaseModel):
     id: int
     found_item_id: int
-    student_id: int
+    student_id: Optional[int] = None
+    guest_full_name: Optional[str] = None
+    guest_email: Optional[str] = None
+    tracking_id: Optional[str] = None
     proof_description: str
     proof_photo_url: Optional[str] = None
     status: str

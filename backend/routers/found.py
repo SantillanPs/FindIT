@@ -7,18 +7,99 @@ from ai_service import AIService
 
 router = APIRouter(tags=["Found Items"])
 
+@router.post("/found/report/guest", response_model=schemas.FoundItemPublic)
+def report_found_item_guest(
+    item: schemas.FoundItemCreate,
+    db: Session = Depends(auth.get_db)
+):
+    # Use provided category, fallback to item_name (the "title") as requested
+    category = item.category or item.item_name
+    
+    # Dynamic Stats logic
+    stat = db.query(database.CategoryStat).filter(database.CategoryStat.category_id == category).first()
+    if not stat:
+        stat = database.CategoryStat(category_id=category, hit_count=1)
+        db.add(stat)
+    else:
+        stat.hit_count += 1
+    
+    if category == "Other" and item.item_name:
+        suggestion = db.query(database.OtherSuggestion).filter(database.OtherSuggestion.suggested_name.ilike(item.item_name)).first()
+        if not suggestion:
+            suggestion = database.OtherSuggestion(suggested_name=item.item_name)
+            db.add(suggestion)
+        else:
+            suggestion.hit_count += 1
+            suggestion.last_reported_at = datetime.utcnow()
+    
+    combined_text = f"{item.item_name} ({category}): {item.description}"
+    embedding_json = AIService.generate_embedding(combined_text)
+
+    item_data = item.model_dump()
+    item_data['category'] = category
+
+    new_item = database.FoundItem(
+        **item_data,
+        finder_id=None,
+        embedding=embedding_json
+    )
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+
+    # AUTO-NOTIFY Logic
+    target_user = None
+    if item.identified_student_id:
+        target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
+    elif item.identified_name:
+        target_user = db.query(database.User).filter(database.User.full_name.ilike(item.identified_name)).first()
+
+    if target_user:
+        notification = database.Notification(
+            user_id=target_user.id,
+            title="Important: An Item with Your Name/ID was Found",
+            message=f"A '{item.item_name}' was recovered at {item.location_zone} that appears to belong to you. Please visit the office to verify and claim it.",
+            found_item_id=new_item.id
+        )
+        db.add(notification)
+        db.commit()
+
+    return new_item
+
 @router.post("/found/report", response_model=schemas.FoundItemPublic)
 def report_found_item(
     item: schemas.FoundItemCreate, 
     db: Session = Depends(auth.get_db),
     current_user: database.User = Depends(verified_student_required)
 ):
-    # Deep Secret Matching: Include private notes in the embedding for better semantic matching
-    combined_text = f"{item.category}: {item.description}. Private Info: {item.private_admin_notes}"
+    # Use provided category, fallback to item_name (the "title") as requested
+    category = item.category or item.item_name
+    
+    # Dynamic Stats logic
+    stat = db.query(database.CategoryStat).filter(database.CategoryStat.category_id == category).first()
+    if not stat:
+        stat = database.CategoryStat(category_id=category, hit_count=1)
+        db.add(stat)
+    else:
+        stat.hit_count += 1
+    
+    if category == "Other" and item.item_name:
+        suggestion = db.query(database.OtherSuggestion).filter(database.OtherSuggestion.suggested_name.ilike(item.item_name)).first()
+        if not suggestion:
+            suggestion = database.OtherSuggestion(suggested_name=item.item_name)
+            db.add(suggestion)
+        else:
+            suggestion.hit_count += 1
+            suggestion.last_reported_at = datetime.utcnow()
+
+    combined_text = f"{item.item_name} ({category}): {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
+    item_data = item.model_dump()
+    item_data['category'] = category
+
     new_item = database.FoundItem(
-        **item.model_dump(),
+        **item_data,
         finder_id=current_user.id,
         embedding=embedding_json
     )
@@ -55,8 +136,9 @@ def list_my_found_reports(
 
 @router.get("/found/public", response_model=list[schemas.FoundItemPublic])
 def list_public_found_items(db: Session = Depends(auth.get_db)):
+    # Items only appear in the public feed once they are in USG custody
     return db.query(database.FoundItem).filter(
-        database.FoundItem.status.in_([database.ItemStatus.REPORTED.value, database.ItemStatus.IN_CUSTODY.value])
+        database.FoundItem.status == database.ItemStatus.IN_CUSTODY.value
     ).all()
 
 @router.get("/admin/found", response_model=list[schemas.FoundItemDetail])
@@ -119,6 +201,41 @@ def release_item(
     db.refresh(found_item)
     
     log_audit(db, admin.id, "item_release", item_id=item_id, notes=f"Released to user {release.released_to_id} by {release.released_by_name}")
+    
+    return found_item
+
+@router.post("/admin/found/{item_id}/direct-release", response_model=schemas.FoundItemDetail)
+def direct_release_item(
+    item_id: int,
+    release: schemas.ItemDirectRelease,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    found_item = db.query(database.FoundItem).filter(database.FoundItem.id == item_id).first()
+    if not found_item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    # Allow release from most active statuses
+    if found_item.status in [database.ItemStatus.CLAIMED.value, database.ItemStatus.RELEASED.value]:
+        # If it's already released, we shouldn't release it again
+        if found_item.status == database.ItemStatus.RELEASED.value:
+            raise HTTPException(status_code=400, detail="Item is already released")
+    
+    # Try to find user by student ID if possible (for better linking)
+    actual_user = db.query(database.User).filter(database.User.student_id_number == release.released_to_id_number).first()
+    if actual_user:
+        found_item.released_to_id = actual_user.id
+
+    found_item.status = database.ItemStatus.RELEASED.value
+    found_item.released_to_name = release.released_to_name
+    found_item.released_to_id_number = release.released_to_id_number
+    found_item.released_by_name = release.released_by_name
+    found_item.released_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(found_item)
+    
+    log_audit(db, admin.id, "direct_release", item_id=item_id, notes=f"Directly released to {release.released_to_name} ({release.released_to_id_number}) by {release.released_by_name}")
     
     return found_item
 

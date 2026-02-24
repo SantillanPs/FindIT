@@ -4,6 +4,8 @@ from datetime import timedelta
 import database, schemas, auth
 from dependencies import admin_required, verified_student_required
 from ai_service import AIService
+from datetime import datetime
+import uuid
 
 router = APIRouter(tags=["Lost Items"])
 
@@ -23,9 +25,6 @@ def _calculate_hybrid_score(base_score, lost_item, found_item):
         
     if not found_item.location_zone or found_item.location_zone.strip() in ["", "Unknown", "none"]:
         final_score -= 0.10 # Penalty for missing found location
-        
-    if not found_item.private_admin_notes or len(found_item.private_admin_notes.strip()) < 3:
-        final_score -= 0.05 # Small penalty for missing finder proof (Master Record)
     
     # 1. Location Weighting
     if lost_item.location_zone and found_item.location_zone:
@@ -44,62 +43,125 @@ def _calculate_hybrid_score(base_score, lost_item, found_item):
         elif delta > 5:
             final_score -= 0.10 # Reduced confidence gap (per user request)
 
-    # 3. Secret Proof Cross-Check (Manual precision layer)
-    # This helps penalize mismatches that AI might miss if description is long
-    if lost_item.private_proof_details and found_item.private_admin_notes:
-        s1 = set(w for w in lost_item.private_proof_details.lower().split() if len(w) > 2)
-        s2 = set(w for w in found_item.private_admin_notes.lower().split() if len(w) > 2)
-        
-        if s1 and s2:
-            if s1.intersection(s2):
-                final_score += 0.05 # Boost for shared secret keywords
-            else:
-                final_score -= 0.05 # Small penalty for completely different secrets (per user request)
-            
     # Clamp results to reasonable range [0.01, 0.99]
     return max(0.01, min(0.99, final_score))
-
-@router.post("/lost/report", response_model=schemas.LostItemResponse)
-def report_lost_item(
-    item: schemas.LostItemCreate,
-    db: Session = Depends(auth.get_db),
-    current_user: database.User = Depends(verified_student_required)
-):
-    # Deep Secret Matching: Include private proof in the embedding for better semantic matching
-    combined_text = f"{item.category}: {item.description}. Proof: {item.private_proof_details}"
-    embedding_json = AIService.generate_embedding(combined_text)
-
-    new_item = database.LostItem(
-        **item.model_dump(),
-        user_id=current_user.id,
-        embedding=embedding_json
-    )
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-    return new_item
 
 @router.post("/lost/report/guest", response_model=schemas.LostItemResponse)
 def report_lost_item_guest(
     item: schemas.LostItemCreate,
     db: Session = Depends(auth.get_db)
 ):
-    if not item.contact_email:
-        raise HTTPException(status_code=400, detail="Contact email is required for guest reports")
+    # Use provided category, fallback to item_name (the "title") as requested
+    category = item.category or item.item_name
 
-    # Deep Secret Matching: Include private proof in the embedding for better semantic matching
-    combined_text = f"{item.category}: {item.description}. Proof: {item.private_proof_details}"
+    # Dynamic Stats logic
+    stat = db.query(database.CategoryStat).filter(database.CategoryStat.category_id == category).first()
+    if not stat:
+        stat = database.CategoryStat(category_id=category, hit_count=1)
+        db.add(stat)
+    else:
+        stat.hit_count += 1
+    
+    if category == "Other" and item.item_name:
+        suggestion = db.query(database.OtherSuggestion).filter(database.OtherSuggestion.suggested_name.ilike(item.item_name)).first()
+        if not suggestion:
+            suggestion = database.OtherSuggestion(suggested_name=item.item_name)
+            db.add(suggestion)
+        else:
+            suggestion.hit_count += 1
+            suggestion.last_reported_at = datetime.utcnow()
+
+    # Semantic Matching: Generate embedding
+    combined_text = f"{item.item_name} ({category}): {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
+    item_data = item.model_dump()
+    item_data['category'] = category
+
+    # Extract guest info to avoid duplicate kwargs
+    guest_full_name = item_data.pop('guest_full_name', None)
+    guest_email = item_data.pop('guest_email', None)
+
     new_item = database.LostItem(
-        **item.model_dump(),
+        **item_data,
         user_id=None,
+        guest_full_name=guest_full_name,
+        guest_email=guest_email,
+        tracking_id=str(uuid.uuid4()),
         embedding=embedding_json
     )
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
     return new_item
+
+@router.post("/lost/report", response_model=schemas.LostItemResponse)
+def report_lost_item(
+    item: schemas.LostItemCreate,
+    db: Session = Depends(auth.get_db),
+    current_user: database.User = Depends(auth.get_current_user_optional)
+):
+    # Use provided category, fallback to item_name (the "title") as requested
+    category = item.category or item.item_name
+
+    # Dynamic Stats logic
+    stat = db.query(database.CategoryStat).filter(database.CategoryStat.category_id == category).first()
+    if not stat:
+        stat = database.CategoryStat(category_id=category, hit_count=1)
+        db.add(stat)
+    else:
+        stat.hit_count += 1
+    
+    if category == "Other" and item.item_name:
+        suggestion = db.query(database.OtherSuggestion).filter(database.OtherSuggestion.suggested_name.ilike(item.item_name)).first()
+        if not suggestion:
+            suggestion = database.OtherSuggestion(suggested_name=item.item_name)
+            db.add(suggestion)
+        else:
+            suggestion.hit_count += 1
+            suggestion.last_reported_at = datetime.utcnow()
+
+    # Semantic Matching: Generate embedding for item name and description
+    combined_text = f"{item.item_name} ({category}): {item.description}"
+    embedding_json = AIService.generate_embedding(combined_text)
+
+    item_data = item.model_dump()
+    item_data['category'] = category
+
+    # Extract guest info to avoid duplicate kwargs
+    guest_full_name = item_data.pop('guest_full_name', None)
+    guest_email = item_data.pop('guest_email', None)
+
+    if not current_user:
+        if not guest_full_name or not guest_email:
+            raise HTTPException(status_code=400, detail="Name and email are required for guest reports.")
+        if not guest_email.endswith("@nemsu.edu.ph"):
+            raise HTTPException(status_code=400, detail="Please use your institutional email (@nemsu.edu.ph).")
+
+    new_item = database.LostItem(
+        **item_data,
+        user_id=current_user.id if current_user else None,
+        guest_full_name=guest_full_name if not current_user else None,
+        guest_email=guest_email if not current_user else None,
+        tracking_id=str(uuid.uuid4()) if not current_user else None,
+        embedding=embedding_json
+    )
+    db.add(new_item)
+    db.commit()
+    db.refresh(new_item)
+    return new_item
+
+@router.get("/lost/status/{tracking_id}", response_model=schemas.LostItemResponse)
+def get_lost_report_status(
+    tracking_id: str,
+    db: Session = Depends(auth.get_db)
+):
+    report = db.query(database.LostItem).filter(database.LostItem.tracking_id == tracking_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Tracking ID not found.")
+    return report
+
+
 
 @router.get("/lost/my-reports", response_model=list[schemas.LostItemResponse])
 def list_my_lost_reports(
@@ -133,7 +195,7 @@ def get_matches_for_lost_item(
     end_time = lost_item.last_seen_time + time_window
 
     query = db.query(database.FoundItem).filter(
-        database.FoundItem.status.in_([database.ItemStatus.REPORTED.value, database.ItemStatus.IN_CUSTODY.value]),
+        database.FoundItem.status == database.ItemStatus.IN_CUSTODY.value,
         database.FoundItem.category == lost_item.category,
         database.FoundItem.found_time >= start_time,
         database.FoundItem.found_time <= end_time
@@ -195,32 +257,14 @@ def admin_get_all_global_matches(
             # Threshold to avoid noise, but keep it low enough for manual review
             if score >= 0.3: 
                 matches.append({
-                    "item": {
-                        "id": lost.id,
-                        "category": lost.category,
-                        "description": lost.description,
-                        "location_zone": lost.location_zone,
-                        "last_seen_time": lost.last_seen_time,
-                        "private_proof_details": lost.private_proof_details,
-                        "status": lost.status,
-                        "user_id": lost.user_id,
-                        "contact_email": lost.contact_email
-                    },
+                    "item": lost,
                     "similarity_score": score
                 })
         
         if matches:
             matches.sort(key=lambda x: x['similarity_score'], reverse=True)
             results.append({
-                "found_item": {
-                    "id": found.id,
-                    "category": found.category,
-                    "description": found.description,
-                    "location_zone": found.location_zone,
-                    "found_time": found.found_time,
-                    "status": found.status,
-                    "private_admin_notes": found.private_admin_notes
-                },
+                "found_item": found,
                 "top_matches": matches,
                 "max_score": matches[0]['similarity_score']
             })
@@ -298,17 +342,7 @@ def admin_get_matches_for_found_item(
             base_score = AIService.calculate_similarity(found_embedding, lost_embedding)
             score = _calculate_hybrid_score(base_score, lost, found_item)
             suggestions.append({
-                "item": {
-                    "id": lost.id,
-                    "category": lost.category,
-                    "description": lost.description,
-                    "location_zone": lost.location_zone,
-                    "last_seen_time": lost.last_seen_time,
-                    "private_proof_details": lost.private_proof_details,
-                    "status": lost.status,
-                    "user_id": lost.user_id,
-                    "contact_email": lost.contact_email
-                },
+                "item": lost,
                 "similarity_score": score
             })
     
