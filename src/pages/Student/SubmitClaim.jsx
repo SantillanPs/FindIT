@@ -17,6 +17,9 @@ const SubmitClaim = () => {
   // Guest State
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
+  const [contactMethod, setContactMethod] = useState('Email'); // Email, Facebook, Phone
+  const [contactInfo, setContactInfo] = useState('');
+  const [courseDepartment, setCourseDepartment] = useState('');
   const [trackingId, setTrackingId] = useState('');
 
   const navigate = useNavigate();
@@ -56,7 +59,10 @@ const SubmitClaim = () => {
 
       if (!user) {
         payload.guest_full_name = guestName;
-        payload.guest_email = guestEmail;
+        payload.guest_email = guestEmail || null;
+        payload.contact_method = contactMethod;
+        payload.contact_info = contactInfo;
+        payload.course_department = courseDepartment;
       }
 
       const response = await apiClient.post('/claims/submit', payload);
@@ -108,8 +114,11 @@ const SubmitClaim = () => {
         </div>
         <div className="space-y-4">
             <h2 className="text-3xl font-black text-white uppercase tracking-tight">Claim Submitted Successfully</h2>
-            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs leading-relaxed max-w-sm mx-auto">
-                We've sent a tracking link to <span className="text-white">{guestEmail}</span>. Please save the link below to check your status.
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px] leading-relaxed max-w-sm mx-auto">
+                {guestEmail 
+                  ? <>We've sent a tracking link to <span className="text-white">{guestEmail}</span>.</>
+                  : <>We will notify you via <span className="text-white">{contactMethod}</span> once your claim is reviewed.</>
+                } Please save the link below to check your status manually.
             </p>
         </div>
 
@@ -181,32 +190,91 @@ const SubmitClaim = () => {
               variants={itemVariants}
               className="p-8 md:p-12 space-y-10 rounded-[2.5rem] bg-slate-900/40 border border-white/10 text-left backdrop-blur-sm"
             >
-              {/* Guest Identity Section */}
+              {/* Guest Identity & Identification Section */}
               {!user && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
-                        <input 
-                            type="text"
-                            required
-                            placeholder="Your real name"
-                            className="input-field py-4 text-[11px] font-bold tracking-widest"
-                            value={guestName}
-                            onChange={(e) => setGuestName(e.target.value)}
-                        />
+                <div className="space-y-10 group">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
+                            <input 
+                                type="text"
+                                required
+                                placeholder="Your real name"
+                                className="input-field py-4 text-[11px] font-bold tracking-widest"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-3">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">College Course / Department</label>
+                            <input 
+                                type="text"
+                                required
+                                placeholder="e.g. BSIT - College of Engineering"
+                                className="input-field py-4 text-[11px] font-bold tracking-widest uppercase"
+                                value={courseDepartment}
+                                onChange={(e) => setCourseDepartment(e.target.value)}
+                            />
+                        </div>
                     </div>
-                    <div className="space-y-3">
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">University Email</label>
-                        <input 
-                            type="email"
-                            required
-                            placeholder="yourname@nemsu.edu.ph"
-                            className="input-field py-4 text-[11px] font-bold tracking-widest"
-                            value={guestEmail}
-                            onChange={(e) => setGuestEmail(e.target.value)}
-                            pattern="[a-zA-Z0-9._%+-]+@nemsu\.edu\.ph"
-                            title="Please use your institutional email (@nemsu.edu.ph)"
-                        />
+
+                    <div className="space-y-6">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 block">Preferred Contact Method</label>
+                        <div className="grid grid-cols-3 gap-4">
+                            {[
+                              { id: 'Email', icon: 'fa-envelope', label: 'Email' },
+                              { id: 'Facebook', icon: 'fa-facebook', label: 'Facebook' },
+                              { id: 'Phone', icon: 'fa-phone', label: 'Phone' }
+                            ].map(method => (
+                              <button
+                                key={method.id}
+                                type="button"
+                                onClick={() => setContactMethod(method.id)}
+                                className={`p-4 rounded-xl border flex flex-col items-center gap-3 transition-all ${
+                                  contactMethod === method.id 
+                                    ? 'bg-uni-500 border-uni-500 text-white shadow-lg' 
+                                    : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/20'
+                                }`}
+                              >
+                                <i className={`fa-brands ${method.icon.startsWith('fa-f') ? 'fa-facebook' : 'fa-solid ' + method.icon} text-lg`}></i>
+                                <span className="text-[9px] font-black uppercase tracking-tighter">{method.label}</span>
+                              </button>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                    {contactMethod} Details <span className="text-uni-400">*</span>
+                                </label>
+                                <input 
+                                    type={contactMethod === 'Email' ? 'email' : 'text'}
+                                    required
+                                    placeholder={
+                                        contactMethod === 'Facebook' ? 'FB Link or Handle' :
+                                        contactMethod === 'Phone' ? 'Contact Number' : 'Personal or School Email'
+                                    }
+                                    className="input-field py-4 text-[11px] font-bold tracking-widest"
+                                    value={contactInfo}
+                                    onChange={(e) => setContactInfo(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                                    Secondary Email (Optional)
+                                </label>
+                                <input 
+                                    type="email"
+                                    placeholder="Alternative contact email"
+                                    className="input-field py-4 text-[11px] font-bold tracking-widest opacity-60 focus:opacity-100 transition-opacity"
+                                    value={guestEmail}
+                                    onChange={(e) => setGuestEmail(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest italic pt-2">
+                             * This is how we will notify you once your claim is reviewed.
+                        </p>
                     </div>
                 </div>
               )}

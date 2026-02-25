@@ -24,10 +24,6 @@ import LostReportStatus from './pages/Student/LostReportStatus';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard';
-import ClaimReview from './pages/Admin/ClaimReview';
-import ReleaseLogging from './pages/Admin/ReleaseLogging';
-import UserVerification from './pages/Admin/UserVerification';
-import GlobalMatchDiscovery from './pages/Admin/GlobalMatchDiscovery';
 
 const AppContent = () => {
   const { user, token, loading } = useAuth();
@@ -80,11 +76,11 @@ const AppContent = () => {
           {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/claims" element={<ClaimReview />} />
-            <Route path="/admin/release/:itemId" element={<ReleaseLogging />} />
-            <Route path="/admin/verify" element={<UserVerification />} />
-            <Route path="/admin/discovery" element={<GlobalMatchDiscovery />} />
-            <Route path="/admin/released" element={<div>Release History (Under Construction)</div>} />
+            <Route path="/admin/claims" element={<AdminDashboard />} />
+            <Route path="/admin/matches" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<AdminDashboard />} />
+            <Route path="/admin/analytics" element={<AdminDashboard />} />
+            <Route path="/admin/released" element={<AdminDashboard />} />
           </Route>
         </Route>
       </Routes>

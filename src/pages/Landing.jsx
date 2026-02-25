@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
+import ItemCard from '../components/ItemCard';
+import LostReportCard from '../components/LostReportCard';
+import { CATEGORIES } from '../constants/categories';
 import { useAuth } from '../context/AuthContext';
 
 const Landing = () => {
   const [items, setItems] = useState([]);
+  const [lostReports, setLostReports] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
+  const [lostLoading, setLostLoading] = useState(true);
   const [sharedId, setSharedId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [lostSearchQuery, setLostSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedLostCategory, setSelectedLostCategory] = useState('all');
   const [toast, setToast] = useState({ show: false, message: '' });
 
   const { user } = useAuth();
@@ -18,6 +24,7 @@ const Landing = () => {
 
   useEffect(() => {
     fetchPublicFeed();
+    fetchLostReports();
   }, []);
 
   const fetchPublicFeed = async () => {
@@ -28,6 +35,17 @@ const Landing = () => {
       console.error('Failed to fetch public feed', error);
     } finally {
       setItemsLoading(false);
+    }
+  };
+
+  const fetchLostReports = async () => {
+    try {
+      const resp = await apiClient.get('/lost/public');
+      setLostReports(resp.data);
+    } catch (err) {
+      console.error("Failed to fetch lost reports", err);
+    } finally {
+      setLostLoading(false);
     }
   };
 
@@ -49,11 +67,21 @@ const Landing = () => {
   };
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = (item.description?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.location_zone.toLowerCase().includes(searchQuery.toLowerCase());
+                          item.location_zone?.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const filteredLostReports = lostReports.filter(report => {
+    const matchesSearch = (report.description?.toLowerCase().includes(lostSearchQuery.toLowerCase()) || 
+                          report.item_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                          report.category?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                          report.location_zone?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                          report.owner_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()));
+    const matchesCategory = selectedLostCategory === 'all' || report.category === selectedLostCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -161,7 +189,7 @@ const Landing = () => {
 
                    <div className="pt-6 border-t border-white/5 flex gap-3">
                       <button 
-                         onClick={() => navigate(`/register?claim=${item.id}`)}
+                         onClick={() => navigate(`/submit-claim/${item.id}`)}
                          className="flex-grow bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all"
                       >
                          Claim this item
@@ -243,45 +271,68 @@ const Landing = () => {
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredItems.map(item => (
-                    <motion.div 
-                        key={item.id} 
-                        layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        whileHover={{ y: -6 }}
-                        className="glass-panel group rounded-[2rem] md:rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-uni-500/30 transition-all cursor-pointer flex flex-col"
-                        onClick={() => setSelectedItem(item)}
-                    >
-                        <div className="h-48 md:h-56 relative overflow-hidden bg-slate-900 border-b border-white/5">
-                            {item.safe_photo_url ? (
-                                <img src={item.safe_photo_url} alt={item.category} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-6xl opacity-10 font-bold uppercase tracking-tighter">
-                                    {item.category.substring(0, 3)}
-                                </div>
-                            )}
-                            <div className="absolute top-4 right-4">
-                                <span className="px-4 py-1.5 bg-black/60 backdrop-blur-md text-uni-400 text-[9px] font-black rounded-full border border-white/10 uppercase tracking-widest font-sans">
-                                    {item.location_zone}
-                                </span>
-                            </div>
-                        </div>
-                        <div className="p-8 text-left flex flex-col flex-grow">
-                            <h3 className="text-2xl font-black text-white uppercase tracking-tight mb-1 group-hover:text-uni-400 transition-colors">
-                                {item.item_name}
-                            </h3>
-                            <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-4">{item.category} recovered</div>
-                            <p className="text-slate-400 text-xs italic line-clamp-2 leading-relaxed mb-8 flex-grow">"{item.description}"</p>
-                            <div className="flex items-center justify-between pt-6 border-t border-white/5">
-                                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                                    {new Date(item.found_time).toLocaleDateString()}
-                                </span>
-                                <span className="text-uni-500 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
-                                    View details <i className="fa-solid fa-arrow-right"></i>
-                                </span>
-                            </div>
-                        </div>
-                    </motion.div>
+                    <ItemCard 
+                        key={item.id}
+                        item={item}
+                        onClick={() => navigate(`/submit-claim/${item.id}`)}
+                        onShare={handleShare}
+                    />
+                ))}
+            </div>
+        )}
+      </section>
+
+      {/* Lost Items Registry */}
+      <section id="lost-registry" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-white/5 pb-8 md:pb-10">
+           <div className="text-left space-y-2">
+              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Lost Reports</h2>
+              <p className="text-accent-default text-[10px] md:text-sm font-black uppercase tracking-widest">Help our community find their missing belongings</p>
+           </div>
+           
+           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              <div className="relative w-full sm:w-80">
+                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                  <input 
+                    type="text" 
+                    placeholder="Search by owner, item, description..." 
+                    className="input-field pl-12 focus:border-accent-default focus:ring-accent-glow/20"
+                    value={lostSearchQuery}
+                    onChange={(e) => setLostSearchQuery(e.target.value)}
+                  />
+              </div>
+              <select 
+                className="input-field sm:w-64 font-black uppercase text-[10px] tracking-widest focus:border-accent-default focus:ring-accent-glow/20"
+                value={selectedLostCategory}
+                onChange={(e) => setSelectedLostCategory(e.target.value)}
+              >
+                <option value="all">Every Category</option>
+                {[...CATEGORIES].sort((a,b) => a.label.localeCompare(b.label)).map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.label}</option>
+                ))}
+              </select>
+           </div>
+        </div>
+
+        {lostLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {Array(6).fill(0).map((_, i) => (
+                    <div key={i} className="h-[400px] bg-white/5 animate-pulse rounded-[2.5rem]"></div>
+                ))}
+            </div>
+        ) : filteredLostReports.length === 0 ? (
+            <div className="py-32 text-center glass-panel rounded-[3rem] border border-white/5">
+                <div className="text-5xl opacity-20 mb-6">🔍</div>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">No active lost reports</h3>
+                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any lost items matching your current filters.</p>
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredLostReports.map(report => (
+                    <LostReportCard 
+                        key={report.id}
+                        report={report}
+                    />
                 ))}
             </div>
         )}
@@ -360,69 +411,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Item Detail Modal */}
-      <AnimatePresence>
-        {selectedItem && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-2xl"
-              onClick={() => setSelectedItem(null)}
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 30 }}
-              className="glass-panel w-full max-w-2xl rounded-[3rem] overflow-hidden relative z-10 border border-white/10 shadow-2xl"
-            >
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-6 right-6 w-12 h-12 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white transition-colors z-20 border border-white/5"
-              >
-                <i className="fa-solid fa-xmark"></i>
-              </button>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 h-full">
-                 <div className="h-64 md:h-full relative bg-slate-900 overflow-hidden">
-                    {selectedItem.safe_photo_url ? (
-                        <img src={selectedItem.safe_photo_url} alt="Item detail" className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-8xl opacity-10">📦</div>
-                    )}
-                 </div>
-                 <div className="p-10 text-left flex flex-col justify-between">
-                    <div>
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            <span className="px-4 py-1 bg-uni-500/10 text-uni-400 text-[10px] font-black rounded-full border border-uni-500/20 uppercase tracking-widest">{selectedItem.category}</span>
-                            <span className="px-4 py-1 bg-white/5 text-slate-400 text-[10px] font-black rounded-full border border-white/5 uppercase tracking-widest">{selectedItem.location_zone}</span>
-                        </div>
-                        <h3 className="text-4xl font-black text-white uppercase tracking-tighter mb-4 font-display leading-[0.9]">{selectedItem.item_name}</h3>
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8">Logged on {new Date(selectedItem.found_time).toLocaleDateString()}</p>
-                        <p className="text-slate-200 mb-10 text-lg leading-relaxed font-bold italic border-l-4 border-uni-500 pl-6 py-2">"{selectedItem.description}"</p>
-                    </div>
-
-                    <div className="space-y-4">
-                        <button 
-                            onClick={() => navigate(`/submit-claim/${selectedItem.id}`)}
-                            className="w-full bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-uni-500/20 transition-all hover:scale-[1.02]"
-                        >
-                            This is mine
-                        </button>
-                        <button 
-                            onClick={() => handleShare(selectedItem)}
-                            className={`w-full bg-white/5 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all hover:bg-white/10 border border-white/5 ${sharedId === selectedItem.id ? 'text-green-400 border-green-500/20' : 'text-white'}`}
-                        >
-                            {sharedId === selectedItem.id ? 'Copied to clipboard' : 'Share report'}
-                        </button>
-                    </div>
-                 </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Toast Notification */}
       <AnimatePresence>

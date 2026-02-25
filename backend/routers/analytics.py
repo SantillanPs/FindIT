@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, case
 from datetime import datetime, timedelta
 import database, schemas, auth
 from dependencies import admin_required
@@ -18,7 +18,10 @@ def get_report_stats(
 ):
     now = datetime.utcnow()
     
-    if period == "weekly":
+    if period == "today":
+        start_date = now - timedelta(days=1)
+        strftime_fmt = "%H:00"
+    elif period == "weekly":
         start_date = now - timedelta(weeks=12)
         strftime_fmt = "%Y-W%W"
     elif period == "monthly":
@@ -29,6 +32,9 @@ def get_report_stats(
         strftime_fmt = "%Y-%m"
     elif period == "yearly":
         start_date = now - timedelta(days=365*5)
+        strftime_fmt = "%Y"
+    elif period == "all_time":
+        start_date = now - timedelta(days=365*100) # Effectively all time
         strftime_fmt = "%Y"
     else:
         start_date = now - timedelta(days=365)
@@ -64,7 +70,10 @@ def get_claim_stats(
     admin: database.User = Depends(admin_required)
 ):
     now = datetime.utcnow()
-    if period == "weekly":
+    if period == "today":
+        start_date = now - timedelta(days=1)
+        strftime_fmt = "%H:00"
+    elif period == "weekly":
         start_date = now - timedelta(weeks=12)
         strftime_fmt = "%Y-W%W"
     elif period == "monthly":
@@ -75,6 +84,9 @@ def get_claim_stats(
         strftime_fmt = "%Y-%m"
     elif period == "yearly":
         start_date = now - timedelta(days=365*5)
+        strftime_fmt = "%Y"
+    elif period == "all_time":
+        start_date = now - timedelta(days=365*100) # Effectively all time
         strftime_fmt = "%Y"
     else:
         start_date = now - timedelta(days=365)
@@ -110,7 +122,7 @@ def get_insights(
     claim_counts = db.query(
         database.FoundItem.category,
         func.count(database.Claim.id).label('total'),
-        func.sum(database.case((database.Claim.status == 'rejected', 1), else_=0)).label('rejected')
+        func.sum(case((database.Claim.status == 'rejected', 1), else_=0)).label('rejected')
     ).join(database.FoundItem, database.Claim.found_item_id == database.FoundItem.id)\
      .group_by(database.FoundItem.category)\
      .having(func.count(database.Claim.id) >= 3)\
@@ -129,7 +141,7 @@ def get_insights(
     found_counts = db.query(
         database.FoundItem.category,
         func.count(database.FoundItem.id).label('total'),
-        func.sum(database.case((database.FoundItem.status == 'released', 1), else_=0)).label('released')
+        func.sum(case((database.FoundItem.status == 'released', 1), else_=0)).label('released')
     ).group_by(database.FoundItem.category)\
      .having(func.count(database.FoundItem.id) >= 3)\
      .all()
@@ -142,10 +154,22 @@ def get_insights(
             max_success = rate
             best_recovery = {"category": f.category, "rate": rate}
 
+    # Today's Activity
+    today = datetime.utcnow().date()
+    today_found = db.query(func.count(database.FoundItem.id)).filter(func.date(database.FoundItem.found_time) == today).scalar()
+    today_lost = db.query(func.count(database.LostItem.id)).filter(func.date(database.LostItem.last_seen_time) == today).scalar()
+
+    # Weekly Activity
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    weekly_found = db.query(func.count(database.FoundItem.id)).filter(database.FoundItem.found_time >= week_ago).scalar()
+    weekly_lost = db.query(func.count(database.LostItem.id)).filter(database.LostItem.last_seen_time >= week_ago).scalar()
+
     return {
         "most_lost": {"category": most_lost.category, "count": most_lost.count} if most_lost else None,
         "hardest_to_claim": hardest_to_claim,
-        "best_recovery": best_recovery
+        "best_recovery": best_recovery,
+        "today": {"found": today_found, "lost": today_lost},
+        "weekly": {"found": weekly_found, "lost": weekly_lost}
     }
 
 @router.get("/export")

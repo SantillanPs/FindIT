@@ -348,3 +348,8 @@ def admin_get_matches_for_found_item(
     
     suggestions.sort(key=lambda x: x['similarity_score'], reverse=True)
     return suggestions
+@router.get("/lost/public", response_model=list[schemas.LostItemPublic])
+def list_public_lost_items(db: Session = Depends(auth.get_db)):
+    return db.query(database.LostItem).filter(
+        database.LostItem.status == "reported"
+    ).all()

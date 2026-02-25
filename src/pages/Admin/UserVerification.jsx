@@ -61,17 +61,17 @@ const UserVerification = () => {
       className="space-y-10"
     >
       <motion.header className="space-y-4 text-left" variants={itemVariants}>
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">User Registry</h1>
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Identity Validation Console</h1>
         <p className="text-slate-500 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-          Verify student identities to grant them permission to claim items. Check their uploaded IDs for authenticity.
+           Manually review student ID uploads to authorize system permissions. Validated students can officially claim found property.
         </p>
       </motion.header>
 
       <motion.div variants={itemVariants} className="glass-panel rounded-3xl overflow-hidden border border-white/5">
         <div className="p-8 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6 bg-white/5">
-           <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Active System Users</h2>
+           <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Institutional Member Registry</h2>
            <span className="text-[9px] font-black text-slate-500 bg-slate-900 px-4 py-1.5 rounded-full border border-white/5 uppercase tracking-widest">
-              {users.length} Total Users
+              {users.length} Active Records
            </span>
         </div>
 
@@ -131,7 +131,7 @@ const UserVerification = () => {
                            : 'bg-uni-600 text-white hover:bg-uni-500 shadow-lg shadow-uni-500/20'
                          }`}
                        >
-                         {user.is_verified ? 'Revoke' : 'Verify'}
+                         {user.is_verified ? 'Revoke Access' : 'Validate ID'}
                        </button>
                     </div>
                   </td>

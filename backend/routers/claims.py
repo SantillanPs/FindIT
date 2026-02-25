@@ -25,10 +25,13 @@ def submit_claim(
 
     # Validation for guest claims
     if not current_user:
-        if not claim.guest_full_name or not claim.guest_email:
-            raise HTTPException(status_code=400, detail="Guest name and email are required for anonymous claims.")
-        if not claim.guest_email.endswith("@nemsu.edu.ph"):
-            raise HTTPException(status_code=400, detail="Claims require an institutional email (@nemsu.edu.ph).")
+        if not claim.guest_full_name:
+            raise HTTPException(status_code=400, detail="Guest name is required for anonymous claims.")
+        
+        # Check if at least one contact method is provided
+        has_contact = (claim.guest_email or (claim.contact_method and claim.contact_info))
+        if not has_contact:
+            raise HTTPException(status_code=400, detail="At least one contact method (Email, Facebook, or Phone) is required.")
 
     new_claim = database.Claim(
         found_item_id=claim.found_item_id,
@@ -37,6 +40,9 @@ def submit_claim(
         student_id=current_user.id if current_user else None,
         guest_full_name=claim.guest_full_name if not current_user else None,
         guest_email=claim.guest_email if not current_user else None,
+        contact_method=claim.contact_method if not current_user else None,
+        contact_info=claim.contact_info if not current_user else None,
+        course_department=claim.course_department if not current_user else None,
         tracking_id=str(uuid.uuid4()) if not current_user else None
     )
     db.add(new_claim)
@@ -63,6 +69,9 @@ def _populate_claim_details(db: Session, claim: database.Claim):
         "student_id": claim.student_id,
         "guest_full_name": claim.guest_full_name,
         "guest_email": claim.guest_email,
+        "contact_method": claim.contact_method,
+        "contact_info": claim.contact_info,
+        "course_department": claim.course_department,
         "tracking_id": claim.tracking_id,
         "proof_description": claim.proof_description,
         "proof_photo_url": claim.proof_photo_url,

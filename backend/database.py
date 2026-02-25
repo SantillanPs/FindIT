@@ -93,8 +93,21 @@ class LostItem(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     guest_full_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
+    safe_photo_url = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
     owner = relationship("User", back_populates="lost_items")
+
+    @property
+    def owner_name(self):
+        if self.user_id and self.owner:
+            return self.owner.full_name
+        return self.guest_full_name
+
+    @property
+    def owner_email(self):
+        if self.user_id and self.owner:
+            return self.owner.email
+        return self.guest_email
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -140,15 +153,31 @@ class Claim(Base):
     student_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     guest_full_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
+    contact_method = Column(String, nullable=True) # Facebook, Email, Contact Number
+    contact_info = Column(String, nullable=True)
+    course_department = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest tracking
     proof_description = Column(Text)
     proof_photo_url = Column(String, nullable=True)
     status = Column(String, default=ClaimStatus.PENDING.value)
     admin_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    student = relationship("User", back_populates="claims")
+
+    @property
+    def owner_name(self):
+        if self.student_id and self.student:
+            return self.student.full_name
+        return self.guest_full_name
+
+    @property
+    def owner_email(self):
+        if self.student_id and self.student:
+            return self.student.email
+        return self.guest_email
     
     found_item = relationship("FoundItem")
-    student = relationship("User", back_populates="claims")
 
 class CategoryStat(Base):
     __tablename__ = "category_stats"

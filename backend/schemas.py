@@ -110,6 +110,7 @@ class LostItemBase(BaseModel):
     description: str
     location_zone: str
     last_seen_time: Optional[datetime] = None
+    safe_photo_url: Optional[str] = None
 
 class LostItemCreate(LostItemBase):
     guest_full_name: Optional[str] = None
@@ -145,6 +146,9 @@ class LostItemPublic(BaseModel):
     guest_full_name: Optional[str] = None
     guest_email: Optional[str] = None
     tracking_id: Optional[str] = None
+    safe_photo_url: Optional[str] = None
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -168,20 +172,19 @@ class ClaimCreate(BaseModel):
     proof_description: str
     proof_photo_url: Optional[str] = None
     guest_full_name: Optional[str] = None
-    guest_email: Optional[EmailStr] = None
-
-    @validator('guest_email')
-    def validate_nemsu_email(cls, v):
-        if v and not v.endswith('@nemsu.edu.ph'):
-            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
-        return v
+    guest_email: Optional[str] = None
+    contact_method: Optional[str] = None
+    contact_info: Optional[str] = None
+    course_department: Optional[str] = None
 
 class ClaimResponse(BaseModel):
     id: int
     found_item_id: int
     student_id: Optional[int] = None
-    guest_full_name: Optional[str] = None
     guest_email: Optional[str] = None
+    contact_method: Optional[str] = None
+    contact_info: Optional[str] = None
+    course_department: Optional[str] = None
     tracking_id: Optional[str] = None
     proof_description: str
     proof_photo_url: Optional[str] = None
@@ -191,6 +194,8 @@ class ClaimResponse(BaseModel):
     found_item_description: Optional[str] = None
     admin_notes: Optional[str] = None
     similarity_score: Optional[float] = None  # AI context for admins
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
     created_at: datetime
 
     class Config:

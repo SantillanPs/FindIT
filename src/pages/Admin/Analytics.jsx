@@ -101,7 +101,7 @@ const Analytics = () => {
 
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex bg-slate-900 border border-white/5 p-1 rounded-xl">
-            {['weekly', 'monthly', '6months', 'yearly'].map((p) => (
+            {['today', 'weekly', 'monthly', '6months', 'yearly', 'all_time'].map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
@@ -109,7 +109,7 @@ const Analytics = () => {
                   period === p ? 'bg-uni-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'
                 }`}
               >
-                {p.replace('6months', '6 Months')}
+                {p.replace('today', 'Today').replace('6months', '6 Months').replace('all_time', 'All Time')}
               </button>
             ))}
           </div>
@@ -127,6 +127,14 @@ const Analytics = () => {
             Export CSV
           </button>
         </div>
+      </div>
+      
+      {/* Activity Snapshot */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <ActivityCard label="Today's Found" value={insights?.today?.found} color="text-uni-400" />
+        <ActivityCard label="Today's Lost" value={insights?.today?.lost} color="text-amber-500" />
+        <ActivityCard label="Weekly Found" value={insights?.weekly?.found} color="text-uni-400" />
+        <ActivityCard label="Weekly Lost" value={insights?.weekly?.lost} color="text-amber-500" />
       </div>
 
       {/* Insight Cards */}
@@ -308,6 +316,13 @@ const calculateCategoryDistribution = (data) => {
         value: total > 0 ? Math.round((counts[name] / total) * 100) : 0
     })).sort((a,b) => b.value - a.value);
 };
+
+const ActivityCard = ({ label, value, color }) => (
+    <div className="glass-panel p-6 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col justify-center items-center text-center space-y-2">
+        <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">{label}</p>
+        <h4 className={`text-2xl font-black ${color} tracking-tight`}>{value || 0}</h4>
+    </div>
+);
 
 const InsightCard = ({ icon, label, value, subValue, color }) => {
     const borders = {

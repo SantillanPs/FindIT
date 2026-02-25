@@ -3,17 +3,44 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
+import apiClient from '../api/client';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0 });
 
   // Close sidebar on route change
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
+
+  // Fetch admin stats if user is admin
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      fetchAdminStats();
+      const interval = setInterval(fetchAdminStats, 30000); // Refresh every 30s
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchAdminStats = async () => {
+    try {
+      const [claimsRes, matchesRes] = await Promise.all([
+        apiClient.get('/admin/claims/pending'),
+        apiClient.get('/admin/matches/all')
+      ]);
+      setAdminStats({
+        claims: claimsRes.data.length,
+        matches: matchesRes.data.length
+      });
+    } catch (error) {
+      console.error('Failed to fetch admin sidebar stats', error);
+    }
+  };
+
 
   const handleLogout = () => {
     logout();
@@ -64,10 +91,14 @@ const Layout = ({ children }) => {
                 <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Main Navigation</p>
                 {user.role === 'admin' ? (
                   <>
-                    <SideNavLink to="/admin" icon="fa-chart-pie" label="Overview" />
-                    <SideNavLink to="/admin/discovery" icon="fa-bolt" label="Active Matches" />
-                    <SideNavLink to="/admin/claims" icon="fa-file-invoice" label="Manage Claims" />
-                    <SideNavLink to="/admin/verify" icon="fa-user-shield" label="User Registry" />
+                    <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Command Center</p>
+                    <SideNavLink to="/admin" icon="fa-warehouse" label="Inventory" />
+                    <SideNavLink to="/admin/claims" icon="fa-stamp" label="Verify Claims" count={adminStats.claims} />
+                    <SideNavLink to="/admin/matches" icon="fa-wand-magic-sparkles" label="Matchmaker" count={adminStats.matches} />
+                    <SideNavLink to="/admin/users" icon="fa-id-card" label="Verify Students" />
+                    <SideNavLink to="/admin/analytics" icon="fa-chart-pie" label="System Insights" />
+                    <div className="h-px bg-white/5 mx-4 my-4"></div>
+                    <SideNavLink to="/admin/released" icon="fa-history" label="History" />
                   </>
                 ) : (
                   <>
@@ -79,27 +110,6 @@ const Layout = ({ children }) => {
                   </>
                 )}
              </nav>
-
-             <div className="p-4 mt-auto">
-                <div className="glass-panel rounded-2xl p-4 border border-white/5 space-y-4">
-                   <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-lg shadow-inner">
-                         👤
-                      </div>
-                      <div className="overflow-hidden">
-                         <p className="text-[10px] font-black text-white uppercase tracking-widest truncate">{user.email.split('@')[0]}</p>
-                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{user.role}</p>
-                      </div>
-                   </div>
-                   <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
-                   >
-                     <i className="fa-solid fa-sign-out text-xs"></i>
-                     Sign Out
-                   </button>
-                </div>
-             </div>
           </aside>
 
           {/* Main Content Area */}
@@ -127,9 +137,20 @@ const Layout = ({ children }) => {
                 <div className="flex items-center gap-4 md:gap-6">
                    <NotificationCenter />
                    <div className="hidden sm:block h-8 w-px bg-white/10 mx-2"></div>
-                   <span className="hidden sm:block text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                      {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                   </span>
+                   
+                   <div className="hidden md:flex flex-col items-end mr-2">
+                       <span className="text-[10px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{user.email.split('@')[0]}</span>
+                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">{user.role}</span>
+                   </div>
+
+                   <button 
+                     onClick={handleLogout}
+                     className="w-10 h-10 md:w-auto md:px-5 flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all border border-red-500/20"
+                     title="Sign Out"
+                   >
+                     <i className="fa-solid fa-sign-out text-xs"></i>
+                     <span className="hidden md:inline text-[9px] font-black uppercase tracking-widest">Sign Out</span>
+                   </button>
                 </div>
              </header>
 
@@ -224,23 +245,35 @@ const Layout = ({ children }) => {
   );
 };
 
-const SideNavLink = ({ to, icon, label }) => {
+const SideNavLink = ({ to, icon, label, count }) => {
   const location = useLocation();
-  const isActive = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
+  // Exact match for /admin to prevent it being highlighted when at sub-routes
+  const isActive = to === '/admin' 
+    ? location.pathname === '/admin' 
+    : location.pathname.startsWith(to);
 
   return (
     <Link 
       to={to} 
       className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest no-underline transition-all group ${
-        isActive ? 'bg-uni-500/10 text-uni-400 border border-uni-500/20' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
+        isActive ? 'bg-uni-500/10 text-white border border-uni-500/20 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
       }`}
     >
-      <i className={`fa-solid ${icon} text-lg w-6 flex justify-center transition-colors ${isActive ? 'text-uni-400' : 'text-slate-600 group-hover:text-slate-400'}`}></i>
-      {label}
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-slate-900 border border-white/5 text-slate-600 group-hover:text-slate-400'}`}>
+        <i className={`fa-solid ${icon} text-sm`}></i>
+      </div>
+      <span className="flex-grow">{label}</span>
+      
+      {count > 0 && (
+        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black ${isActive ? 'bg-white text-uni-600' : 'bg-uni-500/20 text-uni-400'}`}>
+          {count}
+        </span>
+      )}
+
       {isActive && (
         <motion.div 
           layoutId="sidebar-active"
-          className="absolute right-4 w-1.5 h-1.5 rounded-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"
+          className="absolute -left-1 w-1 h-6 rounded-r-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"
         />
       )}
     </Link>

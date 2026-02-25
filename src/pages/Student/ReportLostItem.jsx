@@ -4,19 +4,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { CATEGORIES } from '../../constants/categories';
+import ImageUpload from '../../components/ImageUpload';
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
     item_name: '',
     description: '',
     location_zone: '',
     last_seen_time: new Date().toISOString().slice(0, 16),
-    category: ''
+    category: '',
+    safe_photo_url: ''
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 6;
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -209,8 +211,47 @@ const ReportLostItem = () => {
                 )}
 
                 <div className="space-y-4 text-center">
-                  <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Item Category</span>
-                  <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none italic">"First, what did<br/>you lose?"</h2>
+                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 1: Visual Reference (Optional)</span>
+                   <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Do you have a<br/>photo of the item?"</h2>
+                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">This step is <span className="text-uni-400">optional</span>. You can upload a real photo, a reference image, or simply skip to the next step.</p>
+                </div>
+                
+                <div className="max-w-xl mx-auto w-full space-y-10">
+                    <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5 shadow-2xl">
+                        <ImageUpload 
+                            value={formData.safe_photo_url}
+                            onUploadSuccess={(url) => setFormData({...formData, safe_photo_url: url})}
+                        />
+                        <div className="mt-8 p-6 bg-white/5 border border-white/5 border-dashed rounded-3xl text-left">
+                            <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
+                                <i className="fa-solid fa-camera-rotate"></i>
+                                Reference Photos
+                            </p>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                                If you don't have a photo of your specific item, searching for the exact model or brand online and uploading a screenshot works great too!
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <button 
+                      onClick={() => goToStep(2)} 
+                      disabled={!user && (!guestName || !guestEmail)}
+                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20 flex items-center justify-center gap-4"
+                    >
+                      {formData.safe_photo_url ? 'Next Step →' : 'Skip & Continue →'}
+                    </button>
+                    {!user && (!guestName || !guestEmail) && (
+                        <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest text-center mt-4">Please provide your contact info to continue</p>
+                    )}
+                </div>
+              </div>
+            )}
+
+            {step === 2 && (
+              <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
+                <div className="space-y-4 text-center">
+                  <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 2: Item Category</span>
+                  <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Next, what did<br/>you lose?"</h2>
                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-md mx-auto">Select the category that best fits your lost item.</p>
                 </div>
 
@@ -220,7 +261,7 @@ const ReportLostItem = () => {
                         key={cat.id}
                         onClick={() => {
                           setFormData({ ...formData, category: cat.id, item_name: cat.id });
-                          setTimeout(() => goToStep(2), 400);
+                          setTimeout(() => goToStep(3), 400);
                         }}
                         className={`p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group relative overflow-hidden ${
                           formData.category === cat.id 
@@ -266,7 +307,7 @@ const ReportLostItem = () => {
                               key={cat.id}
                               onClick={() => {
                                 setFormData({ ...formData, category: cat.id, item_name: cat.id });
-                                setTimeout(() => goToStep(2), 400);
+                                setTimeout(() => goToStep(3), 400);
                               }}
                               className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-4 group ${
                                 formData.category === cat.id 
@@ -322,7 +363,7 @@ const ReportLostItem = () => {
                                />
                             </div>
                             <button 
-                              onClick={() => goToStep(2)}
+                              onClick={() => goToStep(3)}
                               disabled={!otherItemName}
                               className="w-full bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] disabled:opacity-20 hover:scale-[1.02] active:scale-95 transition-all shadow-xl"
                             >
@@ -337,10 +378,10 @@ const ReportLostItem = () => {
               </div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
                 <div className="space-y-4 text-center">
-                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 2: Last Seen At</span>
+                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 3: Last Seen At</span>
                    <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Where did you last<br/>see your item?"</h2>
                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Help us narrow down the search area.</p>
                 </div>
@@ -375,7 +416,7 @@ const ReportLostItem = () => {
                     </div>
 
                     <button 
-                      onClick={() => goToStep(3)} 
+                      onClick={() => goToStep(4)} 
                       disabled={!formData.location_zone}
                       className="w-full bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] disabled:opacity-20 hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/30 active:scale-95"
                     >
@@ -385,10 +426,10 @@ const ReportLostItem = () => {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
                 <div className="space-y-4 text-center">
-                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 3: Approximate Time</span>
+                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 4: Approximate Time</span>
                    <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none italic">"When did you<br/>lose it?"</h2>
                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Select the date and time you last saw your item.</p>
                 </div>
@@ -406,7 +447,7 @@ const ReportLostItem = () => {
                     </div>
                     
                     <button 
-                      onClick={() => goToStep(4)} 
+                      onClick={() => goToStep(5)} 
                       className="w-full bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/30 active:scale-95"
                     >
                       Next Step →
@@ -415,10 +456,10 @@ const ReportLostItem = () => {
               </div>
             )}
 
-            {step === 4 && (
+            {step === 5 && (
               <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
                 <div className="space-y-4 text-center">
-                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 4: Item Description</span>
+                   <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2">Step 5: Item Description</span>
                    <h2 className="text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Additional details<br/>about the item?"</h2>
                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-sm mx-auto">Mention any unique marks, scratches, or specifics.</p>
                 </div>
@@ -449,7 +490,7 @@ const ReportLostItem = () => {
                     </div>
 
                     <button 
-                      onClick={() => goToStep(5)} 
+                      onClick={() => goToStep(6)} 
                       disabled={!formData.description || formData.description.length < 10}
                       className="w-full bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] disabled:opacity-20 hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/30 active:scale-95 flex items-center justify-center gap-4"
                     >
@@ -459,7 +500,8 @@ const ReportLostItem = () => {
               </div>
             )}
 
-            {step === 5 && (
+
+            {step === 6 && (
               <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
                 <div className="space-y-4 text-center">
                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20 text-4xl mb-6 shadow-2xl shadow-green-500/10">🛰️</div>
@@ -470,9 +512,16 @@ const ReportLostItem = () => {
                 <div className="max-w-2xl mx-auto w-full space-y-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 text-left space-y-6">
-                         <div className="space-y-1">
-                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Category</p>
-                            <p className="text-lg font-black text-white uppercase italic tracking-tighter">{formData.category === 'Other' ? otherItemName : formData.category}</p>
+                         <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                               <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Category</p>
+                               <p className="text-lg font-black text-white uppercase italic tracking-tighter">{formData.category === 'Other' ? otherItemName : formData.category}</p>
+                            </div>
+                            {formData.safe_photo_url && (
+                                <div className="w-16 h-16 rounded-xl overflow-hidden border border-white/10">
+                                    <img src={formData.safe_photo_url} className="w-full h-full object-cover" alt="Preview" />
+                                </div>
+                            )}
                          </div>
                          <div className="space-y-1 border-t border-white/5 pt-4">
                             <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Last Seen At</p>
