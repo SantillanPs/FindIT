@@ -38,11 +38,11 @@ def submit_claim(
         proof_description=claim.proof_description,
         proof_photo_url=claim.proof_photo_url,
         student_id=current_user.id if current_user else None,
-        guest_full_name=claim.guest_full_name if not current_user else None,
-        guest_email=claim.guest_email if not current_user else None,
-        contact_method=claim.contact_method if not current_user else None,
-        contact_info=claim.contact_info if not current_user else None,
-        course_department=claim.course_department if not current_user else None,
+        guest_full_name=claim.guest_full_name,
+        guest_email=claim.guest_email,
+        contact_method=claim.contact_method,
+        contact_info=claim.contact_info,
+        course_department=claim.course_department,
         tracking_id=str(uuid.uuid4()) if not current_user else None
     )
     db.add(new_claim)
@@ -131,11 +131,21 @@ def review_claim(
         if found_item:
             found_item.status = database.ItemStatus.CLAIMED.value
             
+            # Update item identity based on successful claim
+            if db_claim.student_id:
+                claimer = db.query(database.User).filter(database.User.id == db_claim.student_id).first()
+                if claimer:
+                    found_item.identified_name = claimer.full_name
+                    found_item.identified_student_id = claimer.student_id or str(claimer.id)
+            else:
+                found_item.identified_name = db_claim.guest_full_name
+                found_item.identified_student_id = db_claim.contact_info # Use contact info as fallback ID
+            
             # 1. Notify the successful claimer
             approval_notif = database.Notification(
                 user_id=db_claim.student_id,
                 title="Claim Approved - Ready for Pickup",
-                message=f"Good news! Your claim for the '{found_item.category}' has been approved. Please visit the student desk to claim it.",
+                message=f"Good news! Your claim for the '{found_item.item_name}' has been approved. Please visit the student desk to claim it.",
                 found_item_id=found_item.id
             )
             db.add(approval_notif)

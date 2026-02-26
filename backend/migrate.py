@@ -43,6 +43,10 @@ def migrate():
         if 'embedding' not in columns:
              print("Adding embedding to found_items table...")
              cursor.execute("ALTER TABLE found_items ADD COLUMN embedding TEXT")
+        
+        if 'released_to_photo_url' not in columns:
+             print("Adding released_to_photo_url to found_items table...")
+             cursor.execute("ALTER TABLE found_items ADD COLUMN released_to_photo_url TEXT")
 
         conn.commit()
         conn.close()

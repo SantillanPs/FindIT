@@ -74,6 +74,7 @@ class FoundItem(Base):
     released_to_id_number = Column(String, nullable=True) # Official school ID for logging
     released_by_name = Column(String, nullable=True)
     released_at = Column(DateTime, nullable=True)
+    released_to_photo_url = Column(String, nullable=True)
     
     finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
     released_to = relationship("User", foreign_keys=[released_to_id])

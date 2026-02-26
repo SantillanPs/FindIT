@@ -90,6 +90,7 @@ class FoundItemDetail(FoundItemPublic):
     released_to_id_number: Optional[str] = None
     released_by_name: Optional[str] = None
     released_at: Optional[datetime] = None
+    released_to_photo_url: Optional[str] = None
 
 class ItemRelease(BaseModel):
     released_to_id: int
@@ -99,6 +100,7 @@ class ItemDirectRelease(BaseModel):
     released_to_name: str
     released_to_id_number: str
     released_by_name: str
+    released_to_photo_url: Optional[str] = None
 
 class CustodyUpdate(BaseModel):
     notes: Optional[str] = None

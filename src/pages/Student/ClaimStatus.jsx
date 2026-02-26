@@ -138,15 +138,33 @@ const ClaimStatus = () => {
             </div>
         </div>
 
+        {/* Claim Info */}
+        <div className="pt-8 border-t border-white/5 grid grid-cols-2 gap-6">
+            <div className="space-y-1">
+                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Claimant</span>
+                <p className="text-[11px] font-black text-white uppercase tracking-tight">{claim.guest_full_name || 'Verified Student'}</p>
+                <p className="text-[9px] text-uni-400 font-bold uppercase">{claim.course_department || 'Student Profile'}</p>
+            </div>
+            <div className="space-y-1">
+                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Contact Via</span>
+                <div className="flex items-center gap-2">
+                    <i className={`fa-brands ${claim.contact_method === 'Facebook' ? 'fa-facebook' : 'fa-solid ' + (claim.contact_method === 'Phone' ? 'fa-phone' : 'fa-envelope')} text-slate-400 text-[10px]`}></i>
+                    <p className="text-[11px] font-black text-white uppercase tracking-tight">{claim.contact_info || 'Account Details'}</p>
+                </div>
+            </div>
+        </div>
+
         {/* Item Details (Context) */}
         <div className="pt-8 border-t border-white/5 space-y-4">
-            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block">Claiming Item</span>
+            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Claiming Item</span>
             <div className="flex items-center gap-4 text-left p-4 bg-white/5 rounded-2xl">
-                <div className="w-12 h-12 bg-slate-950 rounded-lg flex items-center justify-center text-xl">📦</div>
+                <div className="w-12 h-12 bg-slate-950 rounded-lg flex items-center justify-center text-xl overflow-hidden border border-white/5">
+                   {claim.found_item_description ? '📦' : '📷'}
+                </div>
                 <div>
-                    <p className="text-white font-black uppercase text-sm">{claim.found_item_category}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        Your Proof: "{claim.proof_description}"
+                    <p className="text-white font-black uppercase text-sm tracking-tight">{claim.found_item_category}</p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest line-clamp-1 italic">
+                        "{claim.proof_description}"
                     </p>
                 </div>
             </div>

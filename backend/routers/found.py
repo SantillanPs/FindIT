@@ -231,6 +231,7 @@ def direct_release_item(
     found_item.released_to_id_number = release.released_to_id_number
     found_item.released_by_name = release.released_by_name
     found_item.released_at = datetime.utcnow()
+    found_item.released_to_photo_url = release.released_to_photo_url
     
     db.commit()
     db.refresh(found_item)

@@ -10,7 +10,7 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0 });
+  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0 });
 
   // Close sidebar on route change
   useEffect(() => {
@@ -28,13 +28,15 @@ const Layout = ({ children }) => {
 
   const fetchAdminStats = async () => {
     try {
-      const [claimsRes, matchesRes] = await Promise.all([
+      const [claimsRes, matchesRes, lostRes] = await Promise.all([
         apiClient.get('/admin/claims/pending'),
-        apiClient.get('/admin/matches/all')
+        apiClient.get('/admin/matches/all'),
+        apiClient.get('/admin/lost/all')
       ]);
       setAdminStats({
         claims: claimsRes.data.length,
-        matches: matchesRes.data.length
+        matches: matchesRes.data.length,
+        lost: lostRes.data.length
       });
     } catch (error) {
       console.error('Failed to fetch admin sidebar stats', error);
@@ -93,6 +95,7 @@ const Layout = ({ children }) => {
                   <>
                     <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Command Center</p>
                     <SideNavLink to="/admin" icon="fa-warehouse" label="Inventory" />
+                    <SideNavLink to="/admin/lost" icon="fa-file-circle-question" label="Lost Reports" count={adminStats.lost} />
                     <SideNavLink to="/admin/claims" icon="fa-stamp" label="Verify Claims" count={adminStats.claims} />
                     <SideNavLink to="/admin/matches" icon="fa-wand-magic-sparkles" label="Matchmaker" count={adminStats.matches} />
                     <SideNavLink to="/admin/users" icon="fa-id-card" label="Verify Students" />

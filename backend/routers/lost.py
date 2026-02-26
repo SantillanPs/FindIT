@@ -353,3 +353,12 @@ def list_public_lost_items(db: Session = Depends(auth.get_db)):
     return db.query(database.LostItem).filter(
         database.LostItem.status == "reported"
     ).all()
+
+@router.get("/admin/lost/all", response_model=list[schemas.LostItemResponse])
+def admin_get_all_lost_reports(
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    return db.query(database.LostItem).filter(
+        database.LostItem.status != "found"
+    ).order_by(database.LostItem.last_seen_time.desc()).all()
