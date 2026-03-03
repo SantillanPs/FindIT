@@ -9,8 +9,13 @@ const StudentDashboard = () => {
   const [lostReports, setLostReports] = useState([]);
   const [foundReports, setFoundReports] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, fetchUser } = useAuth();
   const navigate = useNavigate();
+  const [deptInput, setDeptInput] = useState("");
+
+  useEffect(() => {
+    if (user?.department) setDeptInput(user.department);
+  }, [user]);
 
   useEffect(() => {
     fetchDashData();
@@ -45,7 +50,7 @@ const StudentDashboard = () => {
   return (
     <div className="space-y-12">
       {/* Overview Stats */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard 
           index={0}
           icon="fa-search" 
@@ -64,12 +69,74 @@ const StudentDashboard = () => {
         />
         <StatCard 
           index={2}
-          icon="fa-bolt" 
-          label="Active Matches" 
-          value={lostReports.filter(r => r.status === 'matched').length} 
+          icon="fa-award" 
+          label="Integrity Points" 
+          value={user?.integrity_points || 0} 
           color="gold"
           variants={statVariants}
         />
+        <StatCard 
+          index={3}
+          icon="fa-bolt" 
+          label="Active Matches" 
+          value={lostReports.filter(r => r.status === 'matched').length} 
+          color="blue"
+          variants={statVariants}
+        />
+      </section>
+
+      {/* Account & Privacy Settings (Leaderboard Changes) */}
+      <section className="glass-panel rounded-3xl p-8 border border-white/5 bg-white/[0.01]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+          <div className="space-y-2">
+            <h2 className="text-[10px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-3">
+              <span className="w-2 h-2 rounded-full bg-uni-500 shadow-[0_0_8px_rgba(var(--color-uni-500),0.5)]"></span>
+              Leaderboard & Privacy Settings
+            </h2>
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Manage how you appear in the Hall of Integrity.</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="space-y-2">
+               <label className="block text-[8px] font-black text-slate-600 uppercase tracking-widest ml-1">College Department</label>
+               <input 
+                 type="text"
+                 readOnly={user?.role === 'student'}
+                 placeholder="e.g. CEIT or Engineering"
+                 value={deptInput}
+                 onChange={(e) => user?.role !== 'student' && setDeptInput(e.target.value)}
+                 onBlur={async () => {
+                    if (user?.role === 'student') return;
+                    try {
+                      await apiClient.put('/auth/me/preference', { department: deptInput });
+                      fetchUser(); 
+                    } catch (err) { console.error(err); }
+                 }}
+                 className={`bg-slate-900 border border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest focus:outline-none w-48 md:w-56 ${user?.role === 'student' ? 'text-slate-500 cursor-not-allowed border-transparent' : 'text-white border-white/10 focus:border-uni-500'}`}
+               />
+               {user?.role === 'student' && (
+                 <p className="text-[7px] font-bold text-slate-600 uppercase tracking-[0.1em] mt-1 ml-1 opacity-50 italic">
+                   Institutional Record (Read Only)
+                 </p>
+               )}
+            </div>
+
+            <div className="flex items-center gap-3 bg-slate-950 p-2 rounded-2xl border border-white/5">
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-2">Display Full Name?</span>
+                <button 
+                  onClick={async () => {
+                    try {
+                      await apiClient.put('/auth/me/preference', { show_full_name: !user?.show_full_name });
+                      fetchUser(); // Sync global state without reload
+                    } catch (err) { console.error(err); }
+                  }}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${user?.show_full_name ? 'bg-uni-500' : 'bg-slate-800'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${user?.show_full_name ? 'left-7' : 'left-1'}`}></div>
+                </button>
+            </div>
+          </div>
+        </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-12">
@@ -144,24 +211,6 @@ const StudentDashboard = () => {
         </section>
       </div>
 
-      {/* Suggested Action */}
-      <section className="mt-12 md:mt-20">
-         <div className="glass-panel rounded-3xl p-6 sm:p-10 relative overflow-hidden group border border-white/5">
-            <div className="absolute inset-0 bg-gradient-to-r from-uni-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12">
-               <div className="text-center md:text-left space-y-2 md:space-y-3">
-                  <p className="text-[9px] md:text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] md:tracking-[0.4em]">Help the community</p>
-                  <h3 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight leading-tight">Found an item that isn't yours?</h3>
-                  <p className="text-xs md:text-sm text-slate-500 font-bold uppercase tracking-widest max-w-lg mx-auto md:mx-0">
-                    Reporting found items helps fellow students recover their belongings faster. Drop off items at Building 42.
-                  </p>
-               </div>
-               <Link to="/report/found" className="w-full md:w-auto text-center bg-white text-slate-950 px-8 md:px-10 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-uni-400 hover:text-white transition-all shadow-xl shadow-white/5 hover:scale-105">
-                  Start Report →
-               </Link>
-            </div>
-         </div>
-      </section>
     </div>
   );
 };

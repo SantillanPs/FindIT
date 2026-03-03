@@ -150,7 +150,17 @@ def review_claim(
             )
             db.add(approval_notif)
 
-            # 2. Handle competing claims
+            # 2. Automatically resolve matching lost reports for this user
+            matching_lost_reports = db.query(database.LostItem).filter(
+                database.LostItem.user_id == db_claim.student_id,
+                database.LostItem.category == found_item.category,
+                database.LostItem.status == database.ItemStatus.REPORTED.value
+            ).all()
+            for report in matching_lost_reports:
+                report.status = database.ItemStatus.RESOLVED.value
+                report.admin_notes = (report.admin_notes or "") + f"\n[System] Auto-resolved on {datetime.utcnow().strftime('%Y-%m-%d')} because claim #{claim_id} was approved."
+
+            # 3. Handle competing claims
             other_claims = db.query(database.Claim).filter(
                 database.Claim.found_item_id == found_item.id,
                 database.Claim.id != claim_id,

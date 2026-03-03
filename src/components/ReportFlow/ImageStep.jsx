@@ -11,7 +11,7 @@ const ImageStep = ({
   optional = true 
 }) => {
   return (
-    <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
+    <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
       <div className="space-y-4">
          <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">{stepLabel}</span>
          <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">{title}</h2>
@@ -26,26 +26,46 @@ const ImageStep = ({
                   value={value}
                   onUploadSuccess={onUpload}
               />
-              <div className="mt-8 p-6 bg-white/5 border border-white/5 border-dashed rounded-3xl text-left">
-                  <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
-                      <i className="fa-solid fa-camera-rotate"></i>
-                      Reference Photos
-                  </p>
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                      If you don't have a photo of your specific item, searching for the exact model or brand online and uploading a screenshot works great too!
-                  </p>
-              </div>
+              {optional && (
+                <div className="mt-8 p-6 bg-white/5 border border-white/5 border-dashed rounded-3xl text-left">
+                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
+                        <i className="fa-solid fa-camera-rotate"></i>
+                        Reference Photos
+                    </p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                        If you don't have a photo of your specific item, searching for the exact model or brand online and uploading a screenshot works great too!
+                    </p>
+                </div>
+              )}
+              {!optional && !value && (
+                <div className="mt-8 p-6 bg-uni-500/5 border border-uni-400/30 rounded-3xl text-left shadow-[0_0_20px_rgba(var(--uni-400),0.1)]">
+                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
+                        <i className="fa-solid fa-circle-info"></i>
+                        Mandatory Photo
+                    </p>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
+                        Since you have the item, a real photo is required. This helps verify the report and ensures we find the owner faster.
+                    </p>
+                </div>
+              )}
           </div>
           
           <button 
             onClick={onNext} 
-            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4"
+            disabled={!optional && !value}
+            className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 ${
+              (!optional && !value) 
+                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5' 
+                : 'bg-uni-600 text-white hover:bg-white hover:text-black'
+            }`}
           >
-            {value ? 'Next Step →' : (optional ? 'Skip & Continue →' : 'Next Step →')}
+            {value ? 'Next Step →' : (optional ? 'Skip & Continue →' : 'Upload Required →')}
           </button>
       </div>
     </div>
   );
 };
 
+
 export default ImageStep;
+

@@ -104,8 +104,10 @@ def report_found_item(
         embedding=embedding_json
     )
     db.add(new_item)
+    
     db.commit()
     db.refresh(new_item)
+    db.refresh(current_user)
 
     # AUTO-NOTIFY Logic
     target_user = None
@@ -169,7 +171,36 @@ def update_item_custody(
     item = db.query(database.FoundItem).filter(database.FoundItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
-    
+
+    # AWARD REWARDS LOGIC (Only if moving to IN_CUSTODY for the first time)
+    if item.status != database.ItemStatus.IN_CUSTODY.value and item.finder_id:
+        finder = db.query(database.User).filter(database.User.id == item.finder_id).first()
+        if finder:
+            points_awarded = AIService.calculate_item_value(item.category, item.description)
+            finder.integrity_points += points_awarded
+            
+            # Milestone Check
+            milestone_reached = False
+            if finder.integrity_points >= 1000 and not finder.is_certificate_eligible:
+                finder.is_certificate_eligible = True
+                milestone_reached = True
+            
+            # Notifications
+            if milestone_reached:
+                cert_notif = database.Notification(
+                    user_id=finder.id,
+                    title="🏆 1,000 Points Reached: Certificate Eligible!",
+                    message="Congratulations! You have reached 1,000 Integrity Points. You are now eligible to receive an Official Certificate of Appreciation from the University. Visit the office to claim yours!"
+                )
+                db.add(cert_notif)
+            
+            points_notif = database.Notification(
+                user_id=finder.id,
+                title="Integrity Points Awarded / Item Verified",
+                message=f"Your report for '{item.item_name}' was verified by the USG. You earned +{points_awarded} integrity points. Total: {finder.integrity_points}"
+            )
+            db.add(points_notif)
+
     item.status = database.ItemStatus.IN_CUSTODY.value
     db.commit()
     db.refresh(item)
@@ -233,6 +264,17 @@ def direct_release_item(
     found_item.released_at = datetime.utcnow()
     found_item.released_to_photo_url = release.released_to_photo_url
     
+    # Auto-resolve matching lost reports for this recipient
+    if actual_user:
+        matching_lost = db.query(database.LostItem).filter(
+            database.LostItem.user_id == actual_user.id,
+            database.LostItem.category == found_item.category,
+            database.LostItem.status == database.ItemStatus.REPORTED.value
+        ).all()
+        for report in matching_lost:
+            report.status = database.ItemStatus.RESOLVED.value
+            report.admin_notes = (report.admin_notes or "") + f"\n[System] Auto-resolved on {datetime.utcnow().strftime('%Y-%m-%d')} via direct release of item #{item_id}."
+
     db.commit()
     db.refresh(found_item)
     

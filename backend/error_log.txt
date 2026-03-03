@@ -1,1 +1,2 @@
 [2026-02-23 02:30:14.334668] VALIDATION ERROR: [{'type': 'missing', 'loc': ('body', 'password'), 'msg': 'Field required', 'input': {'email': 'spsantillan@gmail.com', 'full_name': 'Sebastian Santillan', 'student_id_number': '22-00130'}}]
+[2026-03-02 06:48:52.634889] VALIDATION ERROR: [{'type': 'value_error', 'loc': ('body', 'email'), 'msg': 'Value error, Email must be an institutional email (@nemsu.edu.ph)', 'input': 'sebastian@gmail.com', 'ctx': {'error': ValueError('Email must be an institutional email (@nemsu.edu.ph)')}}]

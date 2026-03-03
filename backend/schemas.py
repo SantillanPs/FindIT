@@ -10,13 +10,9 @@ class UserCreate(UserBase):
     role: Optional[str] = "student"
     full_name: Optional[str] = None
     student_id_number: Optional[str] = None
+    department: Optional[str] = None
     verification_proof_url: Optional[str] = None
 
-    @validator('email')
-    def validate_nemsu_email(cls, v):
-        if not v.endswith('@nemsu.edu.ph'):
-            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
-        return v
 
 class UpgradeGuestRequest(BaseModel):
     email: EmailStr
@@ -24,11 +20,6 @@ class UpgradeGuestRequest(BaseModel):
     student_id_number: str
     password: Optional[str] = None
 
-    @validator('email')
-    def validate_nemsu_email(cls, v):
-        if not v.endswith('@nemsu.edu.ph'):
-            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
-        return v
 
 class UserLogin(UserBase):
     password: str
@@ -39,10 +30,37 @@ class UserResponse(UserBase):
     is_verified: bool
     full_name: Optional[str] = None
     student_id_number: Optional[str] = None
+    department: Optional[str] = None
     verification_proof_url: Optional[str] = None
+    integrity_points: int = 0
+    fraud_strikes: int = 0
+    is_blacklisted: bool = False
+    is_certificate_eligible: bool = False
+    show_full_name: bool = False
+
+class UserPublicResponse(BaseModel):
+    id: int
+    full_name_masked: str
+    show_full_name: bool
+    department: Optional[str] = None
+    integrity_points: int
+    is_certificate_eligible: bool
+    rank: Optional[int] = None
 
     class Config:
         from_attributes = True
+
+class UserReputationUpdate(BaseModel):
+    points_modifier: int = 0
+    strikes_modifier: int = 0
+    is_blacklisted: Optional[bool] = None
+
+class CertificateEligibilityUpdate(BaseModel):
+    is_eligible: bool
+
+class UserPreferenceUpdate(BaseModel):
+    show_full_name: Optional[bool] = None
+    department: Optional[str] = None
 
 class UserUpdate(BaseModel):
     is_verified: bool
@@ -118,11 +136,6 @@ class LostItemCreate(LostItemBase):
     guest_full_name: Optional[str] = None
     guest_email: Optional[EmailStr] = None
 
-    @validator('guest_email')
-    def validate_nemsu_email(cls, v):
-        if v and not v.endswith('@nemsu.edu.ph'):
-            raise ValueError('Email must be an institutional email (@nemsu.edu.ph)')
-        return v
 
 class LostItemResponse(LostItemBase):
     id: int
@@ -132,6 +145,7 @@ class LostItemResponse(LostItemBase):
     guest_email: Optional[str] = None
     tracking_id: Optional[str] = None
     embedding: Optional[str] = None
+    admin_notes: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -151,9 +165,14 @@ class LostItemPublic(BaseModel):
     safe_photo_url: Optional[str] = None
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
+    admin_notes: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class LostItemUpdate(BaseModel):
+    status: Optional[str] = None
+    admin_notes: Optional[str] = None
 
 class MatchSuggestion(BaseModel):
     item: FoundItemPublic
@@ -238,3 +257,29 @@ class AuditLogResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# Witness Report Schemas
+class WitnessReportCreate(BaseModel):
+    witness_description: str
+    witness_photo_url: Optional[str] = None
+    is_anonymous: bool = False
+    guest_name: Optional[str] = None
+    guest_email: Optional[EmailStr] = None
+
+class WitnessReportResponse(BaseModel):
+    id: int
+    lost_item_id: int
+    reporter_id: Optional[int] = None
+    guest_name: Optional[str] = None
+    guest_email: Optional[str] = None
+    witness_description: str
+    witness_photo_url: Optional[str] = None
+    is_anonymous: bool
+    status: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class WitnessReportStatusUpdate(BaseModel):
+    status: str # approved or dismissed

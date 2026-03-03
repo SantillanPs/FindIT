@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import { ProtectedRoute, GuestRoute } from './components/SafeRoute';
 
@@ -78,6 +79,7 @@ const AppContent = () => {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/lost" element={<AdminDashboard />} />
             <Route path="/admin/claims" element={<AdminDashboard />} />
+            <Route path="/admin/witnesses" element={<AdminDashboard />} />
             <Route path="/admin/matches" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminDashboard />} />
@@ -92,9 +94,11 @@ const AppContent = () => {
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </Router>
   );
 }

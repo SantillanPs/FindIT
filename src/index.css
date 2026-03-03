@@ -8,14 +8,20 @@
   --color-brand-secondary: #0284c7;  /* Sky 600 */
   --color-brand-gold: #f59e0b;       /* Amber 500 */
   --color-brand-gold-muted: #9a7b2c; 
-  --color-brand-background: #0f172a; /* Slate 900 */
-  --color-brand-surface: #1e293b;    /* Slate 800 */
-  --color-brand-border: rgba(71, 85, 105, 0.5);
+  --color-brand-background: var(--bg-main);
+  --color-brand-surface: var(--bg-surface);
+  --color-brand-border: var(--border-main);
 
-  --color-dark-bg: #0f172a;
-  --color-dark-surface: #1e293b;
-  --color-dark-elevated: #334155;
-  --color-dark-border: #475569;
+  --color-bg-main: var(--bg-main);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-border-main: var(--border-main);
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-header: var(--text-header);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-input-bg: var(--input-bg);
 
   --color-uni-400: #38bdf8;
   --color-uni-500: #0ea5e9;
@@ -44,28 +50,63 @@
   --animate-glow: glow 2s ease-in-out infinite alternate;
 }
 
+:root {
+  --bg-main: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #334155;
+  --border-main: rgba(71, 85, 105, 0.5);
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-header: #ffffff;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(71, 85, 105, 0.5);
+  --input-bg: rgba(15, 23, 42, 0.8);
+  --card-bg: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+}
+
+/* Light Theme Overrides */
+.light-theme {
+  --bg-main: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --border-main: rgba(203, 213, 225, 0.8);
+  --text-main: #334155;
+  --text-muted: #64748b;
+  --text-header: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(203, 213, 225, 0.6);
+  --input-bg: #ffffff;
+  --card-bg: #ffffff;
+}
+
 @layer base {
   body {
-    @apply font-sans bg-brand-background text-slate-200 antialiased selection:bg-brand-primary/20 selection:text-white;
-    background-color: #0f172a;
+    @apply font-sans antialiased selection:bg-brand-primary/20;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-header);
   }
 }
 
 @layer components {
   .mesh-bg {
-    background-color: #0f172a;
+    background-color: var(--bg-main);
     background-image: 
-        radial-gradient(at 40% 20%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
-        radial-gradient(at 80% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-        radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.1) 0px, transparent 50%),
-        radial-gradient(at 80% 50%, rgba(251, 191, 36, 0.08) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+        radial-gradient(at 40% 20%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(245, 158, 11, 0.05) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(251, 191, 36, 0.04) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.05) 0px, transparent 50%);
   }
 
   .glass-panel {
-    background: rgba(30, 41, 59, 0.7);
+    background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(71, 85, 105, 0.5);
+    border: 1px solid var(--glass-border);
   }
 
   .glass-panel-hover:hover {
@@ -75,7 +116,7 @@
 
   .item-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+    background: var(--card-bg);
   }
 
   .item-card:hover {
@@ -92,7 +133,7 @@
   }
 
   .category-pill {
-    @apply bg-dark-surface/80 border-slate-600/50 text-slate-400 px-4 py-2 rounded-full border text-sm font-medium transition-all hover:bg-slate-700/90 hover:border-uni-400/30 hover:text-slate-200;
+    @apply bg-bg-surface/80 border-border-main text-text-muted px-4 py-2 rounded-full border text-sm font-medium transition-all hover:bg-bg-elevated hover:border-uni-400/30 hover:text-text-header;
   }
 
   .category-pill.active {
@@ -103,7 +144,7 @@
   }
 
   .search-input {
-    @apply bg-slate-900/60 border-slate-600/50 text-slate-200 w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none transition-all focus:bg-slate-900/80 focus:border-uni-500 focus:ring-4 focus:ring-uni-500/20;
+    @apply bg-bg-surface/60 border-border-main text-text-main w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none transition-all focus:bg-bg-surface/80 focus:border-uni-500 focus:ring-4 focus:ring-uni-500/20;
   }
 
   .nav-link {
@@ -116,7 +157,7 @@
   }
 
   .form-input {
-    @apply bg-slate-900/60 border-slate-600/50 text-slate-200 w-full px-4 py-3 rounded-xl border focus:outline-none transition-all focus:border-uni-500 focus:ring-3 focus:ring-uni-500/20 placeholder:text-slate-500;
+    @apply bg-bg-surface/60 border-border-main text-text-main w-full px-4 py-3 rounded-xl border focus:outline-none transition-all focus:border-uni-500 focus:ring-3 focus:ring-uni-500/20 placeholder:text-text-muted;
   }
 
   .location-btn {
@@ -124,11 +165,14 @@
   }
 
   .app-card {
-    @apply bg-slate-950/40 backdrop-blur-md border border-brand-border rounded-xl transition-all;
+    @apply bg-bg-main/40 backdrop-blur-md border border-border-main rounded-xl transition-all;
   }
 
   .input-field {
-    @apply bg-slate-950/80 border-slate-800 text-slate-200 w-full px-4 py-3 rounded-lg border focus:outline-none focus:border-uni-500 focus:ring-2 focus:ring-uni-500/20 transition-all placeholder:text-slate-500;
+    @apply w-full px-4 py-3 rounded-lg border focus:outline-none focus:border-uni-500 focus:ring-2 focus:ring-uni-500/20 transition-all;
+    background: var(--input-bg);
+    border-color: var(--border-main);
+    color: var(--text-main);
   }
 
   .btn-primary {
@@ -144,19 +188,20 @@
   }
 
   .upload-zone {
-    @apply bg-slate-950/40 border-slate-800 border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer hover:bg-slate-900/40 hover:border-uni-500;
+    @apply bg-bg-main/40 border-border-main border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer hover:bg-bg-surface/40 hover:border-uni-500;
   }
 
   .app-bg-main {
     @apply h-screen relative overflow-x-hidden;
-    background-color: #0f172a;
+    background-color: var(--bg-main);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.08) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.05) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
     background-attachment: fixed;
+    transition: background-color 0.3s ease;
   }
 
   /* Ambient Glow Effects as global utilities */

@@ -44,6 +44,53 @@ class AIService:
         return float(dot_product / (norm_e1 * norm_e2))
 
     @classmethod
+    def calculate_item_value(cls, category: str, description: str) -> int:
+        """
+        Calculates the integrity point value of an item based on its category 
+        and descriptive importance.
+        """
+        base_values = {
+            "Cellphone": 100,
+            "Laptop": 150,
+            "Tablet": 80,
+            "ID Card": 40,
+            "Wallet": 60,
+            "Bag / Backpack": 50,
+            "Keys": 30,
+            "Headphones / Earbuds": 50,
+            "Watch / Wearable": 70,
+            "Water Bottle": 10,
+            "Umbrella": 10,
+            "Eyewear": 40,
+            "Book": 20,
+            "Notebook": 10,
+            "Stationery": 5,
+            "Clothing": 15,
+            "Accessories": 25,
+            "Electronics Accessories": 30,
+            "Computer Peripheral": 35,
+            "Other": 10
+        }
+
+        # Get base value
+        points = base_values.get(category, 10)
+
+        # Value Boosters (Keyword analysis)
+        high_value_keywords = [
+            "iphone", "macbook", "ipad", "samsung", "cash", "money", "wallet", 
+            "gold", "silver", "jewelry", "expensive", "brand new", "important",
+            "medical", "prescriptions", "luxury"
+        ]
+        
+        desc_lower = description.lower()
+        boost_count = sum(1 for kw in high_value_keywords if kw in desc_lower)
+        
+        # Add 10 points for each high-value keyword found, capped at 50 extra points
+        points += min(boost_count * 10, 50)
+
+        return points
+
+    @classmethod
     def classify_item(cls, item_name: str, description: str) -> str:
         # Define internal descriptive seeds for better zero-shot accuracy
         category_seeds = {
@@ -64,6 +111,8 @@ class AIService:
             "Stationery": "pens, pencils, rulers, erasers, highlighters",
             "Clothing": "shirts, jackets, hoodies, pants, shoes, caps, hats",
             "Accessories": "jewelry, rings, necklaces, watches, scarves",
+            "Electronics Accessories": "chargers, cables, power banks, adapters, cases",
+            "Computer Peripheral": "computer mouse, keyboard, monitor, usb hub, mousepad",
             "Other": "other items, general objects"
         }
         

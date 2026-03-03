@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import apiClient from '../api/client';
+import ThemeToggle from './ThemeToggle';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -50,7 +51,7 @@ const Layout = ({ children }) => {
   };
 
   return (
-    <div className="app-bg-main h-screen text-slate-200 flex overflow-hidden">
+    <div className="app-bg-main h-screen text-text-main flex overflow-hidden transition-colors duration-300">
       {/* Ambient Glow Effects */}
       <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="ambient-uni opacity-30"></div>
@@ -73,15 +74,15 @@ const Layout = ({ children }) => {
           </AnimatePresence>
 
           {/* Sidebar */}
-          <aside className={`fixed inset-y-0 left-0 z-[60] w-72 flex-shrink-0 glass-panel border-r border-white/5 flex flex-col h-full overflow-hidden transition-transform duration-300 lg:translate-x-0 lg:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <aside className={`fixed inset-y-0 left-0 z-[60] w-72 flex-shrink-0 bg-bg-surface border-r border-border-main flex flex-col h-full overflow-hidden transition-all duration-300 lg:translate-x-0 lg:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
              <div className="p-8 pb-4 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-3 group no-underline">
                   <div className="w-10 h-10 bg-gradient-to-br from-uni-600 to-uni-400 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-uni-500/30 group-hover:rotate-6 transition-transform">
                     <i className="fa-solid fa-compass"></i>
                   </div>
                   <div>
-                    <h1 className="font-display font-bold text-xl tracking-tight text-white leading-none">FindIT</h1>
-                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
+                    <h1 className="font-display font-bold text-xl tracking-tight text-text-header leading-none">FindIT</h1>
+                    <p className="text-[8px] text-text-muted font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
                   </div>
                 </Link>
                 <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-white p-2">
@@ -97,8 +98,9 @@ const Layout = ({ children }) => {
                     <SideNavLink to="/admin" icon="fa-warehouse" label="Inventory" />
                     <SideNavLink to="/admin/lost" icon="fa-file-circle-question" label="Lost Reports" count={adminStats.lost} />
                     <SideNavLink to="/admin/claims" icon="fa-stamp" label="Verify Claims" count={adminStats.claims} />
+                    <SideNavLink to="/admin/witnesses" icon="fa-eye" label="Witness Intel" />
                     <SideNavLink to="/admin/matches" icon="fa-wand-magic-sparkles" label="Matchmaker" count={adminStats.matches} />
-                    <SideNavLink to="/admin/users" icon="fa-id-card" label="Verify Students" />
+                    <SideNavLink to="/admin/users" icon="fa-trophy" label="Leaderboard" />
                     <SideNavLink to="/admin/analytics" icon="fa-chart-pie" label="System Insights" />
                     <div className="h-px bg-white/5 mx-4 my-4"></div>
                     <SideNavLink to="/admin/released" icon="fa-history" label="History" />
@@ -117,7 +119,7 @@ const Layout = ({ children }) => {
 
           {/* Main Content Area */}
           <div className="flex-grow flex flex-col relative z-10 overflow-hidden w-full">
-             <header className="h-20 flex-shrink-0 border-b border-white/5 flex items-center justify-between px-6 md:px-10 glass-panel-simple backdrop-blur-xl">
+             <header className="h-20 flex-shrink-0 border-b border-border-main flex items-center justify-between px-6 md:px-10 bg-bg-surface/80 backdrop-blur-xl">
                 <div className="flex items-center gap-4">
                    <button 
                     onClick={() => setIsSidebarOpen(true)}
@@ -138,12 +140,13 @@ const Layout = ({ children }) => {
                    </div>
                 </div>
                 <div className="flex items-center gap-4 md:gap-6">
+                   <ThemeToggle />
                    <NotificationCenter />
                    <div className="hidden sm:block h-8 w-px bg-white/10 mx-2"></div>
                    
                    <div className="hidden md:flex flex-col items-end mr-2">
-                       <span className="text-[10px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{user.email.split('@')[0]}</span>
-                       <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">{user.role}</span>
+                       <span className="text-[10px] font-black text-text-header uppercase tracking-widest truncate max-w-[120px]">{user.email.split('@')[0]}</span>
+                       <span className="text-[8px] font-black text-text-muted uppercase tracking-[0.2em]">{user.role}</span>
                    </div>
 
                    <button 
@@ -208,12 +211,13 @@ const Layout = ({ children }) => {
                     <i className="fa-solid fa-compass"></i>
                   </div>
                   <div className="hidden sm:block text-left">
-                    <h1 className="font-display font-bold text-xl tracking-tight text-white leading-none">FindIT</h1>
-                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
+                    <h1 className="font-display font-bold text-xl tracking-tight text-text-header leading-none">FindIT</h1>
+                    <p className="text-[8px] text-text-muted font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
                   </div>
                 </Link>
                 
                 <div className="flex items-center gap-3 md:gap-6">
+                  <ThemeToggle />
                   <Link to="/login" className="text-slate-500 hover:text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors">Sign In</Link>
                   <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-4 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20">Register</Link>
                 </div>

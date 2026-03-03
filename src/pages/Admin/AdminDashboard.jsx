@@ -10,8 +10,9 @@ import ClaimsTab from './components/ClaimsTab';
 import MatchmakerTab from './components/MatchmakerTab';
 import LostReportsTab from './components/LostReportsTab';
 import ReleasedItemsTable from './components/ReleasedItemsTable';
+import WitnessReportsTab from './components/WitnessReportsTab';
 import Analytics from './Analytics';
-import UserVerification from './UserVerification';
+import Leaderboard from './Leaderboard';
 
 // Modals
 import ReleaseItemModal from './components/ReleaseItemModal';
@@ -130,6 +131,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleLostReportUpdate = async (reportId, updates) => {
+    setActionLoading(`lost-${reportId}`);
+    try {
+      await apiClient.put(`/admin/lost/${reportId}/status`, updates);
+      await fetchDashboardData();
+    } catch (err) {
+      console.error('Lost report update failed', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Filter Logic
   const filteredItems = recentFound.filter(item => {
     if (item.status === 'released') return false;
@@ -227,12 +240,19 @@ const AdminDashboard = () => {
             )}
 
             {currentTab === 'lost' && (
-               <LostReportsTab 
-                 filteredLostReports={filteredLostReports}
-                 matches={matches}
-                 navigate={navigate}
-                 setSearchTerm={setSearchTerm}
-               />
+                <LostReportsTab 
+                  filteredLostReports={filteredLostReports}
+                  matches={matches}
+                  navigate={navigate}
+                  setSearchTerm={setSearchTerm}
+                  onUpdateReport={handleLostReportUpdate}
+                  actionLoading={actionLoading}
+                  setPreviewImage={setPreviewImage}
+                />
+            )}
+
+            {currentTab === 'witnesses' && (
+              <WitnessReportsTab setPreviewImage={setPreviewImage} />
             )}
 
             {currentTab === 'released' && (
@@ -247,7 +267,7 @@ const AdminDashboard = () => {
 
             {currentTab === 'users' && (
               <div className="p-8 md:p-12 pb-32">
-                 <UserVerification />
+                 <Leaderboard />
               </div>
             )}
           </div>

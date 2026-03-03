@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import timedelta
 import database, schemas, auth
+from database import WitnessReport, WitnessReportStatus, User
 from dependencies import admin_required, verified_student_required
 from ai_service import AIService
 from datetime import datetime
@@ -135,8 +136,6 @@ def report_lost_item(
     if not current_user:
         if not guest_full_name or not guest_email:
             raise HTTPException(status_code=400, detail="Name and email are required for guest reports.")
-        if not guest_email.endswith("@nemsu.edu.ph"):
-            raise HTTPException(status_code=400, detail="Please use your institutional email (@nemsu.edu.ph).")
 
     new_item = database.LostItem(
         **item_data,
@@ -362,3 +361,96 @@ def admin_get_all_lost_reports(
     return db.query(database.LostItem).filter(
         database.LostItem.status != "found"
     ).order_by(database.LostItem.last_seen_time.desc()).all()
+
+@router.put("/admin/lost/{report_id}/status", response_model=schemas.LostItemResponse)
+def admin_update_lost_report_status(
+    report_id: int,
+    update: schemas.LostItemUpdate,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    report = db.query(database.LostItem).filter(database.LostItem.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Lost report not found")
+    
+    if update.status:
+        report.status = update.status
+    if update.admin_notes is not None:
+        report.admin_notes = update.admin_notes
+    
+    db.commit()
+    db.refresh(report)
+    return report
+
+@router.post("/lost/{report_id}/witness", response_model=schemas.WitnessReportResponse)
+def submit_witness_report(
+    report_id: int,
+    witness_report: schemas.WitnessReportCreate,
+    db: Session = Depends(auth.get_db),
+    current_user: User = Depends(auth.get_current_user_optional)
+):
+    lost_item = db.query(database.LostItem).filter(database.LostItem.id == report_id).first()
+    if not lost_item:
+        raise HTTPException(status_code=404, detail="Lost report not found")
+    
+    new_report = WitnessReport(
+        lost_item_id=report_id,
+        reporter_id=current_user.id if current_user else None,
+        guest_name=witness_report.guest_name if not current_user else None,
+        guest_email=witness_report.guest_email if not current_user else None,
+        witness_description=witness_report.witness_description,
+        witness_photo_url=witness_report.witness_photo_url,
+        is_anonymous=witness_report.is_anonymous,
+        status=WitnessReportStatus.PENDING.value
+    )
+    
+    db.add(new_report)
+    db.commit()
+    db.refresh(new_report)
+    return new_report
+
+@router.get("/admin/witness-reports", response_model=list[schemas.WitnessReportResponse])
+def get_all_witness_reports(
+    db: Session = Depends(auth.get_db),
+    admin: User = Depends(admin_required)
+):
+    return db.query(WitnessReport).all()
+
+@router.put("/admin/witness-reports/{report_id}/status", response_model=schemas.WitnessReportResponse)
+def update_witness_report_status(
+    report_id: int,
+    update: schemas.WitnessReportStatusUpdate,
+    db: Session = Depends(auth.get_db),
+    admin: User = Depends(admin_required)
+):
+    report = db.query(WitnessReport).filter(WitnessReport.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Witness report not found")
+    
+    old_status = report.status
+    report.status = update.status
+    
+    # Award points if approved and not anonymous
+    if report.status == WitnessReportStatus.APPROVED.value and old_status != WitnessReportStatus.APPROVED.value:
+        if not report.is_anonymous and report.reporter_id:
+            reporter = db.query(User).filter(User.id == report.reporter_id).first()
+            if reporter:
+                # Award fixed points for witness report (e.g., 100 points)
+                points_to_award = 100 
+                reporter.integrity_points += points_to_award
+                
+                # Check milestone
+                if reporter.integrity_points >= 1000 and not reporter.is_certificate_eligible:
+                    reporter.is_certificate_eligible = True
+                
+                # Notification
+                notif = database.Notification(
+                    user_id=reporter.id,
+                    title="Witness Report Approved!",
+                    message=f"Your witness report was approved. You earned +{points_to_award} integrity points!"
+                )
+                db.add(notif)
+    
+    db.commit()
+    db.refresh(report)
+    return report

@@ -7,10 +7,13 @@ const InventoryCard = ({ item, matches, pendingClaims, navigate, setSearchTerm, 
 
   return (
     <div key={item.id} className={`bg-white/[0.02] border rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:bg-white/[0.05] transition-all group overflow-hidden relative ${
-       item.status === 'claimed' ? 'border-uni-500/30' : 'border-white/5'
+       item.status === 'claimed' ? 'border-green-500/30' : 
+       item.status === 'in_custody' ? 'border-sky-500/20' : 'border-white/5'
     }`}>
-       {item.status === 'claimed' && (
-           <div className="absolute top-0 left-0 w-1 h-full bg-uni-500 shadow-[0_0_15px_rgba(var(--uni-rgb),0.5)]"></div>
+       {item.status !== 'reported' && (
+           <div className={`absolute top-0 left-0 w-1 h-full shadow-[0_0_15px_rgba(var(--color-status-rgb),0.5)] ${
+             item.status === 'in_custody' ? 'bg-sky-500' : 'bg-green-500'
+           }`}></div>
        )}
        <div className="flex items-center gap-5">
           {/* Visual ID */}
@@ -83,7 +86,7 @@ const InventoryCard = ({ item, matches, pendingClaims, navigate, setSearchTerm, 
        <div className="w-full md:w-auto flex flex-col items-end gap-3 border-t md:border-none border-white/5 pt-4 md:pt-0">
           <div className={`px-2 py-0.5 rounded-md text-[7px] font-black uppercase tracking-[0.1em] border ${
              item.status === 'reported' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-             item.status === 'in_custody' ? 'bg-uni-500/10 text-uni-400 border-uni-500/20' :
+             item.status === 'in_custody' ? 'bg-sky-500/10 text-sky-400 border-sky-500/20' :
              'bg-green-500/10 text-green-400 border-green-500/20'
           }`}>
             {item.status === 'reported' ? 'Pending intake' : item.status.replace('_', ' ')}

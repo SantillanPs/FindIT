@@ -5,7 +5,10 @@ const LostReportsTab = ({
   filteredLostReports, 
   matches, 
   navigate, 
-  setSearchTerm 
+  setSearchTerm,
+  onUpdateReport,
+  actionLoading,
+  setPreviewImage
 }) => {
   return (
     <div className="p-8 space-y-10 pb-32 text-left">
@@ -23,6 +26,9 @@ const LostReportsTab = ({
                matches={matches}
                navigate={navigate}
                setSearchTerm={setSearchTerm}
+               onUpdate={onUpdateReport}
+               isUpdating={actionLoading === `lost-${report.id}`}
+               onPreview={setPreviewImage}
              />
            ))}
          </div>

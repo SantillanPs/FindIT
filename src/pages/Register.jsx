@@ -7,9 +7,10 @@ import ImageUpload from '../components/ImageUpload';
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('student');
+  const role = 'student';
   const [fullName, setFullName] = useState('');
   const [studentId, setStudentId] = useState('');
+  const [department, setDepartment] = useState('');
   const [proofUrl, setProofUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,10 +24,11 @@ const Register = () => {
     const payload = { 
       email, 
       password, 
-      role,
+      role: 'student',
       full_name: fullName,
-      student_id_number: role === 'student' ? studentId : null,
-      verification_proof_url: role === 'student' ? proofUrl : null
+      student_id_number: studentId,
+      department: department,
+      verification_proof_url: proofUrl
     };
 
     try {
@@ -115,64 +117,46 @@ const Register = () => {
             />
           </div>
 
-          <div className="space-y-2 text-left">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Select Role</label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                <button 
-                    type="button"
-                    onClick={() => setRole('student')}
-                    className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border transition-all ${role === 'student' ? 'bg-uni-600 border-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'}`}
-                >
-                    Student
-                </button>
-                <button 
-                    type="button"
-                    onClick={() => setRole('admin')}
-                    className={`py-3 md:py-4 rounded-xl md:rounded-2xl text-[9px] md:text-[10px] font-black uppercase tracking-widest border transition-all ${role === 'admin' ? 'bg-uni-600 border-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'}`}
-                >
-                    Staff / Admin
-                </button>
+          <div className="space-y-6 pt-4 text-left">
+            <div className="p-8 bg-white/5 rounded-3xl border border-white/5 space-y-6">
+              <div className="flex items-center gap-3 mb-2">
+                <i className="fa-solid fa-id-card text-uni-400"></i>
+                <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Student Verification</h4>
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">Student ID Number</label>
+                <input 
+                  placeholder="e.g. 2026-0001"
+                  type="text" 
+                  className="input-field bg-black/20"
+                  value={studentId} 
+                  onChange={(e) => setStudentId(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">College Department</label>
+                <input 
+                  placeholder="e.g. Computer Science"
+                  type="text" 
+                  className="input-field bg-black/20"
+                  value={department} 
+                  onChange={(e) => setDepartment(e.target.value)} 
+                  required 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Institutional ID (Required for Verification)</label>
+                <ImageUpload 
+                  value={proofUrl}
+                  onUploadSuccess={(url) => setProofUrl(url)}
+                />
+                <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-2 italic text-left">
+                   Your ID will be reviewed by staff to verify your student status.
+                </p>
+              </div>
             </div>
           </div>
-
-          <AnimatePresence mode="wait">
-            {role === 'student' && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-6 pt-4 text-left"
-              >
-                <div className="p-8 bg-white/5 rounded-3xl border border-white/5 space-y-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <i className="fa-solid fa-id-card text-uni-400"></i>
-                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Student Verification</h4>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">Student ID Number</label>
-                    <input 
-                      placeholder="e.g. 2026-0001"
-                      type="text" 
-                      className="input-field bg-black/20"
-                      value={studentId} 
-                      onChange={(e) => setStudentId(e.target.value)} 
-                      required={role === 'student'} 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Institutional ID (Required for Verification)</label>
-                    <ImageUpload 
-                      value={proofUrl}
-                      onUploadSuccess={(url) => setProofUrl(url)}
-                    />
-                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-2 italic text-left">
-                       Your ID will be reviewed by staff to verify your student status.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           <button 
             type="submit" 

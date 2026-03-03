@@ -52,3 +52,57 @@ def verify_user(
     log_audit(db, admin.id, "user_verification", notes=f"Verified user {user_id}: {update.is_verified}")
     
     return user
+
+@router.get("/leaderboard", response_model=list[schemas.UserResponse])
+def get_leaderboard(
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    return db.query(database.User)\
+             .filter(database.User.role == database.UserRole.STUDENT)\
+             .order_by(database.User.integrity_points.desc())\
+             .limit(50).all()
+
+@router.put("/users/{user_id}/certificate", response_model=schemas.UserResponse)
+def toggle_certificate_eligibility(
+    user_id: int,
+    update: schemas.CertificateEligibilityUpdate,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_certificate_eligible = update.is_eligible
+    db.commit()
+    db.refresh(user)
+    
+    log_audit(db, admin.id, "certificate_toggle", notes=f"Certificate eligibility set to {update.is_eligible}")
+    
+    return user
+
+@router.put("/users/{user_id}/reputation", response_model=schemas.UserResponse)
+def adjust_reputation(
+    user_id: int,
+    update: schemas.UserReputationUpdate,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if update.points_modifier:
+        user.integrity_points += update.points_modifier
+    if update.strikes_modifier:
+        user.fraud_strikes += update.strikes_modifier
+    if update.is_blacklisted is not None:
+        user.is_blacklisted = update.is_blacklisted
+        
+    db.commit()
+    db.refresh(user)
+    
+    log_audit(db, admin.id, "reputation_adjustment", notes=f"Adjusted reputation for user {user_id}: points={update.points_modifier}, strikes={update.strikes_modifier}, blacklisted={update.is_blacklisted}")
+    
+    return user

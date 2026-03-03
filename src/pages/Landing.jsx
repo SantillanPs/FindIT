@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 import ItemCard from '../components/ItemCard';
 import LostReportCard from '../components/LostReportCard';
+import WitnessReportModal from '../components/WitnessReportModal';
 import { CATEGORIES } from '../constants/categories';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,6 +18,8 @@ const Landing = () => {
   const [lostSearchQuery, setLostSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLostCategory, setSelectedLostCategory] = useState('all');
+  const [selectedLostReport, setSelectedLostReport] = useState(null);
+  const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
 
   const { user } = useAuth();
@@ -64,6 +67,11 @@ const Landing = () => {
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  };
+
+  const handleWitness = (report) => {
+    setSelectedLostReport(report);
+    setShowWitnessModal(true);
   };
 
   const filteredItems = items.filter(item => {
@@ -114,7 +122,7 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-base md:text-xl text-slate-400 max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed font-medium px-4"
+            className="text-base md:text-xl text-text-muted max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed font-medium px-4"
           >
             The official community registry for lost and found items. Report what you lost, list what you've found, and reconnect with your belongings.
           </motion.p>
@@ -133,7 +141,7 @@ const Landing = () => {
             </button>
             <button 
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
-                className="bg-white/5 hover:bg-white/10 text-white border border-white/5 px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-[1.05]"
+                className="bg-bg-surface hover:bg-bg-elevated text-text-header border border-border-main/50 px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-[1.05]"
             >
                 I found something
             </button>
@@ -149,8 +157,8 @@ const Landing = () => {
               <i className="fa-solid fa-bullhorn animate-bounce"></i>
             </div>
             <div className="text-left">
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Reunion Alerts</h2>
-              <p className="text-slate-500 text-[10px] md:text-sm font-black uppercase tracking-widest">Items found with visible names or IDs</p>
+              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Reunion Alerts</h2>
+              <p className="text-text-muted text-[10px] md:text-sm font-black uppercase tracking-widest">Items found with visible names or IDs</p>
             </div>
           </div>
 
@@ -167,27 +175,27 @@ const Landing = () => {
                    </span>
                 </div>
                 
-                <div className="h-48 bg-slate-900 flex items-center justify-center text-7xl opacity-20 group-hover:opacity-30 transition-opacity">
+                <div className="h-48 bg-bg-surface flex items-center justify-center text-7xl opacity-20 group-hover:opacity-30 transition-opacity">
                    {item.safe_photo_url ? (
                      <img src={item.safe_photo_url} className="w-full h-full object-cover" alt="" />
                    ) : (
-                     <i className="fa-solid fa-fingerprint"></i>
+                     <i className="fa-solid fa-fingerprint text-text-muted"></i>
                    )}
                 </div>
 
                 <div className="p-8 text-left space-y-6">
                    <div className="space-y-2">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Owner Identified as:</p>
-                      <h3 className="text-2xl font-black text-white uppercase tracking-tight line-clamp-1 italic">
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Owner Identified as:</p>
+                      <h3 className="text-2xl font-black text-text-header uppercase tracking-tight line-clamp-1 italic">
                         {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
                       </h3>
                    </div>
 
-                   <p className="text-slate-400 text-xs font-bold leading-relaxed line-clamp-2">
+                   <p className="text-text-muted text-xs font-bold leading-relaxed line-clamp-2">
                      A {item.item_name} recovered at {item.location_zone}.
                    </p>
 
-                   <div className="pt-6 border-t border-white/5 flex gap-3">
+                   <div className="pt-6 border-t border-border-main/10 flex gap-3">
                       <button 
                          onClick={() => navigate(`/submit-claim/${item.id}`)}
                          className="flex-grow bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all"
@@ -196,10 +204,10 @@ const Landing = () => {
                       </button>
                       <button 
                          onClick={() => handleShare(item)}
-                         className="w-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-white hover:bg-white/10 transition-all"
+                         className="w-14 bg-bg-surface border border-border-main/50 rounded-xl flex items-center justify-center text-text-header hover:bg-bg-elevated transition-all"
                          title="Notify Friend"
                       >
-                         <i className="fa-solid fa-paper-plane"></i>
+                         <i className="fa-solid fa-paper-plane text-text-muted"></i>
                       </button>
                    </div>
                 </div>
@@ -211,15 +219,15 @@ const Landing = () => {
 
       {/* Registry Browser */}
       <section id="browse" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-white/5 pb-8 md:pb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-border-main/10 pb-8 md:pb-10">
            <div className="text-left space-y-2">
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Public Registry</h2>
-              <p className="text-slate-500 text-[10px] md:text-sm font-black uppercase tracking-widest">Live feed of items recovered on campus</p>
+              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Public Registry</h2>
+              <p className="text-text-muted text-[10px] md:text-sm font-black uppercase tracking-widest">Live feed of items recovered on campus</p>
            </div>
            
            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <div className="relative w-full sm:w-80">
-                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
                   <input 
                     type="text" 
                     placeholder="Search by color, model, or area..." 
@@ -263,10 +271,10 @@ const Landing = () => {
                 ))}
             </div>
         ) : filteredItems.length === 0 ? (
-            <div className="py-32 text-center glass-panel rounded-[3rem] border border-white/5">
-                <div className="text-5xl opacity-20 mb-6">📦</div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">No matching items</h3>
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any results for your current filters.</p>
+            <div className="py-32 text-center glass-panel rounded-[3rem] border border-border-main/20">
+                <div className="text-5xl opacity-40 mb-6">📦</div>
+                <h3 className="text-xl font-black text-text-header uppercase tracking-tight mb-2">No matching items</h3>
+                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any results for your current filters.</p>
             </div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -284,15 +292,15 @@ const Landing = () => {
 
       {/* Lost Items Registry */}
       <section id="lost-registry" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-white/5 pb-8 md:pb-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-border-main/10 pb-8 md:pb-10">
            <div className="text-left space-y-2">
-              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">Lost Reports</h2>
+              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Lost Reports</h2>
               <p className="text-accent-default text-[10px] md:text-sm font-black uppercase tracking-widest">Help our community find their missing belongings</p>
            </div>
            
            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
               <div className="relative w-full sm:w-80">
-                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
                   <input 
                     type="text" 
                     placeholder="Search by owner, item, description..." 
@@ -321,10 +329,10 @@ const Landing = () => {
                 ))}
             </div>
         ) : filteredLostReports.length === 0 ? (
-            <div className="py-32 text-center glass-panel rounded-[3rem] border border-white/5">
-                <div className="text-5xl opacity-20 mb-6">🔍</div>
-                <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">No active lost reports</h3>
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any lost items matching your current filters.</p>
+            <div className="py-32 text-center glass-panel rounded-[3rem] border border-border-main/20">
+                <div className="text-5xl opacity-40 mb-6">🔍</div>
+                <h3 className="text-xl font-black text-text-header uppercase tracking-tight mb-2">No active lost reports</h3>
+                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any lost items matching your current filters.</p>
             </div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -332,6 +340,7 @@ const Landing = () => {
                     <LostReportCard 
                         key={report.id}
                         report={report}
+                        onWitness={handleWitness}
                     />
                 ))}
             </div>
@@ -348,27 +357,27 @@ const Landing = () => {
                     <i className="fa-solid fa-trophy"></i>
                     Honor System Active
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
-                <p className="text-slate-400 text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
+                <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
+                <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
                     Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
                 </p>
-                <div className="flex items-center gap-6 pt-4 border-t border-white/5">
+                <div className="flex items-center gap-6 pt-4 border-t border-border-main/10">
                     <div className="flex -space-x-3">
                         {[1,2,3,4].map(i => (
-                            <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-black text-white italic">
+                            <div key={i} className="w-10 h-10 rounded-full border-2 border-border-main bg-bg-elevated flex items-center justify-center text-[10px] font-black text-text-header italic">
                                 S{i}
                             </div>
                         ))}
                     </div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">
-                        <span className="text-white">124+ Students</span> <br/>
+                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">
+                        <span className="text-text-header">124+ Students</span> <br/>
                         Recognized this semester
                     </p>
                 </div>
             </div>
 
             <div className="md:w-1/2 w-full">
-                <div className="glass-panel p-8 md:p-10 rounded-[3rem] border border-white/10 bg-black/40 backdrop-blur-md relative">
+                <div className="glass-panel p-8 md:p-10 rounded-[3rem] border border-border-main/50 bg-bg-surface/40 backdrop-blur-md relative">
                     <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl">Top List</div>
                     
                     <div className="space-y-6">
@@ -379,25 +388,25 @@ const Landing = () => {
                             { email: 'p***z@university.edu', points: 40, rank: 4, icon: '🛡️' },
                             { email: 'k***l@university.edu', points: 35, rank: 5, icon: '🔰' }
                         ].map((student, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-bg-surface/50 border border-border-main/20 hover:bg-bg-elevated/50 transition-all group">
                                 <div className="flex items-center gap-4">
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${
                                         i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 
-                                        i === 1 ? 'bg-slate-400/20 text-slate-400 border border-slate-400/20' :
+                                        i === 1 ? 'bg-text-muted/20 text-text-muted border border-text-muted/20' :
                                         i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/20' :
-                                        'bg-white/5 text-slate-500 border border-white/5'
+                                        'bg-bg-elevated/50 text-text-muted border border-border-main/10'
                                     }`}>
                                         {student.rank}
                                     </div>
                                     <div className="text-left">
-                                        <p className="text-[11px] font-black text-white tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
-                                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
+                                        <p className="text-[11px] font-black text-text-header tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
+                                        <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="text-right">
                                         <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.points} IP</p>
-                                        <div className="w-12 h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+                                        <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1">
                                             <div className="h-full bg-uni-400" style={{ width: `${(student.points/125)*100}%` }}></div>
                                         </div>
                                     </div>
@@ -421,13 +430,20 @@ const Landing = () => {
             exit={{ y: 50, opacity: 0 }}
             className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]"
           >
-            <div className="glass-panel border border-white/10 bg-black/80 backdrop-blur-md text-white px-8 py-4 rounded-full shadow-2xl flex items-center space-x-4">
-              <i className="fa-solid fa-check-circle text-green-400"></i>
+            <div className="glass-panel border border-border-main/20 bg-bg-surface/90 backdrop-blur-md text-text-header px-8 py-4 rounded-full shadow-2xl flex items-center space-x-4">
+              <i className="fa-solid fa-check-circle text-green-500"></i>
               <p className="text-[10px] font-black uppercase tracking-widest">{toast.message}</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <WitnessReportModal
+        isOpen={showWitnessModal}
+        onClose={() => setShowWitnessModal(false)}
+        report={selectedLostReport}
+        onSuccess={(msg) => showToast(msg)}
+      />
     </div>
   );
 };

@@ -290,9 +290,9 @@ const SubmitClaim = () => {
                  <div className="max-w-2xl mx-auto w-full space-y-10">
                     <div className="grid grid-cols-3 gap-4">
                         {[
-                          { id: 'Email', icon: 'fa-envelope', label: 'Email' },
+                          { id: 'Email', icon: 'fa-paper-plane', label: 'Email' },
                           { id: 'Facebook', icon: 'fa-facebook', label: 'Facebook' },
-                          { id: 'Phone', icon: 'fa-phone', label: 'Phone' }
+                          { id: 'Phone', icon: 'fa-mobile-screen', label: 'Phone' }
                         ].map(method => (
                           <button
                             key={method.id}
@@ -304,9 +304,10 @@ const SubmitClaim = () => {
                                 : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/10'
                             }`}
                           >
-                            <i className={`fa-brands ${method.id === 'Facebook' ? 'fa-facebook' : 'fa-solid ' + method.icon} text-2xl`}></i>
+                            <i className={`${method.id === 'Facebook' ? 'fa-brands' : 'fa-solid'} ${method.icon} text-2xl`}></i>
                             <span className="text-[10px] font-black uppercase tracking-widest font-mono">{method.label}</span>
                           </button>
+
                         ))}
                     </div>
 
@@ -391,8 +392,8 @@ const SubmitClaim = () => {
                            </div>
                            <div className="pt-4 border-t border-white/5 space-y-1">
                               <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Contact Method</p>
-                              <p className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
-                                <i className={`fa-brands ${contactMethod === 'Facebook' ? 'fa-facebook' : 'fa-solid ' + (contactMethod === 'Phone' ? 'fa-phone' : 'fa-envelope')} text-uni-400`}></i>
+                               <p className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
+                                 <i className={`${contactMethod === 'Facebook' ? 'fa-brands fa-facebook' : 'fa-solid ' + (contactMethod === 'Phone' ? 'fa-mobile-screen' : 'fa-paper-plane')} text-uni-400`}></i>
                                 {contactInfo}
                               </p>
                            </div>

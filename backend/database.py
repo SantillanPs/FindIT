@@ -25,6 +25,13 @@ class ItemStatus(str, enum.Enum):
     CLAIMED = "claimed"
     MATCHED = "matched"
     RELEASED = "released"
+    RESOLVED = "resolved"
+    DISMISSED = "dismissed"
+
+class WitnessReportStatus(str, enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    DISMISSED = "dismissed"
 
 class User(Base):
     __tablename__ = "users"
@@ -36,12 +43,15 @@ class User(Base):
     role = Column(String, default=UserRole.STUDENT.value)
     is_verified = Column(Boolean, default=False)
     student_id_number = Column(String, unique=True, index=True, nullable=True)
+    department = Column(String, nullable=True) # College department
     verification_proof_url = Column(String, nullable=True)
     
     # Reputation System
     integrity_points = Column(Integer, default=0) # Earned by returning items
     fraud_strikes = Column(Integer, default=0)    # Penalized for fake claims
     is_blacklisted = Column(Boolean, default=False)
+    is_certificate_eligible = Column(Boolean, default=False)
+    show_full_name = Column(Boolean, default=False) # Privacy toggle for leaderboard
     
     found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder")
     notifications = relationship("Notification", back_populates="user")
@@ -96,7 +106,9 @@ class LostItem(Base):
     guest_email = Column(String, nullable=True)
     safe_photo_url = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
+    admin_notes = Column(Text, nullable=True)
     owner = relationship("User", back_populates="lost_items")
+    witness_reports = relationship("WitnessReport", back_populates="lost_item")
 
     @property
     def owner_name(self):
@@ -140,6 +152,7 @@ class Notification(Base):
 # Update User model to include lost_items relationship
 User.lost_items = relationship("LostItem", back_populates="owner")
 User.claims = relationship("Claim", back_populates="student")
+User.witness_reports = relationship("WitnessReport", back_populates="reporter")
 
 class ClaimStatus(str, enum.Enum):
     PENDING = "pending"
@@ -191,6 +204,26 @@ class OtherSuggestion(Base):
     suggested_name = Column(String, unique=True)
     hit_count = Column(Integer, default=1)
     last_reported_at = Column(DateTime, default=datetime.utcnow)
+
+class WitnessReport(Base):
+    __tablename__ = "witness_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    lost_item_id = Column(Integer, ForeignKey("lost_items.id"))
+    reporter_id = Column(Integer, ForeignKey("users.id"), nullable=True) # If null, it's a guest
+    
+    guest_name = Column(String, nullable=True)
+    guest_email = Column(String, nullable=True)
+    
+    witness_description = Column(Text)
+    witness_photo_url = Column(String, nullable=True)
+    is_anonymous = Column(Boolean, default=False)
+    
+    status = Column(String, default=WitnessReportStatus.PENDING.value)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    lost_item = relationship("LostItem", back_populates="witness_reports")
+    reporter = relationship("User", back_populates="witness_reports")
 
 def init_db():
     Base.metadata.create_all(bind=engine)

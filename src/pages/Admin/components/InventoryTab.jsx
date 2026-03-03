@@ -19,17 +19,17 @@ const InventoryTab = ({
       {/* Inventory Filter Nav */}
       <div className="flex items-center gap-4 border-b border-white/5 pb-6 overflow-x-auto scrollbar-hide">
          {[
-           { id: 'all', label: 'Complete Catalog', icon: 'fa-list-ul' },
-           { id: 'pending', label: 'Discovery Pending', icon: 'fa-clock' },
-           { id: 'vault', label: 'In Office Vault', icon: 'fa-vault' },
-           { id: 'ready', label: 'Ready for Release', icon: 'fa-hand-holding-heart' }
+           { id: 'all', label: 'Complete Catalog', icon: 'fa-list-ul', color: 'uni' },
+           { id: 'pending', label: 'Discovery Pending', icon: 'fa-clock', color: 'amber' },
+           { id: 'vault', label: 'In Office Vault', icon: 'fa-vault', color: 'sky' },
+           { id: 'ready', label: 'Ready for Release', icon: 'fa-hand-holding-heart', color: 'green' }
          ].map(f => (
            <button 
              key={f.id}
              onClick={() => setInventoryFilter(f.id)}
              className={`flex items-center gap-2 whitespace-nowrap px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
                inventoryFilter === f.id 
-               ? 'bg-uni-600 text-white shadow-lg shadow-uni-600/20' 
+               ? `bg-${f.color}-600 text-white shadow-lg shadow-${f.color}-600/20` 
                : 'bg-white/5 text-slate-500 hover:text-white hover:bg-white/10'
              }`}
            >

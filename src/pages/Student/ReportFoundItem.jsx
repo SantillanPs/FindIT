@@ -104,7 +104,7 @@ const ReportFoundItem = () => {
               <ImageStep 
                 stepLabel="Step 1: Upload Photo"
                 title="First, upload a photo of the item."
-                description="A photo helps the owner identify their item faster."
+                description="Please upload an actual photo of the item you found."
                 value={formData.safe_photo_url}
                 onUpload={(url) => {
                   setFormData({...formData, safe_photo_url: url});
@@ -114,6 +114,9 @@ const ReportFoundItem = () => {
                 optional={false}
               />
             )}
+
+
+
 
             {step === 2 && (
               <CategorySelection 
