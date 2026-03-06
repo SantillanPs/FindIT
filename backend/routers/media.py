@@ -5,7 +5,8 @@ from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv()
+env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+load_dotenv(env_path)
 
 router = APIRouter(tags=["Media"])
 
