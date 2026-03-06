@@ -78,7 +78,7 @@ const Login = () => {
             <div className="relative">
                 <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                 <input 
-                  placeholder="yourname@nemsu.edu.ph"
+                  placeholder="yourname@email.com"
                   type="email" 
                   className="input-field pl-12"
                   value={email} 

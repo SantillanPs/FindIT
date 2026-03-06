@@ -82,13 +82,11 @@ const Register = () => {
             <div className="space-y-2 text-left">
               <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
               <input 
-                placeholder="yourname@nemsu.edu.ph"
+                placeholder="yourname@email.com"
                 type="email" 
                 className="input-field"
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                pattern="[a-zA-Z0-9._%+-]+@nemsu\.edu\.ph"
-                title="Please use your institutional email (@nemsu.edu.ph)"
                 required 
               />
             </div>

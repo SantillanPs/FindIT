@@ -141,7 +141,7 @@ const Layout = ({ children }) => {
                 </div>
                 <div className="flex items-center gap-4 md:gap-6">
                    <ThemeToggle />
-                   <NotificationCenter />
+                   {user?.role === 'student' && <NotificationCenter />}
                    <div className="hidden sm:block h-8 w-px bg-white/10 mx-2"></div>
                    
                    <div className="hidden md:flex flex-col items-end mr-2">
@@ -202,7 +202,9 @@ const Layout = ({ children }) => {
 
       ) : (
         /* Guest Layout (Landing Page) */
-        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar">
+        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative">
+          <BackgroundEffects />
+          
           <header className="glass-header sticky top-0 z-[60] h-14 flex-shrink-0">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
               <div className="flex justify-between h-full items-center">
@@ -251,6 +253,47 @@ const Layout = ({ children }) => {
     </div>
   );
 };
+
+const BackgroundEffects = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    {/* Grid Layer */}
+    <div className="absolute inset-0 bg-grid opacity-20"></div>
+    
+    {/* Dynamic Blobs */}
+    <div className="absolute inset-0">
+      <motion.div 
+        animate={{ 
+          x: [0, 100, -50, 0],
+          y: [0, -100, 50, 0],
+          scale: [1, 1.2, 0.9, 1]
+        }}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-uni-500/10 rounded-full blur-[120px]"
+      />
+      <motion.div 
+        animate={{ 
+          x: [0, -120, 80, 0],
+          y: [0, 120, -60, 0],
+          scale: [1, 0.8, 1.1, 1]
+        }}
+        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+        className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-default/10 rounded-full blur-[120px]"
+      />
+      <motion.div 
+        animate={{ 
+          x: [0, 50, -50, 0],
+          y: [0, 150, -150, 0],
+          opacity: [0.1, 0.2, 0.1]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-uni-400/10 rounded-full blur-[100px]"
+      />
+    </div>
+
+    {/* Grain Overlay */}
+    <div className="absolute inset-0 bg-noise opacity-[0.03]"></div>
+  </div>
+);
 
 const SideNavLink = ({ to, icon, label, count }) => {
   const location = useLocation();

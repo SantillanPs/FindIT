@@ -14,7 +14,8 @@ const ReportSuccess = ({
   const [ghostEmail, setGhostEmail] = useState('');
   const [ghosting, setGhosting] = useState(false);
   const [ghostDone, setGhostDone] = useState(false);
-  const [showAccountForm, setShowAccountForm] = useState(type === 'lost'); // Auto show for lost
+  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [showIncentiveModal, setShowIncentiveModal] = useState(type === 'lost'); 
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -37,8 +38,84 @@ const ReportSuccess = ({
     }
   };
 
+  const PremiumInvitationModal = () => (
+    <AnimatePresence>
+      {showIncentiveModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-bg-main/90 backdrop-blur-xl"
+            onClick={() => setShowIncentiveModal(false)}
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 50 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.9, opacity: 0, y: 50 }}
+            className="relative w-full max-w-2xl bg-slate-900 rounded-[3.5rem] border-2 border-uni-500/30 overflow-hidden shadow-[0_0_100px_rgba(var(--color-uni-500-rgb),0.2)]"
+          >
+            {/* Ambient decoration */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-uni-500/20 blur-[80px] rounded-full animate-pulse"></div>
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-brand-gold/10 blur-[80px] rounded-full animate-pulse"></div>
+
+            <div className="p-10 md:p-16 space-y-12 text-center relative z-10">
+              <div className="space-y-4">
+                <div className="w-24 h-24 bg-uni-500 rounded-3xl flex items-center justify-center mx-auto text-5xl shadow-2xl rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                  ✨
+                </div>
+                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none pt-4">
+                  Wait! Before you go...
+                </h2>
+                <p className="text-sm font-black text-uni-400 uppercase tracking-[0.3em]">Unlock Institutional Benefits</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="text-3xl">🛡️</div>
+                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Safety Net</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Instant alerts via Student ID matches</p>
+                 </div>
+                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="text-3xl">🏛️</div>
+                    <p className="text-[10px] font-black text-white uppercase tracking-widest">College Honor</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Earn points for your department rankings</p>
+                 </div>
+                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
+                    <div className="text-3xl">🏆</div>
+                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Official Merit</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Get an Official Univ. Certificate</p>
+                 </div>
+              </div>
+
+
+              <div className="flex flex-col gap-4">
+                <button 
+                  onClick={() => {
+                    setShowIncentiveModal(false);
+                    setShowAccountForm(true);
+                  }}
+                  className="w-full bg-white text-black py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.6em] shadow-2xl hover:bg-uni-500 hover:text-white transition-all active:scale-95"
+                >
+                  Awesome! Create My Account
+                </button>
+                <button 
+                  onClick={() => setShowIncentiveModal(false)}
+                  className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] hover:text-white transition-colors"
+                >
+                  Skip these benefits for now
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+
   return (
     <div className="max-w-4xl mx-auto py-16 px-4 space-y-12">
+      <PremiumInvitationModal />
       <div className="text-center space-y-6">
          <motion.div 
            initial={{ scale: 0 }}
@@ -138,12 +215,10 @@ const ReportSuccess = ({
 
                   <div className="text-left space-y-3">
                       <h3 className="text-2xl font-black text-white uppercase tracking-tight italic">
-                        {type === 'lost' ? 'Create a Secure Account' : 'Register My Contribution'}
+                         {type === 'lost' ? 'Create a Secure Account' : 'Register My Contribution'}
                       </h3>
                       <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest leading-relaxed max-w-sm">
-                        {type === 'lost' 
-                          ? 'Creating an account allows you to track matches and manage your reports.'
-                          : 'Receive a notification when the owner claims this and earn Integrity Points.'}
+                        Receive instant alerts via Student ID and earn Integrity Points for your college.
                       </p>
                   </div>
 
@@ -174,12 +249,10 @@ const ReportSuccess = ({
                       </div>
                       <input 
                           type="email"
-                          placeholder="Email Address (@nemsu.edu.ph)"
+                          placeholder="Email Address"
                           className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
                           value={ghostEmail}
                           onChange={(e) => setGhostEmail(e.target.value)}
-                          pattern="[a-zA-Z0-9._%+-]+@nemsu\.edu\.ph"
-                          title="Please use your institutional email (@nemsu.edu.ph)"
                           required
                       />
                       <input 

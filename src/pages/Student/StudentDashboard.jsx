@@ -12,6 +12,7 @@ const StudentDashboard = () => {
   const { user, fetchUser } = useAuth();
   const navigate = useNavigate();
   const [deptInput, setDeptInput] = useState("");
+  const [deptRank, setDeptRank] = useState(null);
 
   useEffect(() => {
     if (user?.department) setDeptInput(user.department);
@@ -24,13 +25,19 @@ const StudentDashboard = () => {
   const fetchDashData = async () => {
     setLoading(true);
     try {
-      const [lostRes, foundRes] = await Promise.allSettled([
+      const [lostRes, foundRes, deptRes] = await Promise.allSettled([
         apiClient.get('/lost/my-reports'),
-        apiClient.get('/found/my-reports')
+        apiClient.get('/found/my-reports'),
+        apiClient.get('/admin/leaderboard/departments')
       ]);
       
       if (lostRes.status === 'fulfilled') setLostReports(lostRes.value.data);
       if (foundRes.status === 'fulfilled') setFoundReports(foundRes.value.data);
+      if (deptRes.status === 'fulfilled' && user?.department) {
+        const rankings = deptRes.value.data;
+        const index = rankings.findIndex(r => r.department === user.department);
+        if (index !== -1) setDeptRank({ rank: index + 1, total: rankings.length, points: rankings[index].total_points });
+      }
     } catch (error) {
       console.error('Fatal dashboard sync error', error);
     } finally {
@@ -83,6 +90,61 @@ const StudentDashboard = () => {
           color="blue"
           variants={statVariants}
         />
+      </section>
+
+      {/* Strategic Incentives / Safety Net Status */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+         <div className="glass-panel p-8 rounded-[2.5rem] border border-uni-500/30 bg-uni-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-uni-500/10 blur-2xl -z-10 group-hover:scale-110 transition-transform"></div>
+            <div className="flex items-start gap-6">
+               <div className="w-16 h-16 rounded-2xl bg-uni-500/20 flex items-center justify-center text-3xl shadow-lg border border-uni-500/20">
+                  {user?.student_id_number ? '🛡️' : '⚠️'}
+               </div>
+               <div className="space-y-2 text-left">
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight">Proactive Safety Net</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest leading-relaxed text-text-muted max-w-sm">
+                     {user?.student_id_number 
+                       ? `Active! Your ID (${user.student_id_number}) is registered. We will notify you instantly if an item matching this ID is found.` 
+                       : 'Inactive. Please add your Student ID to your profile to enable automated notifications if your property is recovered.'}
+                  </p>
+                  {!user?.student_id_number && (
+                     <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest mt-2 animate-pulse">Action Required for Protection</p>
+                  )}
+               </div>
+            </div>
+         </div>
+
+         <div className="glass-panel p-8 rounded-[2.5rem] border border-amber-500/30 bg-amber-500/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-2xl -z-10 group-hover:scale-110 transition-transform"></div>
+            <div className="flex items-start gap-6">
+               <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center text-3xl shadow-lg border border-amber-500/20">
+                  🏛️
+               </div>
+               <div className="space-y-2 text-left">
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight">College Standing</h3>
+                  <div className="flex items-center gap-4">
+                     <div className="space-y-1">
+                        <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest leading-none">Your Department</p>
+                        <p className="text-xl font-black text-white uppercase tracking-tighter truncate max-w-[150px]">{user?.department || 'Not Set'}</p>
+                     </div>
+                     {deptRank && (
+                        <div className="h-10 w-px bg-amber-500/20 mx-2"></div>
+                     )}
+                     {deptRank && (
+                        <div className="space-y-1">
+                           <p className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Current Rank</p>
+                           <p className="text-xl font-black text-amber-500 tracking-tighter">#{deptRank.rank} <span className="text-[10px] text-text-muted font-bold tracking-widest uppercase">of {deptRank.total}</span></p>
+                        </div>
+                     )}
+                  </div>
+                  <p className="text-[9px] font-bold text-text-muted uppercase tracking-widest leading-relaxed mt-2">
+                     {deptRank 
+                       ? `Your college has contributed ${deptRank.points} integrity points this semester. Keep it up!` 
+                       : 'Register your department to contribute to the Hall of Integrity competition.'}
+                  </p>
+               </div>
+            </div>
+         </div>
       </section>
 
       {/* Account & Privacy Settings (Leaderboard Changes) */}

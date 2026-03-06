@@ -1,20 +1,21 @@
-# Triggering reload.
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 import database
 from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics
-import os
 
 # Ensure uploads directory exists
 if not os.path.exists("uploads"):
     os.makedirs("uploads")
-
-from fastapi import FastAPI, APIRouter, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-# ... existing imports ...
 
 app = FastAPI(
     title="FindIT API", 
@@ -29,7 +30,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     # Log the full error to the server terminal
     err_msg = f"[{datetime.utcnow()}] VALIDATION ERROR: {exc.errors()}"
     print(err_msg)
-    with open(r"C:\Users\admin\Documents\Programming\findIT\backend\error_log.txt", "a") as f:
+    with open("error_log.txt", "a") as f:
         f.write(err_msg + "\n")
     # Return a generic message to the client
     return JSONResponse(

@@ -44,10 +44,7 @@ const AppContent = () => {
   return (
     <Layout>
       <Routes location={location}>
-        <Route path="/" element={
-          !token ? <Landing /> : 
-          user?.role === 'admin' ? <Navigate to="/admin" replace /> : <Navigate to="/student" replace />
-        } />
+        <Route path="/" element={<Landing />} />
         <Route path="/report-lost-guest" element={<GuestReportItem />} />
         <Route path="/report-found-guest" element={<GuestReportFound />} />
         <Route path="/submit-claim/:itemId" element={<SubmitClaim />} />

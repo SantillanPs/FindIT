@@ -63,6 +63,29 @@ def get_leaderboard(
              .order_by(database.User.integrity_points.desc())\
              .limit(50).all()
 
+@router.get("/leaderboard/departments")
+def get_department_leaderboard(
+    db: Session = Depends(auth.get_db)
+):
+    from sqlalchemy import func
+    # Aggregate points by department for students
+    results = db.query(
+        database.User.department,
+        func.sum(database.User.integrity_points).label("total_points"),
+        func.count(database.User.id).label("student_count")
+    ).filter(
+        database.User.role == database.UserRole.STUDENT,
+        database.User.department.isnot(None)
+    ).group_by(database.User.department).order_by(func.sum(database.User.integrity_points).desc()).all()
+    
+    return [
+        {
+            "department": r.department,
+            "total_points": r.total_points,
+            "student_count": r.student_count
+        } for r in results
+    ]
+
 @router.put("/users/{user_id}/certificate", response_model=schemas.UserResponse)
 def toggle_certificate_eligibility(
     user_id: int,

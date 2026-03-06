@@ -19,16 +19,23 @@ const ReleasedItemsTable = ({ releasedItems }) => {
                 <div className="font-black text-white text-[11px] uppercase tracking-widest mb-1">{item.item_name}</div>
                 <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest">#{item.id.toString().padStart(4, '0')} • {item.category}</div>
               </td>
-               <td className="px-8 py-6">
+                <td className="px-8 py-6">
                  <div className="flex items-center gap-3">
-                    {item.released_to_photo_url && (
+                    {(item.released_to_photo_url || item.safe_photo_url) && (
                         <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden shrink-0">
-                            <img src={item.released_to_photo_url} className="w-full h-full object-cover" />
+                            <img src={item.released_to_photo_url || item.safe_photo_url} className="w-full h-full object-cover" />
                         </div>
                     )}
                     <div>
-                       <div className="text-[11px] text-uni-400 font-black uppercase tracking-widest">{item.released_to_name}</div>
-                       <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest mt-1">{item.released_to_id_number}</div>
+                       <div className="text-[11px] text-uni-400 font-black uppercase tracking-widest leading-none mb-1">
+                         {item.released_to_name || item.identified_name || 'Guest Claimant'}
+                       </div>
+                       <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
+                         {item.released_to_id_number || item.identified_student_id || 'Walk-in Claim'}
+                       </div>
+                       {item.status === 'claimed' && (
+                         <div className="text-[7px] text-amber-500 font-black uppercase tracking-widest mt-1 italic">Awaiting Pickup</div>
+                       )}
                     </div>
                  </div>
                </td>

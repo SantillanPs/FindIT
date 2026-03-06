@@ -210,3 +210,20 @@ def export_data(
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=findit_export_{datetime.utcnow().strftime('%Y%m%d')}.csv"}
     )
+
+@router.get("/history", response_model=list[schemas.FoundItemDetail])
+def get_resolved_history(
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    """
+    Returns a history of all items that have been successfully returned (released) or resolved.
+    Includes claimant/recipient details for the audit trail.
+    """
+    return db.query(database.FoundItem).filter(
+        database.FoundItem.status.in_([
+            database.ItemStatus.RELEASED.value, 
+            database.ItemStatus.CLAIMED.value,
+            database.ItemStatus.RESOLVED.value
+        ])
+    ).order_by(database.FoundItem.released_at.desc()).all()

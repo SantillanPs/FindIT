@@ -8,11 +8,13 @@ const InventoryCard = ({ item, matches, pendingClaims, navigate, setSearchTerm, 
   return (
     <div key={item.id} className={`bg-white/[0.02] border rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:bg-white/[0.05] transition-all group overflow-hidden relative ${
        item.status === 'claimed' ? 'border-green-500/30' : 
-       item.status === 'in_custody' ? 'border-sky-500/20' : 'border-white/5'
+       item.status === 'in_custody' ? 'border-sky-500/20' : 
+       item.status === 'reported' ? 'border-amber-500/20' : 'border-white/5'
     }`}>
-       {item.status !== 'reported' && (
+       {true && (
            <div className={`absolute top-0 left-0 w-1 h-full shadow-[0_0_15px_rgba(var(--color-status-rgb),0.5)] ${
-             item.status === 'in_custody' ? 'bg-sky-500' : 'bg-green-500'
+             item.status === 'in_custody' ? 'bg-sky-500' : 
+             item.status === 'reported' ? 'bg-amber-500' : 'bg-green-500'
            }`}></div>
        )}
        <div className="flex items-center gap-5">

@@ -21,6 +21,8 @@ const Landing = () => {
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [leaderboardType, setLeaderboardType] = useState('students'); // 'students' or 'colleges'
+  const [topColleges, setTopColleges] = useState([]);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ const Landing = () => {
   useEffect(() => {
     fetchPublicFeed();
     fetchLostReports();
+    fetchDepartmentStats();
   }, []);
 
   const fetchPublicFeed = async () => {
@@ -49,6 +52,15 @@ const Landing = () => {
       console.error("Failed to fetch lost reports", err);
     } finally {
       setLostLoading(false);
+    }
+  };
+
+  const fetchDepartmentStats = async () => {
+    try {
+      const resp = await apiClient.get('/admin/leaderboard/departments'); // We'll make this public or handle auth
+      setTopColleges(resp.data);
+    } catch (err) {
+      console.error("Failed to fetch department stats", err);
     }
   };
 
@@ -135,13 +147,13 @@ const Landing = () => {
           >
             <button 
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
-                className="bg-uni-600 hover:bg-uni-500 text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl shadow-uni-500/20 hover:scale-[1.05]"
+                className="bg-accent-default/5 hover:bg-accent-default hover:text-white text-accent-default border border-accent-default/30 px-8 md:px-12 py-4 md:py-5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all hover:scale-[1.05] hover:border-accent-default shadow-lg shadow-accent-default/5"
             >
                 Report a lost item
             </button>
             <button 
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
-                className="bg-bg-surface hover:bg-bg-elevated text-text-header border border-border-main/50 px-8 md:px-10 py-4 md:py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-widest transition-all shadow-xl hover:scale-[1.05]"
+                className="bg-uni-500/5 hover:bg-uni-600 hover:text-white text-uni-400 border border-uni-500/30 px-8 md:px-12 py-4 md:py-5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all hover:scale-[1.05] hover:border-uni-400 shadow-lg shadow-uni-500/5"
             >
                 I found something
             </button>
@@ -216,6 +228,122 @@ const Landing = () => {
           </div>
         </section>
       )}
+
+      {/* Hall of Integrity / Leaderboard Section */}
+      <section className="max-w-7xl mx-auto px-4 py-20 relative">
+        <div className="flex flex-col md:flex-row gap-16 items-center">
+            <div className="md:w-1/2 space-y-8 text-left">
+                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
+                    <i className="fa-solid fa-trophy"></i>
+                    Honor System Active
+                </div>
+                <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
+                <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
+                    Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
+                </p>
+                
+                <div className="flex gap-2 p-1 bg-bg-surface/30 border border-border-main/20 rounded-2xl w-fit backdrop-blur-sm">
+                    <button 
+                        onClick={() => setLeaderboardType('students')}
+                        className={`px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-lg shadow-uni-500/20' : 'text-text-muted hover:text-text-header'}`}
+                    >
+                        Top Students
+                    </button>
+                    <button 
+                        onClick={() => setLeaderboardType('colleges')}
+                        className={`px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20' : 'text-text-muted hover:text-text-header'}`}
+                    >
+                        Top Colleges
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-6 pt-4 border-t border-border-main/10">
+                    <div className="flex -space-x-3">
+                        {[1,2,3,4].map(i => (
+                            <div key={i} className="w-10 h-10 rounded-full border-2 border-border-main bg-bg-elevated flex items-center justify-center text-[10px] font-black text-text-header italic">
+                                S{i}
+                            </div>
+                        ))}
+                    </div>
+                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">
+                        <span className="text-text-header">124+ Students</span> <br/>
+                        Recognized this semester
+                    </p>
+                </div>
+            </div>
+
+            <div className="md:w-1/2 w-full relative">
+                <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl z-20">Top List</div>
+                
+                <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40 backdrop-blur-md">
+                    <div className="space-y-1">
+                        {leaderboardType === 'students' ? (
+                            [
+                                { email: 'm***n@university.edu', points: 125, rank: 1, icon: '👑' },
+                                { email: 's***j@university.edu', points: 90, rank: 2, icon: '🔥' },
+                                { email: 'a***p@university.edu', points: 75, rank: 3, icon: '✨' },
+                                { email: 'p***z@university.edu', points: 40, rank: 4, icon: '🛡️' },
+                                { email: 'k***l@university.edu', points: 35, rank: 5, icon: '🔰' }
+                            ].map((student, i) => (
+                                <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
+                                            i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-lg shadow-amber-500/10' : 
+                                            i === 1 ? 'bg-text-muted/20 text-text-muted border border-text-muted/30' :
+                                            i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/30' :
+                                            'bg-bg-elevated/50 text-text-muted border border-border-main/10'
+                                        }`}>
+                                            {student.rank}
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-[11px] font-black text-text-header tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
+                                            <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right">
+                                            <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.points} IP</p>
+                                            <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                <div className="h-full bg-uni-400" style={{ width: `${(student.points/125)*100}%` }}></div>
+                                            </div>
+                                        </div>
+                                        <span className="text-xl group-hover:scale-110 transition-transform">{student.icon}</span>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            topColleges.length > 0 ? (
+                                topColleges.slice(0, 5).map((col, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black bg-bg-elevated/50 text-text-muted border border-border-main/10 group-hover:border-amber-500/30 transition-all">
+                                                {i + 1}
+                                            </div>
+                                            <div className="text-left text-ellipsis overflow-hidden max-w-[150px]">
+                                                <p className="text-[11px] font-black text-text-header tracking-widest uppercase opacity-80 group-hover:opacity-100 transition-opacity">{col.department}</p>
+                                                <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">{col.student_count} Active Students</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-[11px] font-black text-amber-500 tracking-[0.2em]">{col.total_points} IP</p>
+                                                <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                    <div className="h-full bg-amber-500" style={{ width: `${(col.total_points / (topColleges[0]?.total_points || 1)) * 100}%` }}></div>
+                                                </div>
+                                            </div>
+                                            <span className="text-xl group-hover:scale-110 transition-transform">🏛️</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">Collecting college stats...</div>
+                            )
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+      </section>
 
       {/* Registry Browser */}
       <section id="browse" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
@@ -347,78 +475,62 @@ const Landing = () => {
         )}
       </section>
 
-      {/* Hall of Integrity / Leaderboard Section */}
-      <section className="max-w-7xl mx-auto px-4 py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-uni-500/5 blur-[100px] rounded-full -z-10 animate-pulse"></div>
-        
-        <div className="flex flex-col md:flex-row gap-16 items-center">
-            <div className="md:w-1/2 space-y-8 text-left">
-                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
-                    <i className="fa-solid fa-trophy"></i>
-                    Honor System Active
-                </div>
-                <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
-                <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
-                    Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
-                </p>
-                <div className="flex items-center gap-6 pt-4 border-t border-border-main/10">
-                    <div className="flex -space-x-3">
-                        {[1,2,3,4].map(i => (
-                            <div key={i} className="w-10 h-10 rounded-full border-2 border-border-main bg-bg-elevated flex items-center justify-center text-[10px] font-black text-text-header italic">
-                                S{i}
-                            </div>
-                        ))}
+      {/* Why Register? (Incentives Section) */}
+      <section className="max-w-7xl mx-auto px-4 py-20">
+           <div className="glass-panel p-12 md:p-20 rounded-[4rem] border-2 border-uni-500/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/10 blur-[100px] -z-10"></div>
+              
+              <div className="flex flex-col md:flex-row items-center gap-16">
+                 <div className="md:w-1/2 space-y-10 text-left">
+                    <div className="space-y-4">
+                       <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic leading-none">Why create <br/><span className="gradient-text">an account?</span></h2>
+                       <p className="text-text-muted text-sm font-bold uppercase tracking-widest max-w-md">Your email isn't just a login—it's your insurance policy on campus.</p>
                     </div>
-                    <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none">
-                        <span className="text-text-header">124+ Students</span> <br/>
-                        Recognized this semester
-                    </p>
-                </div>
-            </div>
 
-            <div className="md:w-1/2 w-full">
-                <div className="glass-panel p-8 md:p-10 rounded-[3rem] border border-border-main/50 bg-bg-surface/40 backdrop-blur-md relative">
-                    <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl">Top List</div>
-                    
-                    <div className="space-y-6">
-                        {[
-                            { email: 'm***n@university.edu', points: 125, rank: 1, icon: '👑' },
-                            { email: 's***j@university.edu', points: 90, rank: 2, icon: '🔥' },
-                            { email: 'a***p@university.edu', points: 75, rank: 3, icon: '✨' },
-                            { email: 'p***z@university.edu', points: 40, rank: 4, icon: '🛡️' },
-                            { email: 'k***l@university.edu', points: 35, rank: 5, icon: '🔰' }
-                        ].map((student, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-bg-surface/50 border border-border-main/20 hover:bg-bg-elevated/50 transition-all group">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${
-                                        i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' : 
-                                        i === 1 ? 'bg-text-muted/20 text-text-muted border border-text-muted/20' :
-                                        i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/20' :
-                                        'bg-bg-elevated/50 text-text-muted border border-border-main/10'
-                                    }`}>
-                                        {student.rank}
-                                    </div>
-                                    <div className="text-left">
-                                        <p className="text-[11px] font-black text-text-header tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
-                                        <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="text-right">
-                                        <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.points} IP</p>
-                                        <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1">
-                                            <div className="h-full bg-uni-400" style={{ width: `${(student.points/125)*100}%` }}></div>
-                                        </div>
-                                    </div>
-                                    <span className="text-xl">{student.icon}</span>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="space-y-8">
+                       <div className="flex gap-6 items-start group">
+                          <div className="w-14 h-14 rounded-2xl bg-uni-500/10 border border-uni-500/20 flex items-center justify-center text-2xl group-hover:bg-uni-500 group-hover:text-white transition-all shadow-lg">🛡️</div>
+                          <div className="space-y-1">
+                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">The Safety Net</h4>
+                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Add your Student ID to your profile. If an item with your name or ID is found, we notify you instantly—zero effort required.</p>
+                          </div>
+                       </div>
+                       
+                       <div className="flex gap-6 items-start group">
+                          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition-all shadow-lg">🏆</div>
+                          <div className="space-y-1">
+                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">College Honor</h4>
+                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Represent your department. Every item you return adds points to the College Leaderboard. Let's see who has the most integrity.</p>
+                          </div>
+                       </div>
+
+                       <div className="flex gap-6 items-start group">
+                          <div className="w-14 h-14 rounded-2xl bg-uni-400/10 border border-uni-400/20 flex items-center justify-center text-2xl group-hover:bg-uni-400 group-hover:text-white transition-all shadow-lg">📜</div>
+                          <div className="space-y-1">
+                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">Official Merit</h4>
+                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Reach 1,000 points to receive a physical Certificate of Appreciation for Integrity—a premium addition to your student portfolio.</p>
+                          </div>
+                       </div>
                     </div>
-                </div>
-            </div>
-        </div>
-      </section>
+
+                    <button 
+                       onClick={() => navigate('/register')}
+                       className="bg-uni-600 text-white px-10 py-5 rounded-3xl font-black text-xs uppercase tracking-[0.3em] hover:scale-[1.05] transition-all shadow-2xl shadow-uni-500/30"
+                    >
+                       Get Started Now
+                    </button>
+                 </div>
+
+                 <div className="md:w-1/2 flex justify-center">
+                    <div className="relative">
+                       <div className="absolute -inset-10 bg-uni-500/20 blur-[60px] rounded-full animate-pulse"></div>
+                       <i className="fa-solid fa-id-card-clip text-[12rem] md:text-[20rem] text-uni-400/20 relative z-10"></i>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </section>
+
 
 
       {/* Toast Notification */}

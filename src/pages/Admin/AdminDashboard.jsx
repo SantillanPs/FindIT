@@ -27,6 +27,7 @@ const AdminDashboard = () => {
   const [matches, setMatches] = useState([]);
   const [pendingClaims, setPendingClaims] = useState([]);
   const [lostReports, setLostReports] = useState([]);
+  const [historyItems, setHistoryItems] = useState([]);
   const [loading, setLoading] = useState(true);
   
   const location = useLocation();
@@ -49,18 +50,20 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const [foundRes, suggestionsRes, matchesRes, claimsRes, lostRes] = await Promise.all([
+      const [foundRes, suggestionsRes, matchesRes, claimsRes, lostRes, historyRes] = await Promise.all([
         apiClient.get('/admin/found'),
         apiClient.get('/categories/suggestions'),
         apiClient.get('/admin/matches/all'),
         apiClient.get('/admin/claims/pending'),
-        apiClient.get('/admin/lost/all')
+        apiClient.get('/admin/lost/all'),
+        apiClient.get('/analytics/history')
       ]);
       setRecentFound(foundRes.data);
       setSuggestions(suggestionsRes.data);
       setMatches(matchesRes.data);
       setPendingClaims(claimsRes.data);
       setLostReports(lostRes.data);
+      setHistoryItems(historyRes.data);
     } catch (error) {
       console.error('Failed to fetch dashboard data', error);
     } finally {
@@ -158,12 +161,10 @@ const AdminDashboard = () => {
     );
   });
 
-  const releasedItems = recentFound.filter(item => 
-    item.status === 'released' && (
-      item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.released_to_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.id.toString().includes(searchTerm)
-    )
+  const historyFiltered = historyItems.filter(item => 
+    item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.released_to_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.id.toString().includes(searchTerm)
   );
 
   const filteredClaims = pendingClaims.filter(claim => 
@@ -255,9 +256,9 @@ const AdminDashboard = () => {
               <WitnessReportsTab setPreviewImage={setPreviewImage} />
             )}
 
-            {currentTab === 'released' && (
-              <ReleasedItemsTable releasedItems={releasedItems} />
-            )}
+            {currentTab === 'history' || currentTab === 'released' ? (
+              <ReleasedItemsTable releasedItems={historyFiltered} />
+            ) : null}
 
             {currentTab === 'analytics' && (
               <div className="p-8 md:p-12">

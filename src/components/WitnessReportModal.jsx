@@ -42,11 +42,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
     // Guest validation
     if (!user) {
       if (!guestName.trim() || !guestEmail.trim()) {
-        alert('Please provide your name and institutional email.');
-        return;
-      }
-      if (!guestEmail.endsWith('@nemsu.edu.ph')) {
-        alert('Please use your institutional email (@nemsu.edu.ph).');
+        alert('Please provide your name and email.');
         return;
       }
     }
@@ -130,13 +126,13 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">NEMSU Email</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Email Address</label>
                   <div className="relative">
                     <Send className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
                     <input
                       type="email"
                       required
-                      placeholder="student@nemsu.edu.ph"
+                      placeholder="yourname@email.com"
                       className="input-field pl-12"
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}

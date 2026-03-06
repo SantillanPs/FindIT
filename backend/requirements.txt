@@ -11,3 +11,6 @@ bcrypt==4.0.1
 sentence-transformers
 torch
 numpy
+psycopg2-binary
+python-dotenv
+supabase

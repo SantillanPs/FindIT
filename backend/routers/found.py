@@ -57,8 +57,8 @@ def report_found_item_guest(
     if target_user:
         notification = database.Notification(
             user_id=target_user.id,
-            title="Important: An Item with Your Name/ID was Found",
-            message=f"A '{item.item_name}' was recovered at {item.location_zone} that appears to belong to you. Please visit the office to verify and claim it.",
+            title="🛡️ Proactive Safety Net: Item Identified",
+            message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Since your ID was found on the item, it has been reserved for you. Visit the office to verify and claim it.",
             found_item_id=new_item.id
         )
         db.add(notification)
@@ -120,8 +120,8 @@ def report_found_item(
     if target_user:
         notification = database.Notification(
             user_id=target_user.id,
-            title="Important: An Item with Your Name/ID was Found",
-            message=f"A '{item.category}' was recovered at {item.location_zone} that appears to belong to you. Please visit the office to verify and claim it.",
+            title="🛡️ Proactive Safety Net: Item Identified",
+            message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Since your ID was found on the item, it has been reserved for you. Visit the office to verify and claim it.",
             found_item_id=new_item.id
         )
         db.add(notification)
