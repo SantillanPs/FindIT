@@ -271,6 +271,10 @@ const AdminDashboard = () => {
                  <Leaderboard />
               </div>
             )}
+
+            {currentTab === 'staff' && (
+              <StaffManagementTab />
+            )}
           </div>
         </section>
 

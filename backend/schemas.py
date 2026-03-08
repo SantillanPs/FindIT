@@ -258,6 +258,13 @@ class AuditLogResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class AuditLogResponseDetail(AuditLogResponse):
+    admin_name: Optional[str] = None
+    admin_email: str
+    
+    class Config:
+        from_attributes = True
+
 # Witness Report Schemas
 class WitnessReportCreate(BaseModel):
     witness_description: str

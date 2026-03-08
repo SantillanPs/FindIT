@@ -1,42 +1,77 @@
-from sentence_transformers import SentenceTransformer
 import json
-import numpy as np
+import os
+import math
+from google import genai
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class AIService:
-    _model = None
-    # BAAI/bge-m3 produces 1024-dimensional vectors
-    EMBEDDING_DIM = 1024
+    # Google gemini-embedding-001 produces 3072-dimensional vectors
+    EMBEDDING_DIM = 3072
+    
+    @classmethod
+    def get_client(cls):
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            print("WARNING: GOOGLE_API_KEY environment variable is not set. AI features will fail.")
+        return genai.Client(api_key=api_key)
 
     @classmethod
-    def get_model(cls):
-        if cls._model is None:
-            print("Loading BAAI/bge-m3 model (this may take a while on first run)...")
-            # Using cpu as default for compatibility, can be changed to 'cuda' if available
-            cls._model = SentenceTransformer('BAAI/bge-m3')
-        return cls._model
+    def _fetch_embeddings(cls, inputs):
+        """
+        Sends text to Google Gemini to generate embeddings using text-embedding-004.
+        'inputs' can be a single string or a list of strings.
+        Returns a list of floats (if single string) or a list of lists of floats.
+        """
+        try:
+            client = cls.get_client()
+            
+            # Gemini API requires a list of strings natively, or it handles single strings
+            input_list = [inputs] if isinstance(inputs, str) else inputs
+            
+            result = client.models.embed_content(
+                model='gemini-embedding-001',
+                contents=input_list,
+            )
+            
+            # The modern Google GenAI library returns embeddings as an attribute on the result objects
+            embeddings = [emb.values for emb in result.embeddings]
+            
+            return embeddings[0] if isinstance(inputs, str) else embeddings
+            
+        except Exception as e:
+            print(f"Gemini API Error: {e}")
+            # Fail gracefully with zero vectors if the API fails
+            if isinstance(inputs, str):
+                return [0.0] * cls.EMBEDDING_DIM
+            else:
+                return [[0.0] * cls.EMBEDDING_DIM for _ in inputs]
 
     @classmethod
     def generate_embedding(cls, text: str) -> str:
-        model = cls.get_model()
-        # Generate embedding
-        embedding = model.encode(text)
-        # Convert to list and then JSON string for SQLite storage
-        return json.dumps(embedding.tolist())
+        # Generate embedding via API
+        embedding = cls._fetch_embeddings(text)
+        # Convert to JSON string for SQLite/Postgres storage
+        return json.dumps(embedding)
 
     @classmethod
     def get_embedding_list(cls, embedding_str: str) -> list:
+        if not embedding_str:
+            return [0.0] * cls.EMBEDDING_DIM
         return json.loads(embedding_str)
 
     @classmethod
     def calculate_similarity(cls, embedding1: list, embedding2: list) -> float:
-        # Using numpy for cosine similarity
-        e1 = np.array(embedding1)
-        e2 = np.array(embedding2)
-        
-        # Cosine Similarity = (A . B) / (||A|| * ||B||)
-        dot_product = np.dot(e1, e2)
-        norm_e1 = np.linalg.norm(e1)
-        norm_e2 = np.linalg.norm(e2)
+        """
+        Pure Python implementation of Cosine Similarity (no numpy required).
+        """
+        if len(embedding1) != len(embedding2):
+             return 0.0
+             
+        dot_product = sum(a * b for a, b in zip(embedding1, embedding2))
+        norm_e1 = math.sqrt(sum(a * a for a in embedding1))
+        norm_e2 = math.sqrt(sum(b * b for b in embedding2))
         
         if norm_e1 == 0 or norm_e2 == 0:
             return 0.0
@@ -120,14 +155,21 @@ class AIService:
         seeds = list(category_seeds.values())
         
         content = f"{item_name}: {description}"
-        content_embedding = cls.get_model().encode(content)
         
-        # Compare against the descriptive seeds instead of just the single word label
-        seed_embeddings = cls.get_model().encode(seeds)
+        # Batch API call: send the item content AND all the category seeds at once
+        texts_to_embed = [content] + seeds
         
-        # Calculate cosine similarity for each seed
-        similarities = [cls.calculate_similarity(content_embedding.tolist(), seed_emb.tolist()) for seed_emb in seed_embeddings]
-        
-        # Return the category with highest similarity
-        best_match_idx = np.argmax(similarities)
-        return categories[best_match_idx]
+        try:
+             embeddings = cls._fetch_embeddings(texts_to_embed)
+             content_embedding = embeddings[0]
+             seed_embeddings = embeddings[1:]
+             
+             # Calculate cosine similarity purely in Python
+             similarities = [cls.calculate_similarity(content_embedding, seed_emb) for seed_emb in seed_embeddings]
+             
+             # Return the category with highest similarity
+             best_match_idx = similarities.index(max(similarities))
+             return categories[best_match_idx]
+        except Exception as e:
+             print(f"Classification failed, falling back to 'Other'. Error: {e}")
+             return "Other"

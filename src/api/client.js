@@ -1,6 +1,10 @@
 import axios from 'axios';
 
-const API_BASE_URL = `http://${window.location.hostname}:8000/api/v1`;
+// Use relative path '/api/v1' in production so Vercel routes it to the Python backend.
+// In local dev, use the localhost proxy.
+const API_BASE_URL = import.meta.env.PROD 
+  ? '/api/v1' 
+  : `http://${window.location.hostname}:8000/api/v1`;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

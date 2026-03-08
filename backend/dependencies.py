@@ -3,8 +3,13 @@ from sqlalchemy.orm import Session
 import database, auth
 
 def admin_required(current_user: database.User = Depends(auth.get_current_user)):
-    if current_user.role != database.UserRole.ADMIN:
+    if current_user.role not in [database.UserRole.ADMIN, database.UserRole.SUPER_ADMIN]:
         raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+def super_admin_required(current_user: database.User = Depends(auth.get_current_user)):
+    if current_user.role != database.UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super Admin access required")
     return current_user
 
 def verified_student_required(current_user: database.User = Depends(auth.get_current_user)):

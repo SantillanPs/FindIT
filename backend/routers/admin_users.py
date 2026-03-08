@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 import database, schemas, auth
-from dependencies import admin_required, log_audit
+from dependencies import admin_required, super_admin_required, log_audit
 
 router = APIRouter(prefix="/admin", tags=["Admin User Management"])
 
@@ -129,3 +129,86 @@ def adjust_reputation(
     log_audit(db, admin.id, "reputation_adjustment", notes=f"Adjusted reputation for user {user_id}: points={update.points_modifier}, strikes={update.strikes_modifier}, blacklisted={update.is_blacklisted}")
     
     return user
+
+# ==========================================
+# SUPER ADMIN STAFF MANAGEMENT ROUTES
+# ==========================================
+
+@router.get("/staff", response_model=list[schemas.UserResponse])
+def get_staff_list(
+    db: Session = Depends(auth.get_db),
+    super_admin: database.User = Depends(super_admin_required)
+):
+    # Returns all users (students, admins, super_admins) so the super admin can search and manage them
+    return db.query(database.User).order_by(database.User.role.asc(), database.User.full_name.asc()).all()
+
+@router.post("/staff/{user_id}/promote", response_model=schemas.UserResponse)
+def promote_to_admin(
+    user_id: int,
+    db: Session = Depends(auth.get_db),
+    super_admin: database.User = Depends(super_admin_required)
+):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.role == database.UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=400, detail="Cannot change role of another super admin")
+        
+    user.role = database.UserRole.ADMIN.value
+    db.commit()
+    db.refresh(user)
+    
+    log_audit(db, super_admin.id, "staff_promotion", notes=f"Promoted user {user_id} to ADMIN")
+    return user
+
+@router.post("/staff/{user_id}/demote", response_model=schemas.UserResponse)
+def demote_to_student(
+    user_id: int,
+    db: Session = Depends(auth.get_db),
+    super_admin: database.User = Depends(super_admin_required)
+):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.role == database.UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=400, detail="Cannot downgrade another super admin")
+        
+    user.role = database.UserRole.STUDENT.value
+    db.commit()
+    db.refresh(user)
+    
+    log_audit(db, super_admin.id, "staff_demotion", notes=f"Demoted user {user_id} to STUDENT")
+    return user
+
+@router.get("/audit-logs", response_model=list[schemas.AuditLogResponseDetail])
+def get_audit_logs(
+    db: Session = Depends(auth.get_db),
+    super_admin: database.User = Depends(super_admin_required)
+):
+    from sqlalchemy.orm import joinedload
+    
+    logs = db.query(database.AuditLog)\
+        .options(joinedload(database.AuditLog.admin_user))\
+        .order_by(database.AuditLog.timestamp.desc())\
+        .limit(200)\
+        .all()
+        
+    result = []
+    for log in logs:
+        # Construct the detailed response
+        log_dict = {
+            "id": log.id,
+            "item_id": log.item_id,
+            "claim_id": log.claim_id,
+            "admin_id": log.admin_id,
+            "action_type": log.action_type,
+            "notes": log.notes,
+            "timestamp": log.timestamp,
+            "admin_name": log.admin_user.full_name if log.admin_user else "Unknown System",
+            "admin_email": log.admin_user.email if log.admin_user else "unknown@system"
+        }
+        result.append(log_dict)
+        
+    return result

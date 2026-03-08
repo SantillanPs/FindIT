@@ -35,6 +35,7 @@ Base = declarative_base()
 class UserRole(str, enum.Enum):
     STUDENT = "student"
     ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
 
 class ItemStatus(str, enum.Enum):
     REPORTED = "reported"
@@ -149,6 +150,8 @@ class AuditLog(Base):
     action_type = Column(String)  # e.g., "custody_update", "claim_review"
     notes = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    
+    admin_user = relationship("User", foreign_keys=[admin_id])
 
 class Notification(Base):
     __tablename__ = "notifications"

@@ -18,9 +18,9 @@ const Layout = ({ children }) => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
-  // Fetch admin stats if user is admin
+  // Fetch admin stats if user is admin or super_admin
   useEffect(() => {
-    if (user?.role === 'admin') {
+    if (user?.role === 'admin' || user?.role === 'super_admin') {
       fetchAdminStats();
       const interval = setInterval(fetchAdminStats, 30000); // Refresh every 30s
       return () => clearInterval(interval);
@@ -92,7 +92,16 @@ const Layout = ({ children }) => {
 
              <nav className="flex-grow px-4 mt-8 space-y-2 overflow-y-auto custom-scrollbar">
                 <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Main Navigation</p>
-                {user.role === 'admin' ? (
+                {location.pathname.startsWith('/super') && user.role === 'super_admin' ? (
+                  <>
+                    <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Super Admin Workspace</p>
+                    <SideNavLink to="/super" icon="fa-globe" label="System Overview" />
+                    <SideNavLink to="/super/staff" icon="fa-users-gear" label="Staff Management" />
+                    <SideNavLink to="/super/audit" icon="fa-shield-halved" label="Security Audit Logs" />
+                    <div className="h-px bg-white/5 mx-4 my-4"></div>
+                    <SideNavLink to="/admin" icon="fa-warehouse" label="Exit to Admin Panel" />
+                  </>
+                ) : ['admin', 'super_admin'].includes(user.role) ? (
                   <>
                     <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Command Center</p>
                     <SideNavLink to="/admin" icon="fa-warehouse" label="Inventory" />
@@ -104,6 +113,13 @@ const Layout = ({ children }) => {
                     <SideNavLink to="/admin/analytics" icon="fa-chart-pie" label="System Insights" />
                     <div className="h-px bg-white/5 mx-4 my-4"></div>
                     <SideNavLink to="/admin/released" icon="fa-history" label="History" />
+                    
+                    {user.role === 'super_admin' && (
+                      <>
+                        <div className="h-px bg-white/5 mx-4 my-4"></div>
+                        <SideNavLink to="/super" icon="fa-user-shield" label="Super Admin Workspace" />
+                      </>
+                    )}
                   </>
                 ) : (
                   <>
@@ -297,9 +313,9 @@ const BackgroundEffects = () => (
 
 const SideNavLink = ({ to, icon, label, count }) => {
   const location = useLocation();
-  // Exact match for /admin to prevent it being highlighted when at sub-routes
-  const isActive = to === '/admin' 
-    ? location.pathname === '/admin' 
+  // Exact match for base routes to prevent highlighting when at sub-routes
+  const isActive = (to === '/admin' || to === '/super')
+    ? location.pathname === to 
     : location.pathname.startsWith(to);
 
   return (

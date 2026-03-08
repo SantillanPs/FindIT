@@ -25,6 +25,7 @@ import LostReportStatus from './pages/Student/LostReportStatus';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 
 const AppContent = () => {
   const { user, token, loading } = useAuth();
@@ -72,7 +73,7 @@ const AppContent = () => {
           </Route>
 
           {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/lost" element={<AdminDashboard />} />
             <Route path="/admin/claims" element={<AdminDashboard />} />
@@ -81,6 +82,13 @@ const AppContent = () => {
             <Route path="/admin/users" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminDashboard />} />
             <Route path="/admin/released" element={<AdminDashboard />} />
+          </Route>
+
+          {/* Super Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+            <Route path="/super" element={<SuperAdminDashboard />} />
+            <Route path="/super/staff" element={<SuperAdminDashboard />} />
+            <Route path="/super/audit" element={<SuperAdminDashboard />} />
           </Route>
         </Route>
       </Routes>

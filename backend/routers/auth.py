@@ -39,6 +39,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
         verification_proof_url=user.verification_proof_url
     )
     db.add(new_user)
+    db.commit()
     db.refresh(new_user)
     
     # NEW: Handle Witness Reports points for newly registered user
