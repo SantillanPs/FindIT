@@ -13,9 +13,12 @@ load_dotenv()
 import database
 from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics
 
-# Ensure uploads directory exists
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
+# Ensure uploads directory exists (wrap in try-except for read-only environments like Vercel)
+try:
+    if not os.path.exists("uploads"):
+        os.makedirs("uploads")
+except OSError:
+    pass
 
 app = FastAPI(
     title="FindIT API", 
@@ -30,8 +33,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     # Log the full error to the server terminal
     err_msg = f"[{datetime.utcnow()}] VALIDATION ERROR: {exc.errors()}"
     print(err_msg)
-    with open("error_log.txt", "a") as f:
-        f.write(err_msg + "\n")
+    # Return a generic message to the client
     # Return a generic message to the client
     return JSONResponse(
         status_code=422,
@@ -83,8 +85,9 @@ v1_router.include_router(analytics.router)
 # Mount central router to app
 app.include_router(v1_router)
 
-# Mount Static Files for Uploads
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Mount Static Files for Uploads (skip if dir doesn't exist to prevent crash on Vercel)
+if os.path.exists("uploads"):
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 if __name__ == "__main__":
     import uvicorn

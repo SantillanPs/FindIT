@@ -14,7 +14,10 @@ SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Fallback to local SQLite if no DATABASE_URL is provided
 if not SQLALCHEMY_DATABASE_URL:
-    SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'findit.db')}"
+    if os.getenv("VERCEL"):
+        SQLALCHEMY_DATABASE_URL = "sqlite:////tmp/findit.db"
+    else:
+        SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'findit.db')}"
 
 # PostgreSQL needs a small fix in the URL for SQLAlchemy if it starts with postgres:// (standard for some providers)
 if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
