@@ -11,9 +11,6 @@ const ClaimStatus = () => {
 
   useEffect(() => {
     fetchStatus();
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
   }, [trackingId]);
 
   const fetchStatus = async () => {

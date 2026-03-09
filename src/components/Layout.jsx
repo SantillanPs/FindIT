@@ -22,8 +22,6 @@ const Layout = ({ children }) => {
   useEffect(() => {
     if (user?.role === 'admin' || user?.role === 'super_admin') {
       fetchAdminStats();
-      const interval = setInterval(fetchAdminStats, 30000); // Refresh every 30s
-      return () => clearInterval(interval);
     }
   }, [user]);
 
