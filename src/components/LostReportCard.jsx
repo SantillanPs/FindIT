@@ -65,8 +65,12 @@ const LostReportCard = ({ report, onWitness }) => {
                     {report.item_name}
                   </h3>
                   <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{report.category}</span>
-                      <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
+                      {report.item_name?.toLowerCase() !== report.category?.toLowerCase() && (
+                          <>
+                              <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{report.category}</span>
+                              <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
+                          </>
+                      )}
                       <span className="text-[10px] font-black text-accent-default/60 uppercase tracking-widest italic">Reported Missing</span>
                   </div>
               </div>

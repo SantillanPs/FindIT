@@ -163,8 +163,8 @@ const GuestReportFound = () => {
             {step === 5 && (
               <DetailsStep 
                 stepLabel="Step 5: Item Details"
-                title="Additional details about the item?"
-                description="Describe what the item is (e.g., brand, color, type)."
+                title="Item Description"
+                description="Briefly describe the item's appearance, brand, or other details to help us identify it."
                 placeholder="e.g. Red backpack, iPhone 13 with a clear case..."
                 value={formData.description}
                 onChange={(val) => setFormData({...formData, description: val})}

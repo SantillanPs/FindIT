@@ -66,9 +66,12 @@ const ItemCard = ({ item, onClick, onShare }) => {
                     {item.item_name}
                   </h3>
                   <div className="flex items-center gap-2 mt-2">
-                      <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{item.category}</span>
-                      <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
-                      <span className="text-[10px] font-black text-uni-500/60 uppercase tracking-widest">Open for Claim</span>
+                      {item.item_name?.toLowerCase() !== item.category?.toLowerCase() && (
+                          <>
+                              <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{item.category}</span>
+                              <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
+                          </>
+                      )}
                   </div>
               </div>
 

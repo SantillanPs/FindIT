@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 
 const Analytics = () => {
-  const [period, setPeriod] = useState('monthly');
+  const [period, setPeriod] = useState('today');
   const [reportData, setReportData] = useState({ found: [], lost: [] });
   const [claimData, setClaimData] = useState([]);
   const [insights, setInsights] = useState(null);
