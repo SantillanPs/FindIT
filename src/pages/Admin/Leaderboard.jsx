@@ -6,17 +6,18 @@ import {
 } from 'lucide-react';
 import apiClient from '../../api/client';
 
-const Leaderboard = () => {
+const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
-    fetchLeaderboard();
-  }, []);
+    fetchLeaderboard(refreshTrigger > 0);
+  }, [refreshTrigger]);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async (isSync = false) => {
+    if (isSync) setIsSyncing(true);
     try {
       const response = await apiClient.get('/admin/leaderboard');
       setUsers(response.data);
@@ -24,6 +25,7 @@ const Leaderboard = () => {
       console.error('Failed to fetch leaderboard', error);
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
   };
 

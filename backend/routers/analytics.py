@@ -10,6 +10,22 @@ from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 
+def get_period_format(db: Session, field, fmt_sqlite: str):
+    """Helper to handle date formatting across SQLite and PostgreSQL"""
+    dialect = db.bind.dialect.name
+    if dialect == "postgresql":
+        # Map SQLite strftime formats to PostgreSQL to_char
+        fmt_mapping = {
+            "%Y-%m": "YYYY-MM",
+            "%Y": "YYYY",
+            "%H:00": "HH24:00",
+            "%Y-W%W": "IYYY-IW" # ISO Year and Week
+        }
+        pg_fmt = fmt_mapping.get(fmt_sqlite, "YYYY-MM-DD")
+        return func.to_char(field, pg_fmt)
+    return func.strftime(fmt_sqlite, field)
+
+
 @router.get("/reports/stats")
 def get_report_stats(
     period: str = "monthly", # weekly, monthly, 6months, yearly
@@ -42,7 +58,7 @@ def get_report_stats(
 
     # Found Items
     found_stats = db.query(
-        func.strftime(strftime_fmt, database.FoundItem.found_time).label('period'),
+        get_period_format(db, database.FoundItem.found_time, strftime_fmt).label('period'),
         database.FoundItem.category,
         func.count(database.FoundItem.id).label('count')
     ).filter(database.FoundItem.found_time >= start_date)\
@@ -51,7 +67,7 @@ def get_report_stats(
 
     # Lost Items
     lost_stats = db.query(
-        func.strftime(strftime_fmt, database.LostItem.last_seen_time).label('period'),
+        get_period_format(db, database.LostItem.last_seen_time, strftime_fmt).label('period'),
         database.LostItem.category,
         func.count(database.LostItem.id).label('count')
     ).filter(database.LostItem.last_seen_time >= start_date)\
@@ -94,7 +110,7 @@ def get_claim_stats(
 
     # Join with FoundItem to get category
     claim_stats = db.query(
-        func.strftime(strftime_fmt, database.Claim.created_at).label('period'),
+        get_period_format(db, database.Claim.created_at, strftime_fmt).label('period'),
         database.FoundItem.category,
         func.count(database.Claim.id).label('count')
     ).join(database.FoundItem, database.Claim.found_item_id == database.FoundItem.id)\
@@ -155,9 +171,18 @@ def get_insights(
             best_recovery = {"category": f.category, "rate": rate}
 
     # Today's Activity
-    today = datetime.utcnow().date()
-    today_found = db.query(func.count(database.FoundItem.id)).filter(func.date(database.FoundItem.found_time) == today).scalar()
-    today_lost = db.query(func.count(database.LostItem.id)).filter(func.date(database.LostItem.last_seen_time) == today).scalar()
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = today_start + timedelta(days=1)
+    
+    today_found = db.query(func.count(database.FoundItem.id)).filter(
+        database.FoundItem.found_time >= today_start,
+        database.FoundItem.found_time < today_end
+    ).scalar()
+    
+    today_lost = db.query(func.count(database.LostItem.id)).filter(
+        database.LostItem.last_seen_time >= today_start,
+        database.LostItem.last_seen_time < today_end
+    ).scalar()
 
     # Weekly Activity
     week_ago = datetime.utcnow() - timedelta(days=7)

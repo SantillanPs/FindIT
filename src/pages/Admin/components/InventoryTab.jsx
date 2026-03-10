@@ -9,10 +9,11 @@ const InventoryTab = ({
   pendingClaims, 
   navigate, 
   setSearchTerm, 
-  handleStatusUpdate, 
+  handleStatusUpdate,
   setShowReleaseModal, 
   setReleaseForm, 
-  actionLoading 
+  actionLoading,
+  activeFilter
 }) => {
   return (
     <div className="p-6 md:p-8 space-y-8">
@@ -38,6 +39,22 @@ const InventoryTab = ({
            </button>
          ))}
       </div>
+       {['today', 'weekly'].includes(activeFilter) && (
+          <div className="bg-uni-500/10 border border-uni-500/20 rounded-xl p-4 flex items-center justify-between mt-6">
+            <div className="flex items-center gap-3">
+              <i className="fa-solid fa-calendar-day text-uni-400"></i>
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">
+                Showing items from {activeFilter === 'today' ? 'Today' : 'this Week'}
+              </span>
+            </div>
+            <button 
+              onClick={() => setSearchTerm('')}
+              className="text-[9px] font-black text-uni-400 uppercase tracking-widest hover:underline"
+            >
+              Clear Filter ✕
+            </button>
+          </div>
+       )}
 
       <div className="space-y-4">
       {filteredItems.length === 0 ? (

@@ -8,10 +8,9 @@ import ThemeToggle from './ThemeToggle';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0 });
+  const hasFetchedStats = React.useRef(false);
 
   // Close sidebar on route change
   useEffect(() => {
@@ -20,7 +19,8 @@ const Layout = ({ children }) => {
 
   // Fetch admin stats if user is admin or super_admin
   useEffect(() => {
-    if (user?.role === 'admin' || user?.role === 'super_admin') {
+    if ((user?.role === 'admin' || user?.role === 'super_admin') && !hasFetchedStats.current) {
+      hasFetchedStats.current = true;
       fetchAdminStats();
     }
   }, [user]);

@@ -3,17 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Eye, CheckCircle, XCircle, Clock, User, Mail, Camera } from 'lucide-react';
 import apiClient from '../../../api/client';
 
-const WitnessReportsTab = ({ setPreviewImage }) => {
+const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
-    fetchWitnessReports();
-  }, []);
+    fetchWitnessReports(refreshTrigger > 0);
+  }, [refreshTrigger]);
 
-  const fetchWitnessReports = async () => {
+  const fetchWitnessReports = async (isSync = false) => {
+    if (isSync) setIsSyncing(true);
     try {
       const response = await apiClient.get('/admin/witness-reports');
       setReports(response.data);
@@ -21,6 +22,7 @@ const WitnessReportsTab = ({ setPreviewImage }) => {
       console.error('Failed to fetch witness reports', error);
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
   };
 

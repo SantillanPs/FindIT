@@ -10,7 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 
-const Analytics = () => {
+const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSyncing }) => {
   const [period, setPeriod] = useState('today');
   const [reportData, setReportData] = useState({ found: [], lost: [] });
   const [claimData, setClaimData] = useState([]);
@@ -19,11 +19,12 @@ const Analytics = () => {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, [period]);
+    fetchAnalyticsData(refreshTrigger > 0);
+  }, [period, refreshTrigger]);
 
-  const fetchAnalyticsData = async () => {
-    setLoading(true);
+  const fetchAnalyticsData = async (isSync = false) => {
+    if (isSync) setIsSyncing(true);
+    else setLoading(true);
     try {
       const [reportsRes, claimsRes, insightsRes] = await Promise.all([
         apiClient.get(`/analytics/reports/stats?period=${period}`),
@@ -37,6 +38,7 @@ const Analytics = () => {
       console.error('Failed to fetch analytics', error);
     } finally {
       setLoading(false);
+      setIsSyncing(false);
     }
   };
 
@@ -131,10 +133,42 @@ const Analytics = () => {
       
       {/* Activity Snapshot */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <ActivityCard label="Today's Found" value={insights?.today?.found} color="text-uni-400" />
-        <ActivityCard label="Today's Lost" value={insights?.today?.lost} color="text-amber-500" />
-        <ActivityCard label="Weekly Found" value={insights?.weekly?.found} color="text-uni-400" />
-        <ActivityCard label="Weekly Lost" value={insights?.weekly?.lost} color="text-amber-500" />
+        <ActivityCard 
+          label="Today's Found" 
+          value={insights?.today?.found} 
+          color="text-uni-400" 
+          onClick={() => {
+            onNavigateToTab('found');
+            onSetSearchTerm('today');
+          }}
+        />
+        <ActivityCard 
+          label="Today's Lost" 
+          value={insights?.today?.lost} 
+          color="text-amber-500" 
+          onClick={() => {
+            onNavigateToTab('lost');
+            onSetSearchTerm('today');
+          }}
+        />
+        <ActivityCard 
+          label="Weekly Found" 
+          value={insights?.weekly?.found} 
+          color="text-uni-400" 
+          onClick={() => {
+            onNavigateToTab('found');
+            onSetSearchTerm('weekly');
+          }}
+        />
+        <ActivityCard 
+          label="Weekly Lost" 
+          value={insights?.weekly?.lost} 
+          color="text-amber-500" 
+          onClick={() => {
+            onNavigateToTab('lost');
+            onSetSearchTerm('weekly');
+          }}
+        />
       </div>
 
       {/* Insight Cards */}
@@ -317,11 +351,15 @@ const calculateCategoryDistribution = (data) => {
     })).sort((a,b) => b.value - a.value);
 };
 
-const ActivityCard = ({ label, value, color }) => (
-    <div className="glass-panel p-6 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col justify-center items-center text-center space-y-2">
-        <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">{label}</p>
+const ActivityCard = ({ label, value, color, onClick }) => (
+    <button 
+        onClick={onClick}
+        className="glass-panel p-6 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col justify-center items-center text-center space-y-2 hover:bg-white/5 hover:border-white/10 transition-all active:scale-95 group"
+    >
+        <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-400">{label}</p>
         <h4 className={`text-2xl font-black ${color} tracking-tight`}>{value || 0}</h4>
-    </div>
+        <div className="text-[7px] font-black text-slate-700 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">View Details →</div>
+    </button>
 );
 
 const InsightCard = ({ icon, label, value, subValue, color }) => {

@@ -25,7 +25,7 @@ const MatchmakerTab = ({
                    setPreviewImage={setPreviewImage} 
                  />
                  
-                 <div className="space-y-12">
+                 <div className="space-y-4">
                     {group.top_matches.map((match, mIdx) => (
                        <MatchCard 
                           key={mIdx}
