@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const ReleasedItemsTable = ({ releasedItems }) => {
   return (
@@ -28,7 +29,13 @@ const ReleasedItemsTable = ({ releasedItems }) => {
                     )}
                     <div>
                        <div className="text-[11px] text-uni-400 font-black uppercase tracking-widest leading-none mb-1">
-                         {item.released_to_name || item.identified_name || 'Guest Claimant'}
+                          {item.released_to_id ? (
+                            <Link to={`/admin/profile/${item.released_to_id}`} className="hover:underline decoration-uni-400/50">
+                              {item.released_to_name || item.identified_name}
+                            </Link>
+                          ) : (
+                            item.released_to_name || item.identified_name || 'Guest Claimant'
+                          )}
                        </div>
                        <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
                          {item.released_to_id_number || item.identified_student_id || 'Walk-in Claim'}
@@ -40,8 +47,12 @@ const ReleasedItemsTable = ({ releasedItems }) => {
                  </div>
                </td>
               <td className="px-8 py-6">
-                <div className="text-[10px] text-slate-300 font-black uppercase tracking-widest mb-1">Released {new Date(item.released_at).toLocaleDateString()}</div>
-                <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">Authorized By {item.released_by_name}</div>
+                <div className="text-[10px] text-slate-300 font-black uppercase tracking-widest mb-1">
+                  {item.released_at ? `Released ${new Date(item.released_at).toLocaleDateString()}` : 'Awaiting Release'}
+                </div>
+                <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
+                  {item.released_by_name ? `Authorized By ${item.released_by_name}` : 'Not Yet Authorized'}
+                </div>
               </td>
               <td className="px-8 py-6 text-right">
                  <span className="px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border bg-green-500/10 text-green-400 border-green-500/20">Archived Record</span>

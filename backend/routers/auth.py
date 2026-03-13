@@ -30,7 +30,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
 
     new_user = database.User(
         email=email_lower,
-        full_name=user.full_name,
+        first_name=user.first_name,
+        last_name=user.last_name,
         hashed_password=hashed_password,
         role=database.UserRole.STUDENT, # Enforce student role
         is_verified=False, # Students start unverified
@@ -53,7 +54,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     for wr in approved_witness_reports:
         wr.reporter_id = new_user.id
         wr.guest_email = None
-        wr.guest_name = None
+        wr.guest_first_name = None
+        wr.guest_last_name = None
         if not wr.is_anonymous:
             total_points_to_award += 100 # Match fixed points in lost.py
             
@@ -213,6 +215,18 @@ def get_college_leaderboard(db: Session = Depends(auth.get_db)):
 @router.get("/me", response_model=schemas.UserResponse)
 def get_me(current_user: database.User = Depends(auth.get_current_user)):
     return current_user
+
+@router.get("/user/{user_id}/profile", response_model=schemas.UserProfile)
+def get_user_profile(user_id: int, db: Session = Depends(auth.get_db)):
+    user = db.query(database.User).filter(database.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Filter items to only show active or relevant ones
+    user.lost_items = [i for i in user.lost_items if i.status != "dismissed"]
+    user.found_items = [i for i in user.found_items if i.status != "dismissed"]
+    
+    return user
 
 @router.get("/leaderboard", response_model=list[schemas.UserPublicResponse])
 def get_public_leaderboard(db: Session = Depends(auth.get_db)):

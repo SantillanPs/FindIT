@@ -6,12 +6,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 import os
 from dotenv import load_dotenv
+import uvicorn
+import logging
 
 # Load environment variables
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 import database
-from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics
+import database
+from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges
 
 # Ensure uploads directory exists (wrap in try-except for read-only environments like Vercel)
 try:
@@ -21,12 +24,33 @@ except OSError:
     pass
 
 app = FastAPI(
-    title="FindIT API", 
+    title="FindIT API",
     description="Backend API for the FindIT Lost and Found System, supporting AI-assisted matching and role-based verification.",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+@app.on_event("startup")
+async def setup_logging_timestamps():
+    # Dynamically inject timestamps into uvicorn loggers after they are created
+    access_formatter = uvicorn.logging.AccessFormatter(
+        "%(asctime)s | %(levelprefix)s %(client_addr)s - \"%(request_line)s\" %(status_code)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    for handler in logging.getLogger("uvicorn.access").handlers:
+        handler.setFormatter(access_formatter)
+
+    default_formatter = uvicorn.logging.DefaultFormatter(
+        "%(asctime)s | %(levelprefix)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    )
+    for handler in logging.getLogger("uvicorn.error").handlers:
+        handler.setFormatter(default_formatter)
+
+    # Also update the root uvicorn logger if needed
+    for handler in logging.getLogger("uvicorn").handlers:
+        handler.setFormatter(default_formatter)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -86,6 +110,9 @@ v1_router.include_router(notifications.router)
 v1_router.include_router(media.router)
 v1_router.include_router(categories.router)
 v1_router.include_router(analytics.router)
+v1_router.include_router(zones.router)
+v1_router.include_router(admin_zones.router)
+v1_router.include_router(colleges.router)
 
 # Mount central router to app
 app.include_router(v1_router)
@@ -93,7 +120,6 @@ app.include_router(v1_router)
 # Mount Static Files for Uploads (skip if dir doesn't exist to prevent crash on Vercel)
 if os.path.exists("uploads"):
     app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 if __name__ == "__main__":
     import uvicorn
     # Using string 'main:app' with reload=True for development

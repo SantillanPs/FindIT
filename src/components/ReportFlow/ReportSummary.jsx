@@ -54,9 +54,19 @@ const ReportSummary = ({
                      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">{type === 'lost' ? 'Last seen at' : 'Found at'}</p>
                      <p className="text-lg font-black text-white uppercase tracking-tight leading-none">{formData.location_zone}</p>
                   </div>
-                  <div className="space-y-1 border-t border-white/5 pt-6">
-                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Reported by</p>
-                     <p className="text-xs font-black text-white uppercase tracking-[0.2em]">{formData.contact_full_name}</p>
+                  <div className="space-y-4 border-t border-white/5 pt-6">
+                     <div>
+                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Reported by</p>
+                        <p className="text-xs font-black text-white uppercase tracking-[0.2em]">
+                           {formData.guest_first_name ? `${formData.guest_first_name} ${formData.guest_last_name}` : formData.contact_full_name}
+                        </p>
+                     </div>
+                     {formData.contact_info && (
+                        <div>
+                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Contact Info</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-relaxed">{formData.contact_info}</p>
+                        </div>
+                     )}
                   </div>
                </div>
 

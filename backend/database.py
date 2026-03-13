@@ -1,12 +1,12 @@
 from sqlalchemy import Column, Integer, String, Boolean, Enum, create_engine, Text, DateTime, ForeignKey
-from sqlalchemy.orm import sessionmaker, declarative_base, relationship
+from sqlalchemy.orm import sessionmaker, declarative_base, relationship, backref
 import enum
 from datetime import datetime
 
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Check for DATABASE_URL environment variable (Supabase / Vercel)
@@ -54,11 +54,43 @@ class WitnessReportStatus(str, enum.Enum):
     APPROVED = "approved"
     DISMISSED = "dismissed"
 
+class ZoneType(str, enum.Enum):
+    BUILDING = "building"
+    FLOOR = "floor"
+    ROOM = "room"
+    HALLWAY = "hallway"
+    OUTDOOR = "outdoor"
+
+class Zone(Base):
+    __tablename__ = "zones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    type = Column(String, default=ZoneType.ROOM.value)
+    parent_zone_id = Column(Integer, ForeignKey("zones.id"), nullable=True)
+    pos_x = Column(Integer, default=0)
+    pos_y = Column(Integer, default=0)
+    
+    # Sub-zones (e.g., rooms inside a building)
+    sub_zones = relationship("Zone", backref=backref("parent_zone", remote_side=[id]))
+
+class ZoneAdjacency(Base):
+    __tablename__ = "zone_adjacencies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    zone_a_id = Column(Integer, ForeignKey("zones.id"), index=True)
+    zone_b_id = Column(Integer, ForeignKey("zones.id"), index=True)
+    distance_weight = Column(Integer, default=1) # 1 = immediate adjacency
+
+    zone_a = relationship("Zone", foreign_keys=[zone_a_id])
+    zone_b = relationship("Zone", foreign_keys=[zone_b_id])
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String, nullable=True)
+    first_name = Column(String, nullable=True)
+    last_name = Column(String, nullable=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String, default=UserRole.STUDENT.value)
@@ -85,6 +117,7 @@ class FoundItem(Base):
     category = Column(String, index=True)
     description = Column(Text)
     location_zone = Column(String)
+    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=True) # New graph zone
     found_time = Column(DateTime, default=datetime.utcnow)
     safe_photo_url = Column(String, nullable=True)
     private_admin_notes = Column(Text)
@@ -97,7 +130,9 @@ class FoundItem(Base):
     
     # Ownership/Tracking
     finder_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Modified to be nullable for guests
-    contact_full_name = Column(String, nullable=True) # Modified from contact_email for guest reports
+    contact_first_name = Column(String, nullable=True)
+    contact_last_name = Column(String, nullable=True)
+    contact_info = Column(Text, nullable=True) # "How can we contact you?"
     
     # Release Metadata
     released_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
@@ -109,6 +144,20 @@ class FoundItem(Base):
     
     finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
     released_to = relationship("User", foreign_keys=[released_to_id])
+    zone = relationship("Zone", foreign_keys=[zone_id])
+
+    @property
+    def owner_name(self):
+        if self.finder_id and self.finder:
+            fname = self.finder.first_name or ""
+            lname = self.finder.last_name or ""
+            name = f"{fname} {lname}".strip()
+            return name if name else "Anonymous Student"
+        if self.contact_first_name or self.contact_last_name:
+            fname = self.contact_first_name or ""
+            lname = self.contact_last_name or ""
+            return f"{fname} {lname}".strip()
+        return "Anonymous Finder"
 
 class LostItem(Base):
     __tablename__ = "lost_items"
@@ -118,30 +167,43 @@ class LostItem(Base):
     category = Column(String, index=True)
     description = Column(Text)
     location_zone = Column(String)
+    zone_id = Column(Integer, ForeignKey("zones.id"), nullable=True) # New graph zone
     last_seen_time = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
     
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    guest_full_name = Column(String, nullable=True)
+    guest_first_name = Column(String, nullable=True)
+    guest_last_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
+    contact_info = Column(Text, nullable=True) # "How can we contact you?"
     safe_photo_url = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
     admin_notes = Column(Text, nullable=True)
     owner = relationship("User", back_populates="lost_items")
     witness_reports = relationship("WitnessReport", back_populates="lost_item")
+    zone = relationship("Zone", foreign_keys=[zone_id])
 
     @property
     def owner_name(self):
         if self.user_id and self.owner:
-            return self.owner.full_name
-        return self.guest_full_name
+            fname = self.owner.first_name or ""
+            lname = self.owner.last_name or ""
+            name = f"{fname} {lname}".strip()
+            return name if name else "Anonymous Student"
+        if self.guest_first_name or self.guest_last_name:
+            fname = self.guest_first_name or ""
+            lname = self.guest_last_name or ""
+            return f"{fname} {lname}".strip()
+        return "Anonymous Guest"
 
     @property
     def owner_email(self):
-        if self.user_id and self.owner:
+        if self.user_id and self.owner and self.owner.email:
             return self.owner.email
-        return self.guest_email
+        if self.guest_email:
+            return self.guest_email
+        return "N/A"
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -188,7 +250,8 @@ class Claim(Base):
     id = Column(Integer, primary_key=True, index=True)
     found_item_id = Column(Integer, ForeignKey("found_items.id"))
     student_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    guest_full_name = Column(String, nullable=True)
+    guest_first_name = Column(String, nullable=True)
+    guest_last_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
     contact_method = Column(String, nullable=True) # Facebook, Email, Contact Number
     contact_info = Column(String, nullable=True)
@@ -205,8 +268,15 @@ class Claim(Base):
     @property
     def owner_name(self):
         if self.student_id and self.student:
-            return self.student.full_name
-        return self.guest_full_name
+            fname = self.student.first_name or ""
+            lname = self.student.last_name or ""
+            name = f"{fname} {lname}".strip()
+            return name if name else "Anonymous Student"
+        if self.guest_first_name or self.guest_last_name:
+            fname = self.guest_first_name or ""
+            lname = self.guest_last_name or ""
+            return f"{fname} {lname}".strip()
+        return "Anonymous Guest"
 
     @property
     def owner_email(self):
@@ -228,15 +298,33 @@ class OtherSuggestion(Base):
     hit_count = Column(Integer, default=1)
     last_reported_at = Column(DateTime, default=datetime.utcnow)
 
+class MasterCategory(Base):
+    __tablename__ = "master_categories"
+    id = Column(String, primary_key=True) # Slug e.g. 'Laptop'
+    label = Column(String)
+    icon = Column(String)
+    emoji = Column(String, nullable=True)
+    is_active = Column(Boolean, default=True)
+
+class MasterCollege(Base):
+    __tablename__ = "master_colleges"
+    id = Column(String, primary_key=True) # Slug e.g. 'CITE'
+    label = Column(String)
+    icon = Column(String)
+    color = Column(String)
+    is_active = Column(Boolean, default=True)
+
 class WitnessReport(Base):
     __tablename__ = "witness_reports"
 
     id = Column(Integer, primary_key=True, index=True)
     lost_item_id = Column(Integer, ForeignKey("lost_items.id"))
-    reporter_id = Column(Integer, ForeignKey("users.id"), nullable=True) # If null, it's a guest
+    reporter_id = Column(Integer, ForeignKey("users.id"), nullable=True) 
     
-    guest_name = Column(String, nullable=True)
+    guest_first_name = Column(String, nullable=True)
+    guest_last_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
+    contact_info = Column(Text, nullable=True)
     
     witness_description = Column(Text)
     witness_photo_url = Column(String, nullable=True)

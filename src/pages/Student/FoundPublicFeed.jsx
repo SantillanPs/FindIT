@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 import EmptyState from '../../components/EmptyState';
 import { useAuth } from '../../context/AuthContext';
-import { CATEGORIES } from '../../constants/categories';
+import { useMasterData } from '../../context/MasterDataContext';
 import ItemCard from '../../components/ItemCard';
 
 const FoundPublicFeed = () => {
@@ -13,6 +13,7 @@ const FoundPublicFeed = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categoryStats, setCategoryStats] = useState([]);
+  const { categories: CATEGORIES } = useMasterData();
   const { user } = useAuth();
   const navigate = useNavigate();
 

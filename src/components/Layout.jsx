@@ -94,6 +94,7 @@ const Layout = ({ children }) => {
                   <>
                     <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Super Admin Workspace</p>
                     <SideNavLink to="/super" icon="fa-globe" label="System Overview" />
+                    <SideNavLink to="/super/zones" icon="fa-route" label="Map Builder" />
                     <SideNavLink to="/super/staff" icon="fa-users-gear" label="Staff Management" />
                     <SideNavLink to="/super/audit" icon="fa-shield-halved" label="Security Audit Logs" />
                     <div className="h-px bg-white/5 mx-4 my-4"></div>
@@ -175,7 +176,7 @@ const Layout = ({ children }) => {
              </header>
 
              <main className="flex-grow overflow-y-auto p-4 md:p-10 custom-scrollbar">
-                <div className="max-w-6xl mx-auto">
+                <div className={`${location.pathname === '/super/zones' ? 'max-w-[1600px] w-full' : 'max-w-6xl'} mx-auto`}>
                     <AnimatePresence mode="wait">
                     {user.role === 'student' && !user.is_verified && (
                         <motion.div 

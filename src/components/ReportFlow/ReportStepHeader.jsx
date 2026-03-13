@@ -17,8 +17,35 @@ const ReportStepHeader = ({ title, label, step, totalSteps, error, icon }) => {
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Progress</p>
                 <p className="text-sm font-black text-white uppercase italic">Step {step} of {totalSteps}</p>
              </div>
-             <div className="w-12 h-12 rounded-full border-4 border-uni-500/20 border-t-uni-500 flex items-center justify-center text-[10px] font-black text-white italic">
-               {Math.round((step / totalSteps) * 100)}%
+             <div className="relative w-12 h-12 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90">
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="transparent"
+                    className="text-uni-500/20"
+                  />
+                  <motion.circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="transparent"
+                    strokeDasharray="125.66"
+                    initial={{ strokeDashoffset: 125.66 }}
+                    animate={{ strokeDashoffset: 125.66 - (125.66 * (step / totalSteps)) }}
+                    transition={{ duration: 0.8, ease: "circOut" }}
+                    strokeLinecap="round"
+                    className="text-uni-500"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white italic">
+                  {Math.round((step / totalSteps) * 100)}%
+                </div>
              </div>
           </div>
       </div>

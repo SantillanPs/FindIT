@@ -1,8 +1,8 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { CATEGORIES } from '../constants/categories';
+import { useMasterData } from '../context/MasterDataContext';
 
 const LostReportCard = ({ report, onWitness }) => {
+  const { categories: CATEGORIES } = useMasterData();
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
   const formattedDate = new Date(report.last_seen_time).toLocaleDateString('en-US', {

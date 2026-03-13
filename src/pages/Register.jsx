@@ -3,12 +3,15 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 import ImageUpload from '../components/ImageUpload';
+import { useMasterData } from '../context/MasterDataContext';
 
 const Register = () => {
+  const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const role = 'student';
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
   const [proofUrl, setProofUrl] = useState('');
@@ -25,7 +28,8 @@ const Register = () => {
       email, 
       password, 
       role: 'student',
-      full_name: fullName,
+      first_name: firstName,
+      last_name: lastName,
       student_id_number: studentId,
       department: department,
       verification_proof_url: proofUrl
@@ -103,16 +107,29 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="space-y-2 text-left">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label>
-            <input 
-              placeholder="e.g. Juan De La Cruz"
-              type="text" 
-              className="input-field"
-              value={fullName} 
-              onChange={(e) => setFullName(e.target.value)} 
-              required 
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2 text-left">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
+              <input 
+                placeholder="Juan"
+                type="text" 
+                className="input-field"
+                value={firstName} 
+                onChange={(e) => setFirstName(e.target.value)} 
+                required 
+              />
+            </div>
+            <div className="space-y-2 text-left">
+              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
+              <input 
+                placeholder="De La Cruz"
+                type="text" 
+                className="input-field"
+                value={lastName} 
+                onChange={(e) => setLastName(e.target.value)} 
+                required 
+              />
+            </div>
           </div>
 
           <div className="space-y-6 pt-4 text-left">
@@ -132,16 +149,31 @@ const Register = () => {
                   required 
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">College Department</label>
-                <input 
-                  placeholder="e.g. Computer Science"
-                  type="text" 
-                  className="input-field bg-black/20"
-                  value={department} 
-                  onChange={(e) => setDepartment(e.target.value)} 
-                  required 
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  {COLLEGES.map((college) => (
+                    <button
+                      key={college.id}
+                      type="button"
+                      onClick={() => setDepartment(college.label)}
+                      className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${
+                        department === college.label
+                          ? 'bg-uni-500 border-uni-500 text-white shadow-lg'
+                          : 'bg-black/20 border-white/5 text-slate-500 hover:border-white/20'
+                      }`}
+                    >
+                      <i className={`fa-solid ${college.icon} text-xl transition-transform group-hover:scale-110 ${department === college.label ? 'scale-110' : ''}`}></i>
+                      <span className="text-[8px] font-black uppercase tracking-widest text-center leading-tight">{college.label}</span>
+                      {department === college.label && (
+                        <motion.div 
+                          layoutId="activeCollege"
+                          className="absolute inset-0 bg-uni-500/10 pointer-events-none"
+                        />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Institutional ID (Required for Verification)</label>

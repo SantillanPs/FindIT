@@ -4,8 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 import ImageUpload from '../../components/ImageUpload';
 import { useAuth } from '../../context/AuthContext';
+import { useMasterData } from '../../context/MasterDataContext';
 
 const SubmitClaim = () => {
+  const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
   const { itemId } = useParams();
   const [item, setItem] = useState(null);
   const [proof, setProof] = useState('');
@@ -15,7 +17,8 @@ const SubmitClaim = () => {
   const [error, setError] = useState('');
   
   // Guest State
-  const [guestName, setGuestName] = useState('');
+  const [guestFirstName, setGuestFirstName] = useState('');
+  const [guestLastName, setGuestLastName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [contactMethod, setContactMethod] = useState('Email');
   const [contactInfo, setContactInfo] = useState('');
@@ -63,7 +66,8 @@ const SubmitClaim = () => {
         found_item_id: parseInt(itemId),
         proof_description: proof,
         proof_photo_url: proofPhotoUrl,
-        guest_full_name: guestName || (user?.full_name),
+        guest_first_name: guestFirstName || (user?.first_name),
+        guest_last_name: guestLastName || (user?.last_name),
         guest_email: guestEmail || (user?.email),
         contact_method: contactMethod,
         contact_info: contactInfo,
@@ -177,9 +181,36 @@ const SubmitClaim = () => {
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Progress</p>
                     <p className="text-sm font-black text-white uppercase italic">Step {step} of {totalSteps}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-full border-4 border-uni-500/20 border-t-uni-500 flex items-center justify-center text-[10px] font-black text-white italic">
+               <div className="relative w-12 h-12 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90">
+                    <circle
+                      cx="24"
+                      cy="24"
+                      r="20"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="transparent"
+                      className="text-uni-500/20"
+                    />
+                    <motion.circle
+                      cx="24"
+                      cy="24"
+                      r="20"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="transparent"
+                      strokeDasharray="125.66"
+                      initial={{ strokeDashoffset: 125.66 }}
+                      animate={{ strokeDashoffset: 125.66 - (125.66 * (step / totalSteps)) }}
+                      transition={{ duration: 0.8, ease: "circOut" }}
+                      strokeLinecap="round"
+                      className="text-uni-500"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white italic">
                     {Math.round((step / totalSteps) * 100)}%
                   </div>
+               </div>
               </div>
           </div>
           
@@ -245,39 +276,59 @@ const SubmitClaim = () => {
                  <div className="max-w-2xl mx-auto w-full space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Full Name</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">First Name</label>
                             <input 
                                 type="text"
                                 required
-                                placeholder="e.g. Juan Dela Cruz"
+                                placeholder="Juan"
                                 className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px]"
-                                value={guestName || (user?.full_name)}
-                                onChange={(e) => setGuestName(e.target.value)}
+                                value={guestFirstName || (user?.first_name)}
+                                onChange={(e) => setGuestFirstName(e.target.value)}
                             />
                         </div>
                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Course / Dept</label>
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Last Name</label>
                             <input 
                                 type="text"
                                 required
-                                placeholder="e.g. BSIT - 3B"
+                                placeholder="Dela Cruz"
                                 className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px]"
-                                value={courseDepartment}
-                                onChange={(e) => setCourseDepartment(e.target.value)}
+                                value={guestLastName || (user?.last_name)}
+                                onChange={(e) => setGuestLastName(e.target.value)}
                             />
                         </div>
                     </div>
+                        <div className="space-y-4 text-left">
+                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Course / Dept</label>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {COLLEGES.map((college) => (
+                                    <button
+                                        key={college.id}
+                                        type="button"
+                                        onClick={() => setCourseDepartment(college.label)}
+                                        className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${
+                                            courseDepartment === college.label
+                                                ? 'bg-uni-500 border-uni-500 text-white shadow-xl'
+                                                : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/20'
+                                        }`}
+                                    >
+                                        <i className={`fa-solid ${college.icon} text-2xl transition-transform group-hover:scale-110 ${courseDepartment === college.label ? 'scale-110' : ''}`}></i>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-center leading-tight">{college.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
-                    <button
-                      disabled={(!guestName && !user?.full_name) || !courseDepartment}
-                      onClick={() => goToStep(3)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20"
-                    >
-                      Continue →
-                    </button>
-                 </div>
-               </div>
-             )}
+                        <button
+                          disabled={(!guestFirstName && !user?.first_name) || (!guestLastName && !user?.last_name) || !courseDepartment}
+                          onClick={() => goToStep(3)}
+                          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20"
+                        >
+                          Continue →
+                        </button>
+                    </div>
+                </div>
+            )}
 
              {step === 3 && (
                <div className="space-y-12 flex-grow flex flex-col justify-center py-10 text-center">
@@ -387,7 +438,7 @@ const SubmitClaim = () => {
                         <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 space-y-6">
                            <div className="space-y-1">
                               <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Claimant</p>
-                              <p className="text-xl font-black text-white uppercase italic">{user ? user.full_name : guestName}</p>
+                              <p className="text-xl font-black text-white uppercase italic">{user ? `${user.first_name} ${user.last_name}` : `${guestFirstName} ${guestLastName}`}</p>
                               <p className="text-[10px] text-uni-400 font-bold uppercase">{user ? user.role : courseDepartment}</p>
                            </div>
                            <div className="pt-4 border-t border-white/5 space-y-1">

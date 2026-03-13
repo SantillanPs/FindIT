@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES } from '../../constants/categories';
+import { useMasterData } from '../../context/MasterDataContext';
 
 const CategorySelection = ({ 
   formData, 
@@ -10,6 +10,7 @@ const CategorySelection = ({
   setOtherItemName, 
   onNext 
 }) => {
+  const { categories: CATEGORIES, loading } = useMasterData();
   const [showAllCategories, setShowAllCategories] = useState(false);
 
   const sortedCategories = useMemo(() => {
@@ -22,7 +23,13 @@ const CategorySelection = ({
       if (b.id === 'Other') return -1;
       return (statsMap[b.id] || 0) - (statsMap[a.id] || 0);
     });
-  }, [categoryStats]);
+  }, [categoryStats, CATEGORIES]); // Add CATEGORIES dependency
+
+  if (loading) return (
+    <div className="flex justify-center p-20">
+      <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
+    </div>
+  );
 
   const featuredCategories = sortedCategories.slice(0, 6);
   const remainingCategories = sortedCategories.slice(6).filter(c => c.id !== 'Other');

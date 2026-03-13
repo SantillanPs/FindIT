@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES } from '../../../constants/categories';
 
 const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLoading, setPreviewImage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -126,8 +125,8 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                     <div>
                       <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Student / Owner</p>
                       <div className="flex items-center gap-3">
-                        <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.guest_full_name || match.item.owner_name || 'Identity Not Recorded'}</p>
-                        <span className={`w-2 h-2 rounded-full ${match.item.owner_name ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-slate-600'}`}></span>
+                        <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.owner_name}</p>
+                        <span className={`w-2 h-2 rounded-full ${match.item.owner_name !== 'Anonymous Guest' && match.item.owner_name !== 'Anonymous Student' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-slate-600'}`}></span>
                       </div>
                     </div>
                   </div>

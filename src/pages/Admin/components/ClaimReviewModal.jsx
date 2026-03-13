@@ -151,7 +151,7 @@ const ClaimReviewModal = ({
                              <div>
                                 <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3">Claimant Account</p>
                                 <div className="space-y-1">
-                                    <p className="text-sm text-white font-black uppercase tracking-tight">{selectedClaim.guest_full_name || 'Anonymous Submission'}</p>
+                                    <p className="text-sm text-white font-black uppercase tracking-tight">{selectedClaim.owner_name}</p>
                                     <p className="text-[9px] text-uni-400 font-black uppercase tracking-widest">{selectedClaim.course_department || 'General Member'}</p>
                                 </div>
                              </div>

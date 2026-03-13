@@ -11,15 +11,18 @@ import ImageStep from '../../components/ReportFlow/ImageStep';
 import DetailsStep from '../../components/ReportFlow/DetailsStep';
 import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
+import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
     item_name: '',
     description: '',
     location_zone: '',
+    zone_id: null,
     last_seen_time: new Date().toISOString().slice(0, 16),
     category: '',
-    safe_photo_url: ''
+    safe_photo_url: '',
+    contact_info: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -119,14 +122,12 @@ const ReportLostItem = () => {
             )}
 
             {step === 3 && (
-              <SimpleInputStep 
+              <ZoneSelectorStep
                 stepLabel="Step 3: Location"
                 title="Where was it last seen?"
-                description="Please provide the specific building or area."
-                placeholder="e.g. Science Library, 2nd Floor"
-                icon="fa-location-crosshairs"
-                value={formData.location_zone}
-                onChange={(val) => setFormData({...formData, location_zone: val})}
+                description="Please select the specific building or area."
+                formData={formData}
+                setFormData={setFormData}
                 onNext={() => goToStep(4)}
               />
             )}
@@ -151,7 +152,19 @@ const ReportLostItem = () => {
                 value={formData.description}
                 onChange={(val) => setFormData({...formData, description: val})}
                 onNext={() => goToStep(6)}
-              />
+              >
+                 <div className="space-y-6 pt-6 mt-6 border-t border-white/5">
+                   <div className="relative group text-left">
+                       <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 italic text-uni-400">How can we contact you? (Optional)</label>
+                       <textarea 
+                        placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
+                        className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-lg font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[100px] resize-none"
+                        value={formData.contact_info}
+                        onChange={(e) => setFormData({...formData, contact_info: e.target.value})}
+                      />
+                   </div>
+                </div>
+              </DetailsStep>
             )}
 
             {step === 6 && (
@@ -187,7 +200,7 @@ const ReportLostItem = () => {
                             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Registry Status</p>
                             <div className="flex items-center gap-4">
                                <div className="w-3 h-3 rounded-full bg-uni-400 animate-pulse"></div>
-                               <p className="text-sm font-black text-uni-400 uppercase tracking-widest">Logged in as {user?.full_name}</p>
+                               <p className="text-sm font-black text-uni-400 uppercase tracking-widest">Logged in as {user?.first_name} {user?.last_name}</p>
                             </div>
                             <div className="pt-6 border-t border-white/5">
                                <p className="text-[11px] font-black text-slate-600 uppercase tracking-widest italic block mb-1">Impact</p>

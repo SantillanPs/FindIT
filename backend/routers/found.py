@@ -52,7 +52,11 @@ def report_found_item_guest(
     if item.identified_student_id:
         target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
     elif item.identified_name:
-        target_user = db.query(database.User).filter(database.User.full_name.ilike(item.identified_name)).first()
+        # Search by first name or last name or combined
+        name_part = f"%{item.identified_name}%"
+        target_user = db.query(database.User).filter(
+            (database.User.first_name + " " + database.User.last_name).ilike(name_part)
+        ).first()
 
     if target_user:
         notification = database.Notification(
@@ -205,9 +209,56 @@ def update_item_custody(
     db.commit()
     db.refresh(item)
     
-    log_audit(db, admin.id, "custody_update", item_id=item_id, notes=update.notes)
-    
     return item
+
+@router.post("/admin/found/bulk/custody", response_model=list[schemas.FoundItemDetail])
+def bulk_update_item_custody(
+    update: schemas.BulkCustodyUpdate,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    items = db.query(database.FoundItem).filter(database.FoundItem.id.in_(update.item_ids)).all()
+    
+    # Track finder points for those being verified
+    finders_to_reward = {} # finder_id -> total_points
+    
+    for item in items:
+        # Only reward if moving to IN_CUSTODY for the first time
+        if item.status != database.ItemStatus.IN_CUSTODY.value and item.finder_id:
+            points = AIService.calculate_item_value(item.category, item.description)
+            finders_to_reward[item.finder_id] = finders_to_reward.get(item.finder_id, 0) + points
+        
+        item.status = database.ItemStatus.IN_CUSTODY.value
+    
+    # Process rewards
+    for finder_id, total_points in finders_to_reward.items():
+        finder = db.query(database.User).filter(database.User.id == finder_id).first()
+        if finder:
+            finder.integrity_points += total_points
+            
+            # Milestone Check
+            if finder.integrity_points >= 1000 and not finder.is_certificate_eligible:
+                finder.is_certificate_eligible = True
+                cert_notif = database.Notification(
+                    user_id=finder.id,
+                    title="🏆 1,000 Points Reached: Certificate Eligible!",
+                    message="Congratulations! You have reached 1,000 Integrity Points. You are now eligible to receive an Official Certificate of Appreciation. Visit the office to claim yours!"
+                )
+                db.add(cert_notif)
+            
+            points_notif = database.Notification(
+                user_id=finder.id,
+                title="Integrity Points Awarded / Items Verified",
+                message=f"Your reports were verified by the USG. You earned +{total_points} integrity points. Total: {finder.integrity_points}"
+            )
+            db.add(points_notif)
+
+    db.commit()
+    for item in items:
+        db.refresh(item)
+        log_audit(db, admin.id, "bulk_custody_update", item_id=item.id, notes=update.notes)
+    
+    return items
 
 @router.post("/admin/found/{item_id}/release", response_model=schemas.FoundItemDetail)
 def release_item(

@@ -11,17 +11,23 @@ import ImageStep from '../components/ReportFlow/ImageStep';
 import DetailsStep from '../components/ReportFlow/DetailsStep';
 import SimpleInputStep from '../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../components/ReportFlow/DateTimeStep';
+import ZoneSelectorStep from '../components/ReportFlow/ZoneSelectorStep';
 import IdentificationStep from '../components/ReportFlow/IdentificationStep';
 import ReportSummary from '../components/ReportFlow/ReportSummary';
+import GuestInfoStep from '../components/ReportFlow/GuestInfoStep';
 
 const GuestReportFound = () => {
   const [formData, setFormData] = useState({
     item_name: '',
     description: '',
     location_zone: '',
+    zone_id: null,
     found_time: new Date().toISOString().slice(0, 16),
     safe_photo_url: '',
-    contact_full_name: '',
+    guest_first_name: '',
+    guest_last_name: '',
+    guest_email: '',
+    contact_info: '',
     identified_student_id: '',
     identified_name: '',
     category: ''
@@ -137,14 +143,12 @@ const GuestReportFound = () => {
             )}
 
             {step === 3 && (
-              <SimpleInputStep 
+              <ZoneSelectorStep
                 stepLabel="Step 3: Location"
                 title="Where was the item found?"
-                description="Be as specific as possible (Building, room, or landmark)."
-                placeholder="e.g. Science Library, 2nd Floor, Near Stairs"
-                icon="fa-location-dot"
-                value={formData.location_zone}
-                onChange={(val) => setFormData({...formData, location_zone: val})}
+                description="Please select the specific building or area."
+                formData={formData}
+                setFormData={setFormData}
                 onNext={() => goToStep(4)}
               />
             )}
@@ -180,16 +184,14 @@ const GuestReportFound = () => {
             )}
 
             {step === 6 && (
-              <SimpleInputStep 
-                stepLabel="Step 6: Your Information"
-                title="And finally, what is your name?"
-                description="Please provide your name for the report registry."
-                placeholder="Your Full Name"
-                icon="fa-user-check"
-                value={formData.contact_full_name}
-                onChange={(val) => setFormData({...formData, contact_full_name: val})}
+              <GuestInfoStep 
+                stepLabel="Step 6: Contact Details"
+                firstName={formData.guest_first_name}
+                lastName={formData.guest_last_name}
+                email={formData.guest_email}
+                contactInfo={formData.contact_info}
+                onChange={(updates) => setFormData({...formData, ...updates})}
                 onNext={() => goToStep(7)}
-                buttonText="Review Summary →"
               />
             )}
 

@@ -25,7 +25,7 @@ def submit_claim(
 
     # Validation for guest claims
     if not current_user:
-        if not claim.guest_full_name:
+        if not (claim.guest_first_name or claim.guest_last_name):
             raise HTTPException(status_code=400, detail="Guest name is required for anonymous claims.")
         
         # Check if at least one contact method is provided
@@ -38,7 +38,8 @@ def submit_claim(
         proof_description=claim.proof_description,
         proof_photo_url=claim.proof_photo_url,
         student_id=current_user.id if current_user else None,
-        guest_full_name=claim.guest_full_name,
+        guest_first_name=claim.guest_first_name,
+        guest_last_name=claim.guest_last_name,
         guest_email=claim.guest_email,
         contact_method=claim.contact_method,
         contact_info=claim.contact_info,
@@ -67,7 +68,8 @@ def _populate_claim_details(db: Session, claim: database.Claim):
         "id": claim.id,
         "found_item_id": claim.found_item_id,
         "student_id": claim.student_id,
-        "guest_full_name": claim.guest_full_name,
+        "guest_first_name": claim.guest_first_name,
+        "guest_last_name": claim.guest_last_name,
         "guest_email": claim.guest_email,
         "contact_method": claim.contact_method,
         "contact_info": claim.contact_info,

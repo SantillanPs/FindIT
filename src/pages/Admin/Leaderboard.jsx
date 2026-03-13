@@ -69,7 +69,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   };
 
   const filteredUsers = users.filter(user => 
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.student_id_number?.includes(searchTerm) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -168,7 +168,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                           </div>
                           <div>
                               <div className="font-black text-white text-[12px] uppercase tracking-widest group-hover:text-uni-400 transition-colors flex items-center gap-2">
-                                  {user.full_name || 'N/A'}
+                                  {user.first_name} {user.last_name}
                                   {user.is_verified && <UserCheck size={12} className="text-green-500" />}
                                   {user.is_certificate_eligible && (
                                       <span className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-300 text-black px-2 py-0.5 rounded text-[8px] font-black shadow-lg shadow-amber-500/20">

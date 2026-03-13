@@ -5,12 +5,13 @@ import database, schemas, auth
 from database import WitnessReport, WitnessReportStatus, User
 from dependencies import admin_required, verified_student_required
 from ai_service import AIService
+from location_service import LocationService
 from datetime import datetime
 import uuid
 
 router = APIRouter(tags=["Lost Items"])
 
-def _calculate_hybrid_score(base_score, lost_item, found_item):
+def _calculate_hybrid_score(db: Session, base_score, lost_item, found_item):
     """
     Combines AI semantic score with metadata (location/time) boosts and penalties.
     """
@@ -28,7 +29,10 @@ def _calculate_hybrid_score(base_score, lost_item, found_item):
         final_score -= 0.10 # Penalty for missing found location
     
     # 1. Location Weighting
-    if lost_item.location_zone and found_item.location_zone:
+    if lost_item.zone_id and found_item.zone_id:
+        distance = LocationService.get_shortest_path_distance(db, lost_item.zone_id, found_item.zone_id)
+        final_score += LocationService.calculate_location_score(distance)
+    elif lost_item.location_zone and found_item.location_zone:
         if lost_item.location_zone == found_item.location_zone:
             final_score += 0.15 # Exact match boost
         else:
@@ -80,13 +84,15 @@ def report_lost_item_guest(
     item_data['category'] = category
 
     # Extract guest info to avoid duplicate kwargs
-    guest_full_name = item_data.pop('guest_full_name', None)
+    guest_first_name = item_data.pop('guest_first_name', None)
+    guest_last_name = item_data.pop('guest_last_name', None)
     guest_email = item_data.pop('guest_email', None)
 
     new_item = database.LostItem(
         **item_data,
         user_id=None,
-        guest_full_name=guest_full_name,
+        guest_first_name=guest_first_name,
+        guest_last_name=guest_last_name,
         guest_email=guest_email,
         tracking_id=str(uuid.uuid4()),
         embedding=embedding_json
@@ -130,17 +136,19 @@ def report_lost_item(
     item_data['category'] = category
 
     # Extract guest info to avoid duplicate kwargs
-    guest_full_name = item_data.pop('guest_full_name', None)
+    guest_first_name = item_data.pop('guest_first_name', None)
+    guest_last_name = item_data.pop('guest_last_name', None)
     guest_email = item_data.pop('guest_email', None)
 
     if not current_user:
-        if not guest_full_name or not guest_email:
+        if not (guest_first_name or guest_last_name) or not guest_email:
             raise HTTPException(status_code=400, detail="Name and email are required for guest reports.")
 
     new_item = database.LostItem(
         **item_data,
         user_id=current_user.id if current_user else None,
-        guest_full_name=guest_full_name if not current_user else None,
+        guest_first_name=guest_first_name if not current_user else None,
+        guest_last_name=guest_last_name if not current_user else None,
         guest_email=guest_email if not current_user else None,
         tracking_id=str(uuid.uuid4()) if not current_user else None,
         embedding=embedding_json
@@ -209,7 +217,7 @@ def get_matches_for_lost_item(
         if found.embedding:
             found_embedding = AIService.get_embedding_list(found.embedding)
             base_score = AIService.calculate_similarity(lost_embedding, found_embedding)
-            hybrid_score = _calculate_hybrid_score(base_score, lost_item, found)
+            hybrid_score = _calculate_hybrid_score(db, base_score, lost_item, found)
             
             # For students, only show items with a decent hybrid confidence
             if hybrid_score >= 0.4:
@@ -251,7 +259,7 @@ def admin_get_all_global_matches(
             
             lost_emb = AIService.get_embedding_list(lost.embedding)
             base_score = AIService.calculate_similarity(found_emb, lost_emb)
-            score = _calculate_hybrid_score(base_score, lost, found)
+            score = _calculate_hybrid_score(db, base_score, lost, found)
             
             # Threshold to avoid noise, but keep it low enough for manual review
             if score >= 0.3: 
@@ -339,7 +347,7 @@ def admin_get_matches_for_found_item(
         if lost.embedding:
             lost_embedding = AIService.get_embedding_list(lost.embedding)
             base_score = AIService.calculate_similarity(found_embedding, lost_embedding)
-            score = _calculate_hybrid_score(base_score, lost, found_item)
+            score = _calculate_hybrid_score(db, base_score, lost, found_item)
             suggestions.append({
                 "item": lost,
                 "similarity_score": score
@@ -396,8 +404,10 @@ def submit_witness_report(
     new_report = WitnessReport(
         lost_item_id=report_id,
         reporter_id=current_user.id if current_user else None,
-        guest_name=witness_report.guest_name if not current_user else None,
+        guest_first_name=witness_report.guest_first_name if not current_user else None,
+        guest_last_name=witness_report.guest_last_name if not current_user else None,
         guest_email=witness_report.guest_email if not current_user else None,
+        contact_info=witness_report.contact_info,
         witness_description=witness_report.witness_description,
         witness_photo_url=witness_report.witness_photo_url,
         is_anonymous=witness_report.is_anonymous,

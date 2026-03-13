@@ -5,6 +5,11 @@ import database, auth
 
 router = APIRouter(tags=["Categories"])
 
+@router.get("/categories")
+def get_categories(db: Session = Depends(auth.get_db)):
+    """Returns the master list of categories."""
+    return db.query(database.MasterCategory).filter_by(is_active=True).all()
+
 @router.get("/categories/stats")
 def get_category_stats(db: Session = Depends(auth.get_db)):
     """Returns categories ordered by hit count."""

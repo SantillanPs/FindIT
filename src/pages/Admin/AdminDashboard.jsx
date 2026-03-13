@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CATEGORIES } from '../../constants/categories';
 
 // Modular Components
 import InventoryTab from './components/InventoryTab';
@@ -167,12 +166,35 @@ const AdminDashboard = () => {
 
 
   const handleStatusUpdate = async (item, status) => {
+    // Optimistic Update
+    const prevItems = [...recentFound];
+    setRecentFound(prev => prev.map(i => i.id === item.id ? { ...i, status: 'in_custody' } : i));
+    
     setActionLoading(item.id);
     try {
       await apiClient.put(`/admin/found/${item.id}/custody`, { notes: `Status updated to ${status}` });
-      await refreshActiveTab(); 
     } catch (err) {
       console.error('Update failed', err);
+      setRecentFound(prevItems); // Rollback
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleBulkStatusUpdate = async (itemIds, status) => {
+    // Optimistic Update
+    const prevItems = [...recentFound];
+    setRecentFound(prev => prev.map(i => itemIds.includes(i.id) ? { ...i, status: 'in_custody' } : i));
+    
+    setActionLoading('bulk');
+    try {
+      await apiClient.post('/admin/found/bulk/custody', { 
+        item_ids: itemIds,
+        notes: `Bulk status update to ${status}` 
+      });
+    } catch (err) {
+      console.error('Bulk update failed', err);
+      setRecentFound(prevItems); // Rollback
     } finally {
       setActionLoading(null);
     }
@@ -185,7 +207,7 @@ const AdminDashboard = () => {
       await apiClient.post(`/admin/found/${showReleaseModal.id}/direct-release`, {
         released_to_name: releaseForm.name,
         released_to_id_number: releaseForm.id_number,
-        released_by_name: 'Admin Staff',
+        released_by_name: user.full_name || 'Admin Staff',
         released_to_photo_url: releaseForm.photo_url
       });
       setShowReleaseModal(null);
@@ -349,7 +371,7 @@ const AdminDashboard = () => {
         <section className="space-y-6">
           <div className="glass-panel rounded-3xl overflow-hidden border border-white/5">
             {currentTab === 'found' && (
-              <InventoryTab 
+               <InventoryTab 
                 inventoryFilter={inventoryFilter}
                 setInventoryFilter={setInventoryFilter}
                 filteredItems={filteredItems}
@@ -358,6 +380,7 @@ const AdminDashboard = () => {
                 navigate={navigate}
                 setSearchTerm={setSearchTerm}
                 handleStatusUpdate={handleStatusUpdate}
+                handleBulkStatusUpdate={handleBulkStatusUpdate}
                 setShowReleaseModal={setShowReleaseModal}
                 setReleaseForm={setReleaseForm}
                 actionLoading={actionLoading}
@@ -428,9 +451,6 @@ const AdminDashboard = () => {
               </div>
             )}
 
-            {currentTab === 'staff' && (
-              <StaffManagementTab />
-            )}
           </div>
         </section>
 

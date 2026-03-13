@@ -86,7 +86,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
                     
                      <div className="grid grid-cols-2 gap-6">
                         <div>
-                           <p className="text-[10px] font-black text-white uppercase tracking-wide truncate">{selectedMatchPair.lost.guest_full_name || selectedMatchPair.lost.owner_name || 'Anonymous Student'}</p>
+                           <p className="text-[10px] font-black text-white uppercase tracking-wide truncate">{selectedMatchPair.lost.owner_name}</p>
                            <p className="text-[7px] font-black text-slate-600 uppercase tracking-widest">Reported By (Claimant)</p>
                         </div>
                         <div>

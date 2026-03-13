@@ -19,14 +19,32 @@ const DateTimeStep = ({
 
       <div className="max-w-md mx-auto w-full space-y-10">
           <div className="p-10 glass-panel rounded-[3.5rem] border border-white/5 shadow-2xl flex flex-col gap-6">
-             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic text-center">Date & Time</label>
-             <input 
-              type="datetime-local"
-              className="w-full bg-slate-950/50 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white focus:border-uni-500 outline-none"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              autoFocus
-            />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2 text-left">
+                  <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4">Select Date</label>
+                  <input 
+                    type="date"
+                    className="w-full bg-slate-950/50 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
+                    value={value.split('T')[0] || ''}
+                    onChange={(e) => {
+                      const time = value.split('T')[1] || '12:00';
+                      onChange(`${e.target.value}T${time}`);
+                    }}
+                  />
+                </div>
+                <div className="space-y-2 text-left">
+                  <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4">Select Time</label>
+                  <input 
+                    type="time"
+                    className="w-full bg-slate-950/50 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
+                    value={value.split('T')[1] || ''}
+                    onChange={(e) => {
+                      const date = value.split('T')[0] || new Date().toISOString().split('T')[0];
+                      onChange(`${date}T${e.target.value}`);
+                    }}
+                  />
+                </div>
+             </div>
           </div>
           <button 
             onClick={onNext} 

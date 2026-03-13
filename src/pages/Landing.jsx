@@ -5,10 +5,11 @@ import apiClient from '../api/client';
 import ItemCard from '../components/ItemCard';
 import LostReportCard from '../components/LostReportCard';
 import WitnessReportModal from '../components/WitnessReportModal';
-import { CATEGORIES } from '../constants/categories';
 import { useAuth } from '../context/AuthContext';
+import { useMasterData } from '../context/MasterDataContext';
 
 const Landing = () => {
+  const { categories: CATEGORIES } = useMasterData();
   const [items, setItems] = useState([]);
   const [lostReports, setLostReports] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -370,24 +371,9 @@ const Landing = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option value="all">Every Category</option>
-                <option value="Cellphone">Cellphone</option>
-                <option value="Laptop">Laptop</option>
-                <option value="Tablet">Tablet</option>
-                <option value="ID Card">ID Card</option>
-                <option value="Wallet">Wallet</option>
-                <option value="Bag / Backpack">Bag / Backpack</option>
-                <option value="Keys">Keys</option>
-                <option value="Headphones / Earbuds">Headphones / Earbuds</option>
-                <option value="Watch / Wearable">Watch / Wearable</option>
-                <option value="Water Bottle">Water Bottle</option>
-                <option value="Umbrella">Umbrella</option>
-                <option value="Eyewear">Eyewear</option>
-                <option value="Book">Book</option>
-                <option value="Notebook">Notebook</option>
-                <option value="Stationery">Stationery</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Accessories">Accessories</option>
-                <option value="Other">Other</option>
+                {CATEGORIES.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.label}</option>
+                ))}
               </select>
            </div>
         </div>

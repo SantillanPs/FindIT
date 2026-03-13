@@ -8,7 +8,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: Optional[str] = "student"
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     student_id_number: Optional[str] = None
     department: Optional[str] = None
     verification_proof_url: Optional[str] = None
@@ -16,7 +17,8 @@ class UserCreate(UserBase):
 
 class UpgradeGuestRequest(BaseModel):
     email: EmailStr
-    full_name: str
+    first_name: str
+    last_name: str
     student_id_number: str
     password: Optional[str] = None
 
@@ -28,7 +30,8 @@ class UserResponse(UserBase):
     id: int
     role: str
     is_verified: bool
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     student_id_number: Optional[str] = None
     department: Optional[str] = None
     verification_proof_url: Optional[str] = None
@@ -79,18 +82,23 @@ class FoundItemBase(BaseModel):
     category: Optional[str] = None
     description: str
     location_zone: str
+    zone_id: Optional[int] = None
     found_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
+    contact_info: Optional[str] = None
 
 class FoundItemCreate(FoundItemBase):
-    contact_full_name: Optional[str] = None
+    contact_first_name: Optional[str] = None
+    contact_last_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
 
 class FoundItemPublic(FoundItemBase):
     id: int
     status: str
-    contact_full_name: Optional[str] = None
+    contact_first_name: Optional[str] = None
+    contact_last_name: Optional[str] = None
+    owner_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
 
@@ -123,26 +131,36 @@ class ItemDirectRelease(BaseModel):
 class CustodyUpdate(BaseModel):
     notes: Optional[str] = None
 
+class BulkCustodyUpdate(BaseModel):
+    item_ids: list[int]
+    notes: Optional[str] = None
+
 # Lost Item Schemas
 class LostItemBase(BaseModel):
     item_name: str
     category: Optional[str] = None
     description: str
     location_zone: str
+    zone_id: Optional[int] = None
     last_seen_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
 
 class LostItemCreate(LostItemBase):
-    guest_full_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[EmailStr] = None
+    contact_info: Optional[str] = None
 
 
 class LostItemResponse(LostItemBase):
     id: int
     status: str
     user_id: Optional[int] = None
-    guest_full_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[str] = None
+    contact_info: Optional[str] = None
+    owner_name: Optional[str] = None
     tracking_id: Optional[str] = None
     embedding: Optional[str] = None
     admin_notes: Optional[str] = None
@@ -159,8 +177,10 @@ class LostItemPublic(BaseModel):
     last_seen_time: Optional[datetime] = None
     status: str
     user_id: Optional[int] = None
-    guest_full_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[str] = None
+    contact_info: Optional[str] = None
     tracking_id: Optional[str] = None
     safe_photo_url: Optional[str] = None
     owner_name: Optional[str] = None
@@ -192,7 +212,8 @@ class ClaimCreate(BaseModel):
     found_item_id: int
     proof_description: str
     proof_photo_url: Optional[str] = None
-    guest_full_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[str] = None
     contact_method: Optional[str] = None
     contact_info: Optional[str] = None
@@ -270,15 +291,19 @@ class WitnessReportCreate(BaseModel):
     witness_description: str
     witness_photo_url: Optional[str] = None
     is_anonymous: bool = False
-    guest_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[EmailStr] = None
+    contact_info: Optional[str] = None
 
 class WitnessReportResponse(BaseModel):
     id: int
     lost_item_id: int
     reporter_id: Optional[int] = None
-    guest_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     guest_email: Optional[str] = None
+    contact_info: Optional[str] = None
     witness_description: str
     witness_photo_url: Optional[str] = None
     is_anonymous: bool
@@ -290,3 +315,46 @@ class WitnessReportResponse(BaseModel):
 
 class WitnessReportStatusUpdate(BaseModel):
     status: str # approved or dismissed
+
+# Zone Schemas (Admin Graph Builder)
+class ZoneBase(BaseModel):
+    name: str
+    type: str # building, floor, room, hallway, outdoor
+    parent_zone_id: Optional[int] = None
+    pos_x: Optional[int] = 0
+    pos_y: Optional[int] = 0
+
+class ZoneCreate(ZoneBase):
+    pass
+
+class ZoneUpdate(BaseModel):
+    name: Optional[str] = None
+    type: Optional[str] = None
+    parent_zone_id: Optional[int] = None
+    pos_x: Optional[int] = None
+    pos_y: Optional[int] = None
+
+class ZoneResponse(ZoneBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class ZoneAdjacencyBase(BaseModel):
+    zone_a_id: int
+    zone_b_id: int
+    distance_weight: int = 1
+
+class ZoneAdjacencyCreate(ZoneAdjacencyBase):
+    pass
+
+class ZoneAdjacencyResponse(ZoneAdjacencyBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class UserProfile(UserResponse):
+    lost_items: list[LostItemResponse] = []
+    found_items: list[FoundItemPublic] = []
+    claims: list[ClaimResponse] = []

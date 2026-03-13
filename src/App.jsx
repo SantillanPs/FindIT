@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { MasterDataProvider } from './context/MasterDataContext';
 import Layout from './components/Layout';
 import { ProtectedRoute, GuestRoute } from './components/SafeRoute';
 
@@ -22,6 +23,7 @@ import SubmitClaim from './pages/Student/SubmitClaim';
 import ClaimStatus from './pages/Student/ClaimStatus';
 import MyClaims from './pages/Student/MyClaims';
 import LostReportStatus from './pages/Student/LostReportStatus';
+import Profile from './pages/Student/Profile';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -64,6 +66,7 @@ const AppContent = () => {
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/public-feed" element={<FoundPublicFeed />} />
             <Route path="/my-claims" element={<MyClaims />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           {/* Verified-Only Student Routes */}
@@ -82,6 +85,7 @@ const AppContent = () => {
             <Route path="/admin/users" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminDashboard />} />
             <Route path="/admin/released" element={<AdminDashboard />} />
+            <Route path="/admin/profile/:userId" element={<Profile />} />
           </Route>
 
           {/* Super Admin Routes */}
@@ -89,6 +93,7 @@ const AppContent = () => {
             <Route path="/super" element={<SuperAdminDashboard />} />
             <Route path="/super/staff" element={<SuperAdminDashboard />} />
             <Route path="/super/audit" element={<SuperAdminDashboard />} />
+            <Route path="/super/zones" element={<SuperAdminDashboard />} />
           </Route>
         </Route>
       </Routes>
@@ -101,7 +106,9 @@ function App() {
     <Router>
       <ThemeProvider>
         <AuthProvider>
-          <AppContent />
+          <MasterDataProvider>
+            <AppContent />
+          </MasterDataProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>

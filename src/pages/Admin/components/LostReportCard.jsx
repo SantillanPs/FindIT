@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { CATEGORIES } from '../../../constants/categories';
+import { useState } from 'react';
+import { useMasterData } from '../../../context/MasterDataContext';
 
 const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, isUpdating, onPreview }) => {
+  const { categories: CATEGORIES } = useMasterData();
   const [notes, setNotes] = useState(report.admin_notes || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
 
@@ -99,7 +100,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
        <div className="flex flex-col md:flex-row items-center gap-4 shrink-0 w-full lg:w-auto">
           <div className="text-center md:text-right md:mr-6">
              <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Submitted By</p>
-             <p className="text-[10px] font-black text-white uppercase">{report.guest_full_name || 'Verified Student'}</p>
+             <p className="text-[10px] font-black text-white uppercase">{report.owner_name}</p>
              <p className="text-[9px] font-bold text-uni-400/60 lowercase mt-0.5">{report.guest_email || 'Institutional Member'}</p>
           </div>
 

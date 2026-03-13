@@ -11,6 +11,7 @@ import ImageStep from '../../components/ReportFlow/ImageStep';
 import DetailsStep from '../../components/ReportFlow/DetailsStep';
 import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
+import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import IdentificationStep from '../../components/ReportFlow/IdentificationStep';
 
 const ReportFoundItem = () => {
@@ -18,11 +19,13 @@ const ReportFoundItem = () => {
     item_name: '',
     description: '',
     location_zone: '',
+    zone_id: null,
     found_time: new Date().toISOString().slice(0, 16),
     safe_photo_url: '',
     identified_student_id: '',
     identified_name: '',
-    category: ''
+    category: '',
+    contact_info: ''
   });
   
   const [loading, setLoading] = useState(false);
@@ -130,14 +133,12 @@ const ReportFoundItem = () => {
             )}
 
             {step === 3 && (
-              <SimpleInputStep 
+              <ZoneSelectorStep
                 stepLabel="Step 3: Location"
                 title="Where was the item found?"
-                description="Be as specific as possible (Building, room, or landmark)."
-                placeholder="e.g. Science Library, 2nd Floor, Near Stairs"
-                icon="fa-location-dot"
-                value={formData.location_zone}
-                onChange={(val) => setFormData({...formData, location_zone: val})}
+                description="Please select the specific building or area."
+                formData={formData}
+                setFormData={setFormData}
                 onNext={() => goToStep(4)}
               />
             )}
@@ -163,12 +164,23 @@ const ReportFoundItem = () => {
                 onChange={(val) => setFormData({...formData, description: val})}
                 onNext={() => goToStep(6)}
               >
-                <IdentificationStep 
-                  formData={formData}
-                  setFormData={setFormData}
-                  hasIdentification={hasIdentification}
-                  setHasIdentification={setHasIdentification}
-                />
+                <div className="space-y-6 pt-6 mt-6 border-t border-white/5">
+                   <div className="relative group text-left">
+                       <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 italic text-uni-400">How can we contact you? (Optional)</label>
+                       <textarea 
+                        placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
+                        className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-lg font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[100px] resize-none"
+                        value={formData.contact_info}
+                        onChange={(e) => setFormData({...formData, contact_info: e.target.value})}
+                      />
+                   </div>
+                   <IdentificationStep 
+                      formData={formData}
+                      setFormData={setFormData}
+                      hasIdentification={hasIdentification}
+                      setHasIdentification={setHasIdentification}
+                    />
+                </div>
               </DetailsStep>
             )}
 

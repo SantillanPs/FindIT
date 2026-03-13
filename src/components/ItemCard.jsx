@@ -1,8 +1,8 @@
-import React from 'react';
 import { motion } from 'framer-motion';
-import { CATEGORIES } from '../constants/categories';
+import { useMasterData } from '../context/MasterDataContext';
 
 const ItemCard = ({ item, onClick, onShare }) => {
+  const { categories: CATEGORIES } = useMasterData();
   const categoryData = CATEGORIES.find(c => c.id === item.category);
   
   const formattedDate = new Date(item.found_time).toLocaleDateString('en-US', {

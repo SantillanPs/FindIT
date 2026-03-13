@@ -10,7 +10,8 @@ import database, schemas
 # SECURITY: Change this in production!
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Set token expiration to 30 days (43200 minutes) to keep users logged in
+ACCESS_TOKEN_EXPIRE_MINUTES = 43200
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
