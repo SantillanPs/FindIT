@@ -10,7 +10,7 @@ const DateTimeStep = ({
   stepLabel 
 }) => {
   return (
-    <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
+    <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
       <div className="space-y-4">
          <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">{stepLabel}</span>
          <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">{title}</h2>

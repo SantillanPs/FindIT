@@ -54,16 +54,16 @@ const Register = () => {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-panel w-full max-w-xl p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 relative overflow-hidden z-10 my-10"
+        className="glass-panel w-full max-w-4xl p-8 sm:p-12 md:p-16 rounded-[3rem] border border-white/5 relative overflow-hidden z-10 my-10"
       >
-        <div className="text-left mb-8 md:mb-10">
-          <div className="flex items-center gap-3 mb-4 md:mb-6">
-             <div className="w-8 h-8 md:w-10 md:h-10 bg-accent-default rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl text-white shadow-lg shadow-accent-default/20">
+        <div className="text-left mb-12">
+          <div className="flex items-center gap-4 mb-4">
+             <div className="w-12 h-12 bg-accent-default rounded-2xl flex items-center justify-center text-2xl text-white shadow-xl shadow-accent-default/20">
                 <i className="fa-solid fa-user-plus"></i>
              </div>
-             <h1 className="text-2xl md:text-3xl font-display font-black text-white uppercase tracking-tighter">Create Account</h1>
+             <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Create Account</h1>
           </div>
-          <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-widest leading-relaxed">
+          <p className="text-slate-500 text-xs font-black uppercase tracking-widest leading-relaxed max-w-2xl">
             Join the university lost & found network. Register your account to start reporting and claiming items.
           </p>
         </div>
@@ -74,137 +74,120 @@ const Register = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center rounded-2xl"
+              className="mb-10 p-5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-black uppercase tracking-widest text-center rounded-3xl"
             >
                {error}
             </motion.div>
           )}
         </AnimatePresence>
         
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2 text-left">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-              <input 
-                placeholder="yourname@email.com"
-                type="email" 
-                className="input-field"
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="space-y-2 text-left">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
-              <input 
-                placeholder="••••••••"
-                type="password" 
-                className="input-field"
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2 text-left">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
-              <input 
-                placeholder="Juan"
-                type="text" 
-                className="input-field"
-                value={firstName} 
-                onChange={(e) => setFirstName(e.target.value)} 
-                required 
-              />
-            </div>
-            <div className="space-y-2 text-left">
-              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
-              <input 
-                placeholder="De La Cruz"
-                type="text" 
-                className="input-field"
-                value={lastName} 
-                onChange={(e) => setLastName(e.target.value)} 
-                required 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-6 pt-4 text-left">
-            <div className="p-8 bg-white/5 rounded-3xl border border-white/5 space-y-6">
-              <div className="flex items-center gap-3 mb-2">
-                <i className="fa-solid fa-id-card text-uni-400"></i>
-                <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Student Verification</h4>
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+            {/* Identity Group */}
+            <div className="space-y-8">
+              <h3 className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] border-b border-white/5 pb-2">Personal Identity</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 text-left">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
+                  <input 
+                    placeholder="Juan"
+                    type="text" 
+                    className="input-field"
+                    value={firstName} 
+                    onChange={(e) => setFirstName(e.target.value)} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2 text-left">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
+                  <input 
+                    placeholder="Cruz"
+                    type="text" 
+                    className="input-field"
+                    value={lastName} 
+                    onChange={(e) => setLastName(e.target.value)} 
+                    required 
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">Student ID Number</label>
+
+              <div className="space-y-2 text-left">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
                 <input 
-                  placeholder="e.g. 2026-0001"
-                  type="text" 
-                  className="input-field bg-black/20"
-                  value={studentId} 
-                  onChange={(e) => setStudentId(e.target.value)} 
+                  placeholder="juan.cruz@university.edu"
+                  type="email" 
+                  className="input-field"
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
                   required 
                 />
               </div>
-              <div className="space-y-4">
-                <label className="block text-[9px] md:text-[10px] font-black text-slate-700 md:text-slate-600 uppercase tracking-widest ml-1">College Department</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {COLLEGES.map((college) => (
-                    <button
-                      key={college.id}
-                      type="button"
-                      onClick={() => setDepartment(college.label)}
-                      className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${
-                        department === college.label
-                          ? 'bg-uni-500 border-uni-500 text-white shadow-lg'
-                          : 'bg-black/20 border-white/5 text-slate-500 hover:border-white/20'
-                      }`}
-                    >
-                      <i className={`fa-solid ${college.icon} text-xl transition-transform group-hover:scale-110 ${department === college.label ? 'scale-110' : ''}`}></i>
-                      <span className="text-[8px] font-black uppercase tracking-widest text-center leading-tight">{college.label}</span>
-                      {department === college.label && (
-                        <motion.div 
-                          layoutId="activeCollege"
-                          className="absolute inset-0 bg-uni-500/10 pointer-events-none"
-                        />
-                      )}
-                    </button>
-                  ))}
+
+              <div className="space-y-2 text-left">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</label>
+                <input 
+                  placeholder="••••••••"
+                  type="password" 
+                  className="input-field"
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  required 
+                />
+              </div>
+            </div>
+
+            {/* Academic Info Group */}
+            <div className="space-y-8">
+              <h3 className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] border-b border-white/5 pb-2">Academic Information</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 text-left">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Student ID Number</label>
+                  <input 
+                    placeholder="2024-123456"
+                    type="text" 
+                    className="input-field"
+                    value={studentId} 
+                    onChange={(e) => setStudentId(e.target.value)} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2 text-left">
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">College/Dept</label>
+                  <select 
+                    className="input-field font-black uppercase text-[10px] tracking-widest px-4"
+                    value={department} 
+                    onChange={(e) => setDepartment(e.target.value)} 
+                    required
+                  >
+                    <option value="">Select Dept</option>
+                    {COLLEGES.map(college => (
+                        <option key={college.id} value={college.label}>{college.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-600 uppercase tracking-widest ml-1">Photo of Institutional ID (Required for Verification)</label>
+
+              <div className="space-y-2 text-left">
+                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Verification Proof (ID Photo)</label>
                 <ImageUpload 
+                  label="Snap a photo of your school ID"
                   value={proofUrl}
-                  onUploadSuccess={(url) => setProofUrl(url)}
+                  onChange={setProofUrl}
                 />
-                <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest mt-2 italic text-left">
-                   Your ID will be reviewed by staff to verify your student status.
-                </p>
               </div>
             </div>
           </div>
 
-          <button 
-            type="submit" 
-            disabled={loading} 
-            className="w-full bg-accent-default hover:bg-accent-light text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-lg shadow-accent-default/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4 flex items-center justify-center gap-3"
-          >
-            {loading ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Creating Account...
-              </>
-            ) : (
-              <>
-                Initialize Account
-                <i className="fa-solid fa-check"></i>
-              </>
-            )}
-          </button>
+          <div className="pt-8 border-t border-white/5">
+            <button 
+              type="submit" 
+              className="w-full bg-white text-black py-6 rounded-2xl font-black text-xs uppercase tracking-[0.5em] hover:bg-uni-500 hover:text-white transition-all shadow-2xl active:scale-95 disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? "PROVISIONING..." : "ACTIVATE ACCOUNT →"}
+            </button>
+          </div>
         </form>
         
         <div className="mt-10 pt-8 border-t border-white/5 text-center">

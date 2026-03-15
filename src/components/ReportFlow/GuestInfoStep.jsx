@@ -9,7 +9,7 @@ const GuestInfoStep = ({
   onNext, 
   stepLabel 
 }) => {
-  const isComplete = firstName && lastName && (email || contactInfo);
+  const isComplete = firstName && lastName && email;
 
   return (
     <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
@@ -25,8 +25,8 @@ const GuestInfoStep = ({
         </p>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-4xl mx-auto w-full space-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="relative group">
             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">First Name</label>
             <input 
@@ -49,25 +49,27 @@ const GuestInfoStep = ({
           </div>
         </div>
 
-        <div className="relative group">
-           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">Email Address</label>
-           <input 
-            type="email"
-            placeholder="juan.cruz@example.com"
-            className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl"
-            value={email}
-            onChange={(e) => onChange({ guest_email: e.target.value })}
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="relative group">
+             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">Email Address</label>
+             <input 
+              type="email"
+              placeholder="juan.cruz@example.com"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl"
+              value={email}
+              onChange={(e) => onChange({ guest_email: e.target.value })}
+            />
+          </div>
 
-        <div className="relative group">
-           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left italic text-uni-400">How can we contact you? (Optional)</label>
-           <textarea 
-            placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
-            className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-lg font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[100px] resize-none"
-            value={contactInfo}
-            onChange={(e) => onChange({ contact_info: e.target.value })}
-          />
+          <div className="relative group">
+             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left italic text-uni-400">How can we contact you? (Optional)</label>
+             <textarea 
+              placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-[15px] font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[82px] max-h-[82px] resize-none"
+              value={contactInfo}
+              onChange={(e) => onChange({ contact_info: e.target.value })}
+            />
+          </div>
         </div>
         
         <button 

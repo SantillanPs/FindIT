@@ -90,6 +90,9 @@ class FoundItemBase(BaseModel):
 class FoundItemCreate(FoundItemBase):
     contact_first_name: Optional[str] = None
     contact_last_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
+    guest_email: Optional[EmailStr] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
 

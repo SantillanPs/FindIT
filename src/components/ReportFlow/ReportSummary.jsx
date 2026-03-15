@@ -7,8 +7,12 @@ const ReportSummary = ({
   loading, 
   onSubmit 
 }) => {
+  const primaryName = formData.guest_first_name 
+    ? `${formData.guest_first_name} ${formData.guest_last_name}` 
+    : formData.contact_full_name || 'Anonymous';
+
   return (
-    <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
+    <div className="space-y-16 py-10 flex-grow flex flex-col justify-center text-center">
       <div className="space-y-4">
          <div className={`w-24 h-24 ${type === 'lost' ? 'bg-uni-500/10 border-uni-500/20' : 'bg-green-500/10 border-green-500/20'} rounded-full flex items-center justify-center mx-auto border text-4xl mb-6 shadow-2xl`}>
             {type === 'lost' ? '📡' : '🌍'}
@@ -17,81 +21,92 @@ const ReportSummary = ({
          <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public {type === 'lost' ? 'registry' : 'feed'}.</p>
       </div>
       
-      <div className="max-w-4xl mx-auto w-full space-y-10 text-left">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            {type === 'lost' ? (
-              <div className="p-10 glass-panel rounded-[3rem] border border-white/5 text-left space-y-8 shadow-2xl flex flex-col justify-center h-full">
-                 <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Item Details</p>
-                       <p className="text-xl font-black text-white uppercase tracking-tight italic">{formData.category === 'Other' ? otherItemName : formData.category}</p>
+      <div className="max-w-5xl mx-auto w-full space-y-12 text-left">
+        {/* Horizontal Info Tiles */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <SummaryTile 
+                label="Item Category" 
+                value={formData.category === 'Other' ? otherItemName : formData.category}
+                icon="fa-tag"
+            />
+            <SummaryTile 
+                label={type === 'lost' ? "Last Seen at" : "Found at"} 
+                value={formData.location_zone}
+                icon="fa-location-dot"
+            />
+            <SummaryTile 
+                label="Reporter Identity" 
+                value={primaryName}
+                icon="fa-user-tag"
+            />
+        </div>
+
+        {/* Descriptive Area & Photo */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="glass-panel p-10 rounded-[3rem] border border-white/5 space-y-8 shadow-2xl">
+                <div className="space-y-4">
+                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] border-b border-white/5 pb-2">Description Snippet</p>
+                    <p className="text-lg font-bold text-slate-300 italic leading-relaxed uppercase">"{formData.description}"</p>
+                </div>
+                
+                {(formData.contact_info || formData.guest_email) && (
+                    <div className="space-y-4 pt-4 border-t border-white/5">
+                        <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] border-b border-white/5 pb-2">Contact Channels</p>
+                        <div className="space-y-2">
+                             {formData.guest_email && <p className="text-[10px] font-black text-white uppercase tracking-widest bg-white/5 p-3 rounded-xl border border-white/5 inline-block mr-2">📧 {formData.guest_email}</p>}
+                             {formData.contact_info && <p className="text-sm font-bold text-white uppercase tracking-widest leading-relaxed bg-white/5 p-4 rounded-2xl">{formData.contact_info}</p>}
+                        </div>
                     </div>
-                    {formData.safe_photo_url && (
-                        <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                            <img src={formData.safe_photo_url} className="w-full h-full object-cover" alt="Preview" />
-                        </div>
-                    )}
-                 </div>
-                 <div className="space-y-1 border-t border-white/5 pt-8">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Last Seen At</p>
-                    <p className="text-xl font-black text-white uppercase tracking-tight">{formData.location_zone}</p>
-                 </div>
-              </div>
-            ) : (
-              <div className="aspect-square bg-white/5 rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative group">
-                 <img src={formData.safe_photo_url} alt="Found item" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                 <div className="absolute bottom-6 left-6 right-6 text-left">
-                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1 text-shadow">Item Details</p>
-                    <p className="text-lg font-black text-white uppercase tracking-tight italic text-shadow">{formData.category === 'Other' ? otherItemName : formData.category}</p>
-                 </div>
-              </div>
-            )}
+                )}
+            </div>
 
-            <div className="space-y-6">
-               <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 text-left space-y-6 shadow-2xl">
-                  <div className="space-y-1">
-                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">{type === 'lost' ? 'Last seen at' : 'Found at'}</p>
-                     <p className="text-lg font-black text-white uppercase tracking-tight leading-none">{formData.location_zone}</p>
-                  </div>
-                  <div className="space-y-4 border-t border-white/5 pt-6">
-                     <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Reported by</p>
-                        <p className="text-xs font-black text-white uppercase tracking-[0.2em]">
-                           {formData.guest_first_name ? `${formData.guest_first_name} ${formData.guest_last_name}` : formData.contact_full_name}
-                        </p>
-                     </div>
-                     {formData.contact_info && (
-                        <div>
-                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Contact Info</p>
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-relaxed">{formData.contact_info}</p>
-                        </div>
-                     )}
-                  </div>
-               </div>
+            <div className="relative group rounded-[3rem] overflow-hidden border-2 border-white/5 shadow-2xl aspect-video lg:aspect-auto">
+                {formData.safe_photo_url ? (
+                    <img src={formData.safe_photo_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Item Preview" />
+                ) : (
+                    <div className="w-full h-full bg-white/5 flex flex-col items-center justify-center space-y-4 opacity-50 italic text-center p-10">
+                        <span className="text-5xl">📷</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest">No visual preview attached</p>
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            </div>
+        </div>
 
-               <button 
+        <div className="pt-8">
+            <button 
                 onClick={onSubmit} 
                 disabled={loading}
-                className="w-full bg-white text-black py-8 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.6em] shadow-[0_20px_60px_rgba(255,255,255,0.1)] hover:bg-uni-400 hover:text-white transition-all group flex items-center justify-center gap-6"
-              >
+                className="w-full bg-white text-black py-8 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.6em] shadow-[0_20px_60px_rgba(255,255,255,0.1)] hover:bg-uni-500 hover:text-white transition-all group flex items-center justify-center gap-6 active:scale-95"
+            >
                 {loading ? (
-                  <div className="flex items-center gap-4">
-                    <div className="w-6 h-6 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                    Processing...
-                  </div>
+                    <div className="flex items-center gap-4">
+                        <div className="w-6 h-6 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+                        TRANSMITTING...
+                    </div>
                 ) : (
-                  <>
-                     <i className="fa-solid fa-paper-plane text-2xl group-hover:rotate-12 transition-transform"></i>
-                     Submit Report
-                  </>
+                    <>
+                        <i className="fa-solid fa-cloud-arrow-up text-2xl group-hover:-translate-y-1 transition-transform"></i>
+                        Confirm & Finalize Report
+                    </>
                 )}
-              </button>
-            </div>
+            </button>
         </div>
       </div>
     </div>
   );
 };
+
+const SummaryTile = ({ label, value, icon }) => (
+    <div className="p-8 glass-panel rounded-[2rem] border border-white/5 shadow-xl flex items-center gap-6 group hover:border-white/10 transition-all overflow-hidden">
+        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-xl text-uni-400 border border-white/5 group-hover:bg-uni-500 group-hover:text-white transition-all shrink-0">
+            <i className={`fa-solid ${icon}`}></i>
+        </div>
+        <div className="space-y-1 min-w-0">
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
+            <p className="text-md font-black text-white uppercase tracking-tight truncate">{value}</p>
+        </div>
+    </div>
+);
 
 export default ReportSummary;

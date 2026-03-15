@@ -25,13 +25,16 @@ const ReportFoundItem = () => {
     identified_student_id: '',
     identified_name: '',
     category: '',
+    guest_first_name: '',
+    guest_last_name: '',
+    guest_email: '',
     contact_info: ''
   });
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  const totalSteps = 6;
+  const totalSteps = 7;
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -49,7 +52,17 @@ const ReportFoundItem = () => {
       }
     };
     fetchStats();
-  }, []);
+
+    // Pre-fill contact info if user is logged in
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        guest_first_name: user.first_name || '',
+        guest_last_name: user.last_name || '',
+        guest_email: user.email || ''
+      }));
+    }
+  }, [user]);
 
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
@@ -165,15 +178,6 @@ const ReportFoundItem = () => {
                 onNext={() => goToStep(6)}
               >
                 <div className="space-y-6 pt-6 mt-6 border-t border-white/5">
-                   <div className="relative group text-left">
-                       <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 italic text-uni-400">How can we contact you? (Optional)</label>
-                       <textarea 
-                        placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
-                        className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-lg font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[100px] resize-none"
-                        value={formData.contact_info}
-                        onChange={(e) => setFormData({...formData, contact_info: e.target.value})}
-                      />
-                   </div>
                    <IdentificationStep 
                       formData={formData}
                       setFormData={setFormData}
@@ -185,6 +189,18 @@ const ReportFoundItem = () => {
             )}
 
             {step === 6 && (
+              <GuestInfoStep 
+                stepLabel="Step 6: Contact Details"
+                firstName={formData.guest_first_name}
+                lastName={formData.guest_last_name}
+                email={formData.guest_email}
+                contactInfo={formData.contact_info}
+                onChange={(updates) => setFormData({...formData, ...updates})}
+                onNext={() => goToStep(7)}
+              />
+            )}
+
+            {step === 7 && (
               <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
                 <div className="space-y-4">
                    <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20 text-4xl mb-6 shadow-2xl">🌍</div>

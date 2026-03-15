@@ -132,6 +132,7 @@ class FoundItem(Base):
     finder_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Modified to be nullable for guests
     contact_first_name = Column(String, nullable=True)
     contact_last_name = Column(String, nullable=True)
+    guest_email = Column(String, nullable=True)
     contact_info = Column(Text, nullable=True) # "How can we contact you?"
     
     # Release Metadata

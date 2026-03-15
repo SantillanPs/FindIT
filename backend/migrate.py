@@ -93,6 +93,9 @@ def migrate():
         if 'contact_info' not in columns:
             print("Adding contact_info to found_items table...")
             cursor.execute("ALTER TABLE found_items ADD COLUMN contact_info TEXT")
+        if 'guest_email' not in columns:
+            print("Adding guest_email to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN guest_email TEXT")
 
         # Lost items table
         cursor.execute("PRAGMA table_info(lost_items)")

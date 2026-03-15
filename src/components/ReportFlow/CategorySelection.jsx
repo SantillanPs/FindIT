@@ -33,10 +33,10 @@ const CategorySelection = ({
 
   const featuredCategories = sortedCategories.slice(0, 6);
   const remainingCategories = sortedCategories.slice(6).filter(c => c.id !== 'Other');
-  const otherCategory = CATEGORIES.find(c => c.id === 'Other');
+  const otherCategory = CATEGORIES.find(c => c.id === 'Other') || { icon: 'fa-question-circle', label: 'Other' };
 
   return (
-    <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
+    <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
       <div className="space-y-4">
         <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 2: Item Category</span>
         <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Next, what kind of<br/>item is it?"</h2>

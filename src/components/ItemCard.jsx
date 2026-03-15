@@ -24,10 +24,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={onClick}
-      className="group relative glass-panel rounded-[2.5rem] border border-border-main/50 hover:border-uni-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-2xl shadow-black/10 bg-bg-surface/50"
+      className="group relative glass-panel rounded-[2.5rem] border border-border-main/50 hover:border-uni-500/30 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col md:flex-row shadow-2xl shadow-black/10 bg-bg-surface/50 min-h-[320px]"
     >
       {/* Visual Anchor Area */}
-      <div className="h-48 relative overflow-hidden bg-bg-elevated/50 border-b border-border-main/50 group-hover:bg-bg-elevated transition-colors">
+      <div className="w-full md:w-80 relative overflow-hidden bg-bg-elevated/50 border-b md:border-b-0 md:border-r border-border-main/50 group-hover:bg-bg-elevated transition-colors shrink-0 h-48 md:h-auto">
         {item.safe_photo_url ? (
           <img 
             src={item.safe_photo_url} 
@@ -58,70 +58,66 @@ const ItemCard = ({ item, onClick, onShare }) => {
       </div>
 
       {/* Scannable Data Section */}
-      <div className="p-8 text-left flex-grow flex flex-col">
-          <div className="flex-grow space-y-6">
+      <div className="p-10 text-left flex-grow flex flex-col justify-between">
+          <div className="space-y-8">
               {/* Primary Identifier */}
-              <div>
-                  <h3 className="text-2xl font-black text-text-header uppercase tracking-tight leading-none group-hover:text-uni-400 transition-colors">
-                    {item.item_name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-2">
-                      {item.item_name?.toLowerCase() !== item.category?.toLowerCase() && (
-                          <>
-                              <span className="text-[10px] font-black text-text-muted uppercase tracking-widest">{item.category}</span>
-                              <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
-                          </>
-                      )}
+              <div className="flex justify-between items-start">
+                  <div>
+                      <h3 className="text-3xl font-black text-text-header uppercase tracking-tight leading-none group-hover:text-uni-400 transition-colors">
+                        {item.item_name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-3">
+                          {item.item_name?.toLowerCase() !== item.category?.toLowerCase() && (
+                              <>
+                                  <span className="text-[11px] font-black text-text-muted uppercase tracking-[0.2em] bg-white/5 px-2 py-0.5 rounded-md border border-white/5">{item.category}</span>
+                                  <div className="w-1 h-1 rounded-full bg-text-muted/10"></div>
+                              </>
+                          )}
+                           <span className="text-[11px] font-black text-slate-500 uppercase tracking-widest">{formattedDate}</span>
+                      </div>
+                  </div>
+
+                  <div className="flex -space-x-2 hidden md:flex">
+                      {[1,2,3].map(i => (
+                          <div key={i} className="w-8 h-8 rounded-full border-2 border-border-main bg-bg-surface flex items-center justify-center text-[8px] font-black text-text-muted italic shadow-lg">
+                              i{i}
+                          </div>
+                      ))}
                   </div>
               </div>
 
               {/* Description Snippet */}
-              <p className="text-text-muted text-sm italic font-bold leading-relaxed line-clamp-2 uppercase tracking-wide border-l-3 border-uni-500/20 pl-4 py-1">
+              <p className="text-text-muted text-sm italic font-bold leading-relaxed line-clamp-3 uppercase tracking-wide border-l-3 border-uni-500/20 pl-6 py-2 bg-white/[0.02] rounded-r-2xl">
                  "{item.description}"
               </p>
 
-              {/* Scannable Meta Grid */}
-              <div className="grid grid-cols-2 gap-y-6 gap-x-8 pt-2">
+              {/* Scannable Meta Info - Horizontal Strip */}
+              <div className="flex flex-wrap items-center gap-10 pt-2 border-t border-white/5">
                   <div className="space-y-1.5">
                       <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Location</p>
-                      <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-location-dot text-[11px] text-uni-400"></i>
-                          <p className="text-[11px] font-black text-text-main uppercase truncate">{item.location_zone}</p>
+                      <div className="flex items-center gap-3">
+                          <i className="fa-solid fa-location-dot text-[14px] text-uni-400"></i>
+                          <p className="text-xs font-black text-text-main uppercase">{item.location_zone}</p>
                       </div>
                   </div>
+                  <div className="h-8 w-px bg-white/5 hidden sm:block"></div>
                   <div className="space-y-1.5">
                       <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Discovery Time</p>
-                      <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-clock text-[11px] text-uni-400"></i>
-                          <p className="text-[11px] font-black text-text-main uppercase">{formattedTime}</p>
-                      </div>
-                  </div>
-                  <div className="space-y-1.5">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Discovery Date</p>
-                      <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-calendar-day text-[11px] text-uni-400"></i>
-                          <p className="text-[11px] font-black text-text-main uppercase">{formattedDate}</p>
-                      </div>
-                  </div>
-                  <div className="flex items-end justify-end">
-                      <div className="flex -space-x-2">
-                          {[1,2,3].map(i => (
-                              <div key={i} className="w-6 h-6 rounded-full border-2 border-border-main bg-bg-surface flex items-center justify-center text-[7px] font-black text-text-muted italic">
-                                  i{i}
-                              </div>
-                          ))}
+                      <div className="flex items-center gap-3">
+                          <i className="fa-solid fa-clock text-[14px] text-uni-400"></i>
+                          <p className="text-xs font-black text-text-main uppercase">{formattedTime}</p>
                       </div>
                   </div>
               </div>
           </div>
 
-          <div className="mt-10 pt-8 border-t border-border-main/10 flex gap-4">
+          <div className="mt-10 pt-8 border-t border-border-main/10 flex gap-6">
               <button 
                 onClick={(e) => {
                     e.stopPropagation();
                     onClick();
                 }}
-                className="flex-grow bg-bg-surface text-text-header py-5 rounded-[1.25rem] font-black text-[11px] uppercase tracking-[0.3em] hover:bg-uni-500 hover:text-white transition-all shadow-xl active:scale-95 flex items-center justify-center gap-4 group/btn border border-border-main/50"
+                className="flex-grow bg-white text-black py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 group/btn"
               >
                 <span>Initiate Claim</span>
                 <i className="fa-solid fa-chevron-right text-[10px] group-hover/btn:translate-x-1 transition-transform"></i>
@@ -131,10 +127,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
                     e.stopPropagation();
                     onShare(item);
                 }}
-                className="w-16 bg-bg-surface border border-border-main rounded-[1.25rem] flex items-center justify-center text-text-main hover:bg-bg-elevated transition-all"
+                className="w-20 bg-bg-surface border-2 border-border-main/50 rounded-[1.5rem] flex items-center justify-center text-text-main hover:bg-bg-elevated hover:border-white/20 transition-all shadow-xl group/share"
                 title="Share Item"
               >
-                <i className="fa-solid fa-paper-plane text-text-muted"></i>
+                <i className="fa-solid fa-paper-plane text-text-muted group-hover/share:text-uni-400 transition-colors"></i>
               </button>
           </div>
       </div>
