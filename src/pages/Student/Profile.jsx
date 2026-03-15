@@ -11,6 +11,8 @@ const Profile = () => {
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('reports');
+  const [privacyLoading, setPrivacyLoading] = useState(false);
+  const [showFullName, setShowFullName] = useState(false);
 
   const isOwnProfile = !userId || parseInt(userId) === currentUser?.id;
   const targetId = userId || currentUser?.id;
@@ -28,6 +30,24 @@ const Profile = () => {
     };
     if (targetId) fetchProfile();
   }, [targetId]);
+
+  useEffect(() => {
+    if (profileUser) {
+      setShowFullName(profileUser.show_full_name);
+    }
+  }, [profileUser]);
+
+  const handleTogglePrivacy = async () => {
+    setPrivacyLoading(true);
+    try {
+      const res = await apiClient.put('/auth/me/preference', { show_full_name: !showFullName });
+      setShowFullName(res.data.show_full_name);
+    } catch (err) {
+      console.error('Failed to update privacy preference', err);
+    } finally {
+      setPrivacyLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -98,6 +118,23 @@ const Profile = () => {
                         <i className="fa-solid fa-medal text-amber-500"></i>
                         <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Certificate Eligible</span>
                     </div>
+                )}
+                {isOwnProfile && (
+                    <motion.button 
+                      onClick={handleTogglePrivacy}
+                      disabled={privacyLoading}
+                      className={`px-4 py-2 rounded-xl flex items-center gap-3 border transition-all ${
+                        showFullName 
+                        ? 'bg-uni-500/10 border-uni-500/30 text-uni-400' 
+                        : 'bg-white/5 border-white/10 text-slate-500'
+                      }`}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <i className={`fa-solid ${showFullName ? 'fa-eye' : 'fa-eye-slash'}`}></i>
+                      <span className="text-[10px] font-black uppercase tracking-widest">
+                        {showFullName ? 'Name Public' : 'Name Masked'}
+                      </span>
+                    </motion.button>
                 )}
               </div>
             </div>

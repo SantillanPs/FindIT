@@ -126,7 +126,8 @@ def upgrade_guest(request: schemas.UpgradeGuestRequest, db: Session = Depends(au
     
     new_user = database.User(
         email=email_lower,
-        full_name=request.full_name,
+        first_name=request.first_name,
+        last_name=request.last_name,
         hashed_password=hashed_password,
         student_id_number=student_id,
         role=database.UserRole.STUDENT,
@@ -136,15 +137,24 @@ def upgrade_guest(request: schemas.UpgradeGuestRequest, db: Session = Depends(au
     db.commit()
     db.refresh(new_user)
     
-    # Link all guest reports to this new user by full name
+    # Link all guest reports to this new user by name
     # We use a case-insensitive match for the reporter name provided during guest submission
-    db.query(database.LostItem).filter(database.LostItem.guest_full_name.ilike(request.full_name)).update({
+    db.query(database.LostItem).filter(
+        (database.LostItem.guest_first_name.ilike(request.first_name)) & 
+        (database.LostItem.guest_last_name.ilike(request.last_name))
+    ).update({
         "user_id": new_user.id, 
-        "guest_full_name": None
+        "guest_first_name": None,
+        "guest_last_name": None
     }, synchronize_session=False)
-    db.query(database.FoundItem).filter(database.FoundItem.contact_full_name.ilike(request.full_name)).update({
+    
+    db.query(database.FoundItem).filter(
+        (database.FoundItem.contact_first_name.ilike(request.first_name)) & 
+        (database.FoundItem.contact_last_name.ilike(request.last_name))
+    ).update({
         "finder_id": new_user.id, 
-        "contact_full_name": None
+        "contact_first_name": None,
+        "contact_last_name": None
     }, synchronize_session=False)
 
     # Link Witness Reports
@@ -237,14 +247,18 @@ def get_public_leaderboard(db: Session = Depends(auth.get_db)):
     
     results = []
     for i, user in enumerate(users):
+        fname = user.first_name or ""
+        lname = user.last_name or ""
+        
         # Mask name: John Doe -> J*** D***
-        # If full_name is None, use a placeholder
-        display_name = user.full_name if user.full_name else "Anonymous student"
-        name_parts = display_name.split(' ')
-        masked_name = " ".join([f"{p[0]}***" if len(p) > 0 else "*" for p in name_parts])
+        masked_first = f"{fname[0]}***" if len(fname) > 0 else "*"
+        masked_last = f"{lname[0]}***" if len(lname) > 0 else "*"
+        masked_name = f"{masked_first} {masked_last}".strip()
         
         # Respect privacy toggle
-        final_name = user.full_name if user.show_full_name and user.full_name else masked_name
+        final_name = f"{fname} {lname}".strip() if user.show_full_name else masked_name
+        if not final_name:
+            final_name = "Anonymous Student"
         
         results.append({
             "id": user.id,

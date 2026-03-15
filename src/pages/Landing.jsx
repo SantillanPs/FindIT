@@ -24,6 +24,8 @@ const Landing = () => {
   const [toast, setToast] = useState({ show: false, message: '' });
   const [leaderboardType, setLeaderboardType] = useState('students'); // 'students' or 'colleges'
   const [topColleges, setTopColleges] = useState([]);
+  const [topStudents, setTopStudents] = useState([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ const Landing = () => {
   useEffect(() => {
     fetchPublicFeed();
     fetchLostReports();
-    fetchDepartmentStats();
+    fetchLeaderboardData();
   }, []);
 
   const fetchPublicFeed = async () => {
@@ -56,12 +58,19 @@ const Landing = () => {
     }
   };
 
-  const fetchDepartmentStats = async () => {
+  const fetchLeaderboardData = async () => {
+    setLeaderboardLoading(true);
     try {
-      const resp = await apiClient.get('/admin/leaderboard/departments'); // We'll make this public or handle auth
-      setTopColleges(resp.data);
+      const [collegesResp, studentsResp] = await Promise.all([
+        apiClient.get('/admin/leaderboard/departments'),
+        apiClient.get('/auth/leaderboard')
+      ]);
+      setTopColleges(collegesResp.data);
+      setTopStudents(studentsResp.data);
     } catch (err) {
-      console.error("Failed to fetch department stats", err);
+      console.error("Failed to fetch leaderboard data", err);
+    } finally {
+      setLeaderboardLoading(false);
     }
   };
 
@@ -278,40 +287,46 @@ const Landing = () => {
                 
                 <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40 backdrop-blur-md">
                     <div className="space-y-1">
-                        {leaderboardType === 'students' ? (
-                            [
-                                { email: 'm***n@university.edu', points: 125, rank: 1, icon: '👑' },
-                                { email: 's***j@university.edu', points: 90, rank: 2, icon: '🔥' },
-                                { email: 'a***p@university.edu', points: 75, rank: 3, icon: '✨' },
-                                { email: 'p***z@university.edu', points: 40, rank: 4, icon: '🛡️' },
-                                { email: 'k***l@university.edu', points: 35, rank: 5, icon: '🔰' }
-                            ].map((student, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
-                                            i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-lg shadow-amber-500/10' : 
-                                            i === 1 ? 'bg-text-muted/20 text-text-muted border border-text-muted/30' :
-                                            i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/30' :
-                                            'bg-bg-elevated/50 text-text-muted border border-border-main/10'
-                                        }`}>
-                                            {student.rank}
-                                        </div>
-                                        <div className="text-left">
-                                            <p className="text-[11px] font-black text-text-header tracking-widest font-mono opacity-80 group-hover:opacity-100 transition-opacity">{student.email}</p>
-                                            <p className="text-[8px] font-bold text-text-muted uppercase tracking-widest">{student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right">
-                                            <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.points} IP</p>
-                                            <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                <div className="h-full bg-uni-400" style={{ width: `${(student.points/125)*100}%` }}></div>
+                        {leaderboardLoading ? (
+                            <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">Calculating honor list...</div>
+                        ) : leaderboardType === 'students' ? (
+                            topStudents.length > 0 ? (
+                                topStudents.slice(0, 5).map((student, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
+                                                i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-lg shadow-amber-500/10' : 
+                                                i === 1 ? 'bg-slate-500/20 text-slate-400 border border-slate-500/30' :
+                                                i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/30' :
+                                                'bg-bg-elevated/50 text-text-muted border border-border-main/10'
+                                            }`}>
+                                                {i + 1}
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-[11px] font-black text-text-header tracking-widest uppercase opacity-80 group-hover:opacity-100 transition-opacity">
+                                                    {student.full_name_masked}
+                                                </p>
+                                                <p className="text-[8px] font-bold text-uni-400 uppercase tracking-widest">
+                                                    {student.department || 'General Education'} • {student.rank === 1 ? 'Prime Keeper' : 'Scholar of Honor'}
+                                                </p>
                                             </div>
                                         </div>
-                                        <span className="text-xl group-hover:scale-110 transition-transform">{student.icon}</span>
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-right">
+                                                <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.integrity_points} IP</p>
+                                                <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                    <div className="h-full bg-uni-400" style={{ width: `${(student.integrity_points / (topStudents[0]?.integrity_points || 1)) * 100}%` }}></div>
+                                                </div>
+                                            </div>
+                                            <span className="text-xl group-hover:scale-110 transition-transform">
+                                                {i === 0 ? '👑' : i === 1 ? '🔥' : i === 2 ? '✨' : i === 3 ? '🛡️' : '🔰'}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                ))
+                            ) : (
+                                <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">The Hall is currently empty...</div>
+                            )
                         ) : (
                             topColleges.length > 0 ? (
                                 topColleges.slice(0, 5).map((col, i) => (
