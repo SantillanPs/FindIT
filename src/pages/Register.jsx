@@ -173,7 +173,7 @@ const Register = () => {
                 <ImageUpload 
                   label="Snap a photo of your school ID"
                   value={proofUrl}
-                  onChange={setProofUrl}
+                  onUploadSuccess={setProofUrl}
                 />
               </div>
             </div>
