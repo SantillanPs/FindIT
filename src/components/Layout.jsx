@@ -5,37 +5,56 @@ import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import apiClient from '../api/client';
 import ThemeToggle from './ThemeToggle';
+import FeedbackModal from './FeedbackModal';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0 });
-  const hasFetchedStats = React.useRef(false);
+  const [isAdminStatsFetched, setIsAdminStatsFetched] = useState(false);
+  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0, feedbacks: 0 });
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Close sidebar on route change
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [location.pathname]);
 
+  // Listen for custom trigger events
+  useEffect(() => {
+    const handleOpenFeedback = () => setIsFeedbackOpen(true);
+    window.addEventListener('open-feedback', handleOpenFeedback);
+    return () => window.removeEventListener('open-feedback', handleOpenFeedback);
+  }, []);
+
   // Fetch admin stats if user is admin or super_admin
   useEffect(() => {
-    if ((user?.role === 'admin' || user?.role === 'super_admin') && !hasFetchedStats.current) {
-      hasFetchedStats.current = true;
+    if ((user?.role === 'admin' || user?.role === 'super_admin') && !isAdminStatsFetched) {
+      setIsAdminStatsFetched(true);
       fetchAdminStats();
     }
   }, [user]);
 
   const fetchAdminStats = async () => {
     try {
-      const [claimsRes, matchesRes, lostRes] = await Promise.all([
+      const endpoints = [
         apiClient.get('/admin/claims/pending'),
         apiClient.get('/admin/matches/all'),
         apiClient.get('/admin/lost/all')
-      ]);
+      ];
+
+      if (user?.role === 'super_admin') {
+        endpoints.push(apiClient.get('/feedbacks'));
+      }
+
+      const results = await Promise.all(endpoints);
+      
       setAdminStats({
-        claims: claimsRes.data.length,
-        matches: matchesRes.data.length,
-        lost: lostRes.data.length
+        claims: results[0].data.length,
+        matches: results[1].data.length,
+        lost: results[2].data.length,
+        feedbacks: user?.role === 'super_admin' ? results[3].data.filter(f => f.status === 'pending').length : 0
       });
     } catch (error) {
       console.error('Failed to fetch admin sidebar stats', error);
@@ -55,6 +74,11 @@ const Layout = ({ children }) => {
         <div className="ambient-uni opacity-30"></div>
         <div className="ambient-accent opacity-20"></div>
       </div>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+      />
 
       {user ? (
         <>
@@ -95,6 +119,7 @@ const Layout = ({ children }) => {
                     <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Super Admin Workspace</p>
                     <SideNavLink to="/super" icon="fa-globe" label="System Overview" />
                     <SideNavLink to="/super/zones" icon="fa-route" label="Map Builder" />
+                    <SideNavLink to="/super/feedback" icon="fa-comments" label="Feedback Hub" count={adminStats.feedbacks} />
                     <SideNavLink to="/super/staff" icon="fa-users-gear" label="Staff Management" />
                     <SideNavLink to="/super/audit" icon="fa-shield-halved" label="Security Audit Logs" />
                     <div className="h-px bg-white/5 mx-4 my-4"></div>
@@ -217,7 +242,7 @@ const Layout = ({ children }) => {
 
       ) : (
         /* Guest Layout (Landing Page) */
-        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative">
+        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed">
           <BackgroundEffects />
           
           <header className="glass-header sticky top-0 z-[60] h-14 flex-shrink-0">
@@ -242,7 +267,7 @@ const Layout = ({ children }) => {
             </div>
           </header>
 
-          <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full relative z-10">
+          <main className="flex-grow w-full relative z-10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
@@ -265,6 +290,23 @@ const Layout = ({ children }) => {
           </footer>
         </div>
       )}
+      {/* Floating Feedback Trigger */}
+      <motion.button
+        whileHover={{ scale: 1.05, y: -2 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setIsFeedbackOpen(true)}
+        className="fixed bottom-8 right-8 z-[70] group"
+      >
+        <div className="relative">
+          <div className="absolute inset-0 bg-uni-500 blur-xl opacity-40 group-hover:opacity-70 transition-opacity"></div>
+          <div className="relative flex items-center gap-3 bg-bg-surface border border-uni-500/30 hover:border-uni-500 px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-xl transition-all">
+            <div className="w-8 h-8 rounded-xl bg-uni-500 text-white flex items-center justify-center shadow-lg shadow-uni-500/20">
+              <i className="fa-solid fa-comment-dots text-sm"></i>
+            </div>
+            <span className="text-[9px] font-black text-text-header uppercase tracking-widest">Feedback</span>
+          </div>
+        </div>
+      </motion.button>
     </div>
   );
 };
@@ -272,8 +314,12 @@ const Layout = ({ children }) => {
 const BackgroundEffects = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
     {/* Grid Layer */}
-    <div className="absolute inset-0 bg-grid opacity-20"></div>
+    <div className="absolute inset-0 bg-grid opacity-[0.03]"></div>
     
+    {/* Institutional Ambient Glows */}
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-uni-500/10 blur-[120px] rounded-full"></div>
+    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[400px] bg-uni-500/15 blur-[120px] rounded-full"></div>
+
     {/* Dynamic Blobs */}
     <div className="absolute inset-0">
       <motion.div 
@@ -293,15 +339,6 @@ const BackgroundEffects = () => (
         }}
         transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
         className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-default/10 rounded-full blur-[120px]"
-      />
-      <motion.div 
-        animate={{ 
-          x: [0, 50, -50, 0],
-          y: [0, 150, -150, 0],
-          opacity: [0.1, 0.2, 0.1]
-        }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-uni-400/10 rounded-full blur-[100px]"
       />
     </div>
 

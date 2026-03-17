@@ -13,6 +13,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('reports');
   const [privacyLoading, setPrivacyLoading] = useState(false);
   const [showFullName, setShowFullName] = useState(false);
+  const [myFeedbacks, setMyFeedbacks] = useState([]);
 
   const isOwnProfile = !userId || parseInt(userId) === currentUser?.id;
   const targetId = userId || currentUser?.id;
@@ -22,6 +23,11 @@ const Profile = () => {
       try {
         const res = await apiClient.get(`/auth/user/${targetId}/profile`);
         setProfileUser(res.data);
+        
+        if (isOwnProfile) {
+          const feedbackRes = await apiClient.get('/feedbacks/my');
+          setMyFeedbacks(feedbackRes.data);
+        }
       } catch (err) {
         console.error('Failed to fetch profile', err);
       } finally {
@@ -29,7 +35,7 @@ const Profile = () => {
       }
     };
     if (targetId) fetchProfile();
-  }, [targetId]);
+  }, [targetId, isOwnProfile]);
 
   useEffect(() => {
     if (profileUser) {
@@ -177,7 +183,7 @@ const Profile = () => {
         {/* Detailed History */}
         <div className="space-y-8">
             <div className="flex items-center gap-8 border-b border-white/5 pb-4">
-                {['reports', 'claims'].map(tab => (
+                {['reports', 'claims', ...(isOwnProfile ? ['feedback'] : [])].map(tab => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -194,12 +200,12 @@ const Profile = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(activeTab === 'reports' ? profileUser.found_items : profileUser.claims).length === 0 ? (
+                {(activeTab === 'reports' ? profileUser.found_items : activeTab === 'claims' ? profileUser.claims : myFeedbacks).length === 0 ? (
                     <div className="col-span-2 py-20 text-center glass-panel border border-white/5 rounded-[2.5rem]">
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No persistent record found</p>
                     </div>
                 ) : (
-                    (activeTab === 'reports' ? profileUser.found_items : profileUser.claims).map((item, id) => (
+                    (activeTab === 'reports' ? profileUser.found_items : activeTab === 'claims' ? profileUser.claims : myFeedbacks).map((item, id) => (
                         <motion.div 
                             key={id}
                             initial={{ opacity: 0 }}
@@ -208,23 +214,43 @@ const Profile = () => {
                         >
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-xl">
-                                    {item.found_item_category || item.category || '📦'}
+                                    {activeTab === 'feedback' ? (
+                                      <i className={`fa-solid ${
+                                        item.type === 'bug' ? 'fa-bug text-red-400' : 
+                                        item.type === 'feature' ? 'fa-lightbulb text-yellow-400' :
+                                        item.type === 'ux' ? 'fa-wand-magic-sparkles text-blue-400' : 'fa-message text-green-400'
+                                      } text-sm`}></i>
+                                    ) : (
+                                      item.found_item_category || item.category || '📦'
+                                    )}
                                 </div>
                                 <div className="text-left">
                                     <p className="text-[11px] font-black text-white uppercase tracking-widest">
-                                        {item.item_name || item.found_item_description || 'Surrendered Item'}
+                                        {item.subject || item.item_name || item.found_item_description || 'Surrendered Item'}
                                     </p>
                                     <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">
                                         {new Date(item.created_at || item.found_time).toLocaleDateString()}
                                     </p>
+                                    {activeTab === 'feedback' && item.admin_notes && (
+                                        <p className="text-[9px] text-uni-400 font-bold mt-2 border-l-2 border-uni-500/30 pl-3 py-1 bg-uni-500/5 rounded-r-lg max-w-xs italic whitespace-pre-wrap">
+                                            Admin: {item.admin_notes}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
-                                item.status === 'released' || item.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                item.status === 'reported' || item.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                            }`}>
-                                {item.status.replace('_', ' ')}
+                            <div className="flex flex-col items-end gap-2">
+                              <div className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
+                                  item.status === 'released' || item.status === 'approved' || item.status === 'resolved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                                  item.status === 'reported' || item.status === 'pending' || item.status === 'under_review' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                  'bg-sky-500/10 text-sky-400 border-sky-500/20'
+                              }`}>
+                                  {item.status.replace('_', ' ')}
+                              </div>
+                              {activeTab === 'feedback' && item.screenshot_url && (
+                                <a href={item.screenshot_url} target="_blank" rel="noreferrer" className="text-[7px] font-black text-slate-500 hover:text-white uppercase tracking-widest underline decoration-uni-500/30">
+                                  View Screenshot
+                                </a>
+                              )}
                             </div>
                         </motion.div>
                     ))

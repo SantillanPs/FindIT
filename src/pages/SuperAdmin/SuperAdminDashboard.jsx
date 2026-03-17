@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import SystemOverview from './SystemOverview';
 import StaffManagement from './StaffManagement';
 import AuditLogs from './AuditLogs';
+import FeedbackHub from './FeedbackHub';
 import ZoneBuilderTab from '../Admin/components/ZoneBuilderTab';
 
 const SuperAdminDashboard = () => {
@@ -29,6 +30,7 @@ const SuperAdminDashboard = () => {
   const tabs = [
     { id: 'overview', label: 'System Overview', icon: 'fa-globe' },
     { id: 'zones', label: 'Map Builder', icon: 'fa-route' },
+    { id: 'feedback', label: 'Feedback Hub', icon: 'fa-comments' },
     { id: 'staff', label: 'Staff Management', icon: 'fa-users-gear' },
     { id: 'audit', label: 'Audit Logs', icon: 'fa-shield-halved' }
   ];
@@ -48,6 +50,7 @@ const SuperAdminDashboard = () => {
             {currentTab === 'staff' && <StaffManagement />}
             {currentTab === 'audit' && <AuditLogs />}
             {currentTab === 'zones' && <ZoneBuilderTab />}
+            {currentTab === 'feedback' && <FeedbackHub />}
           </motion.div>
         </AnimatePresence>
       </div>

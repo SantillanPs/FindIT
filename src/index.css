@@ -32,6 +32,10 @@
   --color-accent-default: #f59e0b;
   --color-accent-glow: rgba(245, 158, 11, 0.5);
 
+  --color-prestige-gold: #fbbf24;
+  --color-prestige-slate: #475569;
+  --color-honor-blue: #0ea5e9;
+
   @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
@@ -44,10 +48,15 @@
     0% { box-shadow: 0 0 5px rgba(14, 165, 233, 0.5); }
     100% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.8), 0 0 40px rgba(14, 165, 233, 0.4); }
   }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
   --animate-float: float 6s ease-in-out infinite;
   --animate-slide-up: slideUp 0.5s ease-out;
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   --animate-glow: glow 2s ease-in-out infinite alternate;
+  --animate-shimmer: shimmer 3s infinite linear;
 }
 
 :root {
@@ -93,6 +102,16 @@
 }
 
 @layer components {
+  .mesh-bg-premium {
+    background-color: var(--bg-main);
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(245, 158, 11, 0.05) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.05) 0px, transparent 50%);
+  }
+
   .mesh-bg {
     background-color: var(--bg-main);
     background-image: 
@@ -217,6 +236,19 @@
     transition: background-color 0.3s ease;
   }
 
+  /* Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.mask-fade-right {
+  mask-image: linear-gradient(to right, black 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
+}
   /* Ambient Glow Effects as global utilities */
   .ambient-uni {
     @apply absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-uni-500/10 rounded-full blur-[120px] animate-float;

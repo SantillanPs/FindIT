@@ -130,8 +130,8 @@ class FoundItem(Base):
     
     # Ownership/Tracking
     finder_id = Column(Integer, ForeignKey("users.id"), nullable=True) # Modified to be nullable for guests
-    contact_first_name = Column(String, nullable=True)
-    contact_last_name = Column(String, nullable=True)
+    guest_first_name = Column(String, nullable=True)
+    guest_last_name = Column(String, nullable=True)
     guest_email = Column(String, nullable=True)
     contact_info = Column(Text, nullable=True) # "How can we contact you?"
     
@@ -154,9 +154,9 @@ class FoundItem(Base):
             lname = self.finder.last_name or ""
             name = f"{fname} {lname}".strip()
             return name if name else "Anonymous Student"
-        if self.contact_first_name or self.contact_last_name:
-            fname = self.contact_first_name or ""
-            lname = self.contact_last_name or ""
+        if self.guest_first_name or self.guest_last_name:
+            fname = self.guest_first_name or ""
+            lname = self.guest_last_name or ""
             return f"{fname} {lname}".strip()
         return "Anonymous Finder"
 
@@ -205,6 +205,44 @@ class LostItem(Base):
         if self.guest_email:
             return self.guest_email
         return "N/A"
+
+class FeedbackType(str, enum.Enum):
+    BUG = "bug"
+    FEATURE = "feature"
+    UX = "ux"
+    GENERAL = "general"
+
+class FeedbackStatus(str, enum.Enum):
+    PENDING = "pending"
+    UNDER_REVIEW = "under_review"
+    RESOLVED = "resolved"
+    DISMISSED = "dismissed"
+
+class Feedback(Base):
+    __tablename__ = "feedbacks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    type = Column(String, default=FeedbackType.GENERAL.value)
+    subject = Column(String)
+    message = Column(Text)
+    screenshot_url = Column(String, nullable=True)
+    page_url = Column(String, nullable=True)
+    browser_info = Column(Text, nullable=True)
+    status = Column(String, default=FeedbackStatus.PENDING.value)
+    admin_notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    
+    @property
+    def user_name(self):
+        if self.user_id and self.user:
+            fname = self.user.first_name or ""
+            lname = self.user.last_name or ""
+            name = f"{fname} {lname}".strip()
+            return name if name else "Anonymous Student"
+        return "Anonymous Guest"
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

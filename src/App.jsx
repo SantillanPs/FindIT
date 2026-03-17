@@ -94,6 +94,7 @@ const AppContent = () => {
             <Route path="/super/staff" element={<SuperAdminDashboard />} />
             <Route path="/super/audit" element={<SuperAdminDashboard />} />
             <Route path="/super/zones" element={<SuperAdminDashboard />} />
+            <Route path="/super/feedback" element={<SuperAdminDashboard />} />
           </Route>
         </Route>
       </Routes>

@@ -14,7 +14,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 import database
 import database
-from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges
+from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges, feedbacks
 
 # Ensure uploads directory exists (wrap in try-except for read-only environments like Vercel)
 try:
@@ -76,11 +76,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": "An internal server error occurred. Please try again later or contact support."},
     )
 
-# Enable CORS for development
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Enable CORS for development and production
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -113,6 +110,7 @@ v1_router.include_router(analytics.router)
 v1_router.include_router(zones.router)
 v1_router.include_router(admin_zones.router)
 v1_router.include_router(colleges.router)
+v1_router.include_router(feedbacks.router)
 
 # Mount central router to app
 app.include_router(v1_router)

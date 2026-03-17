@@ -88,8 +88,6 @@ class FoundItemBase(BaseModel):
     contact_info: Optional[str] = None
 
 class FoundItemCreate(FoundItemBase):
-    contact_first_name: Optional[str] = None
-    contact_last_name: Optional[str] = None
     guest_first_name: Optional[str] = None
     guest_last_name: Optional[str] = None
     guest_email: Optional[EmailStr] = None
@@ -99,8 +97,8 @@ class FoundItemCreate(FoundItemBase):
 class FoundItemPublic(FoundItemBase):
     id: int
     status: str
-    contact_first_name: Optional[str] = None
-    contact_last_name: Optional[str] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     owner_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
@@ -267,6 +265,36 @@ class MatchRequest(BaseModel):
 
 class ClaimReview(BaseModel):
     status: str  # approved or rejected
+    admin_notes: Optional[str] = None
+
+# Feedback Schemas
+class FeedbackCreate(BaseModel):
+    type: str
+    subject: str
+    message: str
+    screenshot_url: Optional[str] = None
+    page_url: Optional[str] = None
+    browser_info: Optional[str] = None
+
+class FeedbackResponse(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    type: str
+    subject: str
+    message: str
+    screenshot_url: Optional[str] = None
+    page_url: Optional[str] = None
+    browser_info: Optional[str] = None
+    status: str
+    admin_notes: Optional[str] = None
+    created_at: datetime
+    user_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class FeedbackStatusUpdate(BaseModel):
+    status: str
     admin_notes: Optional[str] = None
 
 # Audit Log Schemas

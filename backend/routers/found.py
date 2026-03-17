@@ -38,9 +38,17 @@ def report_found_item_guest(
     item_data = item.model_dump()
     item_data['category'] = category
 
+    # Extract guest info to avoid potential conflicts or duplicates
+    guest_first_name = item_data.pop('guest_first_name', None)
+    guest_last_name = item_data.pop('guest_last_name', None)
+    guest_email = item_data.pop('guest_email', None)
+
     new_item = database.FoundItem(
         **item_data,
         finder_id=None,
+        guest_first_name=guest_first_name,
+        guest_last_name=guest_last_name,
+        guest_email=guest_email,
         embedding=embedding_json
     )
     db.add(new_item)
@@ -101,6 +109,11 @@ def report_found_item(
 
     item_data = item.model_dump()
     item_data['category'] = category
+
+    # Ensure guest info is cleared for verified student reports
+    item_data.pop('guest_first_name', None)
+    item_data.pop('guest_last_name', None)
+    item_data.pop('guest_email', None)
 
     new_item = database.FoundItem(
         **item_data,

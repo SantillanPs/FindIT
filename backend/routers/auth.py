@@ -149,12 +149,12 @@ def upgrade_guest(request: schemas.UpgradeGuestRequest, db: Session = Depends(au
     }, synchronize_session=False)
     
     db.query(database.FoundItem).filter(
-        (database.FoundItem.contact_first_name.ilike(request.first_name)) & 
-        (database.FoundItem.contact_last_name.ilike(request.last_name))
+        (database.FoundItem.guest_first_name.ilike(request.first_name)) & 
+        (database.FoundItem.guest_last_name.ilike(request.last_name))
     ).update({
         "finder_id": new_user.id, 
-        "contact_first_name": None,
-        "contact_last_name": None
+        "guest_first_name": None,
+        "guest_last_name": None
     }, synchronize_session=False)
 
     # Link Witness Reports

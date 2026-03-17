@@ -96,14 +96,21 @@ const Landing = () => {
     setShowWitnessModal(true);
   };
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = (item.description?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.location_zone?.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredItems = items
+    .filter(item => {
+      const matchesSearch = (item.description?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            item.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.location_zone?.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .map(item => {
+      const foundDate = new Date(item.found_time);
+      const now = new Date();
+      const isRecent = (now - foundDate) < (24 * 60 * 60 * 1000);
+      return { ...item, is_recent: isRecent };
+    });
 
   const filteredLostReports = lostReports.filter(report => {
     const matchesSearch = (report.description?.toLowerCase().includes(lostSearchQuery.toLowerCase()) || 
@@ -118,33 +125,34 @@ const Landing = () => {
   return (
     <div className="space-y-24 pb-20">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-32 md:pb-20 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] md:h-[400px] bg-uni-500/5 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"></div>
-        
+      <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-4 relative z-10">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border border-white/5 text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] mb-8 md:mb-10"
+            className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full glass-panel border border-white/10 text-uni-400 text-[10px] font-black uppercase tracking-[0.3em] mb-8 md:mb-12 shadow-xl shadow-uni-500/5"
           >
-            <span className="w-1.5 h-1.5 md:w-2 h-2 bg-accent-default rounded-full animate-pulse"></span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-default opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-default"></span>
+            </span>
             Official Lost & Found Portal
           </motion.div>
           
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-display text-4xl sm:text-6xl md:text-8xl font-black text-white mb-6 md:mb-8 tracking-tighter leading-tight"
+            className="font-display text-5xl sm:text-7xl md:text-9xl font-black text-white mb-6 md:mb-10 tracking-tighter leading-[0.9] italic"
           >
             Lost it? <br />
-            <span className="gradient-text italic">Find it.</span>
+            <span className="gradient-text not-italic">Find it.</span>
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-base md:text-xl text-text-muted max-w-2xl mx-auto mb-10 md:mb-16 leading-relaxed font-medium px-4"
+            className="text-lg md:text-2xl text-text-muted max-w-2xl mx-auto mb-12 md:mb-20 leading-relaxed font-medium px-4 opacity-80"
           >
             The official community registry for lost and found items. Report what you lost, list what you've found, and reconnect with your belongings.
           </motion.p>
@@ -153,19 +161,21 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 px-4"
+            className="flex flex-col sm:flex-row justify-center gap-6 px-4"
           >
             <button 
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
-                className="bg-accent-default/5 hover:bg-accent-default hover:text-white text-accent-default border border-accent-default/30 px-8 md:px-12 py-4 md:py-5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all hover:scale-[1.05] hover:border-accent-default shadow-lg shadow-accent-default/5"
+                className="group relative px-10 md:px-14 py-5 md:py-6 rounded-full font-black text-xs uppercase tracking-[0.4em] transition-all overflow-hidden"
             >
-                Report a lost item
+                <div className="absolute inset-0 bg-accent-default transition-transform group-hover:scale-110"></div>
+                <span className="relative text-white">Report a lost item</span>
             </button>
             <button 
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
-                className="bg-uni-500/5 hover:bg-uni-600 hover:text-white text-uni-400 border border-uni-500/30 px-8 md:px-12 py-4 md:py-5 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all hover:scale-[1.05] hover:border-uni-400 shadow-lg shadow-uni-500/5"
+                className="group relative px-10 md:px-14 py-5 md:py-6 rounded-full font-black text-xs uppercase tracking-[0.4em] transition-all overflow-hidden border-2 border-uni-500/50"
             >
-                I found something
+                <div className="absolute inset-0 bg-uni-500/5 group-hover:bg-uni-500 transition-all"></div>
+                <span className="relative text-uni-400 group-hover:text-white transition-colors">I found something</span>
             </button>
           </motion.div>
         </div>
@@ -188,48 +198,50 @@ const Landing = () => {
             {items.filter(i => i.identified_name || i.identified_student_id).map(item => (
               <motion.div 
                 key={item.id}
-                whileHover={{ y: -5 }}
-                className="min-w-[300px] md:min-w-[400px] snap-start glass-panel rounded-[2.5rem] border-2 border-uni-500/30 overflow-hidden flex flex-col relative group"
+                whileHover={{ y: -12, scale: 1.02 }}
+                className="min-w-[320px] md:min-w-[420px] snap-start glass-panel rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group shadow-2xl shadow-uni-500/10"
               >
                 <div className="absolute top-6 left-6 z-10">
-                   <span className="px-4 py-2 bg-uni-500 text-white text-[10px] font-black rounded-full uppercase tracking-widest shadow-lg shadow-uni-500/50">
+                   <span className="px-5 py-2.5 bg-uni-500 text-white text-[11px] font-black rounded-full uppercase tracking-[0.2em] shadow-xl shadow-uni-500/40 flex items-center gap-2">
+                      <i className="fa-solid fa-id-card"></i>
                       Identity Found
                    </span>
                 </div>
                 
-                <div className="h-48 bg-bg-surface flex items-center justify-center text-7xl opacity-20 group-hover:opacity-30 transition-opacity">
+                <div className="h-56 bg-bg-surface flex items-center justify-center relative overflow-hidden group">
+                   <div className="absolute inset-0 bg-uni-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
                    {item.safe_photo_url ? (
-                     <img src={item.safe_photo_url} className="w-full h-full object-cover" alt="" />
+                     <img src={item.safe_photo_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
                    ) : (
-                     <i className="fa-solid fa-fingerprint text-text-muted"></i>
+                     <i className="fa-solid fa-fingerprint text-8xl text-text-muted opacity-20 group-hover:scale-125 transition-transform duration-700"></i>
                    )}
                 </div>
 
-                <div className="p-8 text-left space-y-6">
-                   <div className="space-y-2">
-                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Owner Identified as:</p>
-                      <h3 className="text-2xl font-black text-text-header uppercase tracking-tight line-clamp-1 italic">
+                <div className="p-10 text-left space-y-8 bg-gradient-to-b from-bg-surface to-bg-main/90">
+                   <div className="space-y-3">
+                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em]">Owner Identified as:</p>
+                      <h3 className="text-3xl font-black text-text-header uppercase tracking-tighter line-clamp-1 italic group-hover:text-uni-400 transition-colors">
                         {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
                       </h3>
                    </div>
 
-                   <p className="text-text-muted text-xs font-bold leading-relaxed line-clamp-2">
-                     A {item.item_name} recovered at {item.location_zone}.
+                   <p className="text-text-muted text-sm font-bold leading-[1.6] line-clamp-2 opacity-80 uppercase tracking-wide">
+                     A <span className="text-text-header">{item.item_name}</span> recovered at <span className="text-text-header">{item.location_zone}</span>.
                    </p>
 
-                   <div className="pt-6 border-t border-border-main/10 flex gap-3">
+                   <div className="pt-8 border-t border-white/5 flex gap-4">
                       <button 
                          onClick={() => navigate(`/submit-claim/${item.id}`)}
-                         className="flex-grow bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all"
+                         className="flex-grow bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-uni-500 hover:text-white transition-all shadow-lg hover:shadow-uni-500/30"
                       >
                          Claim this item
                       </button>
                       <button 
                          onClick={() => handleShare(item)}
-                         className="w-14 bg-bg-surface border border-border-main/50 rounded-xl flex items-center justify-center text-text-header hover:bg-bg-elevated transition-all"
+                         className="w-16 bg-bg-elevated border border-white/10 rounded-2xl flex items-center justify-center text-text-header hover:bg-uni-500 transition-all group/btn shadow-lg"
                          title="Notify Friend"
                       >
-                         <i className="fa-solid fa-paper-plane text-text-muted"></i>
+                         <i className="fa-solid fa-paper-plane text-text-muted group-hover/btn:text-white group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-all"></i>
                       </button>
                    </div>
                 </div>
@@ -240,29 +252,32 @@ const Landing = () => {
       )}
 
       {/* Hall of Integrity / Leaderboard Section */}
-      <section className="max-w-7xl mx-auto px-4 py-20 relative">
+      <section className="relative py-20">
+        <div className="max-w-7xl mx-auto px-4 relative">
         <div className="flex flex-col md:flex-row gap-16 items-center">
             <div className="md:w-1/2 space-y-8 text-left">
                 <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
                     <i className="fa-solid fa-trophy"></i>
                     Honor System Active
                 </div>
-                <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
-                <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest max-w-md">
+                <h2 className="text-4xl md:text-7xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
+                <p className="text-text-muted text-lg font-bold leading-relaxed uppercase tracking-widest max-w-lg opacity-80">
                     Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
                 </p>
                 
-                <div className="flex gap-2 p-1 bg-bg-surface/30 border border-border-main/20 rounded-2xl w-fit backdrop-blur-sm">
+                <div className="flex gap-3 p-1.5 bg-bg-surface/40 border border-white/5 rounded-2xl w-fit backdrop-blur-xl">
                     <button 
                         onClick={() => setLeaderboardType('students')}
-                        className={`px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-lg shadow-uni-500/20' : 'text-text-muted hover:text-text-header'}`}
+                        className={`px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-2xl shadow-uni-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
-                        Top Students
+                        <i className="fa-solid fa-user-graduate mr-2"></i>
+                        Top Keepers
                     </button>
                     <button 
                         onClick={() => setLeaderboardType('colleges')}
-                        className={`px-6 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-lg shadow-amber-500/20' : 'text-text-muted hover:text-text-header'}`}
+                        className={`px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-2xl shadow-amber-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
+                        <i className="fa-solid fa-building-columns mr-2"></i>
                         Top Colleges
                     </button>
                 </div>
@@ -355,42 +370,111 @@ const Landing = () => {
                                 <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">Collecting college stats...</div>
                             )
                         )}
-                    </div>
                 </div>
             </div>
         </div>
+        </div>
+        </div>
       </section>
 
-      {/* Registry Browser */}
-      <section id="browse" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-border-main/10 pb-8 md:pb-10">
-           <div className="text-left space-y-2">
-              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Public Registry</h2>
-              <p className="text-text-muted text-[10px] md:text-sm font-black uppercase tracking-widest">Live feed of items recovered on campus</p>
+      {/* Mission Protocol (How it Works) */}
+      <section className="relative py-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 relative">
+        <div className="text-center space-y-4 mb-20">
+           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[10px] font-black uppercase tracking-[0.3em]">
+              The Mission Protocol
+           </div>
+           <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic">How it <span className="gradient-text not-italic">Works</span></h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+           {[
+             { step: '01', title: 'REPORT IT', desc: 'Found something or lost something? Log it in our community registry with a few taps.', icon: 'fa-file-signature', color: 'bg-uni-500' },
+             { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-check', color: 'bg-accent-default' },
+             { step: '03', title: 'RECOVER IT', desc: 'Reconnect with your belongings at the designated security station or meetup point.', icon: 'fa-hand-holding-heart', color: 'bg-green-500' }
+           ].map((item, i) => (
+             <motion.div 
+               key={i}
+               whileHover={{ y: -10 }}
+               className="relative p-12 glass-panel rounded-[3rem] border border-white/5 text-center group"
+             >
+               <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-16 ${item.color} rounded-2xl flex items-center justify-center text-white text-2xl shadow-2xl shadow-current/30 z-10 transition-transform group-hover:scale-110 group-hover:rotate-6`}>
+                 <i className={`fa-solid ${item.icon}`}></i>
+               </div>
+               <div className="text-7xl font-black text-white/5 absolute top-10 left-1/2 -translate-x-1/2 select-none group-hover:text-white/10 transition-colors">{item.step}</div>
+               <div className="relative z-10 space-y-4 mt-8">
+                 <h4 className="text-2xl font-black text-text-header uppercase tracking-tight italic">{item.title}</h4>
+                 <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest opacity-80">{item.desc}</p>
+               </div>
+             </motion.div>
+           ))}
+        </div>
+        </div>
+      </section>
+      <section id="browse" className="py-12 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12 border-b border-white/5 pb-10 md:pb-12">
+           <div className="text-left space-y-3">
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Public Registry</h2>
+                <span className="px-3 py-1 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Live Feed</span>
+              </div>
+              <p className="text-text-muted text-xs md:text-sm font-bold uppercase tracking-[0.2em] opacity-80">Catalog of every item recovered across our campus zones</p>
            </div>
            
-           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-              <div className="relative w-full sm:w-80">
-                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
+           <div className="flex flex-col sm:flex-row gap-5 w-full md:w-auto">
+              <div className="relative w-full sm:w-80 group">
+                  <i className="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-uni-400 transition-colors"></i>
                   <input 
                     type="text" 
                     placeholder="Search by color, model, or area..." 
-                    className="input-field pl-12"
+                    className="input-field pl-14 py-4 rounded-2xl border-white/5 focus:border-uni-500/50 bg-bg-surface/50 backdrop-blur-xl"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
               </div>
-              <select 
-                className="input-field sm:w-64 font-black uppercase text-[10px] tracking-widest"
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">Every Category</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.label}</option>
-                ))}
-              </select>
            </div>
+        </div>
+
+        {/* Smart Discovery Chips */}
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right">
+           <button 
+             onClick={() => setSelectedCategory('all')}
+             className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border ${
+               selectedCategory === 'all' 
+               ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
+               : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
+             }`}
+           >
+             All Collections
+           </button>
+           
+           {CATEGORIES.map(cat => {
+             const count = items.filter(i => i.category === cat.id).length;
+             return (
+               <button 
+                 key={cat.id}
+                 onClick={() => setSelectedCategory(cat.id)}
+                 className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip ${
+                   selectedCategory === cat.id 
+                   ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
+                   : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
+                 }`}
+               >
+                 <span className={`${selectedCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
+                   {cat.emoji}
+                 </span>
+                 <span>{cat.label}</span>
+                 {count > 0 && (
+                   <span className={`px-2 py-0.5 rounded-md text-[8px] ${
+                     selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
+                   }`}>
+                     {count}
+                   </span>
+                 )}
+               </button>
+             );
+           })}
         </div>
 
         {itemsLoading ? (
@@ -400,11 +484,40 @@ const Landing = () => {
                 ))}
             </div>
         ) : filteredItems.length === 0 ? (
-            <div className="py-32 text-center glass-panel rounded-[3rem] border border-border-main/20">
-                <div className="text-5xl opacity-40 mb-6">📦</div>
-                <h3 className="text-xl font-black text-text-header uppercase tracking-tight mb-2">No matching items</h3>
-                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any results for your current filters.</p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
+            >
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-uni-500/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                
+                <div className="relative z-10 max-w-md mx-auto px-6">
+                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 animate-bounce transition-transform group-hover:scale-110">
+                    🔍
+                  </div>
+                  <h3 className="text-2xl font-black text-text-header uppercase tracking-tighter italic mb-4">No matching records found</h3>
+                  <p className="text-text-muted text-xs font-medium uppercase tracking-[0.15em] leading-relaxed mb-10 opacity-70">
+                    We've scanned our entire institutional ledger but couldn't find a match for your search parameters.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                    <button 
+                      onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                      className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto border border-white/5"
+                    >
+                      Reset Filters
+                    </button>
+                    <Link 
+                      to={user ? "/student/report-lost" : "/report-lost/guest"}
+                      className="px-8 py-4 bg-accent-default hover:bg-accent-active text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto shadow-lg shadow-accent-default/30"
+                    >
+                      Report it Missing
+                    </Link>
+                  </div>
+                </div>
+            </motion.div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredItems.map(item => (
@@ -417,38 +530,74 @@ const Landing = () => {
                 ))}
             </div>
         )}
+        </div>
       </section>
 
       {/* Lost Items Registry */}
-      <section id="lost-registry" className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-10 border-b border-border-main/10 pb-8 md:pb-10">
-           <div className="text-left space-y-2">
-              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Lost Reports</h2>
-              <p className="text-accent-default text-[10px] md:text-sm font-black uppercase tracking-widest">Help our community find their missing belongings</p>
+      <section id="lost-registry" className="py-12 md:py-20">
+        <div className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12 border-b border-white/5 pb-10 md:pb-12">
+           <div className="text-left space-y-3">
+              <div className="flex items-center gap-3">
+                <h2 className="text-3xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Lost Reports</h2>
+                <span className="px-3 py-1 bg-accent-default/10 border border-accent-default/20 text-accent-default text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Active Search</span>
+              </div>
+              <p className="text-text-muted text-xs md:text-sm font-bold uppercase tracking-[0.2em] opacity-80">Help our community find their missing belongings</p>
            </div>
            
-           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-              <div className="relative w-full sm:w-80">
-                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"></i>
+           <div className="flex flex-col sm:flex-row gap-5 w-full md:w-auto">
+              <div className="relative w-full sm:w-80 group">
+                  <i className="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-accent-default transition-colors"></i>
                   <input 
                     type="text" 
                     placeholder="Search by owner, item, description..." 
-                    className="input-field pl-12 focus:border-accent-default focus:ring-accent-glow/20"
+                    className="input-field pl-14 py-4 rounded-2xl border-white/5 focus:border-accent-default/50 bg-bg-surface/50 backdrop-blur-xl"
                     value={lostSearchQuery}
                     onChange={(e) => setLostSearchQuery(e.target.value)}
                   />
               </div>
-              <select 
-                className="input-field sm:w-64 font-black uppercase text-[10px] tracking-widest focus:border-accent-default focus:ring-accent-glow/20"
-                value={selectedLostCategory}
-                onChange={(e) => setSelectedLostCategory(e.target.value)}
-              >
-                <option value="all">Every Category</option>
-                {[...CATEGORIES].sort((a,b) => a.label.localeCompare(b.label)).map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.label}</option>
-                ))}
-              </select>
            </div>
+        </div>
+
+        {/* Smart Discovery Chips for Lost Reports */}
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right">
+           <button 
+             onClick={() => setSelectedLostCategory('all')}
+             className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border ${
+               selectedLostCategory === 'all' 
+               ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
+               : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
+             }`}
+           >
+             Every Report
+           </button>
+           
+           {[...CATEGORIES].sort((a,b) => a.label.localeCompare(b.label)).map(cat => {
+             const count = lostReports.filter(r => r.category === cat.id).length;
+             return (
+               <button 
+                 key={cat.id}
+                 onClick={() => setSelectedLostCategory(cat.id)}
+                 className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip ${
+                   selectedLostCategory === cat.id 
+                   ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
+                   : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
+                 }`}
+               >
+                 <span className={`${selectedLostCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
+                   {cat.emoji}
+                 </span>
+                 <span>{cat.label}</span>
+                 {count > 0 && (
+                   <span className={`px-2 py-0.5 rounded-md text-[8px] ${
+                     selectedLostCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
+                   }`}>
+                     {count}
+                   </span>
+                 )}
+               </button>
+             );
+           })}
         </div>
 
         {lostLoading ? (
@@ -458,11 +607,40 @@ const Landing = () => {
                 ))}
             </div>
         ) : filteredLostReports.length === 0 ? (
-            <div className="py-32 text-center glass-panel rounded-[3rem] border border-border-main/20">
-                <div className="text-5xl opacity-40 mb-6">🔍</div>
-                <h3 className="text-xl font-black text-text-header uppercase tracking-tight mb-2">No active lost reports</h3>
-                <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">We couldn't find any lost items matching your current filters.</p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
+            >
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-accent-default/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                
+                <div className="relative z-10 max-w-md mx-auto px-6">
+                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 animate-pulse transition-transform group-hover:scale-110">
+                    🤝
+                  </div>
+                  <h3 className="text-2xl font-black text-text-header uppercase tracking-tighter italic mb-4">No active lost reports</h3>
+                  <p className="text-text-muted text-xs font-medium uppercase tracking-[0.15em] leading-relaxed mb-10 opacity-70">
+                    All missing items seem to be accounted for! If you've found something that isn't listed here, you should report it.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                    <button 
+                      onClick={() => { setLostSearchQuery(''); setSelectedLostCategory('all'); }}
+                      className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto border border-white/5"
+                    >
+                      Clear Search
+                    </button>
+                    <Link 
+                      to={user ? "/student/report-found" : "/report-found/guest"}
+                      className="px-8 py-4 bg-uni-500 hover:bg-uni-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto shadow-lg shadow-uni-500/30"
+                    >
+                      Surrender Found Item
+                    </Link>
+                  </div>
+                </div>
+            </motion.div>
         ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredLostReports.map(report => (
@@ -474,6 +652,52 @@ const Landing = () => {
                 ))}
             </div>
         )}
+        </div>
+      </section>
+
+      {/* Community Voice Section */}
+      <section className="max-w-7xl mx-auto px-4">
+        <div className="flex flex-col md:flex-row items-center gap-12 p-10 md:p-16 glass-panel rounded-[3rem] border border-white/5 bg-gradient-to-br from-bg-surface to-bg-main relative overflow-hidden group">
+          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-uni-500/5 blur-[100px] group-hover:bg-uni-500/10 transition-colors"></div>
+          
+          <div className="md:w-3/5 space-y-6 text-left relative z-10">
+            <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
+              <i className="fa-solid fa-comments"></i>
+              Community Dialogue
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Found a bug? <br/><span className="gradient-text not-italic">Help us evolve.</span></h2>
+            <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest opacity-80 max-w-xl">
+              FindIT is built for the community, by the community. Your reports, feature requests, and UX suggestions go directly to the Super Admin team to ensure our sanctuary remains efficient and premium.
+            </p>
+            <div className="flex items-center gap-4 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-camera text-uni-400"></i>
+                Visual Snapshot Support
+              </div>
+              <div className="w-1 h-1 rounded-full bg-slate-700"></div>
+              <div className="flex items-center gap-2">
+                <i className="fa-solid fa-clock text-uni-400"></i>
+                Priority Review
+              </div>
+            </div>
+          </div>
+          
+          <div className="md:w-2/5 flex justify-end relative z-10 w-full">
+            <button 
+              onClick={() => {
+                // Smooth scroll to top and open modal is handled by Layout, 
+                // but we can trigger it by finding the button or just using state if we were in Layout.
+                // Since we are in Landing, we'll rely on the floating button being visible, 
+                // or we can use a custom event.
+                window.dispatchEvent(new CustomEvent('open-feedback'));
+              }}
+              className="w-full md:w-auto px-10 py-5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-uni-500/50 text-white font-black text-[10px] uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4 group/btn"
+            >
+              Submit Feedback
+              <i className="fa-solid fa-chevron-right text-[8px] group-hover/btn:translate-x-1 transition-transform"></i>
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Why Register? (Incentives Section) */}
