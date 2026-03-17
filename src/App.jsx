@@ -1,33 +1,44 @@
-import React from 'react';
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import Layout from './components/Layout';
 import { ProtectedRoute, GuestRoute } from './components/SafeRoute';
 
-// Pages
-import Landing from './pages/Landing';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import GuestReportItem from './pages/GuestReportItem';
-import GuestReportFound from './pages/GuestReportFound';
+// Lazy Loaded Pages
+const Landing = lazy(() => import('./pages/Landing'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const GuestReportItem = lazy(() => import('./pages/GuestReportItem'));
+const GuestReportFound = lazy(() => import('./pages/GuestReportFound'));
 
 // Student Pages
-import StudentDashboard from './pages/Student/StudentDashboard';
-import ReportFoundItem from './pages/Student/ReportFoundItem';
-import ReportLostItem from './pages/Student/ReportLostItem';
-import FoundPublicFeed from './pages/Student/FoundPublicFeed';
-import MatchResults from './pages/Student/MatchResults';
-import SubmitClaim from './pages/Student/SubmitClaim';
-import ClaimStatus from './pages/Student/ClaimStatus';
-import MyClaims from './pages/Student/MyClaims';
-import LostReportStatus from './pages/Student/LostReportStatus';
-import Profile from './pages/Student/Profile';
+const StudentDashboard = lazy(() => import('./pages/Student/StudentDashboard'));
+const ReportFoundItem = lazy(() => import('./pages/Student/ReportFoundItem'));
+const ReportLostItem = lazy(() => import('./pages/Student/ReportLostItem'));
+const FoundPublicFeed = lazy(() => import('./pages/Student/FoundPublicFeed'));
+const MatchResults = lazy(() => import('./pages/Student/MatchResults'));
+const SubmitClaim = lazy(() => import('./pages/Student/SubmitClaim'));
+const ClaimStatus = lazy(() => import('./pages/Student/ClaimStatus'));
+const MyClaims = lazy(() => import('./pages/Student/MyClaims'));
+const LostReportStatus = lazy(() => import('./pages/Student/LostReportStatus'));
+const Profile = lazy(() => import('./pages/Student/Profile'));
 
 // Admin Pages
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const SuperAdminDashboard = lazy(() => import('./pages/SuperAdmin/SuperAdminDashboard'));
+
+// Initial Loading Fallback
+const PageLoader = () => (
+    <div className="h-[60vh] w-full flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+            <div className="w-8 h-8 border-3 border-uni-500/20 border-t-uni-500 rounded-full animate-spin"></div>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Archiving Interface State...</p>
+        </div>
+    </div>
+);
 
 const AppContent = () => {
   const { user, token, loading } = useAuth();
@@ -46,69 +57,76 @@ const AppContent = () => {
 
   return (
     <Layout>
-      <Routes location={location}>
-        <Route path="/" element={<Landing />} />
-        <Route path="/report-lost-guest" element={<GuestReportItem />} />
-        <Route path="/report-found-guest" element={<GuestReportFound />} />
-        <Route path="/submit-claim/:itemId" element={<SubmitClaim />} />
-        <Route path="/claim-status/:trackingId" element={<ClaimStatus />} />
-        <Route path="/report/lost" element={<ReportLostItem />} />
-        <Route path="/lost-report-status/:trackingId" element={<LostReportStatus />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes location={location}>
+          <Route path="/" element={<Landing />} />
+          <Route path="/report-lost-guest" element={<GuestReportItem />} />
+          <Route path="/report-found-guest" element={<GuestReportFound />} />
+          <Route path="/submit-claim/:itemId" element={<SubmitClaim />} />
+          <Route path="/claim-status/:trackingId" element={<ClaimStatus />} />
+          <Route path="/report/lost" element={<ReportLostItem />} />
+          <Route path="/lost-report-status/:trackingId" element={<LostReportStatus />} />
 
-        <Route element={<GuestRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['student']} />}>
-            <Route path="/student" element={<StudentDashboard />} />
-            <Route path="/public-feed" element={<FoundPublicFeed />} />
-            <Route path="/my-claims" element={<MyClaims />} />
-            <Route path="/profile" element={<Profile />} />
+          <Route element={<GuestRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
 
-          {/* Verified-Only Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['student']} requireVerification={true} />}>
-            <Route path="/report/found" element={<ReportFoundItem />} />
-            <Route path="/lost/:reportId/matches" element={<MatchResults />} />
-          </Route>
+          <Route element={<ProtectedRoute />}>
+            {/* Student Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} />}>
+              <Route path="/student" element={<StudentDashboard />} />
+              <Route path="/public-feed" element={<FoundPublicFeed />} />
+              <Route path="/my-claims" element={<MyClaims />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
 
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/lost" element={<AdminDashboard />} />
-            <Route path="/admin/claims" element={<AdminDashboard />} />
-            <Route path="/admin/witnesses" element={<AdminDashboard />} />
-            <Route path="/admin/matches" element={<AdminDashboard />} />
-            <Route path="/admin/users" element={<AdminDashboard />} />
-            <Route path="/admin/analytics" element={<AdminDashboard />} />
-            <Route path="/admin/released" element={<AdminDashboard />} />
-            <Route path="/admin/profile/:userId" element={<Profile />} />
-          </Route>
+            {/* Verified-Only Student Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['student']} requireVerification={true} />}>
+              <Route path="/report/found" element={<ReportFoundItem />} />
+              <Route path="/lost/:reportId/matches" element={<MatchResults />} />
+            </Route>
 
-          {/* Super Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
-            <Route path="/super" element={<SuperAdminDashboard />} />
-            <Route path="/super/staff" element={<SuperAdminDashboard />} />
-            <Route path="/super/audit" element={<SuperAdminDashboard />} />
-            <Route path="/super/zones" element={<SuperAdminDashboard />} />
-            <Route path="/super/feedback" element={<SuperAdminDashboard />} />
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/lost" element={<AdminDashboard />} />
+              <Route path="/admin/claims" element={<AdminDashboard />} />
+              <Route path="/admin/witnesses" element={<AdminDashboard />} />
+              <Route path="/admin/matches" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<AdminDashboard />} />
+              <Route path="/admin/analytics" element={<AdminDashboard />} />
+              <Route path="/admin/released" element={<AdminDashboard />} />
+              <Route path="/admin/profile/:userId" element={<Profile />} />
+            </Route>
+
+            {/* Super Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+              <Route path="/super" element={<SuperAdminDashboard />} />
+              <Route path="/super/staff" element={<SuperAdminDashboard />} />
+              <Route path="/super/audit" element={<SuperAdminDashboard />} />
+              <Route path="/super/zones" element={<SuperAdminDashboard />} />
+              <Route path="/super/feedback" element={<SuperAdminDashboard />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </Layout>
   );
 };
 
+
 function App() {
+  const isMobile = window.innerWidth < 1024;
+
   return (
     <Router>
       <ThemeProvider>
         <AuthProvider>
           <MasterDataProvider>
-            <AppContent />
+            <MotionConfig transition={isMobile ? { duration: 0 } : undefined}>
+              <AppContent />
+            </MotionConfig>
           </MasterDataProvider>
         </AuthProvider>
       </ThemeProvider>

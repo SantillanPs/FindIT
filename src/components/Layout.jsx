@@ -261,7 +261,7 @@ const Layout = ({ children }) => {
                 <div className="flex items-center gap-3 md:gap-6">
                   <ThemeToggle />
                   <Link to="/login" className="text-slate-500 hover:text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-4 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20">Register</Link>
+                  <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-3 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-wide md:tracking-widest transition-all shadow-lg shadow-uni-500/20 whitespace-nowrap">Register</Link>
                 </div>
               </div>
             </div>

@@ -123,14 +123,14 @@ const Landing = () => {
   });
 
   return (
-    <div className="space-y-24 pb-20">
+    <div className="space-y-16 md:space-y-24 pb-20">
       {/* Hero Section */}
-      <section className="relative pt-20 pb-32 md:pt-32 md:pb-48 overflow-hidden">
+      <section className="relative pt-12 pb-20 md:pt-32 md:pb-48 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-4 relative z-10">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full glass-panel border border-white/10 text-uni-400 text-[10px] font-black uppercase tracking-[0.3em] mb-8 md:mb-12 shadow-xl shadow-uni-500/5"
+            className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border border-white/10 text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-6 md:mb-12 shadow-xl shadow-uni-500/5"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-default opacity-75"></span>
@@ -142,7 +142,7 @@ const Landing = () => {
           <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="font-display text-5xl sm:text-7xl md:text-9xl font-black text-white mb-6 md:mb-10 tracking-tighter leading-[0.9] italic"
+            className="font-display text-4xl sm:text-7xl md:text-9xl font-black text-white mb-4 md:mb-10 tracking-tighter leading-[0.9] italic px-2"
           >
             Lost it? <br />
             <span className="gradient-text not-italic">Find it.</span>
@@ -152,27 +152,27 @@ const Landing = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-2xl text-text-muted max-w-2xl mx-auto mb-12 md:mb-20 leading-relaxed font-medium px-4 opacity-80"
+            className="text-sm md:text-2xl text-text-muted max-w-2xl mx-auto mb-8 md:mb-20 leading-relaxed font-medium px-8 md:px-4 opacity-80"
           >
-            The official community registry for lost and found items. Report what you lost, list what you've found, and reconnect with your belongings.
+            Official community registry for lost and found items. Report what you lost, list what you've found, and reconnect.
           </motion.p>
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row justify-center gap-6 px-4"
+            className="flex flex-col sm:flex-row justify-center gap-3 md:gap-6 px-8"
           >
             <button 
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
-                className="group relative px-10 md:px-14 py-5 md:py-6 rounded-full font-black text-xs uppercase tracking-[0.4em] transition-all overflow-hidden"
+                className="group relative px-6 md:px-14 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] transition-all overflow-hidden"
             >
                 <div className="absolute inset-0 bg-accent-default transition-transform group-hover:scale-110"></div>
-                <span className="relative text-white">Report a lost item</span>
+                <span className="relative text-white">Report lost item</span>
             </button>
             <button 
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
-                className="group relative px-10 md:px-14 py-5 md:py-6 rounded-full font-black text-xs uppercase tracking-[0.4em] transition-all overflow-hidden border-2 border-uni-500/50"
+                className="group relative px-6 md:px-14 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] transition-all overflow-hidden border-2 border-uni-500/50"
             >
                 <div className="absolute inset-0 bg-uni-500/5 group-hover:bg-uni-500 transition-all"></div>
                 <span className="relative text-uni-400 group-hover:text-white transition-colors">I found something</span>
@@ -183,26 +183,26 @@ const Landing = () => {
 
       {/* Reunion Alerts (Identified Items) */}
       {items.some(i => i.identified_name || i.identified_student_id) && (
-        <section className="max-w-7xl mx-auto px-4 space-y-10">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
-              <i className="fa-solid fa-bullhorn animate-bounce"></i>
+        <section className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
+            <div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-uni-500 flex items-center justify-center text-white text-xl md:text-3xl shadow-2xl shadow-uni-500/30">
+              <i className="fa-solid fa-bell"></i>
             </div>
             <div className="text-left">
-              <h2 className="text-2xl md:text-3xl font-black text-text-header uppercase tracking-tight">Reunion Alerts</h2>
-              <p className="text-text-muted text-[10px] md:text-sm font-black uppercase tracking-widest">Items found with visible names or IDs</p>
+              <h2 className="text-xl md:text-3xl font-black text-text-header uppercase tracking-tight">Reunion Alerts</h2>
+              <p className="text-text-muted text-[8px] md:text-sm font-black uppercase tracking-widest leading-none">Identified Items</p>
             </div>
           </div>
 
-          <div className="flex overflow-x-auto gap-6 pb-6 no-scrollbar snap-x">
+          <div className="flex overflow-x-auto gap-4 md:gap-6 pb-6 no-scrollbar snap-x px-6 md:px-0">
             {items.filter(i => i.identified_name || i.identified_student_id).map(item => (
               <motion.div 
                 key={item.id}
                 whileHover={{ y: -12, scale: 1.02 }}
-                className="min-w-[320px] md:min-w-[420px] snap-start glass-panel rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group shadow-2xl shadow-uni-500/10"
+                className="min-w-[280px] md:min-w-[420px] snap-start glass-panel rounded-[2rem] md:rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group shadow-2xl shadow-uni-500/10"
               >
-                <div className="absolute top-6 left-6 z-10">
-                   <span className="px-5 py-2.5 bg-uni-500 text-white text-[11px] font-black rounded-full uppercase tracking-[0.2em] shadow-xl shadow-uni-500/40 flex items-center gap-2">
+                <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
+                   <span className="px-4 py-2 md:px-5 md:py-2.5 bg-uni-500 text-white text-[9px] md:text-[11px] font-black rounded-full uppercase tracking-[0.2em] shadow-xl shadow-uni-500/40 flex items-center gap-2">
                       <i className="fa-solid fa-id-card"></i>
                       Identity Found
                    </span>
@@ -217,28 +217,28 @@ const Landing = () => {
                    )}
                 </div>
 
-                <div className="p-10 text-left space-y-8 bg-gradient-to-b from-bg-surface to-bg-main/90">
-                   <div className="space-y-3">
-                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em]">Owner Identified as:</p>
-                      <h3 className="text-3xl font-black text-text-header uppercase tracking-tighter line-clamp-1 italic group-hover:text-uni-400 transition-colors">
+                <div className="p-6 md:p-10 text-left space-y-6 md:space-y-8 bg-gradient-to-b from-bg-surface to-bg-main/90">
+                   <div className="space-y-2 md:space-y-3">
+                      <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Owner Identified:</p>
+                      <h3 className="text-xl md:text-3xl font-black text-text-header uppercase tracking-tighter line-clamp-1 italic group-hover:text-uni-400 transition-colors">
                         {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
                       </h3>
                    </div>
 
-                   <p className="text-text-muted text-sm font-bold leading-[1.6] line-clamp-2 opacity-80 uppercase tracking-wide">
+                   <p className="text-text-muted text-[11px] md:text-sm font-bold leading-relaxed line-clamp-2 opacity-80 uppercase tracking-wide">
                      A <span className="text-text-header">{item.item_name}</span> recovered at <span className="text-text-header">{item.location_zone}</span>.
                    </p>
 
-                   <div className="pt-8 border-t border-white/5 flex gap-4">
+                   <div className="pt-6 md:pt-8 border-t border-white/5 flex gap-3 md:gap-4">
                       <button 
                          onClick={() => navigate(`/submit-claim/${item.id}`)}
-                         className="flex-grow bg-white text-black py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] hover:bg-uni-500 hover:text-white transition-all shadow-lg hover:shadow-uni-500/30"
+                         className="flex-grow bg-white text-black py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] hover:bg-uni-500 hover:text-white transition-all shadow-lg hover:shadow-uni-500/30"
                       >
-                         Claim this item
+                         Claim item
                       </button>
                       <button 
                          onClick={() => handleShare(item)}
-                         className="w-16 bg-bg-elevated border border-white/10 rounded-2xl flex items-center justify-center text-text-header hover:bg-uni-500 transition-all group/btn shadow-lg"
+                         className="w-12 h-12 md:w-16 md:h-16 bg-bg-elevated border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-text-header hover:bg-uni-500 transition-all group/btn shadow-lg"
                          title="Notify Friend"
                       >
                          <i className="fa-solid fa-paper-plane text-text-muted group-hover/btn:text-white group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-all"></i>
@@ -252,30 +252,30 @@ const Landing = () => {
       )}
 
       {/* Hall of Integrity / Leaderboard Section */}
-      <section className="relative py-20">
-        <div className="max-w-7xl mx-auto px-4 relative">
-        <div className="flex flex-col md:flex-row gap-16 items-center">
+      <section className="relative py-20 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-12 mb-12 md:mb-20">
             <div className="md:w-1/2 space-y-8 text-left">
                 <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black uppercase tracking-widest">
                     <i className="fa-solid fa-trophy"></i>
                     Honor System Active
                 </div>
-                <h2 className="text-4xl md:text-7xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text">Integrity</span>"</h2>
-                <p className="text-text-muted text-lg font-bold leading-relaxed uppercase tracking-widest max-w-lg opacity-80">
+                <h2 className="text-3xl md:text-7xl font-black text-text-header uppercase tracking-tighter leading-none italic">"The Hall of <br/><span className="gradient-text not-italic">Integrity</span>"</h2>
+                <p className="text-text-muted text-base md:text-lg font-bold leading-relaxed uppercase tracking-widest max-w-lg opacity-80 px-1 md:px-0">
                     Returning lost items isn't just a service—it's a signal of character. Every item returned strengthens our community. Your email is your badge of honor.
                 </p>
                 
-                <div className="flex gap-3 p-1.5 bg-bg-surface/40 border border-white/5 rounded-2xl w-fit backdrop-blur-xl">
+                <div className="flex flex-col sm:flex-row gap-3 p-1.5 bg-bg-surface/40 border border-white/5 rounded-2xl w-full sm:w-fit backdrop-blur-xl">
                     <button 
                         onClick={() => setLeaderboardType('students')}
-                        className={`px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-2xl shadow-uni-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
+                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-2xl shadow-uni-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
                         <i className="fa-solid fa-user-graduate mr-2"></i>
                         Top Keepers
                     </button>
                     <button 
                         onClick={() => setLeaderboardType('colleges')}
-                        className={`px-8 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-2xl shadow-amber-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
+                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-2xl shadow-amber-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
                         <i className="fa-solid fa-building-columns mr-2"></i>
                         Top Colleges
@@ -300,7 +300,7 @@ const Landing = () => {
             <div className="md:w-1/2 w-full relative">
                 <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl z-20">Top List</div>
                 
-                <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40 backdrop-blur-md">
+                <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40">
                     <div className="space-y-1">
                         {leaderboardLoading ? (
                             <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">Calculating honor list...</div>
@@ -378,57 +378,56 @@ const Landing = () => {
       </section>
 
       {/* Mission Protocol (How it Works) */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 relative">
-        <div className="text-center space-y-4 mb-20">
-           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[10px] font-black uppercase tracking-[0.3em]">
-              The Mission Protocol
-           </div>
-           <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic">How it <span className="gradient-text not-italic">Works</span></h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-           {[
-             { step: '01', title: 'REPORT IT', desc: 'Found something or lost something? Log it in our community registry with a few taps.', icon: 'fa-file-signature', color: 'bg-uni-500' },
-             { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-check', color: 'bg-accent-default' },
-             { step: '03', title: 'RECOVER IT', desc: 'Reconnect with your belongings at the designated security station or meetup point.', icon: 'fa-hand-holding-heart', color: 'bg-green-500' }
-           ].map((item, i) => (
-             <motion.div 
-               key={i}
-               whileHover={{ y: -10 }}
-               className="relative p-12 glass-panel rounded-[3rem] border border-white/5 text-center group"
-             >
-               <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-16 h-16 ${item.color} rounded-2xl flex items-center justify-center text-white text-2xl shadow-2xl shadow-current/30 z-10 transition-transform group-hover:scale-110 group-hover:rotate-6`}>
-                 <i className={`fa-solid ${item.icon}`}></i>
+      <section className="relative py-12 md:py-32 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
+            <div className="text-center space-y-4 mb-12 md:mb-24">
+               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
+                  The Mission Protocol
                </div>
-               <div className="text-7xl font-black text-white/5 absolute top-10 left-1/2 -translate-x-1/2 select-none group-hover:text-white/10 transition-colors">{item.step}</div>
-               <div className="relative z-10 space-y-4 mt-8">
-                 <h4 className="text-2xl font-black text-text-header uppercase tracking-tight italic">{item.title}</h4>
-                 <p className="text-text-muted text-sm font-bold leading-relaxed uppercase tracking-widest opacity-80">{item.desc}</p>
-               </div>
-             </motion.div>
-           ))}
-        </div>
+               <h2 className="text-3xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic">How it <span className="gradient-text not-italic">Works</span></h2>
+            </div>
+    
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
+               {[
+                 { step: '01', title: 'REPORT IT', desc: 'Found something or lost something? Log it in our community registry with a few taps.', icon: 'fa-file-signature', color: 'bg-uni-500' },
+                 { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-check', color: 'bg-accent-default' },
+                 { step: '03', title: 'RECOVER IT', desc: 'Reconnect with your belongings at the designated security station or meetup point.', icon: 'fa-hand-holding-heart', color: 'bg-green-500' }
+               ].map((item, i) => (
+                 <motion.div 
+                   key={i}
+                   className="relative p-8 md:p-12 glass-panel rounded-[2rem] md:rounded-[3rem] border border-white/5 text-center group"
+                 >
+                   <div className={`absolute -top-5 md:-top-6 left-1/2 -translate-x-1/2 w-12 h-12 md:w-16 md:h-16 ${item.color} rounded-xl md:rounded-2xl flex items-center justify-center text-white text-lg md:text-2xl shadow-2xl z-10`}>
+                     <i className={`fa-solid ${item.icon}`}></i>
+                   </div>
+                   <div className="text-5xl md:text-7xl font-black text-white/5 absolute top-8 md:top-10 left-1/2 -translate-x-1/2 select-none">{item.step}</div>
+                   <div className="relative z-10 space-y-3 md:space-y-4 mt-6 md:mt-8">
+                     <h4 className="text-lg md:text-2xl font-black text-text-header uppercase tracking-tight italic">{item.title}</h4>
+                     <p className="text-text-muted text-[10px] md:text-sm font-bold leading-relaxed uppercase tracking-widest opacity-80">{item.desc}</p>
+                   </div>
+                 </motion.div>
+               ))}
+            </div>
         </div>
       </section>
       <section id="browse" className="py-12 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12 border-b border-white/5 pb-10 md:pb-12">
-           <div className="text-left space-y-3">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-8 md:space-y-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-12 border-b border-white/5 pb-8 md:pb-12">
+           <div className="text-left space-y-2 md:space-y-3">
               <div className="flex items-center gap-3">
-                <h2 className="text-3xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Public Registry</h2>
-                <span className="px-3 py-1 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Live Feed</span>
+                <h2 className="text-2xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Public Registry</h2>
+                <span className="px-2 py-0.5 md:px-3 md:py-1 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[8px] md:text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Live Feed</span>
               </div>
-              <p className="text-text-muted text-xs md:text-sm font-bold uppercase tracking-[0.2em] opacity-80">Catalog of every item recovered across our campus zones</p>
+              <p className="text-text-muted text-[10px] md:text-sm font-bold uppercase tracking-[0.2em] opacity-80 leading-relaxed">Catalog of every item recovered across campus</p>
            </div>
            
-           <div className="flex flex-col sm:flex-row gap-5 w-full md:w-auto">
-              <div className="relative w-full sm:w-80 group">
-                  <i className="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-uni-400 transition-colors"></i>
+           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto px-1 md:px-0">
+              <div className="relative w-full md:w-80 group">
+                  <i className="fa-solid fa-search absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-text-muted text-xs md:text-base group-focus-within:text-uni-400 transition-colors"></i>
                   <input 
                     type="text" 
-                    placeholder="Search by color, model, or area..." 
-                    className="input-field pl-14 py-4 rounded-2xl border-white/5 focus:border-uni-500/50 bg-bg-surface/50 backdrop-blur-xl"
+                    placeholder="Search records..." 
+                    className="input-field pl-11 md:pl-14 py-3 md:py-4 rounded-xl md:rounded-2xl border-white/5 focus:border-uni-500/50 bg-bg-surface/50 text-xs md:text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -437,50 +436,50 @@ const Landing = () => {
         </div>
 
         {/* Smart Discovery Chips */}
-        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right">
+        <div className="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right px-1 md:px-0">
            <button 
              onClick={() => setSelectedCategory('all')}
-             className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border ${
+             className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border ${
                selectedCategory === 'all' 
                ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
                : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
              }`}
            >
-             All Collections
+             All
            </button>
            
            {CATEGORIES.map(cat => {
-             const count = items.filter(i => i.category === cat.id).length;
-             return (
-               <button 
-                 key={cat.id}
-                 onClick={() => setSelectedCategory(cat.id)}
-                 className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip ${
-                   selectedCategory === cat.id 
-                   ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
-                   : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
-                 }`}
-               >
-                 <span className={`${selectedCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
-                   {cat.emoji}
-                 </span>
-                 <span>{cat.label}</span>
-                 {count > 0 && (
-                   <span className={`px-2 py-0.5 rounded-md text-[8px] ${
-                     selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
-                   }`}>
-                     {count}
-                   </span>
-                 )}
-               </button>
-             );
+              const count = items.filter(i => i.category === cat.id).length;
+              return (
+                <button 
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border flex items-center gap-1.5 md:gap-3 group/chip ${
+                    selectedCategory === cat.id 
+                    ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
+                    : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
+                  }`}
+                >
+                  <span className={`${selectedCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
+                    {cat.emoji}
+                  </span>
+                  <span className="max-w-[80px] md:max-w-none truncate">{cat.label}</span>
+                  {count > 0 && (
+                    <span className={`px-1 py-0.5 rounded-md text-[7px] md:text-[8px] ${
+                      selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
            })}
         </div>
 
         {itemsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {Array(6).fill(0).map((_, i) => (
-                    <div key={i} className="h-[400px] bg-white/5 animate-pulse rounded-[2.5rem]"></div>
+                    <div key={i} className="h-[280px] md:h-[400px] bg-white/5 animate-pulse rounded-2xl md:rounded-[2.5rem]"></div>
                 ))}
             </div>
         ) : filteredItems.length === 0 ? (
@@ -519,7 +518,7 @@ const Landing = () => {
                 </div>
             </motion.div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
                 {filteredItems.map(item => (
                     <ItemCard 
                         key={item.id}
@@ -551,7 +550,7 @@ const Landing = () => {
                   <input 
                     type="text" 
                     placeholder="Search by owner, item, description..." 
-                    className="input-field pl-14 py-4 rounded-2xl border-white/5 focus:border-accent-default/50 bg-bg-surface/50 backdrop-blur-xl"
+                    className="input-field pl-14 py-4 rounded-2xl border-white/5 focus:border-accent-default/50 bg-bg-surface/50"
                     value={lostSearchQuery}
                     onChange={(e) => setLostSearchQuery(e.target.value)}
                   />
@@ -767,7 +766,7 @@ const Landing = () => {
             exit={{ y: 50, opacity: 0 }}
             className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]"
           >
-            <div className="glass-panel border border-border-main/20 bg-bg-surface/90 backdrop-blur-md text-text-header px-8 py-4 rounded-full shadow-2xl flex items-center space-x-4">
+            <div className="glass-panel border border-border-main/20 bg-bg-surface/90 text-text-header px-8 py-4 rounded-full shadow-2xl flex items-center space-x-4">
               <i className="fa-solid fa-check-circle text-green-500"></i>
               <p className="text-[10px] font-black uppercase tracking-widest">{toast.message}</p>
             </div>

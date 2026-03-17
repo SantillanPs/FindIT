@@ -138,8 +138,13 @@
 
   .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
+  }
+
+  @media (min-width: 1024px) {
+    .glass-panel {
+      backdrop-filter: blur(12px);
+    }
   }
 
   .glass-panel-hover:hover {
@@ -198,7 +203,13 @@
   }
 
   .app-card {
-    @apply bg-bg-main/40 backdrop-blur-md border border-border-main rounded-xl transition-all;
+    @apply bg-bg-main/40 border border-border-main rounded-xl transition-all;
+  }
+
+  @media (min-width: 1024px) {
+    .app-card {
+      @apply backdrop-blur-md;
+    }
   }
 
   .input-field {
@@ -228,12 +239,20 @@
     @apply min-h-[100dvh] relative overflow-x-hidden;
     background-color: var(--bg-main);
     background-image: 
-        radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.05) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
+        radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
+        radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
     transition: background-color 0.3s ease;
+  }
+
+  @media (min-width: 1024px) {
+    .app-bg-main {
+      background-image: 
+          radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
+          radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
+          radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+          radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.05) 0px, transparent 50%),
+          radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
+    }
   }
 
   /* Utilities */
@@ -251,19 +270,38 @@
 }
   /* Ambient Glow Effects as global utilities */
   .ambient-uni {
-    @apply absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-uni-500/10 rounded-full blur-[120px] animate-float;
-    pointer-events: none;
+    @apply absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-uni-500/10 rounded-full pointer-events-none;
+    filter: blur(80px);
+    will-change: transform;
   }
 
   .ambient-accent {
-    @apply absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-default/10 rounded-full blur-[120px] animate-float;
-    pointer-events: none;
-    animation-delay: 3s;
+    @apply absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-default/10 rounded-full pointer-events-none;
+    filter: blur(80px);
+    will-change: transform;
+  }
+
+  @media (min-width: 1024px) {
+    .ambient-uni {
+      @apply blur-[120px] animate-float;
+      filter: blur(120px);
+    }
+    .ambient-accent {
+      @apply blur-[120px] animate-float;
+      filter: blur(120px);
+      animation-delay: 3s;
+    }
   }
 
 
   .glass-header {
-    @apply bg-brand-background/90 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border;
+    @apply bg-brand-background/95 sticky top-0 z-50 border-b border-brand-border;
+  }
+
+  @media (min-width: 1024px) {
+    .glass-header {
+      @apply backdrop-blur-md bg-brand-background/90;
+    }
   }
 
   /* Custom Scrollbar Utility */
@@ -280,6 +318,24 @@
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.4);
+  }
+
+  /* GLOBAL MOBILE ANIMATION KILL SWITCH */
+  @media (max-width: 1023px) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+    
+    .animate-float, .animate-glow, .animate-pulse-slow, .animate-shimmer {
+      animation: none !important;
+    }
+
+    [class*="animate-"] {
+      animation: none !important;
+    }
   }
 }
 

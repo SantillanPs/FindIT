@@ -25,7 +25,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
       viewport={{ once: true }}
       whileHover={{ y: -12, transition: { duration: 0.3 } }}
       onClick={onClick}
-      className="group relative glass-panel rounded-[2.5rem] border border-white/10 hover:border-uni-500/40 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-2xl shadow-black/20 bg-bg-surface/30 backdrop-blur-2xl"
+      className="group relative glass-panel rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 hover:border-uni-500/40 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-2xl shadow-black/20 bg-bg-surface/30"
     >
       {/* Premium Visual Anchor Area */}
       <div className="relative aspect-[4/5] overflow-hidden bg-bg-elevated/20 group-hover:bg-bg-elevated/40 transition-colors shrink-0">
@@ -51,62 +51,62 @@ const ItemCard = ({ item, onClick, onShare }) => {
         )}
         
         {/* Superior Status System */}
-        <div className="absolute top-6 left-6 flex flex-col gap-2 z-20">
-            <div className="flex items-center gap-2.5 bg-black/40 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/10 shadow-lg">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)] animate-pulse"></div>
-                <span className="text-[10px] font-black text-white uppercase tracking-widest">In Custody</span>
+        <div className="absolute top-3 left-3 md:top-6 md:left-6 flex flex-col gap-2 z-20">
+            <div className="flex items-center gap-1.5 md:gap-2.5 bg-black/40 px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-white/10 shadow-lg">
+                <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)] animate-pulse"></div>
+                <span className="text-[7px] md:text-[10px] font-black text-white uppercase tracking-widest">In Custody</span>
             </div>
             
             {item.is_recent && (
               <motion.div 
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                className="flex items-center gap-2.5 bg-uni-500/30 backdrop-blur-xl px-4 py-2 rounded-xl border border-uni-500/40 shadow-xl"
+                className="flex items-center gap-1.5 md:gap-2.5 bg-uni-500/30 px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-uni-500/40 shadow-xl"
               >
-                  <div className="w-1.5 h-1.5 rounded-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"></div>
-                  <span className="text-[10px] font-black text-uni-100 uppercase tracking-widest">New Intel</span>
+                  <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"></div>
+                  <span className="text-[7px] md:text-[10px] font-black text-uni-100 uppercase tracking-widest">New</span>
               </motion.div>
             )}
         </div>
 
         {/* Archival Tracking ID */}
-        <div className="absolute top-6 right-6 z-20">
-            <span className="text-[9px] font-black text-white/50 uppercase tracking-widest bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/5">
+        <div className="absolute top-3 right-3 md:top-6 md:right-6 z-20">
+            <span className="text-[7px] md:text-[9px] font-black text-white/50 uppercase tracking-widest bg-black/30 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-white/5">
                 Ref: #{item.id.toString().padStart(4, '0')}
             </span>
         </div>
       </div>
 
       {/* Scannable Data Section */}
-      <div className="p-8 text-left relative flex-grow flex flex-col">
+      <div className="p-4 md:p-8 text-left relative flex-grow flex flex-col">
           {/* Subtle Grid Pattern Overlay */}
           <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none"></div>
 
-          <div className="space-y-6 relative z-10 flex-grow">
-              <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em]">{item.category || 'Legacy Item'}</span>
+          <div className="space-y-3 md:space-y-6 relative z-10 flex-grow">
+              <div className="space-y-1.5 md:space-y-2">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-[8px] md:text-[10px] font-black text-uni-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">{item.category || 'Legacy Item'}</span>
                     <div className="h-px flex-grow bg-white/5"></div>
                   </div>
-                  <h3 className="text-2xl font-black text-text-header uppercase tracking-tighter leading-none group-hover:text-uni-400 transition-colors line-clamp-1 italic">
+                  <h3 className="text-sm md:text-2xl font-black text-text-header uppercase tracking-tighter leading-tight md:leading-none group-hover:text-uni-400 transition-colors line-clamp-1 italic">
                     {item.item_name}
                   </h3>
               </div>
 
               {/* Discovery Context */}
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                  <div className="space-y-1">
-                      <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Located at</p>
-                      <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-map-pin text-[10px] text-uni-500"></i>
-                          <p className="text-[11px] font-medium text-text-main truncate tracking-wide">{item.location_zone}</p>
+              <div className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-4 pt-1">
+                  <div className="space-y-0.5 md:space-y-1">
+                      <p className="text-[7px] md:text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">at</p>
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                          <i className="fa-solid fa-map-pin text-[8px] md:text-[10px] text-uni-500"></i>
+                          <p className="text-[9px] md:text-[11px] font-medium text-text-main truncate tracking-wide">{item.location_zone}</p>
                       </div>
                   </div>
-                  <div className="space-y-1">
-                      <p className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Archived On</p>
-                      <div className="flex items-center gap-2">
-                          <i className="fa-solid fa-calendar text-[10px] text-uni-500"></i>
-                          <p className="text-[11px] font-medium text-text-main truncate tracking-wide">{formattedDate}</p>
+                  <div className="space-y-0.5 md:space-y-1">
+                      <p className="text-[7px] md:text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">on</p>
+                      <div className="flex items-center gap-1.5 md:gap-2">
+                          <i className="fa-solid fa-calendar text-[8px] md:text-[10px] text-uni-500"></i>
+                          <p className="text-[9px] md:text-[11px] font-medium text-text-main truncate tracking-wide">{formattedDate}</p>
                       </div>
                   </div>
               </div>
@@ -120,26 +120,26 @@ const ItemCard = ({ item, onClick, onShare }) => {
               </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 relative z-10">
+          <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-white/5 flex gap-2 md:gap-4 relative z-10">
               <button 
                 onClick={(e) => {
                     e.stopPropagation();
                     onClick();
                 }}
-                className="flex-grow bg-transparent text-white border border-white/20 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300 active:scale-95 flex items-center justify-center gap-3 group/btn"
+                className="flex-grow bg-transparent text-white border border-white/20 py-2.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.3em] hover:bg-white hover:text-black transition-all duration-300 active:scale-95 flex items-center justify-center gap-1.5 md:gap-3 group/btn"
               >
-                <span>Process Claim</span>
-                <i className="fa-solid fa-shield-halved text-[11px] opacity-40 group-hover/btn:opacity-100 transition-opacity"></i>
+                <span>Process</span>
+                <i className="fa-solid fa-shield-halved text-[9px] md:text-[11px] opacity-40 group-hover/btn:opacity-100 transition-opacity"></i>
               </button>
               <button 
                 onClick={(e) => {
                     e.stopPropagation();
                     onShare(item);
                 }}
-                className="w-14 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-text-main hover:bg-white/10 hover:border-white/20 transition-all shadow-lg group/share"
+                className="w-10 h-10 md:w-14 md:h-14 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-text-main hover:bg-white/10 hover:border-white/20 transition-all shadow-lg group/share shrink-0"
                 title="Share Archival Record"
               >
-                <i className="fa-solid fa-share-nodes text-text-muted group-hover/share:text-uni-400 transition-colors"></i>
+                <i className="fa-solid fa-share-nodes text-[10px] md:text-base text-text-muted group-hover/share:text-uni-400 transition-colors"></i>
               </button>
           </div>
       </div>
