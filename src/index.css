@@ -224,7 +224,7 @@
   }
 
   .btn-gold {
-    @apply bg-accent-default hover:bg-accent-light text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg shadow-lg shadow-accent-glow/20 transition-all transform hover:-translate-y-0.5;
+    @apply bg-transparent border-2 border-accent-default hover:bg-accent-default text-accent-default hover:text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg shadow-lg shadow-accent-glow/20 transition-all transform hover:-translate-y-0.5;
   }
 
   .btn-secondary {

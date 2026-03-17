@@ -7,6 +7,7 @@ import LostReportCard from '../components/LostReportCard';
 import WitnessReportModal from '../components/WitnessReportModal';
 import { useAuth } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
+import ItemDetailsPeek from '../components/ItemDetailsPeek';
 
 const Landing = () => {
   const { categories: CATEGORIES } = useMasterData();
@@ -19,9 +20,12 @@ const Landing = () => {
   const [lostSearchQuery, setLostSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLostCategory, setSelectedLostCategory] = useState('all');
+  const [activeItem, setActiveItem] = useState(null);
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [visibleItems, setVisibleItems] = useState(6);
+  const [visibleLostReports, setVisibleLostReports] = useState(6);
   const [leaderboardType, setLeaderboardType] = useState('students'); // 'students' or 'colleges'
   const [topColleges, setTopColleges] = useState([]);
   const [topStudents, setTopStudents] = useState([]);
@@ -34,12 +38,36 @@ const Landing = () => {
     fetchPublicFeed();
     fetchLostReports();
     fetchLeaderboardData();
+    handleSharedItem();
   }, []);
+
+  const handleSharedItem = () => {
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get('item');
+    if (itemId) {
+      // We will handle opening the modal after items are loaded
+      setSharedId(itemId);
+    }
+  };
 
   const fetchPublicFeed = async () => {
     try {
       const response = await apiClient.get('/found/public');
-      setItems(response.data);
+      const data = response.data.map(item => {
+        const foundDate = new Date(item.found_time);
+        const now = new Date();
+        const isRecent = (now - foundDate) < (48 * 60 * 60 * 1000);
+        return { ...item, is_recent: isRecent };
+      });
+      setItems(data);
+      
+      // Auto-open if shared
+      const params = new URLSearchParams(window.location.search);
+      const sId = params.get('item');
+      if (sId) {
+        const sharedItem = data.find(i => i.id.toString() === sId);
+        if (sharedItem) setActiveItem(sharedItem);
+      }
     } catch (error) {
       console.error('Failed to fetch public feed', error);
     } finally {
@@ -50,7 +78,13 @@ const Landing = () => {
   const fetchLostReports = async () => {
     try {
       const resp = await apiClient.get('/lost/public');
-      setLostReports(resp.data);
+      const data = resp.data.map(report => {
+        const lostDate = new Date(report.lost_time);
+        const now = new Date();
+        const isRecent = (now - lostDate) < (48 * 60 * 60 * 1000);
+        return { ...report, is_recent: isRecent };
+      });
+      setLostReports(data);
     } catch (err) {
       console.error("Failed to fetch lost reports", err);
     } finally {
@@ -105,27 +139,24 @@ const Landing = () => {
       const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
-    .map(item => {
-      const foundDate = new Date(item.found_time);
-      const now = new Date();
-      const isRecent = (now - foundDate) < (24 * 60 * 60 * 1000);
-      return { ...item, is_recent: isRecent };
-    });
+    .sort((a, b) => new Date(b.found_time) - new Date(a.found_time));
 
-  const filteredLostReports = lostReports.filter(report => {
-    const matchesSearch = (report.description?.toLowerCase().includes(lostSearchQuery.toLowerCase()) || 
-                          report.item_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
-                          report.category?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
-                          report.location_zone?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
-                          report.owner_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()));
-    const matchesCategory = selectedLostCategory === 'all' || report.category === selectedLostCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredLostReports = lostReports
+    .filter(report => {
+      const matchesSearch = (report.description?.toLowerCase().includes(lostSearchQuery.toLowerCase()) || 
+                            report.item_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                            report.category?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                            report.location_zone?.toLowerCase().includes(lostSearchQuery.toLowerCase()) ||
+                            report.owner_name?.toLowerCase().includes(lostSearchQuery.toLowerCase()));
+      const matchesCategory = selectedLostCategory === 'all' || report.category === selectedLostCategory;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => new Date(b.lost_time) - new Date(a.lost_time));
 
   return (
-    <div className="space-y-16 md:space-y-24 pb-20">
+    <div className="space-y-10 md:space-y-16 pb-20">
       {/* Hero Section */}
-      <section className="relative pt-12 pb-20 md:pt-32 md:pb-48 overflow-hidden">
+      <section className="relative pt-8 pb-12 md:pt-24 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-4 relative z-10">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
@@ -165,10 +196,10 @@ const Landing = () => {
           >
             <button 
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
-                className="group relative px-6 md:px-14 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] transition-all overflow-hidden"
+                className="group relative px-6 md:px-14 py-4 md:py-6 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.4em] transition-all overflow-hidden border-2 border-accent-default/50 hover:border-accent-default"
             >
-                <div className="absolute inset-0 bg-accent-default transition-transform group-hover:scale-110"></div>
-                <span className="relative text-white">Report lost item</span>
+                <div className="absolute inset-0 bg-accent-default/5 group-hover:bg-accent-default transition-all duration-300"></div>
+                <span className="relative text-accent-default group-hover:text-white transition-colors">Report lost item</span>
             </button>
             <button 
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
@@ -208,26 +239,26 @@ const Landing = () => {
                    </span>
                 </div>
                 
-                <div className="h-56 bg-bg-surface flex items-center justify-center relative overflow-hidden group">
-                   <div className="absolute inset-0 bg-uni-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
-                   {item.safe_photo_url ? (
-                     <img src={item.safe_photo_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
-                   ) : (
-                     <i className="fa-solid fa-fingerprint text-8xl text-text-muted opacity-20 group-hover:scale-125 transition-transform duration-700"></i>
-                   )}
-                </div>
+                 <div className="aspect-[4/3] md:h-56 bg-bg-surface flex items-center justify-center relative overflow-hidden group">
+                    <div className="absolute inset-0 bg-uni-500/10 opacity-0 group-hover:opacity-100 transition-opacity z-10"></div>
+                    {item.safe_photo_url ? (
+                      <img src={item.safe_photo_url} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                    ) : (
+                      <i className="fa-solid fa-fingerprint text-8xl text-text-muted opacity-20 group-hover:scale-125 transition-transform duration-700"></i>
+                    )}
+                 </div>
 
-                <div className="p-6 md:p-10 text-left space-y-6 md:space-y-8 bg-gradient-to-b from-bg-surface to-bg-main/90">
-                   <div className="space-y-2 md:space-y-3">
-                      <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Owner Identified:</p>
-                      <h3 className="text-xl md:text-3xl font-black text-text-header uppercase tracking-tighter line-clamp-1 italic group-hover:text-uni-400 transition-colors">
-                        {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
-                      </h3>
-                   </div>
-
-                   <p className="text-text-muted text-[11px] md:text-sm font-bold leading-relaxed line-clamp-2 opacity-80 uppercase tracking-wide">
-                     A <span className="text-text-header">{item.item_name}</span> recovered at <span className="text-text-header">{item.location_zone}</span>.
-                   </p>
+                 <div className="p-6 md:p-10 text-left space-y-4 md:space-y-8 bg-gradient-to-b from-bg-surface to-bg-main/90 flex-grow">
+                    <div className="space-y-1 md:space-y-3">
+                       <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em]">Owner Identified:</p>
+                       <h3 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter line-clamp-2 italic group-hover:text-uni-400 transition-colors">
+                         {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
+                       </h3>
+                    </div>
+ 
+                    <p className="text-slate-200 text-[12px] md:text-sm font-bold leading-relaxed line-clamp-2 uppercase tracking-wide">
+                      A <span className="text-white font-black underline decoration-uni-500/50">{item.item_name}</span> recovered at <span className="text-white font-black">{item.location_zone}</span>.
+                    </p>
 
                    <div className="pt-6 md:pt-8 border-t border-white/5 flex gap-3 md:gap-4">
                       <button 
@@ -252,7 +283,7 @@ const Landing = () => {
       )}
 
       {/* Hall of Integrity / Leaderboard Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative py-12 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 md:gap-12 mb-12 md:mb-20">
             <div className="md:w-1/2 space-y-8 text-left">
@@ -378,7 +409,7 @@ const Landing = () => {
       </section>
 
       {/* Mission Protocol (How it Works) */}
-      <section className="relative py-12 md:py-32 overflow-hidden">
+      <section className="relative py-8 md:py-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
             <div className="text-center space-y-4 mb-12 md:mb-24">
                <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
@@ -390,7 +421,7 @@ const Landing = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
                {[
                  { step: '01', title: 'REPORT IT', desc: 'Found something or lost something? Log it in our community registry with a few taps.', icon: 'fa-file-signature', color: 'bg-uni-500' },
-                 { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-check', color: 'bg-accent-default' },
+                 { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-halved', color: 'bg-accent-default' },
                  { step: '03', title: 'RECOVER IT', desc: 'Reconnect with your belongings at the designated security station or meetup point.', icon: 'fa-hand-holding-heart', color: 'bg-green-500' }
                ].map((item, i) => (
                  <motion.div 
@@ -410,7 +441,7 @@ const Landing = () => {
             </div>
         </div>
       </section>
-      <section id="browse" className="py-12 md:py-20">
+      <section id="browse" className="py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-8 md:space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-12 border-b border-white/5 pb-8 md:pb-12">
            <div className="text-left space-y-2 md:space-y-3">
@@ -439,7 +470,7 @@ const Landing = () => {
         <div className="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right px-1 md:px-0">
            <button 
              onClick={() => setSelectedCategory('all')}
-             className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border ${
+             className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border relative z-20 ${
                selectedCategory === 'all' 
                ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
                : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
@@ -454,18 +485,18 @@ const Landing = () => {
                 <button 
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border flex items-center gap-1.5 md:gap-3 group/chip ${
+                  className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border flex items-center gap-1.5 md:gap-3 group/chip relative z-20 ${
                     selectedCategory === cat.id 
                     ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
                     : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
                   }`}
                 >
-                  <span className={`${selectedCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
+                  <span className={`${selectedCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity pointer-events-none`}>
                     {cat.emoji}
                   </span>
-                  <span className="max-w-[80px] md:max-w-none truncate">{cat.label}</span>
+                  <span className="max-w-[80px] md:max-w-none truncate pointer-events-none">{cat.label}</span>
                   {count > 0 && (
-                    <span className={`px-1 py-0.5 rounded-md text-[7px] md:text-[8px] ${
+                    <span className={`px-1 py-0.5 rounded-md text-[7px] md:text-[8px] pointer-events-none ${
                       selectedCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
                     }`}>
                       {count}
@@ -518,22 +549,48 @@ const Landing = () => {
                 </div>
             </motion.div>
         ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {filteredItems.map(item => (
-                    <ItemCard 
-                        key={item.id}
-                        item={item}
-                        onClick={() => navigate(`/submit-claim/${item.id}`)}
-                        onShare={handleShare}
-                    />
-                ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
+                  {filteredItems.slice(0, visibleItems).map(item => (
+                      <ItemCard 
+                          key={item.id}
+                          item={item}
+                          onClick={() => setActiveItem(item)}
+                          onShare={handleShare}
+                      />
+                  ))}
+              </div>
+              
+              {filteredItems.length > visibleItems && (
+                <div className="mt-12 flex justify-center">
+                  <button 
+                    onClick={() => setVisibleItems(prev => prev + 6)}
+                    className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5 flex items-center gap-3 group"
+                  >
+                    Show More Discoveries
+                    <i className="fa-solid fa-chevron-down opacity-50 group-hover:translate-y-1 transition-transform"></i>
+                  </button>
+                </div>
+              )}
+            </>
         )}
         </div>
       </section>
 
+      {/* Item Details Detail Peek */}
+      <AnimatePresence>
+        {activeItem && (
+          <ItemDetailsPeek 
+            item={activeItem} 
+            isOpen={!!activeItem}
+            onClose={() => setActiveItem(null)}
+            onShare={handleShare}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Lost Items Registry */}
-      <section id="lost-registry" className="py-12 md:py-20">
+      <section id="lost-registry" className="py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-4 space-y-8 md:space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 md:gap-12 border-b border-white/5 pb-10 md:pb-12">
            <div className="text-left space-y-3">
@@ -559,10 +616,10 @@ const Landing = () => {
         </div>
 
         {/* Smart Discovery Chips for Lost Reports */}
-        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right">
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-2 mask-fade-right relative z-10">
            <button 
              onClick={() => setSelectedLostCategory('all')}
-             className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border ${
+             className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border relative z-20 ${
                selectedLostCategory === 'all' 
                ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
                : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
@@ -571,24 +628,24 @@ const Landing = () => {
              Every Report
            </button>
            
-           {[...CATEGORIES].sort((a,b) => a.label.localeCompare(b.label)).map(cat => {
+           {[...CATEGORIES].sort((a,b) => (a.label || '').localeCompare(b.label || '')).map(cat => {
              const count = lostReports.filter(r => r.category === cat.id).length;
              return (
                <button 
                  key={cat.id}
                  onClick={() => setSelectedLostCategory(cat.id)}
-                 className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip ${
+                 className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip relative z-20 ${
                    selectedLostCategory === cat.id 
                    ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
                    : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
                  }`}
                >
-                 <span className={`${selectedLostCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity`}>
+                 <span className={`${selectedLostCategory === cat.id ? 'opacity-100' : 'opacity-60 group-hover/chip:opacity-100'} transition-opacity pointer-events-none`}>
                    {cat.emoji}
                  </span>
-                 <span>{cat.label}</span>
+                 <span className="pointer-events-none">{cat.label}</span>
                  {count > 0 && (
-                   <span className={`px-2 py-0.5 rounded-md text-[8px] ${
+                   <span className={`px-2 py-0.5 rounded-md text-[8px] pointer-events-none ${
                      selectedLostCategory === cat.id ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-500'
                    }`}>
                      {count}
@@ -641,21 +698,35 @@ const Landing = () => {
                 </div>
             </motion.div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredLostReports.map(report => (
-                    <LostReportCard 
-                        key={report.id}
-                        report={report}
-                        onWitness={handleWitness}
-                    />
-                ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {filteredLostReports.slice(0, visibleLostReports).map(report => (
+                      <LostReportCard 
+                          key={report.id}
+                          report={report}
+                          onWitness={handleWitness}
+                      />
+                  ))}
+              </div>
+
+              {filteredLostReports.length > visibleLostReports && (
+                <div className="mt-12 flex justify-center">
+                  <button 
+                    onClick={() => setVisibleLostReports(prev => prev + 6)}
+                    className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all border border-white/5 flex items-center gap-3 group"
+                  >
+                    View More Reports
+                    <i className="fa-solid fa-chevron-down opacity-50 group-hover:translate-y-1 transition-transform"></i>
+                  </button>
+                </div>
+              )}
+            </>
         )}
         </div>
       </section>
 
       {/* Community Voice Section */}
-      <section className="max-w-7xl mx-auto px-4">
+      {/* <section className="max-w-7xl mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center gap-12 p-10 md:p-16 glass-panel rounded-[3rem] border border-white/5 bg-gradient-to-br from-bg-surface to-bg-main relative overflow-hidden group">
           <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-uni-500/5 blur-[100px] group-hover:bg-uni-500/10 transition-colors"></div>
           
@@ -697,10 +768,10 @@ const Landing = () => {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Why Register? (Incentives Section) */}
-      <section className="max-w-7xl mx-auto px-4 py-20">
+      <section className="max-w-7xl mx-auto px-4 py-12">
            <div className="glass-panel p-12 md:p-20 rounded-[4rem] border-2 border-uni-500/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/10 blur-[100px] -z-10"></div>
               

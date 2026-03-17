@@ -28,7 +28,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
       className="group relative glass-panel rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 hover:border-uni-500/40 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-2xl shadow-black/20 bg-bg-surface/30"
     >
       {/* Premium Visual Anchor Area */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-bg-elevated/20 group-hover:bg-bg-elevated/40 transition-colors shrink-0">
+      <div className="relative aspect-square overflow-hidden bg-bg-elevated/20 group-hover:bg-bg-elevated/40 transition-colors shrink-0">
         {item.safe_photo_url ? (
           <div className="relative w-full h-full">
             <img 
@@ -78,45 +78,38 @@ const ItemCard = ({ item, onClick, onShare }) => {
       </div>
 
       {/* Scannable Data Section */}
-      <div className="p-4 md:p-8 text-left relative flex-grow flex flex-col">
+      <div className="p-4 md:p-6 text-left relative flex-grow flex flex-col bg-bg-surface/40">
           {/* Subtle Grid Pattern Overlay */}
-          <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none"></div>
+          <div className="absolute inset-0 bg-grid opacity-[0.05] pointer-events-none"></div>
 
-          <div className="space-y-3 md:space-y-6 relative z-10 flex-grow">
-              <div className="space-y-1.5 md:space-y-2">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <span className="text-[8px] md:text-[10px] font-black text-uni-400 uppercase tracking-[0.2em] md:tracking-[0.3em]">{item.category || 'Legacy Item'}</span>
-                    <div className="h-px flex-grow bg-white/5"></div>
-                  </div>
-                  <h3 className="text-sm md:text-2xl font-black text-text-header uppercase tracking-tighter leading-tight md:leading-none group-hover:text-uni-400 transition-colors line-clamp-1 italic">
+          <div className="space-y-2 md:space-y-4 relative z-10 flex-grow">
+                  <h3 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter leading-tight italic group-hover:text-uni-400 transition-colors line-clamp-2">
                     {item.item_name}
                   </h3>
-              </div>
 
               {/* Discovery Context */}
-              <div className="flex flex-col md:grid md:grid-cols-2 gap-2 md:gap-4 pt-1">
+              <div className="flex flex-col md:grid md:grid-cols-2 gap-3 md:gap-4 py-2 border-y border-white/5">
                   <div className="space-y-0.5 md:space-y-1">
-                      <p className="text-[7px] md:text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">at</p>
-                      <div className="flex items-center gap-1.5 md:gap-2">
-                          <i className="fa-solid fa-map-pin text-[8px] md:text-[10px] text-uni-500"></i>
-                          <p className="text-[9px] md:text-[11px] font-medium text-text-main truncate tracking-wide">{item.location_zone}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Archival Spot</p>
+                      <div className="flex items-center gap-2">
+                          <i className="fa-solid fa-map-pin text-[10px] text-uni-500"></i>
+                          <p className="text-[11px] md:text-sm font-bold text-slate-100 truncate">{item.location_zone}</p>
                       </div>
                   </div>
                   <div className="space-y-0.5 md:space-y-1">
-                      <p className="text-[7px] md:text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">on</p>
-                      <div className="flex items-center gap-1.5 md:gap-2">
-                          <i className="fa-solid fa-calendar text-[8px] md:text-[10px] text-uni-500"></i>
-                          <p className="text-[9px] md:text-[11px] font-medium text-text-main truncate tracking-wide">{formattedDate}</p>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Entry Date</p>
+                      <div className="flex items-center gap-2">
+                          <i className="fa-solid fa-calendar text-[10px] text-uni-500"></i>
+                          <p className="text-[11px] md:text-sm font-bold text-slate-100 truncate">{formattedDate}</p>
                       </div>
                   </div>
               </div>
 
               {/* Official Description */}
-              <div className="relative group/desc">
-                <p className="text-text-muted text-[12px] font-medium leading-relaxed line-clamp-3 tracking-wide opacity-70 group-hover:opacity-100 transition-opacity">
+              <div className="relative group/desc bg-black/20 p-3 rounded-xl border border-white/5">
+                <p className="text-slate-200 text-[12px] font-medium leading-relaxed line-clamp-2 tracking-wide">
                   {item.description}
                 </p>
-                <div className="absolute -left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-uni-500/0 via-uni-500/40 to-uni-500/0 rounded-full scale-y-75 group-hover/desc:scale-y-100 transition-transform"></div>
               </div>
           </div>
 
