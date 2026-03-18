@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import html2canvas from 'html2canvas';
+import { domToPng } from 'modern-screenshot';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
@@ -26,27 +26,33 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
   const handleCapture = async () => {
     setIsCapturing(true);
+    
+    // Hide the modal root temporarily for a clean capture
+    const modalElement = document.querySelector('.feedback-modal-root')?.parentElement;
+    if (modalElement) modalElement.style.visibility = 'hidden';
+
     try {
-      // Capture the entire visual state
-      const canvas = await html2canvas(document.body, {
-        useCORS: true,
-        allowTaint: true,
-        logging: false,
-        scale: 1,
-        ignoreElements: (element) => element.classList?.contains('feedback-modal-root')
+      // modern-screenshot uses SVG foreignObject, which is a lot more accurate than html2canvas
+      const dataUrl = await domToPng(document.body, {
+        features: {
+          // Disable filters if they cause issues, but generally it's better to keep them
+        },
+        scale: window.devicePixelRatio || 1,
+        backgroundColor: '#0f172a',
       });
       
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const file = new File([blob], 'screenshot.png', { type: 'image/png' });
-          setScreenshot(file);
-          setPreviewUrl(URL.createObjectURL(file));
-        }
-        setIsCapturing(false);
-      }, 'image/png', 0.8);
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' });
+      
+      setScreenshot(file);
+      setPreviewUrl(dataUrl);
+
+      if (modalElement) modalElement.style.visibility = 'visible';
     } catch (error) {
       console.error('Screenshot failed:', error);
-      alert('Screenshot capture failed. You might need to manually upload an image instead.');
+      if (modalElement) modalElement.style.visibility = 'visible';
+      alert(`Screenshot failed: ${error.message}. Please try manual upload.`);
+    } finally {
       setIsCapturing(false);
     }
   };
