@@ -13,8 +13,8 @@ import logging
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 import database
-import database
 from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges, feedbacks, assets, init
+import seed_metadata
 
 # Ensure uploads directory exists (wrap in try-except for read-only environments like Vercel)
 try:
@@ -51,6 +51,10 @@ async def setup_logging_timestamps():
     # Also update the root uvicorn logger if needed
     for handler in logging.getLogger("uvicorn").handlers:
         handler.setFormatter(default_formatter)
+
+    # Auto-seed metadata if empty
+    print(f"[{datetime.utcnow()}] INFO: Checking database for initial metadata...")
+    seed_metadata.seed_metadata()
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):

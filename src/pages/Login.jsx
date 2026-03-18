@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
@@ -42,9 +41,7 @@ const Login = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"></div>
       <div className="absolute top-1/4 left-1/3 w-32 md:w-64 h-32 md:h-64 bg-accent-default/10 blur-[60px] md:blur-[100px] rounded-full pointer-events-none"></div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+      <div 
         className="glass-panel w-full max-w-md p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 relative overflow-hidden z-10 my-8"
       >
         <div className="text-left mb-8 md:mb-10">
@@ -59,18 +56,13 @@ const Login = () => {
           </p>
         </div>
 
-        <AnimatePresence mode="wait">
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+        {error && (
+            <div 
               className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center rounded-2xl"
             >
                {error}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2 text-left">
@@ -128,7 +120,7 @@ const Login = () => {
             <Link to="/register" className="text-uni-400 hover:text-white transition-colors font-bold mt-3 inline-block">Create Private Account</Link>
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

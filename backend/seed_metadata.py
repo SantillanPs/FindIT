@@ -76,7 +76,6 @@ def seed_metadata():
         
         # Seed Colleges
         for col in COLLEGES:
-            existing = db.query(database.MasterCollege).filter_by(id=cat['id']).first() # Wait, typo here in my thought, fixing it in code
             existing = db.query(database.MasterCollege).filter_by(id=col['id']).first()
             if not existing:
                 db.add(database.MasterCollege(**col))

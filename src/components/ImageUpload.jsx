@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import apiClient from '../api/client';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const ImageUpload = ({ onUploadSuccess, value }) => {
   const [uploading, setUploading] = useState(false);
@@ -69,26 +68,17 @@ const ImageUpload = ({ onUploadSuccess, value }) => {
           preview ? 'border-uni-500/50' : 'border-white/10'
         } ${uploading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
       >
-        <AnimatePresence mode="wait">
-          {preview ? (
-            <motion.div 
-              key="preview"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+        {preview ? (
+            <div 
               className="absolute inset-0"
             >
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                  <p className="text-[10px] font-black text-white uppercase tracking-widest">Click to Change Image</p>
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div 
-              key="placeholder"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            <div 
               className="flex flex-col items-center justify-center space-y-4"
             >
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-500">
@@ -98,9 +88,8 @@ const ImageUpload = ({ onUploadSuccess, value }) => {
                 <p className="text-xs font-black text-white uppercase tracking-widest">Click to Upload Photo</p>
                 <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">JPEG, PNG, or WebP</p>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
         {uploading && (
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center space-y-4 z-10">
