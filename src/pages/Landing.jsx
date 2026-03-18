@@ -10,7 +10,7 @@ import { useMasterData } from '../context/MasterDataContext';
 import ItemDetailsPeek from '../components/ItemDetailsPeek';
 
 const Landing = () => {
-  const { categories: CATEGORIES } = useMasterData();
+  const { categories: CATEGORIES, leaderboard, loading: masterLoading } = useMasterData();
   const [items, setItems] = useState([]);
   const [lostReports, setLostReports] = useState([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -27,9 +27,6 @@ const Landing = () => {
   const [visibleItems, setVisibleItems] = useState(6);
   const [visibleLostReports, setVisibleLostReports] = useState(6);
   const [leaderboardType, setLeaderboardType] = useState('students'); // 'students' or 'colleges'
-  const [topColleges, setTopColleges] = useState([]);
-  const [topStudents, setTopStudents] = useState([]);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -37,7 +34,6 @@ const Landing = () => {
   useEffect(() => {
     fetchPublicFeed();
     fetchLostReports();
-    fetchLeaderboardData();
     handleSharedItem();
   }, []);
 
@@ -92,21 +88,6 @@ const Landing = () => {
     }
   };
 
-  const fetchLeaderboardData = async () => {
-    setLeaderboardLoading(true);
-    try {
-      const [collegesResp, studentsResp] = await Promise.all([
-        apiClient.get('/admin/leaderboard/departments'),
-        apiClient.get('/auth/leaderboard')
-      ]);
-      setTopColleges(collegesResp.data);
-      setTopStudents(studentsResp.data);
-    } catch (err) {
-      console.error("Failed to fetch leaderboard data", err);
-    } finally {
-      setLeaderboardLoading(false);
-    }
-  };
 
   const handleShare = async (item) => {
     const shareUrl = `${window.location.origin}/?item=${item.id}`;
@@ -158,40 +139,29 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative pt-8 pb-12 md:pt-24 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-4 relative z-10">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div 
             className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border border-white/10 text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-6 md:mb-12 shadow-xl shadow-uni-500/5"
           >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-default opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-default"></span>
             </span>
             Official Lost & Found Portal
-          </motion.div>
+          </div>
           
-          <motion.h1 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+          <h1 
             className="font-display text-4xl sm:text-7xl md:text-9xl font-black text-white mb-4 md:mb-10 tracking-tighter leading-[0.9] italic px-2"
           >
             Lost it? <br />
             <span className="gradient-text not-italic">Find it.</span>
-          </motion.h1>
+          </h1>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+          <p 
             className="text-sm md:text-2xl text-text-muted max-w-2xl mx-auto mb-8 md:mb-20 leading-relaxed font-medium px-8 md:px-4 opacity-80"
           >
             Official community registry for lost and found items. Report what you lost, list what you've found, and reconnect.
-          </motion.p>
+          </p>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+          <div 
             className="flex flex-col sm:flex-row justify-center gap-3 md:gap-6 px-8"
           >
             <button 
@@ -208,7 +178,25 @@ const Landing = () => {
                 <div className="absolute inset-0 bg-uni-500/5 group-hover:bg-uni-500 transition-all"></div>
                 <span className="relative text-uni-400 group-hover:text-white transition-colors">I found something</span>
             </button>
-          </motion.div>
+          </div>
+
+          {/* Quick Guide Row */}
+          <div className="max-w-xl mx-auto mt-12 md:mt-16 grid grid-cols-3 gap-2 md:gap-4 border-t border-white/5 pt-8 md:pt-12">
+            {[
+              { step: '01', title: 'Report', icon: 'fa-file-signature', color: 'text-uni-400' },
+              { step: '02', title: 'Verify', icon: 'fa-shield-halved', color: 'text-accent-default' },
+              { step: '03', title: 'Recover', icon: 'fa-hand-holding-heart', color: 'text-green-500' }
+            ].map((item, i) => (
+              <div key={i} className="flex flex-col items-center gap-2 group">
+                <div className={`w-8 h-8 md:w-11 md:h-11 rounded-lg md:rounded-xl bg-white/5 flex items-center justify-center ${item.color} text-[12px] md:text-lg group-hover:scale-110 transition-transform shadow-lg`}>
+                  <i className={`fa-solid ${item.icon}`}></i>
+                </div>
+                <div className="text-center">
+                  <p className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.15em] text-white opacity-60 group-hover:opacity-100 transition-opacity">{item.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -227,9 +215,8 @@ const Landing = () => {
 
           <div className="flex overflow-x-auto gap-4 md:gap-6 pb-6 no-scrollbar snap-x px-6 md:px-0">
             {items.filter(i => i.identified_name || i.identified_student_id).map(item => (
-              <motion.div 
+              <div 
                 key={item.id}
-                whileHover={{ y: -12, scale: 1.02 }}
                 className="min-w-[280px] md:min-w-[420px] snap-start glass-panel rounded-[2rem] md:rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group shadow-2xl shadow-uni-500/10"
               >
                 <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
@@ -275,10 +262,10 @@ const Landing = () => {
                          <i className="fa-solid fa-paper-plane text-text-muted group-hover/btn:text-white group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-all"></i>
                       </button>
                    </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                 </div>
+               </div>
+             ))}
+           </div>
         </section>
       )}
 
@@ -333,11 +320,9 @@ const Landing = () => {
                 
                 <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40">
                     <div className="space-y-1">
-                        {leaderboardLoading ? (
-                            <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">Calculating honor list...</div>
-                        ) : leaderboardType === 'students' ? (
-                            topStudents.length > 0 ? (
-                                topStudents.slice(0, 5).map((student, i) => (
+                        {!masterLoading && leaderboardType === 'students' ? (
+                            leaderboard.students.length > 0 ? (
+                                leaderboard.students.slice(0, 5).map((student, i) => (
                                     <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
@@ -361,7 +346,7 @@ const Landing = () => {
                                             <div className="text-right">
                                                 <p className="text-[11px] font-black text-uni-400 tracking-[0.2em]">{student.integrity_points} IP</p>
                                                 <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                    <div className="h-full bg-uni-400" style={{ width: `${(student.integrity_points / (topStudents[0]?.integrity_points || 1)) * 100}%` }}></div>
+                                                    <div className="h-full bg-uni-400" style={{ width: `${(student.integrity_points / (leaderboard.students[0]?.integrity_points || 1)) * 100}%` }}></div>
                                                 </div>
                                             </div>
                                             <span className="text-xl group-hover:scale-110 transition-transform">
@@ -374,8 +359,8 @@ const Landing = () => {
                                 <div className="py-20 text-center opacity-40 italic text-xs font-black uppercase tracking-widest">The Hall is currently empty...</div>
                             )
                         ) : (
-                            topColleges.length > 0 ? (
-                                topColleges.slice(0, 5).map((col, i) => (
+                            leaderboard.departments.length > 0 ? (
+                                leaderboard.departments.slice(0, 5).map((col, i) => (
                                     <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
                                         <div className="flex items-center gap-4">
                                             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black bg-bg-elevated/50 text-text-muted border border-border-main/10 group-hover:border-amber-500/30 transition-all">
@@ -390,7 +375,7 @@ const Landing = () => {
                                             <div className="text-right">
                                                 <p className="text-[11px] font-black text-amber-500 tracking-[0.2em]">{col.total_points} IP</p>
                                                 <div className="w-12 h-1 bg-bg-elevated/50 rounded-full overflow-hidden mt-1 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                    <div className="h-full bg-amber-500" style={{ width: `${(col.total_points / (topColleges[0]?.total_points || 1)) * 100}%` }}></div>
+                                                    <div className="h-full bg-amber-500" style={{ width: `${(col.total_points / (leaderboard.departments[0]?.total_points || 1)) * 100}%` }}></div>
                                                 </div>
                                             </div>
                                             <span className="text-xl group-hover:scale-110 transition-transform">🏛️</span>
@@ -408,46 +393,49 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Mission Protocol (How it Works) */}
-      <section className="relative py-8 md:py-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-            <div className="text-center space-y-4 mb-12 md:mb-24">
-               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-text-muted text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
-                  The Mission Protocol
-               </div>
-               <h2 className="text-3xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic">How it <span className="gradient-text not-italic">Works</span></h2>
+      {/* Member Perks Strip */}
+      {!user && (
+        <section className="max-w-7xl mx-auto px-6 md:px-12 py-6 md:py-10">
+          <div className="glass-panel p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-white/5 bg-gradient-to-r from-bg-surface to-bg-main flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 flex-grow">
+              <div className="text-center md:text-left space-y-1">
+                <h3 className="text-sm md:text-xl font-black text-white uppercase tracking-widest italic leading-none">Member <span className="gradient-text not-italic">Perks</span></h3>
+                <p className="text-[7px] md:text-[9px] font-black text-text-muted uppercase tracking-[0.2em]">Why register an account?</p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 md:gap-14 w-full">
+                {[
+                  { icon: '🛡️', title: 'Safety Net', desc: 'Auto-notifications' },
+                  { icon: '🏆', title: 'Honor Points', desc: 'Lead the college' },
+                  { icon: '📜', title: 'Merit Badge', desc: 'Physical certificate' }
+                ].map((perk, i) => (
+                  <div key={i} className="flex items-center gap-4 group">
+                    <span className="text-xl md:text-3xl group-hover:scale-125 transition-transform drop-shadow-lg">{perk.icon}</span>
+                    <div className="text-left">
+                      <p className="text-[10px] md:text-[12px] font-black text-text-header uppercase tracking-tight leading-none group-hover:text-uni-400 transition-colors">{perk.title}</p>
+                      <p className="text-[7px] md:text-[9px] font-bold text-text-muted uppercase tracking-widest mt-1.5 opacity-60">{perk.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-    
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12">
-               {[
-                 { step: '01', title: 'REPORT IT', desc: 'Found something or lost something? Log it in our community registry with a few taps.', icon: 'fa-file-signature', color: 'bg-uni-500' },
-                 { step: '02', title: 'VERIFY IT', desc: 'Our system matches reports automatically. Human moderators ensure every claim is legitimate.', icon: 'fa-shield-halved', color: 'bg-accent-default' },
-                 { step: '03', title: 'RECOVER IT', desc: 'Reconnect with your belongings at the designated security station or meetup point.', icon: 'fa-hand-holding-heart', color: 'bg-green-500' }
-               ].map((item, i) => (
-                 <motion.div 
-                   key={i}
-                   className="relative p-8 md:p-12 glass-panel rounded-[2rem] md:rounded-[3rem] border border-white/5 text-center group"
-                 >
-                   <div className={`absolute -top-5 md:-top-6 left-1/2 -translate-x-1/2 w-12 h-12 md:w-16 md:h-16 ${item.color} rounded-xl md:rounded-2xl flex items-center justify-center text-white text-lg md:text-2xl shadow-2xl z-10`}>
-                     <i className={`fa-solid ${item.icon}`}></i>
-                   </div>
-                   <div className="text-5xl md:text-7xl font-black text-white/5 absolute top-8 md:top-10 left-1/2 -translate-x-1/2 select-none">{item.step}</div>
-                   <div className="relative z-10 space-y-3 md:space-y-4 mt-6 md:mt-8">
-                     <h4 className="text-lg md:text-2xl font-black text-text-header uppercase tracking-tight italic">{item.title}</h4>
-                     <p className="text-text-muted text-[10px] md:text-sm font-bold leading-relaxed uppercase tracking-widest opacity-80">{item.desc}</p>
-                   </div>
-                 </motion.div>
-               ))}
-            </div>
-        </div>
-      </section>
+            
+            <button 
+              onClick={() => navigate('/register')}
+              className="shrink-0 bg-uni-600 text-white px-10 py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl shadow-uni-500/30"
+            >
+              Get Started
+            </button>
+          </div>
+        </section>
+      )}
       <section id="browse" className="py-8 md:py-12">
         <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-8 md:space-y-12">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 md:gap-12 border-b border-white/5 pb-8 md:pb-12">
            <div className="text-left space-y-2 md:space-y-3">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Public Registry</h2>
-                <span className="px-2 py-0.5 md:px-3 md:py-1 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[8px] md:text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Live Feed</span>
+                <span className="px-2 py-0.5 md:px-3 md:py-1 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-[8px] md:text-[9px] font-black rounded-lg uppercase tracking-widest">Live Feed</span>
               </div>
               <p className="text-text-muted text-[10px] md:text-sm font-bold uppercase tracking-[0.2em] opacity-80 leading-relaxed">Catalog of every item recovered across campus</p>
            </div>
@@ -507,17 +495,8 @@ const Landing = () => {
            })}
         </div>
 
-        {itemsLoading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
-                {Array(6).fill(0).map((_, i) => (
-                    <div key={i} className="h-[280px] md:h-[400px] bg-white/5 animate-pulse rounded-2xl md:rounded-[2.5rem]"></div>
-                ))}
-            </div>
-        ) : filteredItems.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+        {itemsLoading ? null : filteredItems.length === 0 ? (
+            <div 
               className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
             >
                 {/* Background Glow */}
@@ -547,7 +526,7 @@ const Landing = () => {
                     </Link>
                   </div>
                 </div>
-            </motion.div>
+            </div>
         ) : (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
@@ -596,7 +575,7 @@ const Landing = () => {
            <div className="text-left space-y-3">
               <div className="flex items-center gap-3">
                 <h2 className="text-3xl md:text-5xl font-black text-text-header uppercase tracking-tighter italic">Lost Reports</h2>
-                <span className="px-3 py-1 bg-accent-default/10 border border-accent-default/20 text-accent-default text-[9px] font-black rounded-lg uppercase tracking-widest animate-pulse">Active Search</span>
+                <span className="px-3 py-1 bg-accent-default/10 border border-accent-default/20 text-accent-default text-[9px] font-black rounded-lg uppercase tracking-widest">Active Search</span>
               </div>
               <p className="text-text-muted text-xs md:text-sm font-bold uppercase tracking-[0.2em] opacity-80">Help our community find their missing belongings</p>
            </div>
@@ -656,17 +635,8 @@ const Landing = () => {
            })}
         </div>
 
-        {lostLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {Array(6).fill(0).map((_, i) => (
-                    <div key={i} className="h-[400px] bg-white/5 animate-pulse rounded-[2.5rem]"></div>
-                ))}
-            </div>
-        ) : filteredLostReports.length === 0 ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+        {lostLoading ? null : filteredLostReports.length === 0 ? (
+            <div 
               className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
             >
                 {/* Background Glow */}
@@ -696,7 +666,7 @@ const Landing = () => {
                     </Link>
                   </div>
                 </div>
-            </motion.div>
+            </div>
         ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -770,61 +740,6 @@ const Landing = () => {
         </div>
       </section> */}
 
-      {/* Why Register? (Incentives Section) */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
-           <div className="glass-panel p-12 md:p-20 rounded-[4rem] border-2 border-uni-500/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/10 blur-[100px] -z-10"></div>
-              
-              <div className="flex flex-col md:flex-row items-center gap-16">
-                 <div className="md:w-1/2 space-y-10 text-left">
-                    <div className="space-y-4">
-                       <h2 className="text-4xl md:text-6xl font-black text-text-header uppercase tracking-tighter italic leading-none">Why create <br/><span className="gradient-text">an account?</span></h2>
-                       <p className="text-text-muted text-sm font-bold uppercase tracking-widest max-w-md">Your email isn't just a login—it's your insurance policy on campus.</p>
-                    </div>
-
-                    <div className="space-y-8">
-                       <div className="flex gap-6 items-start group">
-                          <div className="w-14 h-14 rounded-2xl bg-uni-500/10 border border-uni-500/20 flex items-center justify-center text-2xl group-hover:bg-uni-500 group-hover:text-white transition-all shadow-lg">🛡️</div>
-                          <div className="space-y-1">
-                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">The Safety Net</h4>
-                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Add your Student ID to your profile. If an item with your name or ID is found, we notify you instantly—zero effort required.</p>
-                          </div>
-                       </div>
-                       
-                       <div className="flex gap-6 items-start group">
-                          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-2xl group-hover:bg-amber-500 group-hover:text-white transition-all shadow-lg">🏆</div>
-                          <div className="space-y-1">
-                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">College Honor</h4>
-                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Represent your department. Every item you return adds points to the College Leaderboard. Let's see who has the most integrity.</p>
-                          </div>
-                       </div>
-
-                       <div className="flex gap-6 items-start group">
-                          <div className="w-14 h-14 rounded-2xl bg-uni-400/10 border border-uni-400/20 flex items-center justify-center text-2xl group-hover:bg-uni-400 group-hover:text-white transition-all shadow-lg">📜</div>
-                          <div className="space-y-1">
-                             <h4 className="text-lg font-black text-text-header uppercase tracking-tight">Official Merit</h4>
-                             <p className="text-text-muted text-[10px] font-black uppercase tracking-widest leading-relaxed">Reach 1,000 points to receive a physical Certificate of Appreciation for Integrity—a premium addition to your student portfolio.</p>
-                          </div>
-                       </div>
-                    </div>
-
-                    <button 
-                       onClick={() => navigate('/register')}
-                       className="bg-uni-600 text-white px-10 py-5 rounded-3xl font-black text-xs uppercase tracking-[0.3em] hover:scale-[1.05] transition-all shadow-2xl shadow-uni-500/30"
-                    >
-                       Get Started Now
-                    </button>
-                 </div>
-
-                 <div className="md:w-1/2 flex justify-center">
-                    <div className="relative">
-                       <div className="absolute -inset-10 bg-uni-500/20 blur-[60px] rounded-full animate-pulse"></div>
-                       <i className="fa-solid fa-id-card-clip text-[12rem] md:text-[20rem] text-uni-400/20 relative z-10"></i>
-                    </div>
-                 </div>
-              </div>
-           </div>
-        </section>
 
 
 

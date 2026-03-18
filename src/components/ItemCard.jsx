@@ -18,12 +18,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
   }).toUpperCase();
 
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      whileHover={{ y: -12, transition: { duration: 0.3 } }}
+    <div 
       onClick={onClick}
       className="group relative glass-panel rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 hover:border-uni-500/40 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col shadow-2xl shadow-black/20 bg-bg-surface/30"
     >
@@ -53,19 +48,17 @@ const ItemCard = ({ item, onClick, onShare }) => {
         {/* Superior Status System */}
         <div className="absolute top-3 left-3 md:top-6 md:left-6 flex flex-col gap-2 z-20">
             <div className="flex items-center gap-1.5 md:gap-2.5 bg-black/40 px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-white/10 shadow-lg">
-                <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)] animate-pulse"></div>
+                <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></div>
                 <span className="text-[7px] md:text-[10px] font-black text-white uppercase tracking-widest">In Custody</span>
             </div>
             
             {item.is_recent && (
-              <motion.div 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
+              <div 
                 className="flex items-center gap-1.5 md:gap-2.5 bg-uni-500/30 px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-uni-500/40 shadow-xl"
               >
                   <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"></div>
                   <span className="text-[7px] md:text-[10px] font-black text-uni-100 uppercase tracking-widest">New</span>
-              </motion.div>
+              </div>
             )}
         </div>
 
@@ -136,7 +129,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
               </button>
           </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

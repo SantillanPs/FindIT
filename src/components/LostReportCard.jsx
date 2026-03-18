@@ -22,12 +22,7 @@ const LostReportCard = ({ report, onWitness }) => {
   }).toUpperCase();
 
   return (
-    <motion.div 
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      whileHover={{ y: -12, transition: { duration: 0.3 } }}
+    <div 
       className="group relative glass-panel rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 hover:border-accent-default/40 transition-all duration-500 overflow-hidden flex flex-col shadow-2xl shadow-black/20 bg-bg-surface/30"
     >
       {/* Premium Visual Anchor Area - Compact for text-only reports */}
@@ -62,19 +57,17 @@ const LostReportCard = ({ report, onWitness }) => {
           report.safe_photo_url ? 'top-3 left-3 md:top-6 md:left-6' : 'top-3 left-3 md:top-4 md:left-6 scale-90 md:scale-100'
         }`}>
             <div className="flex items-center gap-1.5 md:gap-2.5 bg-accent-default/20 px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl border border-accent-default/30 shadow-lg">
-                <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-accent-default shadow-[0_0_8px_rgba(255,107,0,0.6)] animate-pulse"></div>
+                <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-accent-default shadow-[0_0_8px_rgba(255,107,0,0.6)]"></div>
                 <span className="text-[7px] md:text-[10px] font-black text-accent-default uppercase tracking-widest">Active Search</span>
             </div>
             
             {report.is_recent && (
-              <motion.div 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
+              <div 
                 className="flex items-center gap-1.5 md:gap-2.5 bg-accent-default px-2.5 py-1 md:px-4 md:py-2 rounded-lg md:rounded-xl shadow-lg"
               >
                   <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.6)]"></div>
                   <span className="text-[7px] md:text-[10px] font-black text-white uppercase tracking-widest">New</span>
-              </motion.div>
+              </div>
             )}
         </div>
 
@@ -151,7 +144,7 @@ const LostReportCard = ({ report, onWitness }) => {
               </button>
           </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

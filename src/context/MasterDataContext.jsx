@@ -7,31 +7,30 @@ const MasterDataContext = createContext();
 export const MasterDataProvider = ({ children }) => {
     const [categories, setCategories] = useState([]);
     const [colleges, setColleges] = useState([]);
+    const [leaderboard, setLeaderboard] = useState({ students: [], departments: [] });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchMetadata = async () => {
+        const fetchSystemConfig = async () => {
             try {
-                const [catRes, colRes] = await Promise.all([
-                    apiClient.get('/categories'),
-                    apiClient.get('/colleges')
-                ]);
-                setCategories(catRes.data);
-                setColleges(colRes.data);
+                const response = await apiClient.get('/init/');
+                setCategories(response.data.categories);
+                setColleges(response.data.colleges);
+                setLeaderboard(response.data.leaderboard);
             } catch (err) {
-                console.error('Failed to fetch master metadata', err);
+                console.error('Failed to fetch system initialization data', err);
                 setError(err);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchMetadata();
+        fetchSystemConfig();
     }, []);
 
     return (
-        <MasterDataContext.Provider value={{ categories, colleges, loading, error }}>
+        <MasterDataContext.Provider value={{ categories, colleges, leaderboard, loading, error }}>
             {children}
         </MasterDataContext.Provider>
     );
