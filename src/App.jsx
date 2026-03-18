@@ -25,6 +25,10 @@ const ClaimStatus = lazy(() => import('./pages/Student/ClaimStatus'));
 const MyClaims = lazy(() => import('./pages/Student/MyClaims'));
 const LostReportStatus = lazy(() => import('./pages/Student/LostReportStatus'));
 const Profile = lazy(() => import('./pages/Student/Profile'));
+const AssetVault = lazy(() => import('./pages/Student/AssetVault'));
+const LostReportsRegistry = lazy(() => import('./pages/Student/LostReportsRegistry'));
+const HallOfIntegrity = lazy(() => import('./pages/Student/HallOfIntegrity'));
+const MatchReviewPage = lazy(() => import('./pages/Student/MatchReviewPage'));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
@@ -77,13 +81,17 @@ const AppContent = () => {
             <Route element={<ProtectedRoute allowedRoles={['student']} />}>
               <Route path="/student" element={<StudentDashboard />} />
               <Route path="/public-feed" element={<FoundPublicFeed />} />
+              <Route path="/lost-reports" element={<LostReportsRegistry />} />
+              <Route path="/hall-of-integrity" element={<HallOfIntegrity />} />
               <Route path="/my-claims" element={<MyClaims />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/asset-vault" element={<AssetVault />} />
+              <Route path="/report/found" element={<ReportFoundItem />} />
+              <Route path="/match-review/:lostId/:foundId" element={<MatchReviewPage />} />
             </Route>
 
             {/* Verified-Only Student Routes */}
             <Route element={<ProtectedRoute allowedRoles={['student']} requireVerification={true} />}>
-              <Route path="/report/found" element={<ReportFoundItem />} />
               <Route path="/lost/:reportId/matches" element={<MatchResults />} />
             </Route>
 

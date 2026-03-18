@@ -147,11 +147,19 @@ const Layout = ({ children }) => {
                   </>
                 ) : (
                   <>
-                    <SideNavLink to="/student" icon="fa-house" label="Dashboard" />
-                    <SideNavLink to="/public-feed" icon="fa-magnifying-glass" label="Browse Finds" />
+                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Terminal</p>
+                    <SideNavLink to="/student" icon="fa-house" label="Mission Control" />
+                    <SideNavLink to="/my-claims" icon="fa-clipboard-check" label="My Claims" />
+                    
+                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 mt-6">Registry</p>
+                    <SideNavLink to="/public-feed" icon="fa-magnifying-glass" label="Found Inventory" />
+                    <SideNavLink to="/lost-reports" icon="fa-file-circle-question" label="Lost Reports" />
+                    <SideNavLink to="/hall-of-integrity" icon="fa-trophy" label="Hall of Integrity" />
+                    
+                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 mt-6">Personal</p>
                     <SideNavLink to="/report/lost" icon="fa-triangle-exclamation" label="Report Lost" />
                     <SideNavLink to="/report/found" icon="fa-hand-holding-heart" label="Report Found" />
-                    <SideNavLink to="/my-claims" icon="fa-clipboard-check" label="My Claims" />
+                    <SideNavLink to="/asset-vault" icon="fa-box-archive" label="Asset Vault" />
                   </>
                 )}
              </nav>

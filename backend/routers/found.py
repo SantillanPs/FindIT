@@ -82,7 +82,7 @@ def report_found_item_guest(
 def report_found_item(
     item: schemas.FoundItemCreate, 
     db: Session = Depends(auth.get_db),
-    current_user: database.User = Depends(verified_student_required)
+    current_user: database.User = Depends(auth.get_current_user)
 ):
     # Use provided category, fallback to item_name (the "title") as requested
     category = item.category or item.item_name
@@ -126,23 +126,47 @@ def report_found_item(
     db.refresh(new_item)
     db.refresh(current_user)
 
-    # AUTO-NOTIFY Logic
+    # AUTO-NOTIFY & MATCH Logic
     target_user = None
-    if item.identified_student_id:
-        target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
-    elif item.identified_name:
-        # Search for exact name match (case-insensitive)
-        target_user = db.query(database.User).filter(database.User.full_name.ilike(item.identified_name)).first()
+    
+    # If this is a direct match from the Registry
+    if item.matched_lost_id:
+        lost_report = db.query(database.LostItem).filter(database.LostItem.id == item.matched_lost_id).first()
+        if lost_report:
+            new_item.status = database.ItemStatus.PENDING_OWNER.value
+            target_user = lost_report.owner if lost_report.user_id else None
+            
+            # Special notification for direct match
+            if target_user:
+                notification = database.Notification(
+                    user_id=target_user.id,
+                    title="🔍 Direct Match: Your Lost Item Found?",
+                    message=f"Someone found an item matching your report: '{lost_report.item_name}'. Please review the find and confirm if it belongs to you.",
+                    found_item_id=new_item.id,
+                    lost_item_id=lost_report.id
+                )
+                db.add(notification)
+    
+    # Fallback to general safety net if no direct match or direct match didn't find a user
+    if not target_user:
+        if item.identified_student_id:
+            target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
+        elif item.identified_name:
+            name_part = f"%{item.identified_name}%"
+            target_user = db.query(database.User).filter(
+                (database.User.first_name + " " + database.User.last_name).ilike(name_part)
+            ).first()
 
-    if target_user:
-        notification = database.Notification(
-            user_id=target_user.id,
-            title="🛡️ Proactive Safety Net: Item Identified",
-            message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Since your ID was found on the item, it has been reserved for you. Visit the office to verify and claim it.",
-            found_item_id=new_item.id
-        )
-        db.add(notification)
-        db.commit()
+        if target_user:
+            notification = database.Notification(
+                user_id=target_user.id,
+                title="🛡️ Proactive Safety Net: Item Identified",
+                message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Visit the office to verify and claim it.",
+                found_item_id=new_item.id
+            )
+            db.add(notification)
+
+    db.commit()
 
     return new_item
 
@@ -152,6 +176,20 @@ def list_my_found_reports(
     current_user: database.User = Depends(auth.get_current_user)
 ):
     return db.query(database.FoundItem).filter(database.FoundItem.finder_id == current_user.id).all()
+
+@router.get("/found/match-detail/{found_id}", response_model=schemas.FoundItemResponse)
+def get_match_detail(found_id: int, current_user: database.User = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
+    found_item = db.query(database.FoundItem).filter(database.FoundItem.id == found_id).first()
+    if not found_item:
+        raise HTTPException(status_code=404, detail="Found item not found")
+    
+    # Check if the current user is the owner of the matched lost item
+    if found_item.matched_lost_id:
+        lost_report = db.query(database.LostItem).filter(database.LostItem.id == found_item.matched_lost_id).first()
+        if lost_report and lost_report.reporter_id == current_user.id:
+            return found_item
+            
+    raise HTTPException(status_code=403, detail="Not authorized to view this item detail")
 
 @router.get("/found/public", response_model=list[schemas.FoundItemPublic])
 def list_public_found_items(db: Session = Depends(auth.get_db)):

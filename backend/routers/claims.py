@@ -82,6 +82,8 @@ def _populate_claim_details(db: Session, claim: database.Claim):
         "found_item_description": found_item.description if found_item else None,
         "status": claim.status,
         "admin_notes": claim.admin_notes,
+        "is_pickup_ready": claim.is_pickup_ready,
+        "scheduled_pickup_time": claim.scheduled_pickup_time,
         "similarity_score": score,
         "created_at": claim.created_at
     }
@@ -102,6 +104,25 @@ def list_my_claims(
     current_user: database.User = Depends(auth.get_current_user)
 ):
     return [_populate_claim_details(db, claim) for claim in current_user.claims]
+
+@router.patch("/claims/{claim_id}/schedule-pickup", response_model=schemas.ClaimResponse)
+def schedule_pickup(
+    claim_id: int,
+    update: schemas.ClaimPickupUpdate,
+    db: Session = Depends(auth.get_db),
+    current_user: database.User = Depends(auth.get_current_user)
+):
+    claim = db.query(database.Claim).filter(database.Claim.id == claim_id, database.Claim.student_id == current_user.id).first()
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim not found")
+    
+    if claim.status != database.ClaimStatus.APPROVED.value:
+        raise HTTPException(status_code=400, detail="You can only schedule a pickup for approved claims.")
+    
+    claim.scheduled_pickup_time = update.scheduled_pickup_time
+    db.commit()
+    db.refresh(claim)
+    return _populate_claim_details(db, claim)
 
 @router.get("/admin/claims/pending", response_model=list[schemas.ClaimResponse])
 def list_pending_claims(
@@ -194,9 +215,32 @@ def review_claim(
          )
          db.add(manual_reject_notif)
 
+@router.patch("/admin/claims/{claim_id}/mark-ready", response_model=schemas.ClaimResponse)
+def mark_claim_ready(
+    claim_id: int,
+    db: Session = Depends(auth.get_db),
+    admin: database.User = Depends(admin_required)
+):
+    claim = db.query(database.Claim).filter(database.Claim.id == claim_id).first()
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim not found")
+    
+    if claim.status != database.ClaimStatus.APPROVED.value:
+        raise HTTPException(status_code=400, detail="Only approved claims can be marked as ready for pickup.")
+    
+    claim.is_pickup_ready = True
     db.commit()
-    db.refresh(db_claim)
+    db.refresh(claim)
     
-    log_audit(db, admin.id, "claim_review", claim_id=claim_id, notes=f"Decision: {review.status}. Notes: {review.admin_notes}")
+    # Notify the user
+    notif = database.Notification(
+        user_id=claim.student_id,
+        title="Ready for Pickup!",
+        message=f"Your item is now ready at the office. Please present your school ID to collect it.",
+        found_item_id=claim.found_item_id
+    )
+    db.add(notif)
+    db.commit()
     
-    return db_claim
+    log_audit(db, admin.id, "claim_ready", claim_id=claim_id, notes="Marked as ready for pickup")
+    return _populate_claim_details(db, claim)

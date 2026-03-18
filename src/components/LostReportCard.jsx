@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMasterData } from '../context/MasterDataContext';
 
 const LostReportCard = ({ report, onWitness }) => {
+  const navigate = useNavigate();
   const { categories: CATEGORIES } = useMasterData();
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
@@ -121,10 +123,16 @@ const LostReportCard = ({ report, onWitness }) => {
           </div>
 
           <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-white/5 flex gap-2 md:gap-4 relative z-10">
-              <div className="flex-grow bg-white/5 border border-white/10 text-text-muted py-2.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[7px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.3em] text-center flex items-center justify-center gap-1.5 md:gap-3 leading-none md:leading-normal">
-                <i className="fa-solid fa-building-shield text-accent-default/50 text-[9px] md:text-base"></i>
-                <span>Surrender to Office</span>
-              </div>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/report/found?match=${report.id}`);
+                }}
+                className="flex-grow bg-transparent hover:bg-accent-default border border-accent-default/50 hover:border-accent-default text-accent-default hover:text-white py-2.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[7px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.3em] text-center flex items-center justify-center gap-1.5 md:gap-3 leading-none md:leading-normal transition-all duration-300 shadow-[0_0_15px_rgba(255,107,0,0.1)] hover:shadow-[0_0_25px_rgba(255,107,0,0.3)] active:scale-95"
+              >
+                <i className="fa-solid fa-hand-holding-heart text-[9px] md:text-base"></i>
+                <span>I Found This!</span>
+              </button>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();

@@ -79,7 +79,7 @@ const Landing = () => {
     try {
       const resp = await apiClient.get('/lost/public');
       const data = resp.data.map(report => {
-        const lostDate = new Date(report.lost_time);
+        const lostDate = new Date(report.last_seen_time);
         const now = new Date();
         const isRecent = (now - lostDate) < (48 * 60 * 60 * 1000);
         return { ...report, is_recent: isRecent };
@@ -151,7 +151,7 @@ const Landing = () => {
       const matchesCategory = selectedLostCategory === 'all' || report.category === selectedLostCategory;
       return matchesSearch && matchesCategory;
     })
-    .sort((a, b) => new Date(b.lost_time) - new Date(a.lost_time));
+    .sort((a, b) => new Date(b.last_seen_time) - new Date(a.last_seen_time));
 
   return (
     <div className="space-y-10 md:space-y-16 pb-20">

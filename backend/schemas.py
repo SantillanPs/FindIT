@@ -86,6 +86,7 @@ class FoundItemBase(BaseModel):
     found_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
     contact_info: Optional[str] = None
+    matched_lost_id: Optional[int] = None
 
 class FoundItemCreate(FoundItemBase):
     guest_first_name: Optional[str] = None
@@ -106,17 +107,27 @@ class FoundItemPublic(FoundItemBase):
     class Config:
         from_attributes = True
 
-class FoundItemDetail(FoundItemPublic):
-    private_admin_notes: Optional[str] = None
+class FoundItemResponse(FoundItemBase):
+    id: int
+    status: str
+    finder_id: Optional[int] = None
+    guest_first_name: Optional[str] = None
+    guest_last_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
-    finder_id: Optional[int] = None
+    owner_name: Optional[str] = None
+    released_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class FoundItemDetail(FoundItemResponse):
+    private_admin_notes: Optional[str] = None
     embedding: Optional[str] = None
     released_to_id: Optional[int] = None
     released_to_name: Optional[str] = None
     released_to_id_number: Optional[str] = None
     released_by_name: Optional[str] = None
-    released_at: Optional[datetime] = None
     released_to_photo_url: Optional[str] = None
 
 class ItemRelease(BaseModel):
@@ -236,10 +247,15 @@ class ClaimResponse(BaseModel):
     found_item_category: Optional[str] = None
     found_item_description: Optional[str] = None
     admin_notes: Optional[str] = None
+    is_pickup_ready: bool = False
+    scheduled_pickup_time: Optional[datetime] = None
     similarity_score: Optional[float] = None  # AI context for admins
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
     created_at: datetime
+
+class ClaimPickupUpdate(BaseModel):
+    scheduled_pickup_time: datetime
 
     class Config:
         from_attributes = True
@@ -266,6 +282,10 @@ class MatchRequest(BaseModel):
 class ClaimReview(BaseModel):
     status: str  # approved or rejected
     admin_notes: Optional[str] = None
+
+class MatchResponse(BaseModel):
+    action: str # confirm or reject
+    notes: Optional[str] = None
 
 # Feedback Schemas
 class FeedbackCreate(BaseModel):
@@ -381,6 +401,26 @@ class ZoneAdjacencyCreate(ZoneAdjacencyBase):
 
 class ZoneAdjacencyResponse(ZoneAdjacencyBase):
     id: int
+
+    class Config:
+        from_attributes = True
+
+# Asset Schemas
+class AssetBase(BaseModel):
+    category: str
+    description: Optional[str] = None
+    serial_number: Optional[str] = None
+    brand: Optional[str] = None
+    model_name: Optional[str] = None
+
+class AssetCreate(AssetBase):
+    photo_url: Optional[str] = None
+
+class AssetResponse(AssetBase):
+    id: int
+    owner_id: int
+    photo_url: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

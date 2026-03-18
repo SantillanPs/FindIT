@@ -199,39 +199,71 @@ const ClaimReviewModal = ({
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                      <button 
-                          onClick={() => {
-                              handleClaimReview(selectedClaim.id, 'rejected');
-                              setSelectedClaim(null);
-                          }}
-                          disabled={actionLoading}
-                          className="group p-8 rounded-[2.5rem] bg-white/5 border border-white/5 hover:border-red-500/20 hover:bg-red-500/5 transition-all text-left space-y-4"
-                      >
-                          <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-                              <i className="fa-solid fa-xmark text-xl"></i>
-                          </div>
-                          <div>
-                              <p className="text-[11px] font-black text-white uppercase tracking-widest">Reject Claim</p>
-                              <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">InSufficient proof provided</p>
-                          </div>
-                      </button>
-                      
-                      <button 
-                          onClick={() => {
-                              handleClaimReview(selectedClaim.id, 'approved');
-                              setSelectedClaim(null);
-                          }}
-                          disabled={actionLoading}
-                          className="group p-8 rounded-[2.5rem] bg-uni-600 border border-uni-600 shadow-2xl shadow-uni-600/20 hover:bg-uni-500 transition-all text-left space-y-4"
-                      >
-                          <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
-                              <i className="fa-solid fa-check text-xl"></i>
-                          </div>
-                          <div>
-                              <p className="text-[11px] font-black text-white uppercase tracking-widest">Approve Claim</p>
-                              <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest">Mark as ready for collection</p>
-                          </div>
-                      </button>
+                      {selectedClaim.status === 'approved' ? (
+                          <button 
+                            onClick={async () => {
+                                try {
+                                    await apiClient.patch(`/admin/claims/${selectedClaim.id}/mark-ready`);
+                                    setSelectedClaim(null);
+                                    window.location.reload(); // Refresh to sync stats
+                                } catch (err) { console.error(err); }
+                            }}
+                            disabled={actionLoading || selectedClaim.is_pickup_ready}
+                            className={`col-span-2 group p-8 rounded-[2.5rem] border shadow-2xl transition-all text-center space-y-4 ${
+                                selectedClaim.is_pickup_ready 
+                                ? 'bg-slate-900 border-white/5 cursor-not-allowed' 
+                                : 'bg-green-600 border-green-600 shadow-green-600/20 hover:bg-green-500'
+                            }`}
+                        >
+                            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform">
+                                <i className={`fa-solid ${selectedClaim.is_pickup_ready ? 'fa-box-open' : 'fa-truck-ramp-box'}`}></i>
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-black text-white uppercase tracking-widest">
+                                    {selectedClaim.is_pickup_ready ? 'Officially Ready for Pickup' : 'Mark as Ready for Pickup'}
+                                </p>
+                                <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest">
+                                    {selectedClaim.is_pickup_ready ? 'Student will be notified to collect the item' : 'Verify the physical item is ready for handover'}
+                                </p>
+                            </div>
+                        </button>
+                      ) : (
+                        <>
+                          <button 
+                              onClick={() => {
+                                  handleClaimReview(selectedClaim.id, 'rejected');
+                                  setSelectedClaim(null);
+                              }}
+                              disabled={actionLoading}
+                              className="group p-8 rounded-[2.5rem] bg-white/5 border border-white/5 hover:border-red-500/20 hover:bg-red-500/5 transition-all text-left space-y-4"
+                          >
+                              <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+                                  <i className="fa-solid fa-xmark text-xl"></i>
+                              </div>
+                              <div>
+                                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Reject Claim</p>
+                                  <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">InSufficient proof provided</p>
+                              </div>
+                          </button>
+                          
+                          <button 
+                              onClick={() => {
+                                  handleClaimReview(selectedClaim.id, 'approved');
+                                  setSelectedClaim(null);
+                              }}
+                              disabled={actionLoading}
+                              className="group p-8 rounded-[2.5rem] bg-uni-600 border border-uni-600 shadow-2xl shadow-uni-600/20 hover:bg-uni-500 transition-all text-left space-y-4"
+                          >
+                              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                  <i className="fa-solid fa-check text-xl"></i>
+                              </div>
+                              <div>
+                                  <p className="text-[11px] font-black text-white uppercase tracking-widest">Approve Claim</p>
+                                  <p className="text-[9px] text-white/50 font-bold uppercase tracking-widest">Mark as ready for collection</p>
+                              </div>
+                          </button>
+                        </>
+                      )}
                   </div>
 
                   <button onClick={() => setClaimReviewStep(2)} className="text-[9px] font-black text-slate-600 uppercase tracking-widest hover:text-white transition-all">Review evidence again</button>

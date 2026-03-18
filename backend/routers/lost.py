@@ -361,6 +361,26 @@ def list_public_lost_items(db: Session = Depends(auth.get_db)):
         database.LostItem.status == "reported"
     ).all()
 
+@router.get("/lost/public/{report_id}", response_model=schemas.LostItemPublic)
+def get_public_lost_item(report_id: int, db: Session = Depends(auth.get_db)):
+    report = db.query(database.LostItem).filter(
+        database.LostItem.id == report_id,
+        database.LostItem.status == "reported"
+    ).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Lost report not found or is no longer public")
+    return report
+
+@router.get("/lost/my-reports/{report_id}", response_model=schemas.LostItemResponse)
+def get_my_lost_report(report_id: int, current_user: database.User = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
+    report = db.query(database.LostItem).filter(
+        database.LostItem.id == report_id,
+        database.LostItem.reporter_id == current_user.id
+    ).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Lost report not found or you are not the owner")
+    return report
+
 @router.get("/admin/lost/all", response_model=list[schemas.LostItemResponse])
 def admin_get_all_lost_reports(
     db: Session = Depends(auth.get_db),
@@ -464,3 +484,55 @@ def update_witness_report_status(
     db.commit()
     db.refresh(report)
     return report
+
+@router.post("/lost/{report_id}/matches/{found_id}/respond")
+def respond_to_match(
+    report_id: int,
+    found_id: int,
+    response: schemas.MatchResponse,
+    db: Session = Depends(auth.get_db),
+    current_user: database.User = Depends(auth.get_current_user)
+):
+    lost_item = db.query(database.LostItem).filter(
+        database.LostItem.id == report_id,
+        database.LostItem.user_id == current_user.id
+    ).first()
+    
+    found_item = db.query(database.FoundItem).filter(
+        database.FoundItem.id == found_id,
+        database.FoundItem.matched_lost_id == report_id
+    ).first()
+
+    if not lost_item or not found_item:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    if response.action == "confirm":
+        # Keep it as pending_owner but maybe add a note
+        found_item.private_admin_notes = (found_item.private_admin_notes or "") + f"\n[System] Owner confirmed match on {datetime.utcnow().strftime('%Y-%m-%d')}."
+        # Create notification for the FINDER
+        if found_item.finder_id:
+            finder_notif = database.Notification(
+                user_id=found_item.finder_id,
+                title="✅ Match Confirmed by Owner!",
+                message=f"The owner of the '{lost_item.item_name}' has confirmed your find! Please surrender the item to the USG office as soon as possible to receive your integrity points.",
+                found_item_id=found_item.id
+            )
+            db.add(finder_notif)
+    elif response.action == "reject":
+        # Rejection: Make the found item public
+        found_item.status = database.ItemStatus.REPORTED.value
+        found_item.matched_lost_id = None
+        found_item.private_admin_notes = (found_item.private_admin_notes or "") + f"\n[System] Owner rejected match on {datetime.utcnow().strftime('%Y-%m-%d')}. Item is now public."
+        
+        # Notify the finder that it's now a public report
+        if found_item.finder_id:
+            finder_notif = database.Notification(
+                user_id=found_item.finder_id,
+                title="⚠️ Match Rejected (Item now Public)",
+                message=f"The owner of the '{lost_item.item_name}' indicated this is not their item. Your report has been converted to a public Found Item report.",
+                found_item_id=found_item.id
+            )
+            db.add(finder_notif)
+
+    db.commit()
+    return {"status": "success", "action": response.action}

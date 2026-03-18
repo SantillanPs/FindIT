@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 import EmptyState from '../../components/EmptyState';
+import ResolutionTimeline from './components/ResolutionTimeline';
 
 const MyClaims = () => {
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [schedulingClaim, setSchedulingClaim] = useState(null);
+  const [pickupTime, setPickupTime] = useState("");
 
   useEffect(() => {
     fetchMyClaims();
@@ -20,6 +23,24 @@ const MyClaims = () => {
       console.error('Failed to fetch my claims', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSchedulePickup = async (e) => {
+    e.preventDefault();
+    if (!schedulingClaim || !pickupTime) return;
+
+    try {
+      await apiClient.patch(`/claims/${schedulingClaim.id}/schedule-pickup`, {
+        scheduled_pickup_time: new Date(pickupTime).toISOString()
+      });
+      setSchedulingClaim(null);
+      setPickupTime("");
+      fetchMyClaims();
+      alert("Pickup scheduled! The office has been notified.");
+    } catch (error) {
+      console.error("Failed to schedule pickup", error);
+      alert("Scheduling failed. Please try again.");
     }
   };
 
@@ -48,10 +69,17 @@ const MyClaims = () => {
       className="space-y-10"
     >
       <motion.header className="space-y-4 text-left" variants={itemVariants}>
-        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">My Claims</h1>
-        <p className="text-slate-500 text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-          Track the progress of items you've claimed. Our team reviews these to make sure everything gets back to the right person.
-        </p>
+        <div className="flex justify-between items-start">
+            <div className="space-y-3">
+                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">My Resolution Center</h1>
+                <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
+                Track the institutional verification process of your claims. Items go through AI-assisted review and manual custodial verification.
+                </p>
+            </div>
+            <div className="hidden md:flex h-12 w-12 rounded-2xl bg-uni-500/10 border border-uni-500/20 items-center justify-center text-xl text-uni-400 shadow-[0_0_15px_rgba(var(--color-uni-500),0.1)]">
+                <i className="fa-solid fa-shield-halved animate-pulse"></i>
+            </div>
+        </div>
       </motion.header>
 
       {loading ? (
@@ -63,7 +91,7 @@ const MyClaims = () => {
       ) : (
         <AnimatePresence>
           {claims.length === 0 ? (
-            <motion.div variants={itemVariants}>
+            <motion.div variants={itemVariants} key="empty">
                 <EmptyState 
                 title="No active claims"
                 message="You haven't claimed any found items yet."
@@ -72,51 +100,89 @@ const MyClaims = () => {
                 />
             </motion.div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-8">
               {claims.map((claim) => (
                 <motion.div 
                   key={claim.id} 
                   variants={itemVariants}
                   layout
-                  className="glass-panel p-5 md:p-6 rounded-[2rem] md:rounded-3xl border border-white/5 group relative overflow-hidden flex flex-col md:flex-row gap-6 md:gap-8 items-start md:items-center"
+                  className="glass-panel p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/5 group relative overflow-hidden"
                 >
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 md:w-1.5 ${
-                    claim.status === 'approved' ? 'bg-green-500' : 
-                    claim.status === 'rejected' ? 'bg-red-500' : 
-                    'bg-uni-500'
+                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                    claim.status === 'approved' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 
+                    claim.status === 'rejected' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 
+                    'bg-uni-500 shadow-[0_0_15px_rgba(var(--color-uni-500),0.3)]'
                   }`}></div>
                   
-                  <div className="flex-grow text-left w-full md:w-auto">
-                    <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-4">
-                      <span className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-900 border border-white/5 px-3 py-1 rounded-lg">
-                        Claim #{claim.id.toString().padStart(4, '0')}
-                      </span>
-                      <span className={`px-3 py-1 rounded-lg text-[8px] md:text-[9px] font-black uppercase tracking-widest border ${
-                        claim.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                        claim.status === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                        'bg-uni-500/10 text-uni-400 border-uni-500/20'
-                      }`}>
-                        {claim.status}
-                      </span>
+                  <div className="flex flex-col gap-8">
+                    {/* Header Row */}
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-4">
+                           <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">{claim.found_item_category || 'Claimed Item'}</h2>
+                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-900 border border-white/5 px-3 py-1 rounded-lg">
+                             FILE #{claim.id.toString().padStart(4, '0')}
+                           </span>
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Submitted on {new Date(claim.created_at).toLocaleDateString()}</p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                         {claim.status === 'approved' && !claim.scheduled_pickup_time && (
+                            <button 
+                                onClick={() => setSchedulingClaim(claim)}
+                                className="px-5 py-2 rounded-xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest shadow-lg shadow-green-500/20"
+                            >
+                                Schedule Pickup
+                            </button>
+                         )}
+                         {claim.scheduled_pickup_time && (
+                            <div className="px-5 py-2 rounded-xl bg-white/5 border border-white/5 text-[9px] font-black text-white uppercase tracking-widest flex items-center gap-3">
+                                <i className="fa-solid fa-clock text-uni-400"></i>
+                                {new Date(claim.scheduled_pickup_time).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                            </div>
+                         )}
+                         <div className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
+                            claim.status === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                            claim.status === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
+                            'bg-uni-500/10 text-uni-400 border-uni-500/20'
+                        }`}>
+                            {claim.status}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                        <div className="space-y-2">
-                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Description provided</p>
-                            <p className="text-white font-bold italic text-[13px] md:text-sm leading-relaxed">"{claim.proof_description}"</p>
+                    {/* Timeline Integration */}
+                    <ResolutionTimeline 
+                      status={claim.status} 
+                      isPickupReady={claim.is_pickup_ready}
+                      similarityScore={claim.similarity_score}
+                    />
+
+                    {/* Notes & Proof */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/5">
+                        <div className="space-y-3">
+                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                                <i className="fa-solid fa-circle-info text-slate-800"></i>
+                                Proof provided
+                            </p>
+                            <div className="p-4 bg-slate-950/50 rounded-2xl border border-white/5 relative group/proof">
+                                <p className="text-white font-bold italic text-xs md:text-sm leading-relaxed">"{claim.proof_description}"</p>
+                            </div>
                         </div>
+
                         {claim.admin_notes && (
-                            <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest mb-2">Staff Note</p>
-                                <p className="text-slate-300 text-[11px] md:text-xs leading-relaxed">{claim.admin_notes}</p>
+                            <div className="space-y-3">
+                                <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest flex items-center gap-2">
+                                    <i className="fa-solid fa-comment-dots"></i>
+                                    Official Resolution Notes
+                                </p>
+                                <div className="p-4 bg-uni-500/5 rounded-2xl border border-uni-500/10">
+                                    <p className="text-slate-300 text-[11px] md:text-xs leading-relaxed font-bold uppercase tracking-tight">{claim.admin_notes}</p>
+                                </div>
                             </div>
                         )}
                     </div>
-                  </div>
-                  
-                  <div className="w-full md:w-auto md:border-l border-white/5 pt-4 md:pt-0 md:pl-8 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center shrink-0 border-t md:border-t-0">
-                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Submitted</p>
-                    <p className="text-white font-black uppercase text-[10px] md:text-[11px] tracking-widest">{new Date(claim.created_at).toLocaleDateString()}</p>
                   </div>
                 </motion.div>
               ))}
@@ -124,6 +190,68 @@ const MyClaims = () => {
           )}
         </AnimatePresence>
       )}
+
+      {/* Pickup Scheduling Modal */}
+      <AnimatePresence>
+        {schedulingClaim && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-8">
+            <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               onClick={() => setSchedulingClaim(null)}
+               className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+            />
+            <motion.div 
+               initial={{ scale: 0.9, opacity: 0, y: 20 }}
+               animate={{ scale: 1, opacity: 1, y: 0 }}
+               exit={{ scale: 0.9, opacity: 0, y: 20 }}
+               className="relative w-full max-w-lg bg-slate-950 border border-white/10 rounded-[3rem] p-8 md:p-10 shadow-2xl overflow-hidden"
+            >
+               <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-3xl rounded-full"></div>
+               
+               <div className="text-center space-y-4 mb-8">
+                  <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-lg text-green-400">
+                    <i className="fa-solid fa-calendar-check"></i>
+                  </div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Schedule Pickup</h2>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-relaxed">
+                    Let the Custodian know when you'll be arriving to collect your item. This helps us ensure the personnel is ready for verification.
+                  </p>
+               </div>
+
+               <form onSubmit={handleSchedulePickup} className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Proposed Arrival Time</label>
+                    <input 
+                       type="datetime-local"
+                       required
+                       value={pickupTime}
+                       onChange={(e) => setPickupTime(e.target.value)}
+                       className="w-full bg-slate-900/50 border border-white/10 rounded-2xl px-5 py-4 text-white text-[11px] font-black uppercase tracking-widest focus:outline-none focus:border-green-500/50 transition-colors"
+                    />
+                  </div>
+
+                  <div className="flex gap-4 pt-4">
+                     <button 
+                       type="button"
+                       onClick={() => setSchedulingClaim(null)}
+                       className="flex-1 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-colors"
+                     >
+                       Cancel
+                     </button>
+                     <button 
+                       type="submit"
+                       className="flex-1 py-4 rounded-2xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest shadow-xl shadow-green-500/20"
+                     >
+                       Confirm Schedule
+                     </button>
+                  </div>
+               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

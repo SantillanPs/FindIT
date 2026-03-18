@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 
 const NotificationCenter = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -99,7 +101,13 @@ const NotificationCenter = () => {
                         transition={{ delay: index * 0.05 }}
                         key={n.id} 
                         className={`p-5 hover:bg-brand-primary/5 transition-all cursor-pointer relative group ${n.is_read ? 'opacity-40' : ''}`}
-                        onClick={() => markAsRead(n.id)}
+                        onClick={() => {
+                          if (n.found_item_id && n.lost_item_id && n.title.includes("Direct Match")) {
+                            navigate(`/match-review/${n.lost_item_id}/${n.found_item_id}`);
+                            setIsOpen(false);
+                          }
+                          markAsRead(n.id);
+                        }}
                       >
                         {!n.is_read && (
                           <div className="absolute top-6 right-5 w-1.5 h-1.5 bg-brand-primary rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>

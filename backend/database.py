@@ -48,6 +48,7 @@ class ItemStatus(str, enum.Enum):
     RELEASED = "released"
     RESOLVED = "resolved"
     DISMISSED = "dismissed"
+    PENDING_OWNER = "pending_owner"
 
 class WitnessReportStatus(str, enum.Enum):
     PENDING = "pending"
@@ -108,6 +109,9 @@ class User(Base):
     
     found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder")
     notifications = relationship("Notification", back_populates="user")
+    claims = relationship("Claim", back_populates="student")
+    witness_reports = relationship("WitnessReport", back_populates="reporter")
+    assets = relationship("Asset", back_populates="owner", cascade="all, delete-orphan")
 
 class FoundItem(Base):
     __tablename__ = "found_items"
@@ -123,6 +127,7 @@ class FoundItem(Base):
     private_admin_notes = Column(Text)
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
+    matched_lost_id = Column(Integer, ForeignKey("lost_items.id"), nullable=True)
     
     # Direct Identification (Optional)
     identified_student_id = Column(String, nullable=True) # ID number found on item
@@ -146,6 +151,7 @@ class FoundItem(Base):
     finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
     released_to = relationship("User", foreign_keys=[released_to_id])
     zone = relationship("Zone", foreign_keys=[zone_id])
+    matched_lost_report = relationship("LostItem", foreign_keys=[matched_lost_id])
 
     @property
     def owner_name(self):
@@ -300,6 +306,8 @@ class Claim(Base):
     proof_photo_url = Column(String, nullable=True)
     status = Column(String, default=ClaimStatus.PENDING.value)
     admin_notes = Column(Text, nullable=True)
+    is_pickup_ready = Column(Boolean, default=False)
+    scheduled_pickup_time = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     student = relationship("User", back_populates="claims")
@@ -374,6 +382,21 @@ class WitnessReport(Base):
 
     lost_item = relationship("LostItem", back_populates="witness_reports")
     reporter = relationship("User", back_populates="witness_reports")
+
+class Asset(Base):
+    __tablename__ = "assets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), index=True)
+    category = Column(String)
+    description = Column(Text, nullable=True)
+    photo_url = Column(String, nullable=True)
+    serial_number = Column(String, nullable=True)
+    brand = Column(String, nullable=True)
+    model_name = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    owner = relationship("User", back_populates="assets")
 
 def init_db():
     Base.metadata.create_all(bind=engine)

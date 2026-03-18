@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
@@ -13,6 +13,7 @@ import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import IdentificationStep from '../../components/ReportFlow/IdentificationStep';
+import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
 
 const ReportFoundItem = () => {
   const [formData, setFormData] = useState({
@@ -41,6 +42,9 @@ const ReportFoundItem = () => {
   const [categoryStats, setCategoryStats] = useState([]);
   const [otherItemName, setOtherItemName] = useState('');
   const [hasIdentification, setHasIdentification] = useState(false);
+  const [searchParams] = useSearchParams();
+  const matchId = searchParams.get('match');
+  const [matchedReport, setMatchedReport] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -62,7 +66,28 @@ const ReportFoundItem = () => {
         guest_email: user.email || ''
       }));
     }
-  }, [user]);
+
+    const fetchMatchedReport = async () => {
+      if (matchId) {
+        try {
+          // We need a public endpoint for lost item details
+          const resp = await apiClient.get(`/lost/public/${matchId}`); 
+          // Note: lost/status uses tracking_id, but here we might have an ID. 
+          // Let's assume /lost/public returns IDs and we can fetch by ID if we add an endpoint or use filtering.
+          // For now, I'll add a check or use a placeholder if the endpoint isn't ready.
+          setMatchedReport(resp.data);
+          setFormData(prev => ({
+            ...prev,
+            category: resp.data.category,
+            matched_lost_id: parseInt(matchId)
+          }));
+        } catch (err) {
+          console.error("Failed to fetch matched report", err);
+        }
+      }
+    };
+    fetchMatchedReport();
+  }, [user, matchId]);
 
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
@@ -207,6 +232,16 @@ const ReportFoundItem = () => {
                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Ready to submit<br/>your report?"</h2>
                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public feed.</p>
                 </div>
+
+                {matchedReport && (
+                  <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🔍</div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1">Direct Match Reporting</p>
+                      <p className="text-sm font-bold text-white">You are reporting a find for <span className="text-uni-400">"{matchedReport.item_name}"</span></p>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="max-w-4xl mx-auto w-full space-y-10 text-left">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">

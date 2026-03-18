@@ -12,6 +12,7 @@ import DetailsStep from '../../components/ReportFlow/DetailsStep';
 import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
+import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
 
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
