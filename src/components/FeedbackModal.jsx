@@ -30,21 +30,23 @@ const FeedbackModal = ({ isOpen, onClose }) => {
       // Capture the entire visual state
       const canvas = await html2canvas(document.body, {
         useCORS: true,
+        allowTaint: true,
         logging: false,
         scale: 1,
-        // Optional: exclude the modal itself if it's already open, 
-        // but here html2canvas usually captures the state *under* the modal if we are careful.
         ignoreElements: (element) => element.classList?.contains('feedback-modal-root')
       });
       
-      const dataUrl = canvas.toDataURL('image/png');
-      setPreviewUrl(dataUrl);
-      
-      const blob = await (await fetch(dataUrl)).blob();
-      setScreenshot(new File([blob], 'screenshot.png', { type: 'image/png' }));
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+          setScreenshot(file);
+          setPreviewUrl(URL.createObjectURL(file));
+        }
+        setIsCapturing(false);
+      }, 'image/png', 0.8);
     } catch (error) {
       console.error('Screenshot failed:', error);
-    } finally {
+      alert('Screenshot capture failed. You might need to manually upload an image instead.');
       setIsCapturing(false);
     }
   };
@@ -227,7 +229,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 type="file" 
                 hidden 
                 ref={fileInputRef} 
-                accept="image/*.jpg,image/*.jpeg,image/*.png,image/*.webp" 
+                accept="image/jpeg,image/png,image/webp" 
                 onChange={handleFileChange}
               />
             </div>

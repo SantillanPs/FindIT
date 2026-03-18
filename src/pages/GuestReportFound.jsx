@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import apiClient from '../api/client';
 
@@ -43,6 +43,10 @@ const GuestReportFound = () => {
   const [otherItemName, setOtherItemName] = useState('');
   const [hasIdentification, setHasIdentification] = useState(false);
   const [reportData, setReportData] = useState(null);
+  
+  const [searchParams] = useSearchParams();
+  const matchId = searchParams.get('match');
+  const [matchedReport, setMatchedReport] = useState(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -54,7 +58,24 @@ const GuestReportFound = () => {
       }
     };
     fetchStats();
-  }, []);
+
+    const fetchMatchedReport = async () => {
+      if (matchId) {
+        try {
+          const resp = await apiClient.get(`/lost/public/${matchId}`); 
+          setMatchedReport(resp.data);
+          setFormData(prev => ({
+            ...prev,
+            category: resp.data.category,
+            matched_lost_id: parseInt(matchId)
+          }));
+        } catch (err) {
+          console.error("Failed to fetch matched report", err);
+        }
+      }
+    };
+    fetchMatchedReport();
+  }, [matchId]);
 
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
@@ -196,6 +217,23 @@ const GuestReportFound = () => {
             )}
 
             {step === 7 && (
+              <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
+                <div className="space-y-4">
+                   <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20 text-4xl mb-6 shadow-2xl">🌍</div>
+                   <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Ready to submit<br/>your report?"</h2>
+                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public feed.</p>
+                </div>
+
+                {matchedReport && (
+                  <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🔍</div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1">Direct Match Reporting</p>
+                      <p className="text-sm font-bold text-white">You are reporting a find for <span className="text-uni-400">"{matchedReport.item_name}"</span></p>
+                    </div>
+                  </div>
+                )}
+
               <ReportSummary 
                 type="found"
                 formData={formData}
@@ -203,6 +241,7 @@ const GuestReportFound = () => {
                 loading={loading}
                 onSubmit={handleSubmit}
               />
+              </div>
             )}
           </motion.div>
         </AnimatePresence>

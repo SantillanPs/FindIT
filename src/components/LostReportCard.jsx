@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useMasterData } from '../context/MasterDataContext';
+import { useAuth } from '../context/AuthContext';
 
 const LostReportCard = ({ report, onWitness }) => {
   const navigate = useNavigate();
   const { categories: CATEGORIES } = useMasterData();
+  const { user } = useAuth();
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
   const formattedDate = new Date(report.last_seen_time).toLocaleDateString('en-US', {
@@ -126,7 +128,11 @@ const LostReportCard = ({ report, onWitness }) => {
               <button 
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/report/found?match=${report.id}`);
+                  if (user) {
+                    navigate(`/report/found?match=${report.id}`);
+                  } else {
+                    navigate(`/report-found-guest?match=${report.id}`);
+                  }
                 }}
                 className="flex-grow bg-transparent hover:bg-accent-default border border-accent-default/50 hover:border-accent-default text-accent-default hover:text-white py-2.5 md:py-4 rounded-xl md:rounded-2xl font-black text-[7px] md:text-[9px] uppercase tracking-[0.1em] md:tracking-[0.3em] text-center flex items-center justify-center gap-1.5 md:gap-3 leading-none md:leading-normal transition-all duration-300 shadow-[0_0_15px_rgba(255,107,0,0.1)] hover:shadow-[0_0_25px_rgba(255,107,0,0.3)] active:scale-95"
               >

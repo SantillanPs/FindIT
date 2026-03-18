@@ -55,26 +55,48 @@ def report_found_item_guest(
     db.commit()
     db.refresh(new_item)
 
-    # AUTO-NOTIFY Logic
+    # AUTO-NOTIFY & MATCH Logic
     target_user = None
-    if item.identified_student_id:
-        target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
-    elif item.identified_name:
-        # Search by first name or last name or combined
-        name_part = f"%{item.identified_name}%"
-        target_user = db.query(database.User).filter(
-            (database.User.first_name + " " + database.User.last_name).ilike(name_part)
-        ).first()
 
-    if target_user:
-        notification = database.Notification(
-            user_id=target_user.id,
-            title="🛡️ Proactive Safety Net: Item Identified",
-            message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Since your ID was found on the item, it has been reserved for you. Visit the office to verify and claim it.",
-            found_item_id=new_item.id
-        )
-        db.add(notification)
-        db.commit()
+    # If this is a direct match from the Registry
+    if item.matched_lost_id:
+        lost_report = db.query(database.LostItem).filter(database.LostItem.id == item.matched_lost_id).first()
+        if lost_report:
+            new_item.status = database.ItemStatus.PENDING_OWNER.value
+            target_user = lost_report.owner if lost_report.user_id else None
+            
+            # Special notification for direct match
+            if target_user:
+                notification = database.Notification(
+                    user_id=target_user.id,
+                    title="🔍 Direct Match: Your Lost Item Found?",
+                    message=f"A guest found an item matching your report: '{lost_report.item_name}'. Please review the find and confirm if it belongs to you.",
+                    found_item_id=new_item.id,
+                    lost_item_id=lost_report.id
+                )
+                db.add(notification)
+
+    # Fallback to general safety net if no direct match or direct match didn't find a user
+    if not target_user:
+        if item.identified_student_id:
+            target_user = db.query(database.User).filter(database.User.student_id_number == item.identified_student_id).first()
+        elif item.identified_name:
+            # Search by first name or last name or combined
+            name_part = f"%{item.identified_name}%"
+            target_user = db.query(database.User).filter(
+                (database.User.first_name + " " + database.User.last_name).ilike(name_part)
+            ).first()
+
+        if target_user:
+            notification = database.Notification(
+                user_id=target_user.id,
+                title="🛡️ Proactive Safety Net: Item Identified",
+                message=f"FindIT's safety net has identified an item that likely belongs to you! A '{item.item_name}' was recovered at {item.location_zone}. Since your ID was found on the item, it has been reserved for you. Visit the office to verify and claim it.",
+                found_item_id=new_item.id
+            )
+            db.add(notification)
+
+    db.commit()
 
     return new_item
 
