@@ -5,15 +5,15 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-[3rem] p-0 hover:border-uni-500/40 transition-all relative group overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+    <div className="bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-[3rem] p-0 hover:border-uni-500/40 transition-all relative group overflow-hidden">
       {/* Match Header Bar */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center justify-between px-12 py-8 border-b border-white/10 bg-white/[0.03] cursor-pointer hover:bg-white/[0.06] transition-colors"
       >
         <div className="flex items-center gap-8">
-          <div className={`px-6 py-3 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] flex items-center gap-4 shadow-inner ${match.similarity_score > 0.8 ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-uni-400/10 text-uni-400 border border-uni-400/20'}`}>
-            <i className={`fa-solid ${match.similarity_score > 0.8 ? 'fa-shield-check animate-pulse' : 'fa-microchip'}`}></i>
+          <div className={`px-6 py-3 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] flex items-center gap-4 ${match.similarity_score > 0.8 ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-uni-400/10 text-uni-400 border border-uni-400/20'}`}>
+            <i className={`fa-solid ${match.similarity_score > 0.8 ? 'fa-shield-check' : 'fa-microchip'}`}></i>
             Match Confidence: {(match.similarity_score * 100).toFixed(0)}%
           </div>
           <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em]">
@@ -35,9 +35,9 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
           <button 
             onClick={() => onAuthorizeMatch(foundItem.id, match.item.id)}
             disabled={actionLoading === `match-${foundItem.id}-${match.item.id}`}
-            className={`px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center gap-4 shadow-2xl active:scale-95 ${
-              match.similarity_score > 0.8 ? 'bg-uni-600 hover:bg-uni-500 text-white shadow-uni-600/40' : 'bg-white text-black hover:bg-uni-500 hover:text-white'
-            }`}
+            className={`px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center gap-4 active:scale-95 ${
+  match.similarity_score > 0.8 ? 'bg-uni-600 hover:bg-uni-500 text-white' : 'bg-white text-black hover:bg-uni-500 hover:text-white'
+}`}
           >
             <i className="fa-solid fa-link-slash group-hover:fa-link transition-all"></i>
             Authorize Link
@@ -115,7 +115,7 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
               <div className="mt-10 pt-10 border-t border-white/10 flex items-center justify-between px-4">
                 <div className="flex items-center gap-12">
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 shadow-xl overflow-hidden">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 overflow-hidden">
                       {match.item.safe_photo_url ? (
                         <img src={match.item.safe_photo_url} className="w-full h-full object-cover" />
                       ) : (
@@ -126,7 +126,7 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                       <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Student / Owner</p>
                       <div className="flex items-center gap-3">
                         <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.owner_name}</p>
-                        <span className={`w-2 h-2 rounded-full ${match.item.owner_name !== 'Anonymous Guest' && match.item.owner_name !== 'Anonymous Student' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-slate-600'}`}></span>
+                        <span className={`w-2 h-2 rounded-full ${match.item.owner_name !== 'Anonymous Guest' && match.item.owner_name !== 'Anonymous Student' ? 'bg-green-500' : 'bg-slate-600'}`}></span>
                       </div>
                     </div>
                   </div>

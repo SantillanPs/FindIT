@@ -78,11 +78,11 @@ const Register = () => {
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-900/20 via-transparent to-transparent"></div>
       
       <div 
-        className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[700px] h-[400px] md:h-[700px] bg-sky-500/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none"
+        className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[700px] h-[400px] md:h-[700px] bg-sky-500/10 rounded-full pointer-events-none"
       ></div>
 
       <div 
-        className="absolute bottom-1/4 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"
+        className="absolute bottom-1/4 right-1/4 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 rounded-full pointer-events-none"
       ></div>
       
       {/* Subtle Grid Overlay */}
@@ -96,13 +96,13 @@ const Register = () => {
            <p className="text-slate-400 text-sm mb-6 pb-2 mx-6">Join the university lost & found network.</p>
            
            {/* Liquid Progress Bar */}
-           <div className="relative w-full max-w-[200px] mx-auto h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-3 shadow-inner border border-white/5">
+           <div className="relative w-full max-w-[200px] mx-auto h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-3 border border-white/5">
                 <div 
                     style={{ width: `${(step / totalSteps) * 100}%` }}
                     className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-500 to-sky-300 rounded-full transition-all duration-300"
                 ></div>
            </div>
-           <span className="text-[10px] font-bold text-sky-500/70 uppercase tracking-[0.2em] shadow-sm">Step {step} of {totalSteps}</span>
+           <span className="text-[10px] font-bold text-sky-500/70 uppercase tracking-[0.2em]">Step {step} of {totalSteps}</span>
         </div>
 
           {error && (
@@ -126,8 +126,8 @@ const Register = () => {
                       </div>
                       <div className="space-y-5 text-left mx-auto w-full">
                           <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">Email Address</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Email Address</label>
+                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                   <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
                                       <i className="fa-solid fa-envelope text-sm"></i>
                                   </div>
@@ -143,8 +143,8 @@ const Register = () => {
                               </div>
                           </div>
                           <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">Secure Password</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Secure Password</label>
+                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                   <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
                                       <i className="fa-solid fa-key text-sm"></i>
                                   </div>
@@ -171,8 +171,8 @@ const Register = () => {
                       <div className="space-y-5 text-left mx-auto w-full">
                           <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-2 text-left">
-                                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">First Name</label>
-                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                                  <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">First Name</label>
+                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                       <div className="w-10 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
                                           <i className="fa-solid fa-user text-sm"></i>
                                       </div>
@@ -188,8 +188,8 @@ const Register = () => {
                                   </div>
                               </div>
                               <div className="space-y-2 text-left">
-                                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">Last Name</label>
-                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                                  <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Last Name</label>
+                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                       <input 
                                           placeholder="Cruz"
                                           type="text" 
@@ -202,8 +202,8 @@ const Register = () => {
                               </div>
                           </div>
                           <div className="space-y-2 text-left">
-                              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">Student ID Number</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Student ID Number</label>
+                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                   <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
                                       <i className="fa-solid fa-id-badge text-sm"></i>
                                   </div>
@@ -229,8 +229,8 @@ const Register = () => {
                       </div>
                       <div className="space-y-5 text-left mx-auto w-full">
                           <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1 drop-shadow-sm">Primary Department</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 shadow-inner group">
+                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Primary Department</label>
+                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
                                   <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
                                       <i className="fa-solid fa-building-columns text-sm"></i>
                                   </div>
@@ -296,7 +296,7 @@ const Register = () => {
                       <div className="mx-auto w-full mt-8 relative z-20">
                               <button 
                               onClick={handleSubmit} 
-                              className="w-full bg-white text-black py-4 rounded-xl font-bold text-sm hover:bg-uni-100 transition-all shadow-xl active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden"
+                              className="w-full bg-white text-black py-4 rounded-xl font-bold text-sm hover:bg-uni-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden"
                               disabled={loading}
                               >
                               {loading ? (
@@ -319,9 +319,9 @@ const Register = () => {
            {step < totalSteps && (
               <button 
                  onClick={handleNext}
-                 className="group w-full py-4 rounded-xl bg-gradient-to-r from-white to-slate-200 text-black font-bold text-sm transition-all flex justify-center items-center shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-[0.98] hover:-translate-y-0.5"
+                 className="group w-full py-4 rounded-xl bg-gradient-to-r from-white to-slate-200 text-black font-bold text-sm transition-all flex justify-center items-center active:scale-[0.98] hover:-translate-y-0.5"
               >
-                 <span className="drop-shadow-sm flex items-center gap-2">
+                 <span className="flex items-center gap-2">
                     Continue
                     <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
                  </span>

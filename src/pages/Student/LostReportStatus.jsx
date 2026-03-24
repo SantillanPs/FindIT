@@ -37,7 +37,7 @@ const LostReportStatus = () => {
 
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <i className="fa-solid fa-satellite-dish text-4xl text-slate-700 opacity-20 animate-pulse"></i>
+        <i className="fa-solid fa-satellite-dish text-4xl text-slate-700 opacity-20"></i>
         <h2 className="text-xl font-black text-white uppercase tracking-tight">{error}</h2>
         <Link to="/" className="text-[10px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors">
             Return to Registry

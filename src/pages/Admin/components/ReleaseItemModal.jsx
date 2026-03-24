@@ -27,15 +27,15 @@ const ReleaseItemModal = ({
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="glass-panel w-full max-w-lg rounded-[2.5rem] p-10 relative z-10 border border-white/10 shadow-2xl space-y-8 overflow-hidden bg-slate-900/50"
+        className="glass-panel w-full max-w-lg rounded-[2.5rem] p-10 relative z-10 border border-white/10 space-y-8 overflow-hidden bg-slate-900/50"
       >
         <div className="flex justify-between items-start">
           <div className="space-y-2">
             <h3 className="text-2xl font-black text-white uppercase tracking-tight italic">Item Release</h3>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Step {releaseStep} of 4 • Item #{showReleaseModal.id}</p>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Step {releaseStep} of 5 • Item #{showReleaseModal.id}</p>
           </div>
           <div className="flex gap-1">
-            {[1,2,3,4].map(s => (
+            {[1,1.5,2,3,4].map(s => (
               <div key={s} className={`w-6 h-1 rounded-full ${releaseStep >= s ? 'bg-uni-500' : 'bg-white/10'}`} />
             ))}
           </div>
@@ -71,12 +71,57 @@ const ReleaseItemModal = ({
               </div>
               
               <button 
-                onClick={() => setReleaseStep(2)}
-                className="w-full bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/20"
+                onClick={() => setReleaseStep(1.5)}
+                className="w-full bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all"
               >
-                ID Verified, Proceed →
+                ID Verified, Next →
               </button>
               <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest">Please follow standard security procedures</p>
+            </motion.div>
+          )}
+
+          {releaseStep === 1.5 && (
+            <motion.div 
+              key="step1.5"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-10 py-6"
+            >
+              <div className="text-center space-y-4">
+                <div className="w-20 h-20 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto border border-uni-500/20 text-uni-400">
+                  <i className="fa-solid fa-user-shield text-3xl"></i>
+                </div>
+                <h4 className="text-3xl font-black text-white uppercase italic tracking-tight leading-none">"Ownership<br/>Challenge"</h4>
+                <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest max-w-xs mx-auto">Verify the recipient's knowledge of the item's secret details.</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="p-8 bg-uni-500/10 rounded-[2.5rem] border border-uni-500/20 space-y-4">
+                  <div className="space-y-1 text-left">
+                    <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest">Challenge Question</p>
+                    <p className="text-[14px] font-black text-white uppercase italic leading-tight">
+                        {showReleaseModal.challenge_question || "Ask for any unique markings or secrets on the item."}
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-uni-500/10 text-left">
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Expected Answer / Secret Note</p>
+                    <p className="text-[11px] font-bold text-slate-300">
+                        {showReleaseModal.verification_note || "No specific secret note provided during intake."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                   <button onClick={() => setReleaseStep(1)} className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-all">Back</button>
+                   <button 
+                    onClick={() => setReleaseStep(2)} 
+                    className="flex-grow bg-white text-black py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all"
+                   >
+                    Passed Challenge →
+                   </button>
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -95,20 +140,20 @@ const ReleaseItemModal = ({
 
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Confirm Recipient Name</label>
+                  <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1">Confirm Recipient Name</label>
                   <input 
                     type="text"
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
+                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all tracking-widest"
                     value={releaseForm.name}
                     onChange={(e) => setReleaseForm({...releaseForm, name: e.target.value})}
                     placeholder="FullName..."
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Institutional ID / Ref Number</label>
+                  <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1">Institutional ID / Ref Number</label>
                   <input 
                     type="text"
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
+                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all tracking-widest"
                     value={releaseForm.id_number}
                     onChange={(e) => setReleaseForm({...releaseForm, id_number: e.target.value})}
                     placeholder="e.g. 2024-XXXXX"
@@ -120,7 +165,7 @@ const ReleaseItemModal = ({
                 <button 
                   disabled={!releaseForm.name || !releaseForm.id_number}
                   onClick={() => setReleaseStep(3)} 
-                  className="flex-grow bg-white text-black py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white disabled:opacity-20 transition-all shadow-2xl"
+                  className="flex-grow bg-white text-black py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white disabled:opacity-20 transition-all"
                 >
                   Next: Visual Proof →
                 </button>
@@ -156,7 +201,7 @@ const ReleaseItemModal = ({
                 <button 
                   disabled={!releaseForm.photo_url}
                   onClick={() => setReleaseStep(4)} 
-                  className="flex-grow bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-white hover:text-black disabled:opacity-20 transition-all shadow-2xl"
+                  className="flex-grow bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-white hover:text-black disabled:opacity-20 transition-all border border-black/5"
                 >
                   Continue →
                 </button>
@@ -173,7 +218,7 @@ const ReleaseItemModal = ({
             >
               <div className="space-y-6">
                 <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20">
-                  <i className="fa-solid fa-handshake text-4xl text-green-500 animate-bounce"></i>
+                  <i className="fa-solid fa-handshake text-4xl text-green-500"></i>
                 </div>
                 <div className="space-y-2">
                   <h4 className="text-3xl font-black text-white uppercase italic tracking-tight">"Complete Release"</h4>
@@ -210,7 +255,7 @@ const ReleaseItemModal = ({
               <button 
                 onClick={handleDirectRelease}
                 disabled={actionLoading}
-                className="w-full bg-green-600 text-white py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.5em] hover:bg-green-500 shadow-2xl shadow-green-500/20 active:scale-95 transition-all flex items-center justify-center gap-4"
+                className="w-full bg-green-600 text-white py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.5em] hover:bg-green-500 active:scale-[0.98] transition-all flex items-center justify-center gap-4"
               >
                 {actionLoading ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

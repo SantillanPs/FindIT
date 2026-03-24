@@ -38,15 +38,15 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-[80vh] px-4 relative">
       {/* Ambient background glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 blur-[80px] md:blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="absolute top-1/4 left-1/3 w-32 md:w-64 h-32 md:h-64 bg-accent-default/10 blur-[60px] md:blur-[100px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[500px] h-[300px] md:h-[500px] bg-uni-500/10 rounded-full pointer-events-none"></div>
+      <div className="absolute top-1/4 left-1/3 w-32 md:w-64 h-32 md:h-64 bg-accent-default/10 rounded-full pointer-events-none"></div>
 
       <div 
         className="glass-panel w-full max-w-md p-6 sm:p-8 md:p-12 rounded-[2rem] md:rounded-[2.5rem] border border-white/5 relative overflow-hidden z-10 my-8"
       >
         <div className="text-left mb-8 md:mb-10">
           <div className="flex items-center gap-3 mb-4 md:mb-6">
-             <div className="w-8 h-8 md:w-10 md:h-10 bg-uni-600 rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl text-white shadow-lg shadow-uni-500/20">
+             <div className="w-8 h-8 md:w-10 md:h-10 bg-uni-600 rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl text-white">
                 <i className="fa-solid fa-lock"></i>
              </div>
              <h1 className="text-2xl md:text-3xl font-display font-black text-white uppercase tracking-tighter">FindIT Login</h1>
@@ -66,7 +66,7 @@ const Login = () => {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2 text-left">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+            <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1">Email Address</label>
             <div className="relative">
                 <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                 <input 
@@ -81,7 +81,7 @@ const Login = () => {
           </div>
           
           <div className="space-y-2 text-left">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Secure Password</label>
+            <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1">Secure Password</label>
             <div className="relative">
                 <i className="fa-solid fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                 <input 
@@ -98,7 +98,7 @@ const Login = () => {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl shadow-lg shadow-uni-500/20 transition-all hover:scale-[1.02] active:scale-[0.98] mt-4 flex items-center justify-center gap-3"
+            className="w-full bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all hover:scale-[1.02] active:scale-[0.98] mt-4 flex items-center justify-center gap-3"
           >
             {loading ? (
               <>

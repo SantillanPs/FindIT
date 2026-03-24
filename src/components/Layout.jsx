@@ -13,6 +13,7 @@ const Layout = ({ children }) => {
   const [isAdminStatsFetched, setIsAdminStatsFetched] = useState(false);
   const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0, feedbacks: 0 });
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -99,7 +100,7 @@ const Layout = ({ children }) => {
           <aside className={`fixed inset-y-0 left-0 z-[60] w-72 flex-shrink-0 bg-bg-surface border-r border-border-main flex flex-col h-full overflow-hidden transition-all duration-300 lg:translate-x-0 lg:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
              <div className="p-8 pb-4 flex items-center justify-between">
                 <Link to="/" className="flex items-center gap-3 group no-underline">
-                  <div className="w-10 h-10 bg-gradient-to-br from-uni-600 to-uni-400 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-uni-500/30 group-hover:rotate-6 transition-transform">
+                  <div className="w-10 h-10 bg-gradient-to-br from-uni-600 to-uni-400 rounded-xl flex items-center justify-center text-white text-xl group-hover:rotate-6 transition-transform border border-white/5">
                     <i className="fa-solid fa-compass"></i>
                   </div>
                   <div>
@@ -180,7 +181,7 @@ const Layout = ({ children }) => {
                          {location.pathname === '/student' ? 'dashboard overview' : location.pathname.split('/').pop()?.replace('-', ' ') || 'overview'}
                       </h2>
                       <div className="flex items-center gap-2">
-                         <div className={`w-2 h-2 rounded-full ${user.is_verified ? 'bg-uni-500' : 'bg-brand-gold'} animate-pulse`}></div>
+                         <div className={`w-2 h-2 rounded-full ${user.is_verified ? 'bg-uni-500' : 'bg-brand-gold'}`}></div>
                          <span className="text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest">
                            {user.is_verified ? 'Verified' : 'Pending Review'}
                          </span>
@@ -269,7 +270,7 @@ const Layout = ({ children }) => {
                 <div className="flex items-center gap-3 md:gap-6">
                   <ThemeToggle />
                   <Link to="/login" className="text-slate-500 hover:text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-3 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-wide md:tracking-widest transition-all shadow-lg shadow-uni-500/20 whitespace-nowrap">Register</Link>
+                  <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-3 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-wide md:tracking-widest transition-all whitespace-nowrap border border-black/5">Register</Link>
                 </div>
               </div>
             </div>
@@ -300,19 +301,34 @@ const Layout = ({ children }) => {
       )}
       {/* Floating Feedback Trigger */}
       <motion.button
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
         onClick={() => setIsFeedbackOpen(true)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className="fixed bottom-8 right-8 z-[70] group"
+        whileTap={{ scale: 0.95 }}
       >
         <div className="relative">
-          <div className="absolute inset-0 bg-uni-500 blur-xl opacity-40 group-hover:opacity-70 transition-opacity"></div>
-          <div className="relative flex items-center gap-3 bg-bg-surface border border-uni-500/30 hover:border-uni-500 px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-xl transition-all">
-            <div className="w-8 h-8 rounded-xl bg-uni-500 text-white flex items-center justify-center shadow-lg shadow-uni-500/20">
+          <div className="absolute inset-0 bg-uni-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
+          <motion.div 
+            animate={{ width: isHovered ? '160px' : '48px' }}
+            transition={{ type: "spring", stiffness: 200, damping: 25 }}
+            className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden ${isHovered ? 'px-4 justify-start' : 'justify-center'}`}
+          >
+            <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-uni-500 text-white flex items-center justify-center border border-white/5">
               <i className="fa-solid fa-comment-dots text-sm"></i>
             </div>
-            <span className="text-[9px] font-black text-text-header uppercase tracking-widest">Feedback</span>
-          </div>
+            <motion.span 
+              initial={false}
+              animate={{ 
+                opacity: isHovered ? 1 : 0,
+                x: isHovered ? 0 : 20,
+              }}
+              transition={{ duration: 0.3 }}
+              className={`text-[9px] font-black text-text-header uppercase tracking-widest whitespace-nowrap ml-3 ${!isHovered && 'hidden'}`}
+            >
+              Feedback
+            </motion.span>
+          </motion.div>
         </div>
       </motion.button>
     </div>
@@ -366,10 +382,10 @@ const SideNavLink = ({ to, icon, label, count }) => {
     <Link 
       to={to} 
       className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest no-underline transition-all group ${
-        isActive ? 'bg-uni-500/10 text-white border border-uni-500/20 shadow-[0_0_20px_rgba(14,165,233,0.1)]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
+        isActive ? 'bg-uni-500/10 text-white border border-uni-500/50' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
       }`}
     >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-uni-500 text-white shadow-lg shadow-uni-500/20' : 'bg-slate-900 border border-white/5 text-slate-600 group-hover:text-slate-400'}`}>
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-uni-500 text-white' : 'bg-slate-900 border border-white/5 text-slate-600 group-hover:text-slate-400'}`}>
         <i className={`fa-solid ${icon} text-sm`}></i>
       </div>
       <span className="flex-grow">{label}</span>
@@ -383,7 +399,7 @@ const SideNavLink = ({ to, icon, label, count }) => {
       {isActive && (
         <motion.div 
           layoutId="sidebar-active"
-          className="absolute -left-1 w-1 h-6 rounded-r-full bg-uni-400 shadow-[0_0_10px_rgba(56,189,248,0.8)]"
+          className="absolute -left-1 w-1 h-6 rounded-r-full bg-uni-400 border border-uni-400/50"
         />
       )}
     </Link>

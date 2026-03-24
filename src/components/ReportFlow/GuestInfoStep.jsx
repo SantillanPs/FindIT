@@ -32,7 +32,7 @@ const GuestInfoStep = ({
             <input 
               type="text"
               placeholder="Juan"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
               value={firstName}
               onChange={(e) => onChange({ guest_first_name: e.target.value })}
             />
@@ -42,7 +42,7 @@ const GuestInfoStep = ({
             <input 
               type="text"
               placeholder="Cruz"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
               value={lastName}
               onChange={(e) => onChange({ guest_last_name: e.target.value })}
             />
@@ -55,7 +55,7 @@ const GuestInfoStep = ({
              <input 
               type="email"
               placeholder="juan.cruz@example.com"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
               value={email}
               onChange={(e) => onChange({ guest_email: e.target.value })}
             />
@@ -65,7 +65,7 @@ const GuestInfoStep = ({
              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left italic text-uni-400">How can we contact you? (Optional)</label>
              <textarea 
               placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-[15px] font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-xl min-h-[82px] max-h-[82px] resize-none"
+              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-[15px] font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 min-h-[82px] max-h-[82px] resize-none"
               value={contactInfo}
               onChange={(e) => onChange({ contact_info: e.target.value })}
             />
@@ -75,7 +75,7 @@ const GuestInfoStep = ({
         <button 
           onClick={onNext} 
           disabled={!isComplete}
-          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/30 active:scale-95 mt-4"
+          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all border border-black/5 active:scale-95 mt-4"
         >
           Review Summary →
         </button>

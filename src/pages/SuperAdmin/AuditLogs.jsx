@@ -111,7 +111,7 @@ const AuditLogs = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-white font-bold text-xs">
                           {log.admin_name?.charAt(0) || log.admin_email?.charAt(0) || '?'}
                         </div>
                         <div>

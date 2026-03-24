@@ -6,6 +6,7 @@ from ai_service import AIService
 import uuid
 
 router = APIRouter(tags=["Claims"])
+admin_router = APIRouter(prefix="/admin", tags=["Admin Claims"])
 
 @router.post("/claims/submit", response_model=schemas.ClaimResponse)
 def submit_claim(
@@ -124,7 +125,7 @@ def schedule_pickup(
     db.refresh(claim)
     return _populate_claim_details(db, claim)
 
-@router.get("/admin/claims/pending", response_model=list[schemas.ClaimResponse])
+@admin_router.get("/claims/pending", response_model=list[schemas.ClaimResponse])
 def list_pending_claims(
     db: Session = Depends(auth.get_db),
     admin: database.User = Depends(admin_required)
@@ -132,7 +133,7 @@ def list_pending_claims(
     claims = db.query(database.Claim).filter(database.Claim.status == database.ClaimStatus.PENDING.value).all()
     return [_populate_claim_details(db, claim) for claim in claims]
 
-@router.post("/admin/claims/{claim_id}/review", response_model=schemas.ClaimResponse)
+@admin_router.post("/claims/{claim_id}/review", response_model=schemas.ClaimResponse)
 def review_claim(
     claim_id: int,
     review: schemas.ClaimReview,
@@ -215,7 +216,7 @@ def review_claim(
          )
          db.add(manual_reject_notif)
 
-@router.patch("/admin/claims/{claim_id}/mark-ready", response_model=schemas.ClaimResponse)
+@admin_router.patch("/claims/{claim_id}/mark-ready", response_model=schemas.ClaimResponse)
 def mark_claim_ready(
     claim_id: int,
     db: Session = Depends(auth.get_db),

@@ -84,18 +84,38 @@ def migrate():
         # Found items table
         cursor.execute("PRAGMA table_info(found_items)")
         columns = [column[1] for column in cursor.fetchall()]
-        if 'contact_first_name' not in columns:
-            print("Adding contact_first_name to found_items table...")
-            cursor.execute("ALTER TABLE found_items ADD COLUMN contact_first_name TEXT")
-        if 'contact_last_name' not in columns:
-            print("Adding contact_last_name to found_items table...")
-            cursor.execute("ALTER TABLE found_items ADD COLUMN contact_last_name TEXT")
+        if 'guest_first_name' not in columns:
+            print("Adding guest_first_name to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN guest_first_name TEXT")
+        if 'guest_last_name' not in columns:
+            print("Adding guest_last_name to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN guest_last_name TEXT")
         if 'contact_info' not in columns:
             print("Adding contact_info to found_items table...")
             cursor.execute("ALTER TABLE found_items ADD COLUMN contact_info TEXT")
         if 'guest_email' not in columns:
             print("Adding guest_email to found_items table...")
             cursor.execute("ALTER TABLE found_items ADD COLUMN guest_email TEXT")
+            
+        if 'matched_lost_id' not in columns:
+            print("Adding matched_lost_id to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN matched_lost_id INTEGER")
+            
+        if 'verification_note' not in columns:
+            print("Adding verification_note to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN verification_note TEXT")
+            
+        if 'challenge_question' not in columns:
+            print("Adding challenge_question to found_items table...")
+            cursor.execute("ALTER TABLE found_items ADD COLUMN challenge_question TEXT")
+                
+        # Handle data migration from legacy contact_ prefix if it exists
+        if 'contact_first_name' in columns:
+            print("Migrating contact_first_name to guest_first_name in found_items...")
+            cursor.execute("UPDATE found_items SET guest_first_name = contact_first_name WHERE guest_first_name IS NULL")
+        if 'contact_last_name' in columns:
+            print("Migrating contact_last_name to guest_last_name in found_items...")
+            cursor.execute("UPDATE found_items SET guest_last_name = contact_last_name WHERE guest_last_name IS NULL")
 
         # Lost items table
         cursor.execute("PRAGMA table_info(lost_items)")

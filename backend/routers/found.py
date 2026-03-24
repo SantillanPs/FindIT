@@ -6,6 +6,7 @@ from dependencies import admin_required, verified_student_required, log_audit
 from ai_service import AIService
 
 router = APIRouter(tags=["Found Items"])
+admin_router = APIRouter(prefix="/admin", tags=["Admin Found Items"])
 
 @router.post("/found/report/guest", response_model=schemas.FoundItemPublic)
 def report_found_item_guest(
@@ -32,7 +33,7 @@ def report_found_item_guest(
             suggestion.hit_count += 1
             suggestion.last_reported_at = datetime.utcnow()
     
-    combined_text = f"{item.item_name} ({category}): {item.description}"
+    combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     item_data = item.model_dump()
@@ -126,7 +127,7 @@ def report_found_item(
             suggestion.hit_count += 1
             suggestion.last_reported_at = datetime.utcnow()
 
-    combined_text = f"{item.item_name} ({category}): {item.description}"
+    combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     item_data = item.model_dump()
@@ -220,14 +221,14 @@ def list_public_found_items(db: Session = Depends(auth.get_db)):
         database.FoundItem.status == database.ItemStatus.IN_CUSTODY.value
     ).all()
 
-@router.get("/admin/found", response_model=list[schemas.FoundItemDetail])
+@admin_router.get("/found", response_model=list[schemas.FoundItemDetail])
 def list_admin_found_items(
     db: Session = Depends(auth.get_db),
     admin: database.User = Depends(admin_required)
 ):
     return db.query(database.FoundItem).all()
 
-@router.get("/admin/found/{item_id}", response_model=schemas.FoundItemDetail)
+@admin_router.get("/found/{item_id}", response_model=schemas.FoundItemDetail)
 def get_found_item_admin_detail(
     item_id: int, 
     db: Session = Depends(auth.get_db),
@@ -238,7 +239,7 @@ def get_found_item_admin_detail(
         raise HTTPException(status_code=404, detail="Item not found")
     return item
 
-@router.put("/admin/found/{item_id}/custody", response_model=schemas.FoundItemDetail)
+@admin_router.put("/found/{item_id}/custody", response_model=schemas.FoundItemDetail)
 def update_item_custody(
     item_id: int,
     update: schemas.CustodyUpdate,
@@ -278,13 +279,19 @@ def update_item_custody(
             )
             db.add(points_notif)
 
+    # Apply verification handshake details if provided
+    if update.verification_note:
+        item.verification_note = update.verification_note
+    if update.challenge_question:
+        item.challenge_question = update.challenge_question
+
     item.status = database.ItemStatus.IN_CUSTODY.value
     db.commit()
     db.refresh(item)
     
     return item
 
-@router.post("/admin/found/bulk/custody", response_model=list[schemas.FoundItemDetail])
+@admin_router.post("/found/bulk/custody", response_model=list[schemas.FoundItemDetail])
 def bulk_update_item_custody(
     update: schemas.BulkCustodyUpdate,
     db: Session = Depends(auth.get_db),
@@ -333,7 +340,7 @@ def bulk_update_item_custody(
     
     return items
 
-@router.post("/admin/found/{item_id}/release", response_model=schemas.FoundItemDetail)
+@admin_router.post("/found/{item_id}/release", response_model=schemas.FoundItemDetail)
 def release_item(
     item_id: int,
     release: schemas.ItemRelease,
@@ -359,7 +366,7 @@ def release_item(
     
     return found_item
 
-@router.post("/admin/found/{item_id}/direct-release", response_model=schemas.FoundItemDetail)
+@admin_router.post("/found/{item_id}/direct-release", response_model=schemas.FoundItemDetail)
 def direct_release_item(
     item_id: int,
     release: schemas.ItemDirectRelease,
@@ -406,7 +413,7 @@ def direct_release_item(
     
     return found_item
 
-@router.get("/admin/found/released", response_model=list[schemas.FoundItemDetail])
+@admin_router.get("/found/released", response_model=list[schemas.FoundItemDetail])
 def list_released_items(
     db: Session = Depends(auth.get_db),
     admin: database.User = Depends(admin_required)

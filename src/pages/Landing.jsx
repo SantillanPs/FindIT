@@ -140,7 +140,7 @@ const Landing = () => {
       <section className="relative pt-8 pb-12 md:pt-24 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-4 relative z-10">
           <div 
-            className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border border-white/10 text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-6 md:mb-12 shadow-xl shadow-uni-500/5"
+            className="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border border-white/10 text-uni-400 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] mb-6 md:mb-12"
           >
             <span className="relative flex h-2 w-2">
               <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-default"></span>
@@ -188,7 +188,7 @@ const Landing = () => {
               { step: '03', title: 'Recover', icon: 'fa-hand-holding-heart', color: 'text-green-500' }
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center gap-2 group">
-                <div className={`w-8 h-8 md:w-11 md:h-11 rounded-lg md:rounded-xl bg-white/5 flex items-center justify-center ${item.color} text-[12px] md:text-lg group-hover:scale-110 transition-transform shadow-lg`}>
+                <div className={`w-8 h-8 md:w-11 md:h-11 rounded-lg md:rounded-xl bg-white/5 flex items-center justify-center ${item.color} text-[12px] md:text-lg group-hover:scale-110 transition-transform`}>
                   <i className={`fa-solid ${item.icon}`}></i>
                 </div>
                 <div className="text-center">
@@ -204,7 +204,7 @@ const Landing = () => {
       {items.some(i => i.identified_name || i.identified_student_id) && (
         <section className="max-w-7xl mx-auto px-6 md:px-12">
           <div className="flex items-center gap-4 md:gap-6 mb-10 md:mb-16">
-            <div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-uni-500 flex items-center justify-center text-white text-xl md:text-3xl shadow-2xl shadow-uni-500/30">
+            <div className="w-12 h-12 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-uni-500 flex items-center justify-center text-white text-xl md:text-3xl">
               <i className="fa-solid fa-bell"></i>
             </div>
             <div className="text-left">
@@ -217,10 +217,10 @@ const Landing = () => {
             {items.filter(i => i.identified_name || i.identified_student_id).map(item => (
               <div 
                 key={item.id}
-                className="min-w-[280px] md:min-w-[420px] snap-start glass-panel rounded-[2rem] md:rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group shadow-2xl shadow-uni-500/10"
+                className="min-w-[280px] md:min-w-[420px] snap-start glass-panel rounded-[2rem] md:rounded-[2.5rem] border-2 border-uni-500/40 overflow-hidden flex flex-col relative group"
               >
                 <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
-                   <span className="px-4 py-2 md:px-5 md:py-2.5 bg-uni-500 text-white text-[9px] md:text-[11px] font-black rounded-full uppercase tracking-[0.2em] shadow-xl shadow-uni-500/40 flex items-center gap-2">
+                   <span className="px-4 py-2 md:px-5 md:py-2.5 bg-uni-500 text-white text-[9px] md:text-[11px] font-black rounded-full uppercase tracking-[0.2em] flex items-center gap-2">
                       <i className="fa-solid fa-id-card"></i>
                       Identity Found
                    </span>
@@ -250,13 +250,13 @@ const Landing = () => {
                    <div className="pt-6 md:pt-8 border-t border-white/5 flex gap-3 md:gap-4">
                       <button 
                          onClick={() => navigate(`/submit-claim/${item.id}`)}
-                         className="flex-grow bg-white text-black py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] hover:bg-uni-500 hover:text-white transition-all shadow-lg hover:shadow-uni-500/30"
+                         className="flex-grow bg-white text-black py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.2em] hover:bg-uni-500 hover:text-white transition-all"
                       >
                          Claim item
                       </button>
                       <button 
                          onClick={() => handleShare(item)}
-                         className="w-12 h-12 md:w-16 md:h-16 bg-bg-elevated border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-text-header hover:bg-uni-500 transition-all group/btn shadow-lg"
+                         className="w-12 h-12 md:w-16 md:h-16 bg-bg-elevated border border-white/10 rounded-xl md:rounded-2xl flex items-center justify-center text-text-header hover:bg-uni-500 transition-all group/btn"
                          title="Notify Friend"
                       >
                          <i className="fa-solid fa-paper-plane text-text-muted group-hover/btn:text-white group-hover/btn:-translate-y-1 group-hover/btn:translate-x-1 transition-all"></i>
@@ -286,14 +286,14 @@ const Landing = () => {
                 <div className="flex flex-col sm:flex-row gap-3 p-1.5 bg-bg-surface/40 border border-white/5 rounded-2xl w-full sm:w-fit backdrop-blur-xl">
                     <button 
                         onClick={() => setLeaderboardType('students')}
-                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-2xl shadow-uni-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
+                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'students' ? 'bg-uni-600 text-white' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
                         <i className="fa-solid fa-user-graduate mr-2"></i>
                         Top Keepers
                     </button>
                     <button 
                         onClick={() => setLeaderboardType('colleges')}
-                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-2xl shadow-amber-500/30' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
+                        className={`px-6 md:px-8 py-3 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-500 flex-grow sm:flex-grow-0 ${leaderboardType === 'colleges' ? 'bg-amber-600 text-white' : 'text-text-muted hover:text-text-header hover:bg-white/5'}`}
                     >
                         <i className="fa-solid fa-building-columns mr-2"></i>
                         Top Colleges
@@ -316,7 +316,7 @@ const Landing = () => {
             </div>
 
             <div className="md:w-1/2 w-full relative">
-                <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest shadow-xl z-20">Top List</div>
+                <div className="absolute top-0 right-10 -translate-y-1/2 bg-uni-600 px-4 py-1 rounded-full text-[9px] font-black text-white uppercase tracking-widest z-20">Top List</div>
                 
                 <div className="glass-panel p-2 md:p-6 rounded-[2.5rem] border border-border-main/30 bg-bg-surface/40">
                     <div className="space-y-1">
@@ -326,7 +326,7 @@ const Landing = () => {
                                     <div key={i} className="flex items-center justify-between p-4 py-5 rounded-2xl hover:bg-white/5 transition-all group">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
-                                                i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30 shadow-lg shadow-amber-500/10' : 
+                                                i === 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 
                                                 i === 1 ? 'bg-slate-500/20 text-slate-400 border border-slate-500/30' :
                                                 i === 2 ? 'bg-orange-800/20 text-orange-800 border border-orange-800/30' :
                                                 'bg-bg-elevated/50 text-text-muted border border-border-main/10'
@@ -396,7 +396,7 @@ const Landing = () => {
       {/* Member Perks Strip */}
       {!user && (
         <section className="max-w-7xl mx-auto px-6 md:px-12 py-6 md:py-10">
-          <div className="glass-panel p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-white/5 bg-gradient-to-r from-bg-surface to-bg-main flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
+          <div className="glass-panel p-6 md:p-10 rounded-[2.5rem] md:rounded-[3rem] border border-white/5 bg-gradient-to-r from-bg-surface to-bg-main flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16 flex-grow">
               <div className="text-center md:text-left space-y-1">
                 <h3 className="text-sm md:text-xl font-black text-white uppercase tracking-widest italic leading-none">Member <span className="gradient-text not-italic">Perks</span></h3>
@@ -410,7 +410,7 @@ const Landing = () => {
                   { icon: '📜', title: 'Merit Badge', desc: 'Physical certificate' }
                 ].map((perk, i) => (
                   <div key={i} className="flex items-center gap-4 group">
-                    <span className="text-xl md:text-3xl group-hover:scale-125 transition-transform drop-shadow-lg">{perk.icon}</span>
+                    <span className="text-xl md:text-3xl group-hover:scale-125 transition-transform">{perk.icon}</span>
                     <div className="text-left">
                       <p className="text-[10px] md:text-[12px] font-black text-text-header uppercase tracking-tight leading-none group-hover:text-uni-400 transition-colors">{perk.title}</p>
                       <p className="text-[7px] md:text-[9px] font-bold text-text-muted uppercase tracking-widest mt-1.5 opacity-60">{perk.desc}</p>
@@ -422,7 +422,7 @@ const Landing = () => {
             
             <button 
               onClick={() => navigate('/register')}
-              className="shrink-0 bg-uni-600 text-white px-10 py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all shadow-2xl shadow-uni-500/30"
+              className="shrink-0 bg-uni-600 text-white px-10 py-5 rounded-2xl md:rounded-3xl font-black text-[10px] md:text-xs uppercase tracking-[0.3em] hover:scale-105 transition-all"
             >
               Get Started
             </button>
@@ -460,7 +460,7 @@ const Landing = () => {
              onClick={() => setSelectedCategory('all')}
              className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border relative z-20 ${
                selectedCategory === 'all' 
-               ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
+               ? 'bg-uni-500 text-white border-uni-400' 
                : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
              }`}
            >
@@ -475,7 +475,7 @@ const Landing = () => {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-wider md:tracking-widest transition-all shrink-0 border flex items-center gap-1.5 md:gap-3 group/chip relative z-20 ${
                     selectedCategory === cat.id 
-                    ? 'bg-uni-500 text-white border-uni-400 shadow-lg shadow-uni-500/30' 
+                    ? 'bg-uni-500 text-white border-uni-400' 
                     : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
                   }`}
                 >
@@ -499,11 +499,10 @@ const Landing = () => {
             <div 
               className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
             >
-                {/* Background Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-uni-500/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                {/* Background Glow Removed */}
                 
                 <div className="relative z-10 max-w-md mx-auto px-6">
-                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 animate-bounce transition-transform group-hover:scale-110">
+                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 transition-transform group-hover:scale-110">
                     🔍
                   </div>
                   <h3 className="text-2xl font-black text-text-header uppercase tracking-tighter italic mb-4">No matching records found</h3>
@@ -520,7 +519,7 @@ const Landing = () => {
                     </button>
                     <Link 
                       to={user ? "/student/report-lost" : "/report-lost/guest"}
-                      className="px-8 py-4 bg-accent-default hover:bg-accent-active text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto shadow-lg shadow-accent-default/30"
+                      className="px-8 py-4 bg-accent-default hover:bg-accent-active text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto"
                     >
                       Report it Missing
                     </Link>
@@ -600,7 +599,7 @@ const Landing = () => {
              onClick={() => setSelectedLostCategory('all')}
              className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border relative z-20 ${
                selectedLostCategory === 'all' 
-               ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
+               ? 'bg-accent-default text-white border-accent-default/40' 
                : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
              }`}
            >
@@ -615,7 +614,7 @@ const Landing = () => {
                  onClick={() => setSelectedLostCategory(cat.id)}
                  className={`px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all shrink-0 border flex items-center gap-3 group/chip relative z-20 ${
                    selectedLostCategory === cat.id 
-                   ? 'bg-accent-default text-white border-accent-default/40 shadow-lg shadow-accent-default/30' 
+                   ? 'bg-accent-default text-white border-accent-default/40' 
                    : 'glass-panel border-white/5 text-text-muted hover:text-text-header hover:border-white/20'
                  }`}
                >
@@ -639,11 +638,10 @@ const Landing = () => {
             <div 
               className="py-24 text-center glass-panel rounded-[3rem] border border-white/5 relative overflow-hidden group"
             >
-                {/* Background Glow */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-accent-default/10 rounded-full blur-[100px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                {/* Background Glow Removed */}
                 
                 <div className="relative z-10 max-w-md mx-auto px-6">
-                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 animate-pulse transition-transform group-hover:scale-110">
+                  <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-8 transition-transform group-hover:scale-110">
                     🤝
                   </div>
                   <h3 className="text-2xl font-black text-text-header uppercase tracking-tighter italic mb-4">No active lost reports</h3>
@@ -660,7 +658,7 @@ const Landing = () => {
                     </button>
                     <Link 
                       to={user ? "/student/report-found" : "/report-found/guest"}
-                      className="px-8 py-4 bg-uni-500 hover:bg-uni-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto shadow-lg shadow-uni-500/30"
+                      className="px-8 py-4 bg-uni-500 hover:bg-uni-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all w-full sm:w-auto"
                     >
                       Surrender Found Item
                     </Link>
@@ -752,7 +750,7 @@ const Landing = () => {
             exit={{ y: 50, opacity: 0 }}
             className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110]"
           >
-            <div className="glass-panel border border-border-main/20 bg-bg-surface/90 text-text-header px-8 py-4 rounded-full shadow-2xl flex items-center space-x-4">
+            <div className="glass-panel border border-border-main/20 bg-bg-surface/90 text-text-header px-8 py-4 rounded-full flex items-center space-x-4">
               <i className="fa-solid fa-check-circle text-green-500"></i>
               <p className="text-[10px] font-black uppercase tracking-widest">{toast.message}</p>
             </div>

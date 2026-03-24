@@ -52,7 +52,7 @@ const HallOfIntegrity = () => {
                         <button 
                             onClick={() => setLeaderboardType('students')}
                             className={`px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-between group ${
-                                leaderboardType === 'students' ? 'bg-uni-600 text-white shadow-xl shadow-uni-600/20' : 'bg-white/5 text-slate-500 hover:text-white hover:bg-white/10'
+                                leaderboardType === 'students' ? 'bg-uni-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white hover:bg-white/10'
                             }`}
                         >
                             <span className="flex items-center gap-3">
@@ -64,7 +64,7 @@ const HallOfIntegrity = () => {
                         <button 
                             onClick={() => setLeaderboardType('colleges')}
                             className={`px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-between group ${
-                                leaderboardType === 'colleges' ? 'bg-amber-600 text-white shadow-xl shadow-amber-600/20' : 'bg-white/5 text-slate-500 hover:text-white hover:bg-white/10'
+                                leaderboardType === 'colleges' ? 'bg-amber-600 text-white' : 'bg-white/5 text-slate-500 hover:text-white hover:bg-white/10'
                             }`}
                         >
                             <span className="flex items-center gap-3">
@@ -109,7 +109,7 @@ const HallOfIntegrity = () => {
                         >
                             <div className="flex items-center gap-6">
                                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black border transition-all ${
-                                    i === 0 ? 'bg-amber-500/20 text-amber-500 border-amber-500/30 shadow-lg shadow-amber-500/20' : 
+                                    i === 0 ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 
                                     i === 1 ? 'bg-slate-500/20 text-slate-400 border-slate-500/30' :
                                     i === 2 ? 'bg-orange-800/20 text-orange-800 border-orange-800/30' :
                                     'bg-bg-elevated/50 text-slate-500 border-white/5'

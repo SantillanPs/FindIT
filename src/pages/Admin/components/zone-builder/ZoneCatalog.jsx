@@ -61,7 +61,7 @@ const ZoneCatalog = ({
                     </div>
                     <button 
                         disabled={actionLoading} 
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-900/10"
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 border border-black/5"
                     >
                         {actionLoading ? "..." : "Add to Catalog"}
                     </button>

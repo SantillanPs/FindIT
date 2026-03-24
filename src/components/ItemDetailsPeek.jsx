@@ -32,7 +32,7 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-5xl h-fit max-h-[90vh] glass-panel rounded-[2rem] md:rounded-[4rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col md:flex-row"
+        className="relative w-full max-w-5xl h-fit max-h-[90vh] glass-panel rounded-[2rem] md:rounded-[4rem] border border-white/10 overflow-hidden flex flex-col md:flex-row"
       >
         {/* Close Button */}
         <button 
@@ -58,12 +58,12 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
           )}
           
           <div className="absolute top-8 left-8 flex flex-col gap-3">
-             <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/10 shadow-2xl">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+             <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md px-5 py-2.5 rounded-2xl border border-white/10">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
                 <span className="text-xs font-black text-white uppercase tracking-widest">In Custody</span>
              </div>
              {item.is_recent && (
-               <div className="flex items-center gap-3 bg-uni-500 px-5 py-2.5 rounded-2xl shadow-2xl">
+               <div className="flex items-center gap-3 bg-uni-500 px-5 py-2.5 rounded-2xl">
                   <span className="text-xs font-black text-white uppercase tracking-widest">New Discovery</span>
                </div>
              )}
@@ -113,10 +113,10 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
                 onClose();
                 navigate(`/submit-claim/${item.id}`);
               }}
-              className="flex-grow py-6 md:py-8 bg-uni-500 hover:bg-uni-400 text-white rounded-3xl font-black text-xs md:text-sm uppercase tracking-[0.3em] transition-all shadow-xl shadow-uni-500/20 active:scale-95 flex items-center justify-center gap-4 group"
+              className="flex-grow py-6 md:py-8 bg-uni-500 hover:bg-uni-400 text-white rounded-3xl font-black text-xs md:text-sm uppercase tracking-[0.3em] transition-all active:scale-95 flex items-center justify-center gap-4 group"
             >
               Initiate Process 
-              <i className="fa-solid fa-shield-halved group-hover:animate-bounce"></i>
+              <i className="fa-solid fa-shield-halved"></i>
             </button>
             <button 
               onClick={() => onShare(item)}

@@ -128,7 +128,7 @@ const UserVerification = () => {
                          className={`text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all ${
                            user.is_verified 
                            ? 'text-red-500 hover:bg-red-500/10' 
-                           : 'bg-uni-600 text-white hover:bg-uni-500 shadow-lg shadow-uni-500/20'
+                           : 'bg-uni-600 text-white hover:bg-uni-500'
                          }`}
                        >
                          {user.is_verified ? 'Revoke Access' : 'Validate ID'}

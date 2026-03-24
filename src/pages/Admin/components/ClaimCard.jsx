@@ -33,7 +33,7 @@ const ClaimCard = ({ claim, onReview }) => {
        <div className="flex gap-3">
           <button 
             onClick={() => onReview(claim)}
-            className="px-6 py-2.5 bg-uni-600 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-uni-500 transition-all shadow-lg shadow-uni-600/20 active:scale-95"
+            className="px-6 py-2.5 bg-uni-600 text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-uni-500 transition-all active:scale-95"
           >
              Analyze Claim
           </button>

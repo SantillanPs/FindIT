@@ -24,7 +24,7 @@ const ClaimReviewModal = ({
         initial={{ scale: 0.9, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 30 }}
-        className="glass-panel w-full max-w-4xl rounded-[3rem] overflow-hidden relative z-10 border border-white/10 shadow-2xl flex flex-col max-h-[90vh] bg-slate-900/50"
+        className="glass-panel w-full max-w-4xl rounded-[3rem] overflow-hidden relative z-10 border border-white/10 flex flex-col max-h-[90vh] bg-slate-900/50"
       >
         <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
           <div className="flex items-center gap-6">
@@ -85,7 +85,7 @@ const ClaimReviewModal = ({
                   </div>
                   <button 
                       onClick={() => setClaimReviewStep(2)}
-                      className="w-full bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all shadow-2xl group flex items-center justify-center gap-4"
+                      className="w-full bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all group flex items-center justify-center gap-4"
                   >
                        Compare Evidence Photos
                        <i className="fa-solid fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
@@ -103,7 +103,7 @@ const ClaimReviewModal = ({
                       {/* Photo Comparison Side-by-Side */}
                       <div className="space-y-4">
                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em]">Found Item (Registry)</p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/10 overflow-hidden relative group shadow-2xl">
+                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/10 overflow-hidden relative group">
                               {selectedClaim.found_item_photo_url ? (
                                   <img src={selectedClaim.found_item_photo_url} className="w-full h-full object-cover" alt="Original item" />
                               ) : (
@@ -120,7 +120,7 @@ const ClaimReviewModal = ({
 
                       <div className="space-y-4">
                           <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.3em]">Claimant Proof Photo</p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-uni-500/10 overflow-hidden relative group shadow-2xl">
+                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-uni-500/10 overflow-hidden relative group">
                               {selectedClaim.proof_photo_url ? (
                                   <img src={selectedClaim.proof_photo_url} className="w-full h-full object-cover" alt="Claim proof" />
                               ) : (
@@ -175,7 +175,7 @@ const ClaimReviewModal = ({
                       <button onClick={() => setClaimReviewStep(1)} className="px-10 py-6 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-all">Back to Details</button>
                       <button 
                           onClick={() => setClaimReviewStep(3)}
-                          className="flex-grow bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all shadow-2xl active:scale-95"
+                          className="flex-grow bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all active:scale-95"
                       >
                            Submit Decision →
                       </button>
@@ -209,10 +209,10 @@ const ClaimReviewModal = ({
                                 } catch (err) { console.error(err); }
                             }}
                             disabled={actionLoading || selectedClaim.is_pickup_ready}
-                            className={`col-span-2 group p-8 rounded-[2.5rem] border shadow-2xl transition-all text-center space-y-4 ${
+                            className={`col-span-2 group p-8 rounded-[2.5rem] border transition-all text-center space-y-4 ${
                                 selectedClaim.is_pickup_ready 
                                 ? 'bg-slate-900 border-white/5 cursor-not-allowed' 
-                                : 'bg-green-600 border-green-600 shadow-green-600/20 hover:bg-green-500'
+                                : 'bg-green-600 border-green-600 hover:bg-green-500'
                             }`}
                         >
                             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform">
@@ -252,7 +252,7 @@ const ClaimReviewModal = ({
                                   setSelectedClaim(null);
                               }}
                               disabled={actionLoading}
-                              className="group p-8 rounded-[2.5rem] bg-uni-600 border border-uni-600 shadow-2xl shadow-uni-600/20 hover:bg-uni-500 transition-all text-left space-y-4"
+                              className="group p-8 rounded-[2.5rem] bg-uni-600 border border-uni-600 hover:bg-uni-500 transition-all text-left space-y-4"
                           >
                               <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white group-hover:scale-110 transition-transform">
                                   <i className="fa-solid fa-check text-xl"></i>

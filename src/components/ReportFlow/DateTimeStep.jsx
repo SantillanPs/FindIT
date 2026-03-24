@@ -18,7 +18,7 @@ const DateTimeStep = ({
       </div>
 
       <div className="max-w-md mx-auto w-full space-y-10">
-          <div className="p-10 glass-panel rounded-[3.5rem] border border-white/5 shadow-2xl flex flex-col gap-6">
+          <div className="p-10 glass-panel rounded-[3.5rem] border border-white/5 flex flex-col gap-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 text-left">
                   <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4">Select Date</label>
@@ -48,7 +48,7 @@ const DateTimeStep = ({
           </div>
           <button 
             onClick={onNext} 
-            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl"
+            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all border border-black/5 active:scale-95"
           >
             Next Step →
           </button>

@@ -70,7 +70,7 @@ const FeedbackHub = () => {
                key={f}
                onClick={() => setFilter(f)}
                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                 filter === f ? 'bg-uni-500 text-white shadow-lg shadow-uni-500/20' : 'text-slate-500 hover:text-white'
+                 filter === f ? 'bg-uni-500 text-white' : 'text-slate-500 hover:text-white'
                }`}
             >
               {f.replace('_', ' ')}
@@ -182,7 +182,7 @@ const FeedbackHub = () => {
                     {selectedFeedback.screenshot_url && (
                       <div>
                         <h5 className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Visual Evidence</h5>
-                        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl group relative cursor-zoom-in max-h-96">
+                        <div className="rounded-2xl overflow-hidden border border-white/10 group relative cursor-zoom-in max-h-96">
                           <img 
                             src={selectedFeedback.screenshot_url} 
                             alt="Screenshot" 
@@ -219,7 +219,7 @@ const FeedbackHub = () => {
                          </button>
                          <button
                            onClick={() => handleStatusUpdate(selectedFeedback.id, 'resolved')}
-                           className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-uni-500 hover:bg-uni-400 text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-uni-500/20 transition-all"
+                           className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-uni-500 hover:bg-uni-400 text-white text-[9px] font-black uppercase tracking-widest transition-all"
                          >
                            Mark as Resolved
                          </button>
@@ -235,7 +235,7 @@ const FeedbackHub = () => {
                 </motion.div>
               ) : (
                 <div className="h-full min-h-[400px] flex flex-col items-center justify-center p-12 text-center opacity-40">
-                  <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mb-6 text-3xl border border-white/5 shadow-inner">🗂️</div>
+                  <div className="w-20 h-20 bg-slate-900 rounded-full flex items-center justify-center mb-6 text-3xl border border-white/5">🗂️</div>
                   <h3 className="text-xl font-bold text-slate-500">Awaiting Record Selection</h3>
                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-600 mt-2">Pick a feedback entry from the ledger to manage</p>
                 </div>

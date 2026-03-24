@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Modular Components
@@ -21,6 +22,7 @@ import ImagePreviewOverlay from './components/ImagePreviewOverlay';
 
 
 const AdminDashboard = () => {
+  const { user } = useAuth();
   const [recentFound, setRecentFound] = useState([]);
   const [matches, setMatches] = useState([]);
   const [pendingClaims, setPendingClaims] = useState([]);
@@ -44,6 +46,7 @@ const AdminDashboard = () => {
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [claimReviewStep, setClaimReviewStep] = useState(1);
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
+  const [showIntakeModal, setShowIntakeModal] = useState(null); // { item, verification_note, challenge_question }
   const [previewImage, setPreviewImage] = useState(null);
 
   useEffect(() => {
@@ -166,16 +169,40 @@ const AdminDashboard = () => {
 
 
   const handleStatusUpdate = async (item, status) => {
-    // Optimistic Update
-    const prevItems = [...recentFound];
-    setRecentFound(prev => prev.map(i => i.id === item.id ? { ...i, status: 'in_custody' } : i));
+    if (status === 'in_custody') {
+      setShowIntakeModal({ 
+        item, 
+        verification_note: item.verification_note || '', 
+        challenge_question: item.challenge_question || '' 
+      });
+      return;
+    }
     
+    // Fallback for other status updates
     setActionLoading(item.id);
     try {
       await apiClient.put(`/admin/found/${item.id}/custody`, { notes: `Status updated to ${status}` });
+      await refreshActiveTab();
     } catch (err) {
       console.error('Update failed', err);
-      setRecentFound(prevItems); // Rollback
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleIntakeSubmit = async () => {
+    const { item, verification_note, challenge_question } = showIntakeModal;
+    setActionLoading(item.id);
+    try {
+      await apiClient.put(`/admin/found/${item.id}/custody`, { 
+        notes: `Secured in vault with verification challenge`,
+        verification_note,
+        challenge_question
+      });
+      setShowIntakeModal(null);
+      await refreshActiveTab();
+    } catch (err) {
+      console.error('Intake failed', err);
     } finally {
       setActionLoading(null);
     }
@@ -493,6 +520,80 @@ const AdminDashboard = () => {
               previewImage={previewImage}
               setPreviewImage={setPreviewImage}
             />
+          )}
+
+          {showIntakeModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowIntakeModal(null)}
+                className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
+              />
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="glass-panel w-full max-w-lg rounded-[2.5rem] p-10 relative z-10 border border-white/10 space-y-8 bg-slate-900/50"
+              >
+                <div className="space-y-4">
+                  <div className="w-16 h-16 bg-uni-500/10 rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400">
+                    <i className="fa-solid fa-vault text-2xl"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-white uppercase italic tracking-tight">"Secure Item"</h3>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Item #{showIntakeModal.item.id} • Intake to Vault</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                   <div className="space-y-3">
+                      <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1 flex items-center gap-2">
+                        <i className="fa-solid fa-eye-slash text-[8px] text-uni-400"></i>
+                        Secret Verification Note (Internal)
+                      </label>
+                      <textarea 
+                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all min-h-[100px]"
+                        placeholder="E.g., Small sunflower sticker under the case..."
+                        value={showIntakeModal.verification_note}
+                        onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})}
+                      />
+                      <p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest">This description is NEVER shown to the public.</p>
+                   </div>
+
+                   <div className="space-y-3">
+                      <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1 flex items-center gap-2">
+                        <i className="fa-solid fa-question-circle text-[8px] text-uni-400"></i>
+                        Challenge Question (Verbally ask student)
+                      </label>
+                      <input 
+                        type="text"
+                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all tracking-widest"
+                        placeholder="E.g., What color is the sticker on the back?"
+                        value={showIntakeModal.challenge_question}
+                        onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})}
+                      />
+                   </div>
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                   <button 
+                     onClick={() => setShowIntakeModal(null)}
+                     className="px-8 py-6 text-[10px] font-black text-slate-500 uppercase tracking-widest hover:text-white transition-all"
+                   >
+                     Cancel
+                   </button>
+                   <button 
+                     onClick={handleIntakeSubmit}
+                     disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note}
+                     className="flex-grow bg-uni-600 text-white py-6 rounded-3xl font-black text-xs uppercase tracking-[0.4em] hover:bg-white hover:text-black disabled:opacity-20 transition-all"
+                   >
+                     {actionLoading === showIntakeModal.item.id ? 'Securing...' : 'Verify & Lock Item →'}
+                   </button>
+                </div>
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
     </div>

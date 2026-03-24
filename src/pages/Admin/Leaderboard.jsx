@@ -75,9 +75,9 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   );
 
   const getRankStyle = (index) => {
-    if (index === 0) return "bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 shadow-[0_0_20px_rgba(245,158,11,0.3)] border-amber-400/50";
-    if (index === 1) return "bg-gradient-to-br from-slate-200 via-slate-400 to-slate-500 shadow-[0_0_20px_rgba(148,163,184,0.2)] border-slate-300/50";
-    if (index === 2) return "bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 shadow-[0_0_20px_rgba(194,65,12,0.2)] border-orange-400/50";
+    if (index === 0) return "bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 border-amber-400/50";
+    if (index === 1) return "bg-gradient-to-br from-slate-200 via-slate-400 to-slate-500 border-slate-300/50";
+    if (index === 2) return "bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 border-orange-400/50";
     return "bg-slate-900 border-white/5";
   };
 
@@ -171,7 +171,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                                   {user.first_name} {user.last_name}
                                   {user.is_verified && <UserCheck size={12} className="text-green-500" />}
                                   {user.is_certificate_eligible && (
-                                      <span className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-300 text-black px-2 py-0.5 rounded text-[8px] font-black shadow-lg shadow-amber-500/20">
+                                      <span className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-300 text-black px-2 py-0.5 rounded text-[8px] font-black">
                                           <Shield size={8} /> CERTIFIED
                                       </span>
                                   )}
@@ -196,7 +196,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                                 <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
-                                    className={`h-full rounded-full ${progress === 100 ? 'bg-gradient-to-r from-amber-500 to-yellow-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]' : 'bg-uni-500'}`}
+                                    className={`h-full rounded-full ${progress === 100 ? 'bg-gradient-to-r from-amber-500 to-yellow-300' : 'bg-uni-500'}`}
                                 />
                             </div>
                         </div>
@@ -215,7 +215,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                               <button 
                                   onClick={() => toggleCertificate(user.id, user.is_certificate_eligible)}
                                   disabled={actionLoading === `cert-${user.id}`}
-                                  className={`p-2 rounded-xl transition-all ${user.is_certificate_eligible ? 'bg-amber-500/10 text-amber-500 shadow-inner shadow-amber-500/10' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
+                                  className={`p-2 rounded-xl transition-all ${user.is_certificate_eligible ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
                                   title="Toggle Certificate Eligibility"
                               >
                                   <Trophy size={16} />
@@ -223,7 +223,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                               <button 
                                   onClick={() => toggleVerification(user.id, user.is_verified)}
                                   disabled={actionLoading === `verify-${user.id}`}
-                                  className={`p-2 rounded-xl transition-all ${user.is_verified ? 'bg-green-500/10 text-green-500 shadow-inner shadow-green-500/10' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
+                                  className={`p-2 rounded-xl transition-all ${user.is_verified ? 'bg-green-500/10 text-green-500 border border-green-500/30' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
                                   title="Verify Identity"
                               >
                                   <UserCheck size={16} />

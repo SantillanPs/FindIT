@@ -86,7 +86,7 @@ const StudentDashboard = () => {
             onClick={() => navigate(`/match-review/${match.lost_item_id}/${match.found_item_id}`)}
             className="bg-uni-600/10 border border-uni-500/30 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-uni-600/20 transition-all group overflow-hidden relative"
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/5 blur-3xl -z-10 group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/5 -z-10 group-hover:scale-110 transition-transform duration-700"></div>
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl border border-white/5 group-hover:border-uni-500/30 transition-colors">🔍</div>
               <div className="text-left space-y-1">
@@ -94,7 +94,7 @@ const StudentDashboard = () => {
                 <p className="text-sm font-bold text-white leading-relaxed">Someone found an item that might be yours. Please verify it now.</p>
               </div>
             </div>
-            <div className="px-8 py-3 bg-uni-600 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.3em] shadow-xl shadow-uni-600/20 group-hover:bg-uni-500 transition-colors whitespace-nowrap">
+            <div className="px-8 py-3 bg-uni-600 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.3em] group-hover:bg-uni-500 transition-colors whitespace-nowrap">
               Verify Match →
             </div>
           </motion.div>
@@ -118,7 +118,7 @@ const StudentDashboard = () => {
             <div className="space-y-6">
                 <div className="flex justify-between items-center px-1">
                     <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-uni-500 animate-pulse"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-uni-500"></span>
                         Live Discovery Feed
                     </h2>
                     <Link to="/public-feed" className="text-[9px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors">Full Inventory</Link>
@@ -126,7 +126,7 @@ const StudentDashboard = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {loading ? (
-                        Array(3).fill(0).map((_, i) => <div key={i} className="h-44 bg-white/5 animate-pulse rounded-3xl"></div>)
+                        Array(3).fill(0).map((_, i) => <div key={i} className="h-44 bg-white/5 rounded-3xl"></div>)
                     ) : publicFound.length === 0 ? (
                         <div className="col-span-full py-12 glass-panel border-dashed border-white/5 text-center">
                             <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Registry Empty</p>
@@ -141,7 +141,7 @@ const StudentDashboard = () => {
                                 onClick={() => navigate(`/submit-claim/${item.id}`)}
                                 className="glass-panel p-4 border border-white/5 hover:border-uni-500/30 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"
                             >
-                                <div className="h-28 w-full bg-slate-900 rounded-2xl mb-3 overflow-hidden shadow-inner">
+                                <div className="h-28 w-full bg-slate-900 rounded-2xl mb-3 overflow-hidden">
                                     {item.safe_photo_url ? (
                                         <img src={item.safe_photo_url} alt={item.item_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                     ) : (
@@ -150,7 +150,7 @@ const StudentDashboard = () => {
                                 </div>
                                 <h4 className="text-[10px] font-black text-white uppercase tracking-wider mb-1 line-clamp-1">{item.item_name}</h4>
                                 <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-auto">{item.location_zone}</p>
-                                <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-uni-500 text-white text-[7px] font-black uppercase tracking-tighter shadow-lg shadow-uni-500/20">NEW</div>
+                                <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-uni-500 text-white text-[7px] font-black uppercase tracking-tighter">NEW</div>
                             </motion.div>
                         ))
                     )}
@@ -168,7 +168,7 @@ const StudentDashboard = () => {
 
                 <div className="space-y-3">
                     {loading ? (
-                        Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-white/5 animate-pulse rounded-2xl"></div>)
+                        Array(3).fill(0).map((_, i) => <div key={i} className="h-16 bg-white/5 rounded-2xl"></div>)
                     ) : publicLost.length === 0 ? (
                         <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest text-center py-6">Registry Empty</p>
                     ) : (
@@ -201,7 +201,7 @@ const StudentDashboard = () => {
         <div className="space-y-8">
             {/* Honor Snapshot */}
             <div className="glass-panel p-6 rounded-[2rem] border border-brand-gold/30 bg-brand-gold/5 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 blur-3xl -z-10 group-hover:scale-110 transition-transform duration-700"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 -z-10 group-hover:scale-110 transition-transform duration-700"></div>
                 <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
                     <i className="fa-solid fa-ranking-star text-brand-gold"></i>
                     Honor Context
@@ -214,7 +214,7 @@ const StudentDashboard = () => {
                             <p className="text-2xl font-black text-brand-gold tracking-tighter italic leading-none">#{deptRank?.rank || '??'}</p>
                         </div>
                         <div className="w-full h-1.5 bg-white/5 rounded-full mt-3 overflow-hidden">
-                            <div className="h-full bg-brand-gold shadow-[0_0_8px_rgba(255,193,7,0.4)]" style={{ width: deptRank ? `${(1 - (deptRank.rank - 1) / deptRank.total) * 100}%` : '0%' }}></div>
+                            <div className="h-full bg-brand-gold" style={{ width: deptRank ? `${(1 - (deptRank.rank - 1) / deptRank.total) * 100}%` : '0%' }}></div>
                         </div>
                     </div>
                     <div className="pt-6 border-t border-white/5 space-y-4">
@@ -236,7 +236,7 @@ const StudentDashboard = () => {
                 </h3>
                 <div className="space-y-4">
                     {loading ? (
-                        Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-white/5 animate-pulse rounded-xl"></div>)
+                        Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-white/5 rounded-xl"></div>)
                     ) : (personalLost.length + personalFound.length) === 0 ? (
                         <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest text-center py-6 italic border border-dashed border-white/5 rounded-2xl">No active cases.</p>
                     ) : (
@@ -246,7 +246,7 @@ const StudentDashboard = () => {
                                     <p className="text-[9px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{case_item.item_name}</p>
                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{case_item.status.replace('_', ' ')}</p>
                                 </div>
-                                <div className={`w-1.5 h-1.5 rounded-full ${['matched', 'pending_owner'].includes(case_item.status) ? 'bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-700'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${['matched', 'pending_owner'].includes(case_item.status) ? 'bg-blue-500' : 'bg-slate-700'}`}></div>
                             </div>
                         ))
                     )}
@@ -263,10 +263,10 @@ const StudentDashboard = () => {
 
 const StatCard = ({ icon, label, value, color, variants, index }) => {
   const colors = {
-    blue: 'from-blue-600/20 to-blue-400/5 text-blue-400 border-blue-500/20 shadow-blue-500/10',
-    green: 'from-green-600/20 to-green-400/5 text-green-400 border-green-500/20 shadow-green-500/10',
-    gold: 'from-brand-gold/20 to-yellow-400/5 text-brand-gold border-brand-gold/20 shadow-brand-gold/10',
-    purple: 'from-purple-600/20 to-purple-400/5 text-purple-400 border-purple-500/20 shadow-purple-500/10'
+    blue: 'from-blue-600/20 to-blue-400/5 text-blue-400 border-blue-500/20',
+    green: 'from-green-600/20 to-green-400/5 text-green-400 border-green-500/20',
+    gold: 'from-brand-gold/20 to-yellow-400/5 text-brand-gold border-brand-gold/20',
+    purple: 'from-purple-600/20 to-purple-400/5 text-purple-400 border-purple-500/20'
   };
 
   return (

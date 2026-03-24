@@ -61,7 +61,7 @@ const ClaimStatus = () => {
 
             {/* Step 1: Submitted */}
             <div className="flex items-start gap-6 relative">
-                <div className="w-8 h-8 bg-uni-500 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 shadow-xl shadow-uni-500/20 z-10">
+                <div className="w-8 h-8 bg-uni-500 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10">
                     <i className="fa-solid fa-check text-[10px] text-white"></i>
                 </div>
                 <div className="space-y-1">
@@ -76,7 +76,7 @@ const ClaimStatus = () => {
             <div className="flex items-start gap-6 relative">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10 transition-colors ${
                     claim.status === 'pending' 
-                    ? 'bg-amber-500 animate-pulse' 
+                    ? 'bg-amber-500' 
                     : 'bg-uni-500'
                 }`}>
                     {claim.status === 'pending' ? (
@@ -99,8 +99,8 @@ const ClaimStatus = () => {
             <div className="flex items-start gap-6 relative">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10 ${
                     claim.status === 'pending' ? 'bg-slate-800' :
-                    claim.status === 'approved' ? 'bg-green-500 shadow-xl shadow-green-500/20' :
-                    'bg-red-500 shadow-xl shadow-red-500/20'
+                    claim.status === 'approved' ? 'bg-green-500' :
+                    'bg-red-500'
                 }`}>
                     {claim.status === 'approved' && <i className="fa-solid fa-check text-[10px] text-white"></i>}
                     {claim.status === 'rejected' && <i className="fa-solid fa-xmark text-[10px] text-white"></i>}

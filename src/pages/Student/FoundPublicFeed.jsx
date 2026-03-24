@@ -123,7 +123,7 @@ const FoundPublicFeed = () => {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array(6).fill(0).map((_, i) => (
-                <div key={i} className="h-[350px] md:h-[400px] bg-white/5 animate-pulse rounded-3xl"></div>
+                <div key={i} className="h-[350px] md:h-[400px] bg-white/5 rounded-3xl"></div>
             ))}
         </div>
       ) : (

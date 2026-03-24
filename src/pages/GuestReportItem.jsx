@@ -154,13 +154,14 @@ const GuestReportItem = () => {
 
             {step === 5 && (
               <DetailsStep 
-                stepLabel="Step 5: Item Details"
+                stepLabel="Step 4: Item Details"
                 title="Item Description"
                 description="Briefly describe the item's appearance, brand, or other details."
                 placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
                 value={formData.description}
+                category={formData.category}
                 onChange={(val) => setFormData({...formData, description: val})}
-                onNext={() => goToStep(6)}
+                onNext={() => goToStep(5)}
               />
             )}
 

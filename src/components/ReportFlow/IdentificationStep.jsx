@@ -22,14 +22,14 @@ const IdentificationStep = ({
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-white/5 rounded-[3rem] border border-uni-500/30 shadow-2xl shadow-uni-500/5 relative text-left"
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-white/5 rounded-[3rem] border border-uni-500/30 relative text-left"
         >
           <button 
             onClick={() => {
               setHasIdentification(false);
               setFormData({...formData, identified_student_id: '', identified_name: ''});
             }}
-            className="absolute -top-3 -right-3 w-8 h-8 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center text-slate-500 hover:text-white z-10 shadow-xl"
+            className="absolute -top-3 -right-3 w-8 h-8 bg-slate-900 border border-white/10 rounded-full flex items-center justify-center text-slate-500 hover:text-white z-10"
           >
             <i className="fa-solid fa-xmark text-[10px]"></i>
           </button>

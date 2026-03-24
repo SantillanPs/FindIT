@@ -90,7 +90,7 @@ const AssetVault = () => {
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="bg-uni-600 hover:bg-uni-500 text-white px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20 active:scale-95 flex items-center gap-2 w-full md:w-auto justify-center"
+          className="bg-uni-600 hover:bg-uni-500 text-white px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 w-full md:w-auto justify-center"
         >
           <i className="fa-solid fa-plus"></i>
           Register New Asset
@@ -100,7 +100,7 @@ const AssetVault = () => {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-64 app-card animate-pulse bg-slate-800/10 rounded-2xl"></div>
+            <div key={i} className="h-64 app-card bg-slate-800/10 rounded-2xl"></div>
           ))}
         </div>
       ) : assets.length === 0 ? (
@@ -139,7 +139,7 @@ const AssetVault = () => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-xl bg-bg-surface border border-border-main rounded-[2rem] overflow-hidden shadow-2xl"
+              className="relative w-full max-w-xl bg-bg-surface border border-border-main rounded-[2rem] overflow-hidden"
             >
               <div className="p-8 border-b border-border-main flex items-center justify-between bg-bg-surface/50 backdrop-blur-md">
                 <div>
@@ -247,7 +247,7 @@ const AssetVault = () => {
                   <button
                     type="submit"
                     disabled={uploading}
-                    className="flex-[2] bg-uni-600 hover:bg-uni-500 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="flex-[2] bg-uni-600 hover:bg-uni-500 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {uploading ? (
                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
@@ -316,7 +316,7 @@ const AssetCard = ({ asset, onDelete }) => {
               </span>
            </div>
            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/5 border border-green-500/10">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
               <span className="text-[8px] font-black text-green-500 uppercase tracking-widest">Verified Vault</span>
            </div>
         </div>

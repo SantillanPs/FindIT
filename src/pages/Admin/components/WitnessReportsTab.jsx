@@ -62,7 +62,7 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
               onClick={() => setFilter(status)}
               className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 filter === status 
-                  ? 'bg-uni-500 text-white shadow-lg shadow-uni-500/20' 
+                  ? 'bg-uni-500 text-white' 
                   : 'text-slate-500 hover:text-white hover:bg-white/5'
               }`}
             >
@@ -145,7 +145,7 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
               {/* Evidence Photo */}
               {report.witness_photo_url && (
                 <div 
-                  className="relative h-48 rounded-3xl overflow-hidden border border-white/5 cursor-zoom-in group-hover:border-uni-500/50 transition-all shadow-2xl"
+                  className="relative h-48 rounded-3xl overflow-hidden border border-white/5 cursor-zoom-in group-hover:border-uni-500/50 transition-all"
                   onClick={() => setPreviewImage(report.witness_photo_url)}
                 >
                   <img src={report.witness_photo_url} className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-all duration-700" alt="Witness Evidence" />

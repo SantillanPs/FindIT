@@ -25,7 +25,7 @@ const SimpleInputStep = ({
              <input 
               type="text"
               placeholder={placeholder}
-              className={`w-full bg-white/5 border-2 border-white/10 rounded-[3.5rem] p-10 ${icon ? 'pl-20' : 'px-10'} text-2xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-2xl`}
+              className={`w-full bg-white/5 border-2 border-white/10 rounded-[3.5rem] p-10 ${icon ? 'pl-20' : 'px-10'} text-2xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700`}
               value={value}
               onChange={(e) => onChange(e.target.value)}
               autoFocus
@@ -35,7 +35,7 @@ const SimpleInputStep = ({
           <button 
             onClick={onNext} 
             disabled={!value}
-            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all shadow-2xl shadow-uni-600/30 active:scale-95"
+            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all border border-black/5 active:scale-95"
           >
             {buttonText}
           </button>

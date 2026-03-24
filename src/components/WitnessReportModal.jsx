@@ -91,7 +91,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-xl glass-panel rounded-[2.5rem] border border-border-main/20 overflow-hidden bg-bg-surface shadow-2xl"
+          className="relative w-full max-w-xl glass-panel rounded-[2.5rem] border border-border-main/20 overflow-hidden bg-bg-surface"
         >
           {/* Header */}
           <div className="p-8 border-b border-border-main/10 flex items-center justify-between bg-bg-elevated/10">
@@ -166,7 +166,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
               
               <div className="grid grid-cols-1 gap-4">
                 {photoUrl ? (
-                  <div className="relative group rounded-3xl overflow-hidden aspect-video border-2 border-accent-default/30 shadow-2xl">
+                  <div className="relative group rounded-3xl overflow-hidden aspect-video border-2 border-accent-default/30">
                     <img src={photoUrl} alt="Evidence" className="w-full h-full object-cover" />
                     <button
                       type="button"
@@ -209,7 +209,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
                   <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1">Your identity won't be shown to anyone.</p>
                 </div>
               </div>
-              <div className={`w-12 h-6 rounded-full relative transition-all shadow-inner ${isAnonymous ? 'bg-accent-default' : 'bg-bg-elevated'}`}>
+              <div className={`w-12 h-6 rounded-full relative transition-all ${isAnonymous ? 'bg-accent-default' : 'bg-bg-elevated'}`}>
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isAnonymous ? 'right-1' : 'left-1'}`} />
               </div>
             </div>
@@ -232,7 +232,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
             <button
               type="submit"
               disabled={loading || uploading}
-              className="w-full py-6 rounded-[1.5rem] bg-accent-default hover:bg-accent-light text-black font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all disabled:opacity-50 shadow-xl shadow-accent-default/20 flex items-center justify-center gap-4 group"
+              className="w-full py-6 rounded-[1.5rem] bg-accent-default hover:bg-accent-light text-black font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all disabled:opacity-50 border border-black/5 flex items-center justify-center gap-4 group"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>

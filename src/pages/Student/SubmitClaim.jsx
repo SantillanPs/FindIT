@@ -106,7 +106,7 @@ const SubmitClaim = () => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-2xl mx-auto glass-panel p-12 md:p-20 text-center space-y-10 rounded-[2.5rem] border-uni-500/20 shadow-2xl shadow-uni-500/10"
+        className="max-w-2xl mx-auto glass-panel p-12 md:p-20 text-center space-y-10 rounded-[2.5rem] border-uni-500/20"
       >
         <div className="w-24 h-24 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto mb-8 border border-uni-500/20">
             <i className="fa-solid fa-check text-4xl text-uni-400"></i>
@@ -248,7 +248,7 @@ const SubmitClaim = () => {
                  </div>
 
                  <div className="max-w-xl mx-auto w-full space-y-10">
-                    <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5 shadow-2xl">
+                    <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5">
                         <ImageUpload
                             value={proofPhotoUrl}
                             onUploadSuccess={(url) => setProofPhotoUrl(url)}
@@ -257,7 +257,7 @@ const SubmitClaim = () => {
 
                     <button
                       onClick={() => goToStep(2)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4"
+                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 flex items-center justify-center gap-4"
                     >
                       {proofPhotoUrl ? 'Next Step →' : 'Skip & Continue →'}
                     </button>
@@ -276,30 +276,30 @@ const SubmitClaim = () => {
                  <div className="max-w-2xl mx-auto w-full space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">First Name</label>
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">First Name</label>
                             <input 
                                 type="text"
                                 required
                                 placeholder="Juan"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px]"
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
                                 value={guestFirstName || (user?.first_name)}
                                 onChange={(e) => setGuestFirstName(e.target.value)}
                             />
                         </div>
                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Last Name</label>
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Last Name</label>
                             <input 
                                 type="text"
                                 required
                                 placeholder="Dela Cruz"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px]"
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
                                 value={guestLastName || (user?.last_name)}
                                 onChange={(e) => setGuestLastName(e.target.value)}
                             />
                         </div>
                     </div>
                         <div className="space-y-4 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Course / Dept</label>
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Course / Dept</label>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                 {COLLEGES.map((college) => (
                                     <button
@@ -308,12 +308,12 @@ const SubmitClaim = () => {
                                         onClick={() => setCourseDepartment(college.label)}
                                         className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${
                                             courseDepartment === college.label
-                                                ? 'bg-uni-500 border-uni-500 text-white shadow-xl'
+                                                ? 'bg-uni-500 border-uni-500 text-white'
                                                 : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/20'
                                         }`}
                                     >
                                         <i className={`fa-solid ${college.icon} text-2xl transition-transform group-hover:scale-110 ${courseDepartment === college.label ? 'scale-110' : ''}`}></i>
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-center leading-tight">{college.label}</span>
+                                        <span className="text-[9px] font-black tracking-widest text-center leading-tight">{college.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -322,7 +322,7 @@ const SubmitClaim = () => {
                         <button
                           disabled={(!guestFirstName && !user?.first_name) || (!guestLastName && !user?.last_name) || !courseDepartment}
                           onClick={() => goToStep(3)}
-                          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20"
+                          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
                         >
                           Continue →
                         </button>
@@ -351,7 +351,7 @@ const SubmitClaim = () => {
                             onClick={() => setContactMethod(method.id)}
                             className={`p-6 rounded-3xl border flex flex-col items-center gap-4 transition-all ${
                               contactMethod === method.id 
-                                ? 'bg-uni-500 border-uni-500 text-white shadow-2xl scale-105' 
+                                ? 'bg-uni-500 border-uni-500 text-white scale-105' 
                                 : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/10'
                             }`}
                           >
@@ -363,23 +363,23 @@ const SubmitClaim = () => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">{contactMethod} Details</label>
+                         <div className="space-y-3 text-left">
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">{contactMethod} Details</label>
                             <input 
                                 type={contactMethod === 'Email' ? 'email' : 'text'}
                                 required
                                 placeholder={contactMethod === 'Facebook' ? 'FB Link or Handle' : contactMethod === 'Phone' ? '09XX XXX XXXX' : 'your@email.com'}
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px]"
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
                                 value={contactInfo}
                                 onChange={(e) => setContactInfo(e.target.value)}
                             />
                         </div>
                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-6">Backup Email (Opt)</label>
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Backup Email (Opt)</label>
                             <input 
                                 type="email"
                                 placeholder="Backup notification email"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px] opacity-40 focus:opacity-100"
+                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] opacity-40 focus:opacity-100"
                                 value={guestEmail}
                                 onChange={(e) => setGuestEmail(e.target.value)}
                             />
@@ -389,7 +389,7 @@ const SubmitClaim = () => {
                     <button
                       disabled={!contactInfo}
                       onClick={() => goToStep(4)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20"
+                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
                     >
                       Save Contact →
                     </button>
@@ -410,14 +410,14 @@ const SubmitClaim = () => {
                         rows="6"
                         required
                         placeholder="Describe details only the owner would know (e.g. Scratches, stickers, wallpaper, contents)..."
-                        className="w-full bg-white/5 border border-white/10 rounded-[2.5rem] p-8 text-white font-bold outline-none focus:border-uni-500 transition-all uppercase tracking-widest text-[11px] min-h-[250px] resize-none"
+                        className="w-full bg-white/5 border border-white/10 rounded-[2.5rem] p-8 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] min-h-[250px] resize-none"
                         value={proof}
                         onChange={(e) => setProof(e.target.value)}
                     />
                     <button
                       disabled={proof.length < 10}
                       onClick={() => goToStep(5)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95 disabled:opacity-20"
+                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
                     >
                       Next Step →
                     </button>
@@ -476,7 +476,7 @@ const SubmitClaim = () => {
                         <button
                           disabled={submitting}
                           onClick={handleSubmit}
-                          className="flex-[2] bg-white text-black py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.5em] shadow-2xl hover:bg-uni-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-6 group"
+                          className="flex-[2] bg-white text-black py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.5em] hover:bg-uni-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-6 group"
                         >
                           {submitting ? (
                             <div className="w-5 h-5 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>

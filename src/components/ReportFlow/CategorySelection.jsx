@@ -53,7 +53,7 @@ const CategorySelection = ({
               }}
               className={`p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group relative overflow-hidden ${
                 formData.category === cat.id 
-                  ? 'bg-uni-500 border-uni-500 text-white shadow-2xl shadow-uni-500/40' 
+                  ? 'bg-uni-500 border-uni-500 text-white' 
                   : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/20 hover:scale-[1.02] active:scale-95'
               }`}
             >
@@ -90,7 +90,7 @@ const CategorySelection = ({
                     }}
                     className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-4 group ${
                       formData.category === cat.id 
-                        ? 'bg-uni-500 border-uni-500 text-white shadow-xl' 
+                        ? 'bg-uni-500 border-uni-500 text-white' 
                         : 'bg-white/5 border-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10'
                     }`}
                   >
@@ -104,7 +104,7 @@ const CategorySelection = ({
 
           <div className={`p-8 rounded-[3rem] border-2 transition-all flex flex-col items-center gap-8 ${
             formData.category === 'Other' 
-              ? 'bg-white/10 border-uni-500 shadow-2xl' 
+              ? 'bg-white/10 border-uni-500' 
               : 'bg-white/5 border-dashed border-white/10'
           }`}>
             <button
@@ -140,7 +140,7 @@ const CategorySelection = ({
                   <button 
                     onClick={onNext}
                     disabled={!otherItemName}
-                    className="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] hover:bg-uni-400 hover:text-white transition-all shadow-xl"
+                    className="w-full bg-white text-black py-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.4em] hover:bg-uni-400 hover:text-white transition-all border border-black/5"
                   >
                     Confirm Item →
                   </button>

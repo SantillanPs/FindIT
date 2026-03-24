@@ -122,7 +122,7 @@ const MatchResults = () => {
  
                     <Link 
                       to={`/submit-claim/${item.id}`} 
-                      className="bg-uni-600 hover:bg-uni-500 text-white px-6 md:px-10 py-3 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all shadow-lg shadow-uni-500/20 hover:scale-[1.05]"
+                      className="bg-uni-600 hover:bg-uni-500 text-white px-6 md:px-10 py-3 rounded-xl md:rounded-2xl font-black text-[9px] md:text-[10px] uppercase tracking-widest transition-all hover:scale-[1.05]"
                     >
                       Claim
                     </Link>

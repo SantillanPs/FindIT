@@ -13,6 +13,7 @@ import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
+import ReportSummary from '../../components/ReportFlow/ReportSummary';
 
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
@@ -26,7 +27,8 @@ const ReportLostItem = () => {
     guest_first_name: '',
     guest_last_name: '',
     guest_email: '',
-    contact_info: ''
+    contact_info: '',
+    potential_zone_ids: []
   });
   
   const [loading, setLoading] = useState(false);
@@ -143,6 +145,7 @@ const ReportLostItem = () => {
                 formData={formData}
                 setFormData={setFormData}
                 onNext={() => goToStep(4)}
+                multiSelect={true}
               />
             )}
 
@@ -164,6 +167,7 @@ const ReportLostItem = () => {
                 description="Briefly describe the item's appearance, brand, or other details."
                 placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
                 value={formData.description}
+                category={formData.category}
                 onChange={(val) => setFormData({...formData, description: val})}
                 onNext={() => goToStep(6)}
               />
@@ -182,67 +186,13 @@ const ReportLostItem = () => {
             )}
 
             {step === 7 && (
-              <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
-                <div className="space-y-4">
-                   <div className="w-24 h-24 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto border border-uni-500/20 text-4xl mb-6 shadow-2xl">📡</div>
-                   <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Ready to submit<br/>your report?"</h2>
-                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public registry.</p>
-                </div>
-                
-                <div className="max-w-4xl mx-auto w-full space-y-10 text-left">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="p-10 glass-panel rounded-[3rem] border border-white/5 text-left space-y-8 shadow-2xl flex flex-col justify-center h-full">
-                         <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Item Details</p>
-                               <p className="text-xl font-black text-white uppercase tracking-tight italic">{formData.category === 'Other' ? otherItemName : formData.category}</p>
-                            </div>
-                            {formData.safe_photo_url && (
-                                <div className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                                    <img src={formData.safe_photo_url} className="w-full h-full object-cover" alt="Preview" />
-                                </div>
-                            )}
-                         </div>
-                         <div className="space-y-1 border-t border-white/5 pt-8">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic leading-none mb-1">Last Seen At</p>
-                            <p className="text-xl font-black text-white uppercase tracking-tight">{formData.location_zone}</p>
-                         </div>
-                      </div>
-
-                      <div className="space-y-6">
-                         <div className="p-10 bg-white/5 rounded-[3rem] border border-white/5 text-left space-y-4 shadow-2xl">
-                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Registry Status</p>
-                            <div className="flex items-center gap-4">
-                               <div className="w-3 h-3 rounded-full bg-uni-400 animate-pulse"></div>
-                               <p className="text-sm font-black text-uni-400 uppercase tracking-widest">Logged in as {user?.first_name} {user?.last_name}</p>
-                            </div>
-                            <div className="pt-6 border-t border-white/5">
-                               <p className="text-[11px] font-black text-slate-600 uppercase tracking-widest italic block mb-1">Impact</p>
-                               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">We'll notify you as soon as a potential match is found by the USG.</p>
-                            </div>
-                         </div>
-
-                         <button 
-                          onClick={handleSubmit} 
-                          disabled={loading}
-                          className="w-full bg-white text-black py-8 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.6em] shadow-[0_20px_60px_rgba(255,255,255,0.1)] hover:bg-uni-400 hover:text-white transition-all group flex items-center justify-center gap-6"
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-4">
-                              <div className="w-6 h-6 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                              Processing...
-                            </div>
-                          ) : (
-                            <>
-                               <i className="fa-solid fa-paper-plane text-2xl group-hover:rotate-12 transition-transform"></i>
-                               Submit Report
-                            </>
-                          )}
-                        </button>
-                      </div>
-                  </div>
-                </div>
-              </div>
+              <ReportSummary 
+                type="lost"
+                formData={formData}
+                otherItemName={otherItemName}
+                loading={loading}
+                onSubmit={handleSubmit}
+              />
             )}
           </motion.div>
         </AnimatePresence>

@@ -1,34 +1,80 @@
-import sqlite3
+
 import os
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
-db_path = 'C:/Users/admin/Documents/Programming/findIT/backend/findit.db'
-tables_to_keep = ['users', 'sqlite_sequence']
+# Load environment variables
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
-def clear_database():
-    if not os.path.exists(db_path):
-        print(f"Database not found at {db_path}")
-        return
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    # Fallback to local SQLite if no DATABASE_URL is provided
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'findit.db')}"
 
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-    # Get all tables
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-    tables = [row[0] for row in cursor.fetchall()]
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    for table in tables:
-        if table not in tables_to_keep:
+TABLES_TO_CLEAR = [
+    "found_items",
+    "lost_items",
+    "claims",
+    "audit_logs",
+    "notifications",
+    "witness_reports",
+    "feedbacks",
+    "category_stats",
+    "other_suggestions",
+    "assets"
+]
+
+def clear_data():
+    db = SessionLocal()
+    try:
+        print(f"Connecting to database: {DATABASE_URL.split('@')[-1] if '@' in DATABASE_URL else DATABASE_URL}")
+        
+        # Disable foreign key checks for clearing (different syntax for SQLite and Postgres)
+        is_sqlite = "sqlite" in DATABASE_URL
+        
+        if is_sqlite:
+            db.execute(text("PRAGMA foreign_keys = OFF;"))
+        else:
+            # For Postgres, we truncate with CASCADE or disable triggers
+            pass
+
+        for table in TABLES_TO_CLEAR:
             try:
-                cursor.execute(f"DELETE FROM {table}")
-                # Optional: Reset auto-increment
-                cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table}'")
-                print(f"Cleared table: {table}")
-            except sqlite3.OperationalError as e:
-                print(f"Could not clear {table}: {e}")
+                print(f"Clearing table: {table}...")
+                if is_sqlite:
+                    db.execute(text(f"DELETE FROM {table};"))
+                    db.execute(text(f"DELETE FROM sqlite_sequence WHERE name='{table}';"))
+                else:
+                    # TRUNCATE is faster and resets sequences in Postgres
+                    db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"))
+                print(f"  [OK] {table} cleared.")
+            except Exception as e:
+                print(f"  [ERROR] Could not clear {table}: {e}")
 
-    conn.commit()
-    conn.close()
-    print("Database data cleared (except users).")
+        if is_sqlite:
+            db.execute(text("PRAGMA foreign_keys = ON;"))
+        
+        db.commit()
+        print("\nData clearing complete (Users, Zones, and Master Data preserved).")
+        
+    except Exception as e:
+        db.rollback()
+        print(f"CRITICAL ERROR during clearing: {e}")
+    finally:
+        db.close()
 
 if __name__ == "__main__":
-    clear_database()
+    # Safety confirmation
+    confirm = input("Are you sure you want to clear all transactional data? (y/N): ")
+    if confirm.lower() == 'y':
+        clear_data()
+    else:
+        print("Operation cancelled.")

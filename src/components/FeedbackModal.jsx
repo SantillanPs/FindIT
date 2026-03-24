@@ -117,7 +117,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="feedback-modal-root relative w-full max-w-2xl bg-bg-surface border border-border-main rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+          className="feedback-modal-root relative w-full max-w-2xl bg-bg-surface border border-border-main rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
         >
           {/* Header */}
           <div className="p-6 border-b border-border-main flex items-center justify-between bg-white/[0.02]">
@@ -192,7 +192,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                       <button 
                         type="button" 
                         onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
-                        className="bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition-transform"
+                        className="bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center border border-black/10 transform scale-75 group-hover:scale-100 transition-transform"
                       >
                         <i className="fa-solid fa-trash"></i>
                       </button>
@@ -259,7 +259,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 type="button"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !formData.subject || !formData.message}
-                className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-gradient-to-r from-uni-600 to-uni-500 hover:from-uni-500 hover:to-uni-400 disabled:opacity-50 disabled:grayscale text-white text-[9px] font-black uppercase tracking-widest shadow-lg shadow-uni-500/20 transition-all flex items-center justify-center gap-2"
+                className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-gradient-to-r from-uni-600 to-uni-500 hover:from-uni-500 hover:to-uni-400 disabled:opacity-50 disabled:grayscale text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-black/5"
               >
                 {isSubmitting ? (
                   <>

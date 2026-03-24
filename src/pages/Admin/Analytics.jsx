@@ -108,7 +108,7 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  period === p ? 'bg-uni-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'
+                  period === p ? 'bg-uni-500 text-white' : 'text-slate-500 hover:text-white'
                 }`}
               >
                 {p.replace('today', 'Today').replace('6months', '6 Months').replace('all_time', 'All Time')}
@@ -388,7 +388,7 @@ const InsightCard = ({ icon, label, value, subValue, color }) => {
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl shadow-2xl">
+            <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl">
                 <p className="text-[10px] font-black text-white uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{label}</p>
                 {payload.map((p, i) => (
                     <div key={i} className="flex justify-between gap-8 mb-1">
@@ -405,7 +405,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 const PieTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-slate-950 border border-white/10 px-4 py-2 rounded-xl shadow-2xl">
+            <div className="bg-slate-950 border border-white/10 px-4 py-2 rounded-xl">
                 <span className="text-[9px] font-black text-white uppercase tracking-widest">{payload[0].name}: {payload[0].value}%</span>
             </div>
         );

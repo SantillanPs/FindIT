@@ -1,4 +1,5 @@
 import React from 'react';
+import HallOfFame from './HallOfFame';
 
 const DetailsStep = ({ 
   title, 
@@ -8,6 +9,7 @@ const DetailsStep = ({
   onNext, 
   placeholder, 
   stepLabel,
+  category,
   children
 }) => {
   return (
@@ -21,18 +23,20 @@ const DetailsStep = ({
           <textarea 
             rows="5"
             placeholder={placeholder}
-            className="w-full bg-white/5 border-2 border-white/10 rounded-[2.5rem] p-10 text-xl font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-2xl resize-none leading-relaxed"
+            className="w-full bg-white/5 border-2 border-white/10 rounded-[2.5rem] p-10 text-xl font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 resize-none leading-relaxed"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             autoFocus
           />
           
           {children}
+          
+          <HallOfFame category={category} />
 
           <button 
             onClick={onNext} 
             disabled={!value || value.length < 5}
-            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all shadow-2xl active:scale-95"
+            className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all border border-black/5 active:scale-95"
           >
             Next Step →
           </button>

@@ -53,15 +53,15 @@ const ReportSuccess = ({
             initial={{ scale: 0.9, opacity: 0, y: 50 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 50 }}
-            className="relative w-full max-w-2xl bg-slate-900 rounded-[3.5rem] border-2 border-uni-500/30 overflow-hidden shadow-[0_0_100px_rgba(var(--color-uni-500-rgb),0.2)]"
+            className="relative w-full max-w-2xl bg-slate-900 rounded-[3.5rem] border-2 border-uni-500/30 overflow-hidden"
           >
             {/* Ambient decoration */}
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-uni-500/20 blur-[80px] rounded-full animate-pulse"></div>
-            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-brand-gold/10 blur-[80px] rounded-full animate-pulse"></div>
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-uni-500/20 blur-[80px] rounded-full"></div>
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-brand-gold/10 blur-[80px] rounded-full"></div>
 
             <div className="p-10 md:p-16 space-y-12 text-center relative z-10">
               <div className="space-y-4">
-                <div className="w-24 h-24 bg-uni-500 rounded-3xl flex items-center justify-center mx-auto text-5xl shadow-2xl rotate-12 group-hover:rotate-0 transition-transform duration-500">
+                <div className="w-24 h-24 bg-uni-500 rounded-3xl flex items-center justify-center mx-auto text-5xl rotate-12 group-hover:rotate-0 transition-transform duration-500">
                   ✨
                 </div>
                 <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none pt-4">
@@ -95,7 +95,7 @@ const ReportSuccess = ({
                     setShowIncentiveModal(false);
                     setShowAccountForm(true);
                   }}
-                  className="w-full bg-white text-black py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.6em] shadow-2xl hover:bg-uni-500 hover:text-white transition-all active:scale-95"
+                  className="w-full bg-white text-black py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.6em] border border-black/5 hover:bg-uni-500 hover:text-white transition-all active:scale-95"
                 >
                   Awesome! Create My Account
                 </button>
@@ -120,7 +120,7 @@ const ReportSuccess = ({
          <motion.div 
            initial={{ scale: 0 }}
            animate={{ scale: 1 }}
-           className="w-24 h-24 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto border border-uni-500/20 text-4xl shadow-2xl"
+           className="w-24 h-24 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto border border-uni-500/20 text-4xl"
          >
            {type === 'lost' ? '📡' : '🤝'}
          </motion.div>
@@ -145,7 +145,7 @@ const ReportSuccess = ({
             </div>
 
             <div className="flex items-center gap-6">
-               <div className="w-20 h-20 bg-uni-500/20 rounded-3xl flex items-center justify-center text-3xl text-uni-400 border border-uni-500/30 shadow-2xl shadow-uni-500/10">
+               <div className="w-20 h-20 bg-uni-500/20 rounded-3xl flex items-center justify-center text-3xl text-uni-400 border border-uni-500/30">
                   <i className="fa-solid fa-person-walking-arrow-right"></i>
                </div>
                <div className="text-left space-y-1">
@@ -198,7 +198,7 @@ const ReportSuccess = ({
               <motion.div 
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-10 glass-panel rounded-[3.5rem] border-2 border-uni-500/20 space-y-10 relative overflow-hidden shadow-2xl bg-slate-900/50"
+                className="p-10 glass-panel rounded-[3.5rem] border-2 border-uni-500/20 space-y-10 relative overflow-hidden bg-slate-900/50"
               >
                   {type === 'found' && (
                     <button 
@@ -210,7 +210,7 @@ const ReportSuccess = ({
                   )}
 
                   <div className="absolute top-0 right-0 p-8 hidden md:block">
-                      <span className="bg-uni-500 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-[0.3em] shadow-xl animate-pulse">Account Benefit</span>
+                      <span className="bg-uni-500 text-white text-[9px] font-black px-4 py-2 rounded-full uppercase tracking-[0.3em] border border-uni-400/20">Account Benefit</span>
                   </div>
 
                   <div className="text-left space-y-3">
@@ -266,7 +266,7 @@ const ReportSuccess = ({
                       <button 
                           type="submit"
                           disabled={ghosting}
-                          className="w-full bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-400 hover:text-white active:scale-95 transition-all shadow-2xl"
+                          className="w-full bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-400 hover:text-white active:scale-95 transition-all border border-black/5"
                       >
                           {ghosting ? 'Creating Account...' : 'Create Account & Save'}
                       </button>
@@ -284,9 +284,9 @@ const ReportSuccess = ({
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="p-16 glass-panel rounded-[4rem] border-2 border-green-500/20 text-center space-y-6 shadow-2xl"
+          className="p-16 glass-panel rounded-[4rem] border-2 border-green-500/20 text-center space-y-6"
         >
-           <i className="fa-solid fa-user-check text-5xl text-green-400 mb-4 animate-bounce"></i>
+           <i className="fa-solid fa-user-check text-5xl text-green-400 mb-4"></i>
            <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Account Created</h2>
            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest italic">Redirecting to your dashboard...</p>
         </motion.div>
@@ -294,7 +294,7 @@ const ReportSuccess = ({
 
       {(!ghostDone && type === 'found') && (
         <div className="pt-6 flex flex-col items-center gap-6">
-            <Link to="/" className="inline-flex items-center gap-4 bg-white/5 border border-white/10 text-white/40 px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-white hover:text-black hover:border-white transition-all shadow-2xl active:scale-95">
+            <Link to="/" className="inline-flex items-center gap-4 bg-white/5 border border-white/10 text-white/40 px-12 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-white hover:text-black hover:border-white transition-all active:scale-95">
                 Return Home
                 <i className="fa-solid fa-arrow-right text-[10px]"></i>
             </Link>

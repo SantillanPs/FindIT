@@ -18,7 +18,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        className="relative w-full max-w-5xl bg-slate-900 border border-white/10 rounded-[3rem] overflow-hidden shadow-2xl"
+        className="relative w-full max-w-5xl bg-slate-900 border border-white/10 rounded-[3rem] overflow-hidden"
       >
         <div className="p-10 space-y-10">
            <div className="flex justify-between items-start">
@@ -108,7 +108,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
            <div className="flex gap-4 pt-4">
               <button 
                 onClick={() => handleConnectMatch(selectedMatchPair.found.id, selectedMatchPair.lost.id).then(() => setSelectedMatchPair(null))}
-                className="flex-grow bg-uni-600 hover:bg-uni-500 text-white py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all shadow-2xl flex items-center justify-center gap-4"
+                className="flex-grow bg-uni-600 hover:bg-uni-500 text-white py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-4"
               >
                  <i className="fa-solid fa-check-double text-lg"></i>
                  Confirm & Authorize Match

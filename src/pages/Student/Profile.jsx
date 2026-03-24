@@ -88,15 +88,15 @@ const Profile = () => {
           className="glass-panel rounded-[3rem] p-10 md:p-16 border border-white/5 relative overflow-hidden"
         >
           {/* Ambient Glow */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-uni-500/10 blur-[120px] rounded-full -mr-48 -mt-48"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-uni-500/10 rounded-full -mr-48 -mt-48"></div>
           
           <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 relative z-10">
             {/* Avatar Section */}
             <div className="relative">
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-slate-900 border-2 border-white/10 flex items-center justify-center text-6xl shadow-2xl relative">
+              <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-slate-900 border-2 border-white/10 flex items-center justify-center text-6xl relative">
                 {profileUser.first_name?.charAt(0) || 'U'}
                 {profileUser.is_verified && (
-                  <div className="absolute -bottom-2 -right-2 bg-uni-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-xl">
+                  <div className="absolute -bottom-2 -right-2 bg-uni-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950">
                     <i className="fa-solid fa-check-double"></i>
                   </div>
                 )}
@@ -148,7 +148,7 @@ const Profile = () => {
             {/* Quick Actions (Admin only) */}
             {currentUser?.role !== 'student' && !isOwnProfile && (
                 <div className="md:ml-auto flex items-center gap-3">
-                    <button className="bg-white text-black px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all shadow-xl shadow-black/20">
+                    <button className="bg-white text-black px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all">
                         Issue Strike
                     </button>
                     <button className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">

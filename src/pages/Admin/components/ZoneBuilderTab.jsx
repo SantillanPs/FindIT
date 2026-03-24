@@ -297,14 +297,14 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   const canvasZones = zones.filter(z => z.pos_x !== 0 || z.pos_y !== 0);
 
   return (
-    <div className="bg-[#0a0f1d] min-h-[700px] rounded-[2rem] border border-white/5 flex flex-col overflow-hidden animate-slide-up relative shadow-2xl">
+    <div className="bg-[#0a0f1d] min-h-[700px] rounded-[2rem] border border-white/5 flex flex-col overflow-hidden animate-slide-up relative">
       <div className="absolute inset-0 bg-grid-slate-900/[0.02] pointer-events-none"></div>
       
       {/* BALANCED WORKBENCH HEADER */}
       <header className="px-10 py-6 bg-slate-900/50 border-b border-white/5 flex items-center justify-between shrink-0 relative z-10 backdrop-blur-md">
         <div className="flex items-center gap-10">
             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-uni-600 flex items-center justify-center text-white text-base shadow-lg shadow-uni-500/30">
+                <div className="w-10 h-10 rounded-xl bg-uni-600 flex items-center justify-center text-white text-base">
                     <i className="fa-solid fa-drafting-compass"></i>
                 </div>
                 <div>

@@ -94,6 +94,8 @@ class FoundItemCreate(FoundItemBase):
     guest_email: Optional[EmailStr] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
+    verification_note: Optional[str] = None
+    challenge_question: Optional[str] = None
 
 class FoundItemPublic(FoundItemBase):
     id: int
@@ -123,6 +125,8 @@ class FoundItemResponse(FoundItemBase):
 
 class FoundItemDetail(FoundItemResponse):
     private_admin_notes: Optional[str] = None
+    verification_note: Optional[str] = None
+    challenge_question: Optional[str] = None
     embedding: Optional[str] = None
     released_to_id: Optional[int] = None
     released_to_name: Optional[str] = None
@@ -142,6 +146,8 @@ class ItemDirectRelease(BaseModel):
 
 class CustodyUpdate(BaseModel):
     notes: Optional[str] = None
+    verification_note: Optional[str] = None
+    challenge_question: Optional[str] = None
 
 class BulkCustodyUpdate(BaseModel):
     item_ids: list[int]
@@ -156,6 +162,8 @@ class LostItemBase(BaseModel):
     zone_id: Optional[int] = None
     last_seen_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
+    potential_zone_ids: Optional[list[int]] = []
+    potential_zone_names: Optional[list[str]] = []
 
 class LostItemCreate(LostItemBase):
     guest_first_name: Optional[str] = None
@@ -176,6 +184,7 @@ class LostItemResponse(LostItemBase):
     tracking_id: Optional[str] = None
     embedding: Optional[str] = None
     admin_notes: Optional[str] = None
+    potential_zone_ids: Optional[list[int]] = []
 
     class Config:
         from_attributes = True

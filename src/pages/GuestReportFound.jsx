@@ -186,22 +186,23 @@ const GuestReportFound = () => {
             )}
 
             {step === 5 && (
-              <DetailsStep 
-                stepLabel="Step 5: Item Details"
-                title="Item Description"
-                description="Briefly describe the item's appearance, brand, or other details to help us identify it."
-                placeholder="e.g. Red backpack, iPhone 13 with a clear case..."
-                value={formData.description}
-                onChange={(val) => setFormData({...formData, description: val})}
-                onNext={() => goToStep(6)}
-              >
-                <IdentificationStep 
-                  formData={formData}
-                  setFormData={setFormData}
-                  hasIdentification={hasIdentification}
-                  setHasIdentification={setHasIdentification}
-                />
-              </DetailsStep>
+                <DetailsStep 
+                  stepLabel="Step 5: Item Details"
+                  title="Item Description"
+                  description="Briefly describe the item's appearance, brand, or other details."
+                  placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
+                  value={formData.description}
+                  category={formData.category}
+                  onChange={(val) => setFormData({...formData, description: val})}
+                  onNext={() => goToStep(6)}
+                >
+                  <IdentificationStep 
+                    formData={formData}
+                    setFormData={setFormData}
+                    hasIdentification={hasIdentification}
+                    setHasIdentification={setHasIdentification}
+                  />
+                </DetailsStep>
             )}
 
             {step === 6 && (
@@ -217,13 +218,7 @@ const GuestReportFound = () => {
             )}
 
             {step === 7 && (
-              <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
-                <div className="space-y-4">
-                   <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20 text-4xl mb-6 shadow-2xl">🌍</div>
-                   <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Ready to submit<br/>your report?"</h2>
-                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public feed.</p>
-                </div>
-
+              <>
                 {matchedReport && (
                   <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">
                     <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🔍</div>
@@ -234,14 +229,14 @@ const GuestReportFound = () => {
                   </div>
                 )}
 
-              <ReportSummary 
-                type="found"
-                formData={formData}
-                otherItemName={otherItemName}
-                loading={loading}
-                onSubmit={handleSubmit}
-              />
-              </div>
+                <ReportSummary 
+                  type="found"
+                  formData={formData}
+                  otherItemName={otherItemName}
+                  loading={loading}
+                  onSubmit={handleSubmit}
+                />
+              </>
             )}
           </motion.div>
         </AnimatePresence>

@@ -92,7 +92,7 @@ const MatchReviewPage = () => {
                 </button>
                 <button 
                     onClick={() => handleAction('confirm')}
-                    className="py-6 rounded-3xl bg-uni-600 border border-uni-400/30 text-white font-black uppercase text-xs tracking-[.3em] shadow-2xl shadow-uni-600/30 hover:bg-uni-500 transition-all"
+                    className="py-6 rounded-3xl bg-uni-600 border border-uni-400/30 text-white font-black uppercase text-xs tracking-[.3em] hover:bg-uni-500 transition-all"
                 >
                     Yes, That's Mine!
                 </button>

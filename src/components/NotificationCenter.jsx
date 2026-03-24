@@ -42,14 +42,14 @@ const NotificationCenter = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 rounded-lg bg-slate-900/50 border border-brand-border hover:bg-slate-800/50 transition-all group backdrop-blur-sm"
       >
-        <span className="text-xl inline-block group-hover:drop-shadow-[0_0_8px_rgba(96,165,250,0.5)] transition-all">🔔</span>
+        <span className="text-xl inline-block transition-all">🔔</span>
         <AnimatePresence>
           {unreadCount > 0 && (
             <motion.span 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 bg-brand-primary text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-sm shadow-lg shadow-brand-primary/20 min-w-[18px] text-center"
+              className="absolute -top-1 -right-1 bg-brand-primary text-slate-950 text-[10px] font-black px-1.5 py-0.5 rounded-sm border border-brand-primary/30 min-w-[18px] text-center"
             >
               {unreadCount}
             </motion.span>
@@ -72,7 +72,7 @@ const NotificationCenter = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 mt-4 w-80 max-h-[480px] bg-slate-900 border border-brand-border rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col backdrop-blur-xl"
+              className="absolute right-0 mt-4 w-80 max-h-[480px] bg-slate-900 border border-brand-border rounded-lg z-50 overflow-hidden flex flex-col backdrop-blur-xl"
             >
               <div className="p-4 border-b border-brand-border bg-slate-950/80 flex justify-between items-center">
                 <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Live Status Updates</h4>
@@ -110,7 +110,7 @@ const NotificationCenter = () => {
                         }}
                       >
                         {!n.is_read && (
-                          <div className="absolute top-6 right-5 w-1.5 h-1.5 bg-brand-primary rounded-full shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
+                          <div className="absolute top-6 right-5 w-1.5 h-1.5 bg-brand-primary rounded-full border border-brand-primary/40"></div>
                         )}
                         <div className="font-black text-[11px] text-white uppercase tracking-wider mb-2 pr-6 group-hover:text-brand-primary transition-colors">{n.title}</div>
                         <div className="text-[11px] text-slate-500 leading-relaxed mb-3 italic font-bold">

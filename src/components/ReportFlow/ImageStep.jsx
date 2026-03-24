@@ -21,7 +21,7 @@ const ImageStep = ({
       </div>
       
       <div className="max-w-xl mx-auto w-full space-y-10">
-          <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5 shadow-2xl">
+          <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5">
               <ImageUpload 
                   value={value}
                   onUploadSuccess={onUpload}
@@ -38,7 +38,7 @@ const ImageStep = ({
                 </div>
               )}
               {!optional && !value && (
-                <div className="mt-8 p-6 bg-uni-500/5 border border-uni-400/30 rounded-3xl text-left shadow-[0_0_20px_rgba(var(--uni-400),0.1)]">
+                <div className="mt-8 p-6 bg-uni-500/5 border border-uni-400/30 rounded-3xl text-left">
                     <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
                         <i className="fa-solid fa-circle-info"></i>
                         Mandatory Photo
@@ -53,7 +53,7 @@ const ImageStep = ({
           <button 
             onClick={onNext} 
             disabled={!optional && !value}
-            className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4 ${
+            className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all border border-black/5 active:scale-95 flex items-center justify-center gap-4 ${
               (!optional && !value) 
                 ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5' 
                 : 'bg-uni-600 text-white hover:bg-white hover:text-black'

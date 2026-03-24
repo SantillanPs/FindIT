@@ -1,0 +1,14 @@
+Connected to: aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require
+Users: 5
+Found Items: 4
+Lost Items: 5
+Claims: 2
+Error: (psycopg2.errors.UndefinedColumn) column found_items.verification_note does not exist
+LINE 1: ...s.matched_lost_id AS found_items_matched_lost_id, found_item...
+                                                             ^
+
+[SQL: SELECT found_items.id AS found_items_id, found_items.item_name AS found_items_item_name, found_items.category AS found_items_category, found_items.description AS found_items_description, found_items.location_zone AS found_items_location_zone, found_items.zone_id AS found_items_zone_id, found_items.found_time AS found_items_found_time, found_items.safe_photo_url AS found_items_safe_photo_url, found_items.private_admin_notes AS found_items_private_admin_notes, found_items.status AS found_items_status, found_items.embedding AS found_items_embedding, found_items.matched_lost_id AS found_items_matched_lost_id, found_items.verification_note AS found_items_verification_note, found_items.challenge_question AS found_items_challenge_question, found_items.identified_student_id AS found_items_identified_student_id, found_items.identified_name AS found_items_identified_name, found_items.finder_id AS found_items_finder_id, found_items.guest_first_name AS found_items_guest_first_name, found_items.guest_last_name AS found_items_guest_last_name, found_items.guest_email AS found_items_guest_email, found_items.contact_info AS found_items_contact_info, found_items.released_to_id AS found_items_released_to_id, found_items.released_to_name AS found_items_released_to_name, found_items.released_to_id_number AS found_items_released_to_id_number, found_items.released_by_name AS found_items_released_by_name, found_items.released_at AS found_items_released_at, found_items.released_to_photo_url AS found_items_released_to_photo_url 
+FROM found_items 
+ LIMIT %(param_1)s]
+[parameters: {'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/20/f405)

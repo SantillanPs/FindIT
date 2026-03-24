@@ -44,15 +44,10 @@ const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
                   backgroundColor: isActive ? 'rgba(var(--color-uni-500), 1)' : 'rgba(15, 23, 42, 1)',
                   borderColor: isActive ? 'rgba(var(--color-uni-500), 0.5)' : 'rgba(255, 255, 255, 0.1)'
                 }}
-                className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-sm md:text-base border-2 shadow-2xl transition-colors z-10 ${isActive ? 'text-white' : 'text-slate-600'}`}
+                className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-sm md:text-base border-2 transition-colors z-10 ${isActive ? 'text-white' : 'text-slate-600'}`}
               >
                 <i className={`fa-solid ${step.icon}`}></i>
                 
-                {isActive && (
-                   <motion.div 
-                     layoutId="glow"
-                     className="absolute inset-0 rounded-2xl bg-uni-500/20 blur-xl -z-10"
-                   />
                 )}
               </motion.div>
               
@@ -61,7 +56,7 @@ const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
                   {step.label}
                 </p>
                 {index === 2 && similarityScore > 0.8 && status === 'pending' && (
-                  <p className="text-[7px] font-bold text-uni-400 uppercase tracking-tighter animate-pulse">High AI Match</p>
+                  <p className="text-[7px] font-bold text-uni-400 uppercase tracking-tighter">High AI Match</p>
                 )}
               </div>
             </div>

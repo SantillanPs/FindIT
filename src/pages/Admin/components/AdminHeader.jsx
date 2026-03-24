@@ -27,7 +27,7 @@ const AdminHeader = ({ stats, greeting }) => {
           const classes = getColorClasses(stat.color);
           return (
             <div key={i} className="bg-white/5 border border-white/5 rounded-3xl px-8 py-5 flex items-center gap-5 backdrop-blur-md">
-               <div className={`w-12 h-12 rounded-2xl ${classes.bg} flex items-center justify-center ${classes.text} text-xl border ${classes.border} shadow-inner`}>
+               <div className={`w-12 h-12 rounded-2xl ${classes.bg} flex items-center justify-center ${classes.text} text-xl border ${classes.border}`}>
                   <i className={`fa-solid ${stat.icon}`}></i>
                </div>
                <div>

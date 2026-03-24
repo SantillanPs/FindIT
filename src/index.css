@@ -26,11 +26,11 @@
   --color-uni-400: #38bdf8;
   --color-uni-500: #0ea5e9;
   --color-uni-600: #0284c7;
-  --color-uni-glow: rgba(14, 165, 233, 0.5);
+  --color-uni-600: #0284c7;
 
   --color-accent-light: #fbbf24;
   --color-accent-default: #f59e0b;
-  --color-accent-glow: rgba(245, 158, 11, 0.5);
+  --color-accent-default: #f59e0b;
 
   --color-prestige-gold: #fbbf24;
   --color-prestige-slate: #475569;
@@ -45,18 +45,18 @@
     100% { transform: translateY(0); opacity: 1; }
   }
   @keyframes glow {
-    0% { box-shadow: 0 0 5px rgba(14, 165, 233, 0.5); }
-    100% { box-shadow: 0 0 20px rgba(14, 165, 233, 0.8), 0 0 40px rgba(14, 165, 233, 0.4); }
+    0% { border-color: rgba(14, 165, 233, 0.2); }
+    100% { border-color: rgba(14, 165, 233, 0.8); }
   }
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
-  --animate-float: float 6s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out;
   --animate-slide-up: slideUp 0.5s ease-out;
-  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-glow: glow 2s ease-in-out infinite alternate;
-  --animate-shimmer: shimmer 3s infinite linear;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1);
+  --animate-glow: glow 2s ease-in-out alternate;
+  --animate-shimmer: shimmer 3s linear;
 }
 
 :root {
@@ -159,7 +159,6 @@
 
   .item-card:hover {
     transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(14, 165, 233, 0.2);
     border-color: rgba(56, 189, 248, 0.4);
   }
 
@@ -178,7 +177,6 @@
     background: linear-gradient(135deg, #0284c7, #0ea5e9);
     color: white;
     border-color: transparent;
-    box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
   }
 
   .search-input {
@@ -191,7 +189,6 @@
 
   .nav-link.active {
     @apply text-uni-400 font-semibold;
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
   }
 
   .form-input {
@@ -220,11 +217,11 @@
   }
 
   .btn-primary {
-    @apply bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg shadow-lg shadow-uni-500/20 transition-all transform hover:-translate-y-0.5;
+    @apply bg-uni-600 hover:bg-uni-500 text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg transition-all transform hover:-translate-y-0.5 border border-black/5;
   }
 
   .btn-gold {
-    @apply bg-transparent border-2 border-accent-default hover:bg-accent-default text-accent-default hover:text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg shadow-lg shadow-accent-glow/20 transition-all transform hover:-translate-y-0.5;
+    @apply bg-transparent border-2 border-accent-default hover:bg-accent-default text-accent-default hover:text-white font-black text-[11px] uppercase tracking-[0.2em] py-4 px-10 rounded-lg transition-all transform hover:-translate-y-0.5;
   }
 
   .btn-secondary {

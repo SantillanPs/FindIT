@@ -9,7 +9,7 @@ const AchievementBadge = ({ points, className = "" }) => {
       color: 'text-amber-400', 
       bg: 'bg-amber-400/10', 
       border: 'border-amber-400/20',
-      glow: 'shadow-amber-400/20',
+      glow: 'border-amber-400/20',
       rank: 'Institutional Guardian'
     };
     if (pts >= 11) return { 
@@ -18,7 +18,7 @@ const AchievementBadge = ({ points, className = "" }) => {
       color: 'text-slate-300', 
       bg: 'bg-slate-300/10', 
       border: 'border-slate-300/20',
-      glow: 'shadow-slate-300/20',
+      glow: 'border-slate-300/20',
       rank: 'Trusted Resident'
     };
     if (pts >= 1) return { 
@@ -27,7 +27,7 @@ const AchievementBadge = ({ points, className = "" }) => {
       color: 'text-orange-400', 
       bg: 'bg-orange-400/10', 
       border: 'border-orange-400/20',
-      glow: 'shadow-orange-400/20',
+      glow: 'border-orange-400/20',
       rank: 'Rising Contributor'
     };
     return null;
@@ -41,7 +41,7 @@ const AchievementBadge = ({ points, className = "" }) => {
     <motion.div 
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${config.bg} ${config.border} ${className} shadow-lg ${config.glow}`}
+      className={`flex items-center gap-3 px-4 py-2 rounded-2xl border ${config.bg} ${config.border} ${className} ${config.glow}`}
     >
       <span className="text-xl">{config.icon}</span>
       <div className="text-left">

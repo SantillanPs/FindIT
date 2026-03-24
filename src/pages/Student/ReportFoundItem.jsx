@@ -14,6 +14,7 @@ import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import IdentificationStep from '../../components/ReportFlow/IdentificationStep';
 import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
+import ReportSummary from '../../components/ReportFlow/ReportSummary';
 
 const ReportFoundItem = () => {
   const [formData, setFormData] = useState({
@@ -193,24 +194,25 @@ const ReportFoundItem = () => {
             )}
 
             {step === 5 && (
-              <DetailsStep 
-                stepLabel="Step 5: Item Details"
-                title="Item Description"
-                description="Briefly describe the item's appearance, brand, or other details to help us identify it."
-                placeholder="e.g. Red backpack, iPhone 13 with a clear case..."
-                value={formData.description}
-                onChange={(val) => setFormData({...formData, description: val})}
-                onNext={() => goToStep(6)}
-              >
-                <div className="space-y-6 pt-6 mt-6 border-t border-white/5">
-                   <IdentificationStep 
-                      formData={formData}
-                      setFormData={setFormData}
-                      hasIdentification={hasIdentification}
-                      setHasIdentification={setHasIdentification}
-                    />
-                </div>
-              </DetailsStep>
+                <DetailsStep 
+                  stepLabel="Step 5: Item Details"
+                  title="Item Description"
+                  description="Briefly describe the item's appearance, brand, or other details."
+                  placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
+                  value={formData.description}
+                  category={formData.category}
+                  onChange={(val) => setFormData({...formData, description: val})}
+                  onNext={() => goToStep(6)}
+                >
+                  <div className="space-y-6 pt-6 mt-6 border-t border-white/5">
+                    <IdentificationStep 
+                        formData={formData}
+                        setFormData={setFormData}
+                        hasIdentification={hasIdentification}
+                        setHasIdentification={setHasIdentification}
+                      />
+                  </div>
+                </DetailsStep>
             )}
 
             {step === 6 && (
@@ -226,13 +228,7 @@ const ReportFoundItem = () => {
             )}
 
             {step === 7 && (
-              <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
-                <div className="space-y-4">
-                   <div className="w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20 text-4xl mb-6 shadow-2xl">🌍</div>
-                   <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Ready to submit<br/>your report?"</h2>
-                   <p className="text-slate-500 text-sm font-bold uppercase tracking-widest mb-10">Check your details before posting to the public feed.</p>
-                </div>
-
+              <>
                 {matchedReport && (
                   <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">
                     <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🔍</div>
@@ -243,50 +239,14 @@ const ReportFoundItem = () => {
                   </div>
                 )}
                 
-                <div className="max-w-4xl mx-auto w-full space-y-10 text-left">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                      <div className="aspect-square bg-white/5 rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative group">
-                         <img src={formData.safe_photo_url} alt="Found item" className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" />
-                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                         <div className="absolute bottom-6 left-6 right-6 text-left">
-                            <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1 text-shadow">Item Details</p>
-                            <p className="text-lg font-black text-white uppercase tracking-tight italic text-shadow">{formData.category === 'Other' ? otherItemName : formData.category}</p>
-                         </div>
-                      </div>
-
-                      <div className="space-y-6">
-                         <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 text-left space-y-6 shadow-2xl">
-                            <div className="space-y-1">
-                               <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Found at</p>
-                               <p className="text-lg font-black text-white uppercase tracking-tight leading-none">{formData.location_zone}</p>
-                            </div>
-                            <div className="space-y-1 border-t border-white/5 pt-6">
-                               <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic block mb-1">Impact</p>
-                               <p className="text-xs font-black text-white uppercase tracking-[0.2em]">{user?.full_name}</p>
-                            </div>
-                         </div>
-
-                         <button 
-                          onClick={handleSubmit} 
-                          disabled={loading}
-                          className="w-full bg-white text-black py-8 rounded-[2.5rem] font-black text-sm uppercase tracking-[0.6em] shadow-[0_20px_60px_rgba(255,255,255,0.1)] hover:bg-uni-400 hover:text-white transition-all group flex items-center justify-center gap-6"
-                        >
-                          {loading ? (
-                            <div className="flex items-center gap-4">
-                              <div className="w-6 h-6 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                              Processing...
-                            </div>
-                          ) : (
-                            <>
-                               <i className="fa-solid fa-paper-plane text-2xl group-hover:rotate-12 transition-transform"></i>
-                               Submit Report
-                            </>
-                          )}
-                        </button>
-                      </div>
-                  </div>
-                </div>
-              </div>
+                <ReportSummary 
+                  type="found"
+                  formData={formData}
+                  otherItemName={otherItemName}
+                  loading={loading}
+                  onSubmit={handleSubmit}
+                />
+              </>
             )}
           </motion.div>
         </AnimatePresence>

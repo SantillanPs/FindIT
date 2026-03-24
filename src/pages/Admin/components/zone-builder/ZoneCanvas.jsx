@@ -75,12 +75,12 @@ const ZoneCanvas = ({
                 }`}
             >
                 {/* TOOLBAR */}
-                <div className="absolute top-8 right-8 z-30 flex items-center gap-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl">
+                <div className="absolute top-8 right-8 z-30 flex items-center gap-2 bg-slate-900/90 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl">
                     <div className="flex bg-slate-950/50 rounded-xl p-1 gap-1">
                         <button 
                             onClick={() => setCanvasMode('select')}
                             title="Arrange Tool (V)"
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${canvasMode === 'select' ? 'bg-uni-600 text-white shadow-lg' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${canvasMode === 'select' ? 'bg-uni-600 text-white' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
                         >
                             <i className="fa-solid fa-arrow-pointer"></i>
                         </button>
@@ -90,7 +90,7 @@ const ZoneCanvas = ({
                                 setNewEdge({ zone_a_id: '', zone_b_id: '', distance_weight: 1 });
                             }}
                                 title="Link Tool (C)"
-                            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${canvasMode === 'link' ? 'bg-uni-600 text-white shadow-lg' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${canvasMode === 'link' ? 'bg-uni-600 text-white' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
                         >
                             <i className="fa-solid fa-link"></i>
                         </button>
@@ -246,7 +246,7 @@ const ZoneCanvas = ({
                                         >
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); handleDeleteEdge(edge.id); }}
-                                                className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all border-2 border-white/20"
+                                                className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all border-2 border-white/20"
                                             >
                                                 <i className="fa-solid fa-xmark text-[10px]"></i>
                                             </button>
@@ -304,7 +304,7 @@ const ZoneCanvas = ({
                                 }
                             }}
                         >
-                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-xl border ${
+                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all border ${
                                 newEdge.zone_a_id === zone.id 
                                 ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-500/20 border-transparent' 
                                 : draggingZoneId === zone.id
@@ -313,7 +313,7 @@ const ZoneCanvas = ({
                             }`}>
                                 <i className={`fa-solid ${getZoneIcon(zone.type)} text-base`}></i>
                             </div>
-                            <span className={`text-[10px] font-black px-2 py-1 whitespace-nowrap drop-shadow-md ${
+                            <span className={`text-[10px] font-black px-2 py-1 whitespace-nowrap ${
                                 draggingZoneId === zone.id ? 'text-white' : 'text-white/50 group-hover:text-white'
                             }`}>
                                 {zone.name}
@@ -326,14 +326,14 @@ const ZoneCanvas = ({
                                  <button 
                                     onClick={(e) => handleDockZone(e, zone.id)}
                                     title="Return to Catalog"
-                                    className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 border border-emerald-500/30 hover:text-white transition-all flex items-center justify-center shadow-lg"
+                                    className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500 border border-emerald-500/30 hover:text-white transition-all flex items-center justify-center"
                                  >
                                     <i className="fa-solid fa-box-archive text-[10px]"></i>
                                  </button>
                                  <button 
                                     onClick={(e) => { e.stopPropagation(); handleDeleteZone(zone.id); }}
                                     title="Delete Place"
-                                    className="w-8 h-8 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 border border-red-500/30 hover:text-white transition-all flex items-center justify-center shadow-lg"
+                                    className="w-8 h-8 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500 border border-red-500/30 hover:text-white transition-all flex items-center justify-center"
                                  >
                                     <i className="fa-solid fa-trash text-[10px]"></i>
                                  </button>
@@ -350,7 +350,7 @@ const ZoneCanvas = ({
                         initial={{ y: 100 }}
                         animate={{ y: 0 }}
                         exit={{ y: 100 }}
-                        className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 px-8 py-4 rounded-[2rem] flex items-center gap-6 shadow-2xl z-30"
+                        className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-amber-500 text-slate-950 px-8 py-4 rounded-[2rem] flex items-center gap-6 z-30"
                     >
                         <i className="fa-solid fa-wand-magic-sparkles"></i>
                         <span className="text-[10px] font-black uppercase tracking-widest whitespace-nowrap">

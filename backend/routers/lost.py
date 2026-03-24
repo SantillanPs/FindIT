@@ -10,6 +10,7 @@ from datetime import datetime
 import uuid
 
 router = APIRouter(tags=["Lost Items"])
+admin_router = APIRouter(prefix="/admin", tags=["Admin Lost Items"])
 
 def _calculate_hybrid_score(db: Session, base_score, lost_item, found_item):
     """
@@ -17,36 +18,68 @@ def _calculate_hybrid_score(db: Session, base_score, lost_item, found_item):
     """
     final_score = base_score
     
-    # 0. Information Density Check (Zombie Report Penalty)
-    # Penalize findings that have almost no information to verify
+    # 0. Information Density Check
     found_desc_len = len(found_item.description.strip())
     if found_desc_len < 5:
-        final_score -= 0.35 # Severe penalty for empty/tiny descriptions
+        final_score -= 0.35 
     elif found_desc_len < 15:
-        final_score -= 0.10 # Light penalty for very vague descriptions
+        final_score -= 0.10
         
     if not found_item.location_zone or found_item.location_zone.strip() in ["", "Unknown", "none"]:
-        final_score -= 0.10 # Penalty for missing found location
+        final_score -= 0.10
     
-    # 1. Location Weighting
+    # 1. Attribute Cross-Check (Brands/Colors)
+    # Detect clear contradictions that the embedding might soften
+    brands = ["iphone", "infinix", "samsung", "oppo", "vivo", "realme", "huawei", "xaomi", "macbook", "ipad", "nike", "adidas"]
+    colors = ["black", "white", "blue", "red", "green", "yellow", "pink", "purple", "orange", "grey", "gray", "silver", "gold"]
+    
+    found_text = (found_item.item_name + " " + found_item.description).lower()
+    lost_text = (lost_item.item_name + " " + lost_item.description).lower()
+    
+    # Brand Clash Check
+    found_brands = [b for b in brands if b in found_text]
+    lost_brands = [b for b in brands if b in lost_text]
+    if found_brands and lost_brands:
+        # If there's a brand mentioned in both but they don't share any common brand
+        if not set(found_brands).intersection(set(lost_brands)):
+            final_score -= 0.40 # Heavy penalty for brand contradiction (e.g. iPhone vs Infinix)
+            
+    # Color Clash Check
+    found_colors = [c for c in colors if c in found_text]
+    lost_colors = [c for c in colors if c in lost_text]
+    if found_colors and lost_colors:
+        if not set(found_colors).intersection(set(lost_colors)):
+            final_score -= 0.25 # Penalty for color contradiction (e.g. Red vs Blue)
+
+    # 2. Location Weighting
     if lost_item.zone_id and found_item.zone_id:
         distance = LocationService.get_shortest_path_distance(db, lost_item.zone_id, found_item.zone_id)
         final_score += LocationService.calculate_location_score(distance)
     elif lost_item.location_zone and found_item.location_zone:
         if lost_item.location_zone == found_item.location_zone:
-            final_score += 0.15 # Exact match boost
+            final_score += 0.15
         else:
-            final_score -= 0.10 # Mismatch penalty (per user request)
+            # Check for building mismatch in strings (e.g. "ICT" vs "MIDWIFERY")
+            l_loc = lost_item.location_zone.upper()
+            f_loc = found_item.location_zone.upper()
+            # If buildings (first word/part) appear different
+            l_building = l_loc.split(' - ')[0] if ' - ' in l_loc else l_loc.split(' ')[0]
+            f_building = f_loc.split(' - ')[0] if ' - ' in f_loc else f_loc.split(' ')[0]
+            
+            if l_building != f_building:
+                final_score -= 0.30 # Increased building mismatch penalty
+            else:
+                final_score -= 0.15 # Still different rooms in same building
 
-    # 2. Time Weighting
+    # 3. Time Weighting
     if lost_item.last_seen_time and found_item.found_time:
         delta = abs((lost_item.last_seen_time - found_item.found_time).days)
         if delta <= 2:
-            final_score += 0.05 # Immediate match boost
+            final_score += 0.05
         elif delta > 14:
-            final_score -= 0.20 # Severe gap penalty
+            final_score -= 0.30 # Heavier long-term penalty
         elif delta > 5:
-            final_score -= 0.10 # Reduced confidence gap (per user request)
+            final_score -= 0.20 # Increased gap penalty
 
     # Clamp results to reasonable range [0.01, 0.99]
     return max(0.01, min(0.99, final_score))
@@ -77,7 +110,7 @@ def report_lost_item_guest(
             suggestion.last_reported_at = datetime.utcnow()
 
     # Semantic Matching: Generate embedding
-    combined_text = f"{item.item_name} ({category}): {item.description}"
+    combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     item_data = item.model_dump()
@@ -95,12 +128,22 @@ def report_lost_item_guest(
         guest_last_name=guest_last_name,
         guest_email=guest_email,
         tracking_id=str(uuid.uuid4()),
-        embedding=embedding_json
+        embedding=embedding_json,
+        potential_zone_ids=str(item.potential_zone_ids) if item.potential_zone_ids else "[]"
     )
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
-    return new_item
+    
+    # Resolve names for response
+    response_data = schemas.LostItemResponse.model_validate(new_item)
+    if item.potential_zone_ids:
+        zones = db.query(database.Zone).filter(database.Zone.id.in_(item.potential_zone_ids)).all()
+        # Maintain order of IDs if possible
+        zone_map = {z.id: z.name for z in zones}
+        response_data.potential_zone_names = [zone_map.get(zid, "Unknown") for zid in item.potential_zone_ids]
+    
+    return response_data
 
 @router.post("/lost/report", response_model=schemas.LostItemResponse)
 def report_lost_item(
@@ -129,7 +172,7 @@ def report_lost_item(
             suggestion.last_reported_at = datetime.utcnow()
 
     # Semantic Matching: Generate embedding for item name and description
-    combined_text = f"{item.item_name} ({category}): {item.description}"
+    combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
     item_data = item.model_dump()
@@ -147,16 +190,45 @@ def report_lost_item(
     new_item = database.LostItem(
         **item_data,
         user_id=current_user.id if current_user else None,
-        guest_first_name=guest_first_name if not current_user else None,
-        guest_last_name=guest_last_name if not current_user else None,
-        guest_email=guest_email if not current_user else None,
-        tracking_id=str(uuid.uuid4()) if not current_user else None,
-        embedding=embedding_json
+        guest_first_name=guest_first_name,
+        guest_last_name=guest_last_name,
+        guest_email=guest_email,
+        tracking_id=str(uuid.uuid4()),
+        embedding=embedding_json,
+        potential_zone_ids=str(item.potential_zone_ids) if item.potential_zone_ids else "[]"
     )
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
-    return new_item
+    
+    # Resolve names for response
+    response_data = schemas.LostItemResponse.model_validate(new_item)
+    if item.potential_zone_ids:
+        zones = db.query(database.Zone).filter(database.Zone.id.in_(item.potential_zone_ids)).all()
+        zone_map = {z.id: z.name for z in zones}
+        response_data.potential_zone_names = [zone_map.get(zid, "Unknown") for zid in item.potential_zone_ids]
+    
+    return response_data
+
+def _populate_zone_names(report, db: Session):
+    """Helper to convert stored ID strings to names for response"""
+    if not report.potential_zone_ids:
+        return []
+        
+    try:
+        # The IDs are stored as a string representation of a list, e.g., "[1, 2]"
+        # We'll use a safer eval or just strip/split
+        id_str = report.potential_zone_ids.strip("[]")
+        if not id_str:
+            return []
+        ids = [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        
+        zones = db.query(database.Zone).filter(database.Zone.id.in_(ids)).all()
+        zone_map = {z.id: z.name for z in zones}
+        return [zone_map.get(zid, "Unknown Location") for zid in ids]
+    except Exception as e:
+        print(f"Error parsing potential_zone_ids: {e}")
+        return []
 
 @router.get("/lost/status/{tracking_id}", response_model=schemas.LostItemResponse)
 def get_lost_report_status(
@@ -166,7 +238,10 @@ def get_lost_report_status(
     report = db.query(database.LostItem).filter(database.LostItem.tracking_id == tracking_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Tracking ID not found.")
-    return report
+    
+    response_data = schemas.LostItemResponse.model_validate(report)
+    response_data.potential_zone_names = _populate_zone_names(report, db)
+    return response_data
 
 
 
@@ -203,7 +278,6 @@ def get_matches_for_lost_item(
 
     query = db.query(database.FoundItem).filter(
         database.FoundItem.status == database.ItemStatus.IN_CUSTODY.value,
-        database.FoundItem.category == lost_item.category,
         database.FoundItem.found_time >= start_time,
         database.FoundItem.found_time <= end_time
     )
@@ -229,7 +303,7 @@ def get_matches_for_lost_item(
     suggestions.sort(key=lambda x: x.similarity_score, reverse=True)
     return suggestions
 
-@router.get("/admin/matches/all", response_model=list[schemas.GlobalMatchGroup])
+@admin_router.get("/matches/all", response_model=list[schemas.GlobalMatchGroup])
 def admin_get_all_global_matches(
     db: Session = Depends(auth.get_db),
     admin: database.User = Depends(admin_required)
@@ -253,8 +327,7 @@ def admin_get_all_global_matches(
         matches = []
         
         for lost in lost_items:
-            # Only match same category
-            if lost.category != found.category: continue
+            # Removed category hard-filter as per user request
             if not lost.embedding: continue
             
             lost_emb = AIService.get_embedding_list(lost.embedding)
@@ -280,7 +353,7 @@ def admin_get_all_global_matches(
     results.sort(key=lambda x: x['max_score'], reverse=True)
     return results
 
-@router.post("/admin/matches/connect")
+@admin_router.post("/matches/connect")
 def admin_connect_match(
     request: schemas.MatchRequest,
     db: Session = Depends(auth.get_db),
@@ -320,7 +393,7 @@ def admin_connect_match(
     
     return {"status": "success", "message": "Match connected and students notified"}
 
-@router.get("/admin/found/{item_id}/matches", response_model=list[schemas.AdminMatchSuggestion])
+@admin_router.get("/found/{item_id}/matches", response_model=list[schemas.AdminMatchSuggestion])
 def admin_get_matches_for_found_item(
     item_id: int,
     db: Session = Depends(auth.get_db),
@@ -336,8 +409,7 @@ def admin_get_matches_for_found_item(
     found_embedding = AIService.get_embedding_list(found_item.embedding)
     
     query = db.query(database.LostItem).filter(
-        database.LostItem.status == "reported",
-        database.LostItem.category == found_item.category
+        database.LostItem.status == "reported"
     )
 
     lost_candidates = query.all()
@@ -357,9 +429,13 @@ def admin_get_matches_for_found_item(
     return suggestions
 @router.get("/lost/public", response_model=list[schemas.LostItemPublic])
 def list_public_lost_items(db: Session = Depends(auth.get_db)):
-    return db.query(database.LostItem).filter(
+    reports = db.query(database.LostItem).filter(
         database.LostItem.status == "reported"
     ).all()
+    
+    for r in reports:
+        r.potential_zone_names = _populate_zone_names(r, db)
+    return reports
 
 @router.get("/lost/public/{report_id}", response_model=schemas.LostItemPublic)
 def get_public_lost_item(report_id: int, db: Session = Depends(auth.get_db)):
@@ -369,28 +445,36 @@ def get_public_lost_item(report_id: int, db: Session = Depends(auth.get_db)):
     ).first()
     if not report:
         raise HTTPException(status_code=404, detail="Lost report not found or is no longer public")
+    
+    report.potential_zone_names = _populate_zone_names(report, db)
     return report
 
 @router.get("/lost/my-reports/{report_id}", response_model=schemas.LostItemResponse)
 def get_my_lost_report(report_id: int, current_user: database.User = Depends(auth.get_current_user), db: Session = Depends(auth.get_db)):
     report = db.query(database.LostItem).filter(
         database.LostItem.id == report_id,
-        database.LostItem.reporter_id == current_user.id
+        database.LostItem.user_id == current_user.id
     ).first()
     if not report:
         raise HTTPException(status_code=404, detail="Lost report not found or you are not the owner")
+    
+    report.potential_zone_names = _populate_zone_names(report, db)
     return report
 
-@router.get("/admin/lost/all", response_model=list[schemas.LostItemResponse])
+@admin_router.get("/lost/all", response_model=list[schemas.LostItemResponse])
 def admin_get_all_lost_reports(
     db: Session = Depends(auth.get_db),
     admin: database.User = Depends(admin_required)
 ):
-    return db.query(database.LostItem).filter(
+    reports = db.query(database.LostItem).filter(
         database.LostItem.status != "found"
     ).order_by(database.LostItem.last_seen_time.desc()).all()
+    
+    for r in reports:
+        r.potential_zone_names = _populate_zone_names(r, db)
+    return reports
 
-@router.put("/admin/lost/{report_id}/status", response_model=schemas.LostItemResponse)
+@admin_router.put("/lost/{report_id}/status", response_model=schemas.LostItemResponse)
 def admin_update_lost_report_status(
     report_id: int,
     update: schemas.LostItemUpdate,
@@ -439,14 +523,14 @@ def submit_witness_report(
     db.refresh(new_report)
     return new_report
 
-@router.get("/admin/witness-reports", response_model=list[schemas.WitnessReportResponse])
+@admin_router.get("/witness-reports", response_model=list[schemas.WitnessReportResponse])
 def get_all_witness_reports(
     db: Session = Depends(auth.get_db),
     admin: User = Depends(admin_required)
 ):
     return db.query(WitnessReport).all()
 
-@router.put("/admin/witness-reports/{report_id}/status", response_model=schemas.WitnessReportResponse)
+@admin_router.put("/witness-reports/{report_id}/status", response_model=schemas.WitnessReportResponse)
 def update_witness_report_status(
     report_id: int,
     update: schemas.WitnessReportStatusUpdate,

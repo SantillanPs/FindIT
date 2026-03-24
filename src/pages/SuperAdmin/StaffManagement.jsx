@@ -65,9 +65,9 @@ const StaffManagement = () => {
   const getRoleBadge = (role) => {
     switch(role) {
       case 'super_admin':
-        return <span className="bg-uni-500/20 text-uni-400 border border-uni-500/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(14,165,233,0.2)]">Super Admin</span>;
+        return <span className="bg-uni-500/20 text-uni-400 border border-uni-500/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Super Admin</span>;
       case 'admin':
-        return <span className="bg-uni-500/20 text-uni-400 border border-uni-500/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-[0_0_10px_rgba(14,165,233,0.2)]">Admin</span>;
+        return <span className="bg-uni-500/20 text-uni-400 border border-uni-500/30 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Admin</span>;
       default:
         return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/20 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">Student</span>;
     }
@@ -114,7 +114,7 @@ const StaffManagement = () => {
           <div key={user_row.id} className="app-card p-6 flex flex-col justify-between group hover:border-white/20 transition-all duration-300">
             <div>
               <div className="flex justify-between items-start mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-white font-display font-bold text-xl shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-white font-display font-bold text-xl">
                   {user_row.full_name?.charAt(0) || user_row.email.charAt(0)}
                 </div>
                 {getRoleBadge(user_row.role)}

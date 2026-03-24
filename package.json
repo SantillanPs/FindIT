@@ -8,7 +8,8 @@
     "backend": "powershell -File scripts/kill_port.ps1 -Port 8000 && backend\\venv\\Scripts\\python backend/main.py",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clear": "backend\\venv\\Scripts\\python backend/clear_data.py"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",

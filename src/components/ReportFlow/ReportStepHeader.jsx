@@ -12,7 +12,7 @@ const ReportStepHeader = ({ title, label, step, totalSteps, error, icon }) => {
              </p>
              <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none italic">{title}</h1>
           </div>
-          <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2rem] border border-white/5 shadow-2xl">
+          <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2rem] border border-white/5">
              <div className="text-right">
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Progress</p>
                 <p className="text-sm font-black text-white uppercase italic">Step {step} of {totalSteps}</p>

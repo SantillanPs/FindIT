@@ -76,8 +76,8 @@ const MyClaims = () => {
                 Track the institutional verification process of your claims. Items go through AI-assisted review and manual custodial verification.
                 </p>
             </div>
-            <div className="hidden md:flex h-12 w-12 rounded-2xl bg-uni-500/10 border border-uni-500/20 items-center justify-center text-xl text-uni-400 shadow-[0_0_15px_rgba(var(--color-uni-500),0.1)]">
-                <i className="fa-solid fa-shield-halved animate-pulse"></i>
+            <div className="hidden md:flex h-12 w-12 rounded-2xl bg-uni-500/10 border border-uni-500/20 items-center justify-center text-xl text-uni-400">
+                <i className="fa-solid fa-shield-halved"></i>
             </div>
         </div>
       </motion.header>
@@ -85,7 +85,7 @@ const MyClaims = () => {
       {loading ? (
         <div className="space-y-4">
             {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-32 bg-white/5 animate-pulse rounded-2xl"></div>
+                <div key={i} className="h-32 bg-white/5 rounded-2xl"></div>
             ))}
         </div>
       ) : (
@@ -109,9 +109,9 @@ const MyClaims = () => {
                   className="glass-panel p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] border border-white/5 group relative overflow-hidden"
                 >
                   <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                    claim.status === 'approved' ? 'bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 
-                    claim.status === 'rejected' ? 'bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' : 
-                    'bg-uni-500 shadow-[0_0_15px_rgba(var(--color-uni-500),0.3)]'
+                    claim.status === 'approved' ? 'bg-green-500' : 
+                    claim.status === 'rejected' ? 'bg-red-500' : 
+                    'bg-uni-500'
                   }`}></div>
                   
                   <div className="flex flex-col gap-8">
@@ -131,7 +131,7 @@ const MyClaims = () => {
                          {claim.status === 'approved' && !claim.scheduled_pickup_time && (
                             <button 
                                 onClick={() => setSchedulingClaim(claim)}
-                                className="px-5 py-2 rounded-xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest shadow-lg shadow-green-500/20"
+                                className="px-5 py-2 rounded-xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest"
                             >
                                 Schedule Pickup
                             </button>
@@ -206,12 +206,12 @@ const MyClaims = () => {
                initial={{ scale: 0.9, opacity: 0, y: 20 }}
                animate={{ scale: 1, opacity: 1, y: 0 }}
                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-               className="relative w-full max-w-lg bg-slate-950 border border-white/10 rounded-[3rem] p-8 md:p-10 shadow-2xl overflow-hidden"
+               className="relative w-full max-w-lg bg-slate-950 border border-white/10 rounded-[3rem] p-8 md:p-10 overflow-hidden"
             >
                <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 blur-3xl rounded-full"></div>
                
                <div className="text-center space-y-4 mb-8">
-                  <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto shadow-lg text-green-400">
+                  <div className="h-16 w-16 bg-green-500/10 border border-green-500/20 rounded-2xl flex items-center justify-center text-3xl mx-auto text-green-400">
                     <i className="fa-solid fa-calendar-check"></i>
                   </div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tight">Schedule Pickup</h2>
@@ -242,7 +242,7 @@ const MyClaims = () => {
                      </button>
                      <button 
                        type="submit"
-                       className="flex-1 py-4 rounded-2xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest shadow-xl shadow-green-500/20"
+                       className="flex-1 py-4 rounded-2xl bg-green-500 text-[10px] font-black text-white hover:bg-green-600 transition-all uppercase tracking-widest"
                      >
                        Confirm Schedule
                      </button>

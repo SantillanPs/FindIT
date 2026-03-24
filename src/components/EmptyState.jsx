@@ -26,7 +26,6 @@ const EmptyState = ({
             }}
             transition={{ 
               duration: 3, 
-              repeat: Infinity, 
               ease: "easeInOut" 
             }}
             className="w-32 h-32 mb-4 relative"

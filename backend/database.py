@@ -129,6 +129,10 @@ class FoundItem(Base):
     embedding = Column(Text, nullable=True)
     matched_lost_id = Column(Integer, ForeignKey("lost_items.id"), nullable=True)
     
+    # Internal Verification (New Handshake Model)
+    verification_note = Column(Text, nullable=True) # E.g., "Small sunflower sticker under case"
+    challenge_question = Column(Text, nullable=True) # E.g., "What is the logo on the buckle?"
+    
     # Direct Identification (Optional)
     identified_student_id = Column(String, nullable=True) # ID number found on item
     identified_name = Column(String, nullable=True) # Name found on item
@@ -178,6 +182,7 @@ class LostItem(Base):
     last_seen_time = Column(DateTime, default=datetime.utcnow)
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
+    potential_zone_ids = Column(Text, default="[]")
     
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     guest_first_name = Column(String, nullable=True)
