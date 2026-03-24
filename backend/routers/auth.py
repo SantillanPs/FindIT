@@ -43,6 +43,38 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
     db.commit()
     db.refresh(new_user)
     
+    # NEW: Adopt "orphan" guest records (Claims, Lost Reports, Found Reports)
+    # This fulfills the "Save this claim to your account" promise
+    db.query(database.Claim).filter(
+        database.Claim.guest_email.ilike(email_lower),
+        database.Claim.student_id == None
+    ).update({
+        "student_id": new_user.id,
+        "guest_email": None,
+        "guest_first_name": None,
+        "guest_last_name": None
+    }, synchronize_session=False)
+
+    db.query(database.LostItem).filter(
+        database.LostItem.guest_email.ilike(email_lower),
+        database.LostItem.user_id == None
+    ).update({
+        "user_id": new_user.id,
+        "guest_email": None,
+        "guest_first_name": None,
+        "guest_last_name": None
+    }, synchronize_session=False)
+
+    db.query(database.FoundItem).filter(
+        database.FoundItem.guest_email.ilike(email_lower),
+        database.FoundItem.finder_id == None
+    ).update({
+        "finder_id": new_user.id,
+        "guest_email": None,
+        "guest_first_name": None,
+        "guest_last_name": None
+    }, synchronize_session=False)
+    
     # NEW: Handle Witness Reports points for newly registered user
     approved_witness_reports = db.query(database.WitnessReport).filter(
         database.WitnessReport.guest_email.ilike(email_lower),
@@ -67,9 +99,17 @@ def register(user: schemas.UserCreate, db: Session = Depends(auth.get_db)):
         notif = database.Notification(
             user_id=new_user.id,
             title="Integrity Points Awarded!",
-            message=f"Welcome! You earned +{total_points_to_award} integrity points from your previously approved witness reports."
+            message=f"Welcome! You earned +{total_points_to_award} integrity points from your previously approved witness reports. Your account is now active!"
         )
         db.add(notif)
+    else:
+        # General welcome for users without prior points but potentially with claims
+        welcome_notif = database.Notification(
+            user_id=new_user.id,
+            title="Welcome to the Network!",
+            message="Your account is active. Any previous claims or reports linked to your email have been automatically synced to your dashboard."
+        )
+        db.add(welcome_notif)
     
     db.commit()
     db.refresh(new_user)

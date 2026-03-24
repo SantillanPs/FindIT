@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, validator
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 
 class UserBase(BaseModel):
@@ -87,6 +87,7 @@ class FoundItemBase(BaseModel):
     safe_photo_url: Optional[str] = None
     contact_info: Optional[str] = None
     matched_lost_id: Optional[int] = None
+    attributes: Optional[Dict[str, str]] = None
 
 class FoundItemCreate(FoundItemBase):
     guest_first_name: Optional[str] = None
@@ -105,6 +106,7 @@ class FoundItemPublic(FoundItemBase):
     owner_name: Optional[str] = None
     identified_student_id: Optional[str] = None
     identified_name: Optional[str] = None
+    challenge_question: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -164,6 +166,7 @@ class LostItemBase(BaseModel):
     safe_photo_url: Optional[str] = None
     potential_zone_ids: Optional[list[int]] = []
     potential_zone_names: Optional[list[str]] = []
+    attributes: Optional[Dict[str, str]] = None
 
 class LostItemCreate(LostItemBase):
     guest_first_name: Optional[str] = None
@@ -239,6 +242,7 @@ class ClaimCreate(BaseModel):
     contact_method: Optional[str] = None
     contact_info: Optional[str] = None
     course_department: Optional[str] = None
+    attributes: Optional[Dict[str, str]] = None
 
 class ClaimResponse(BaseModel):
     id: int
@@ -259,6 +263,7 @@ class ClaimResponse(BaseModel):
     is_pickup_ready: bool = False
     scheduled_pickup_time: Optional[datetime] = None
     similarity_score: Optional[float] = None  # AI context for admins
+    claim_attributes: Optional[Dict[str, str]] = None
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
     created_at: datetime

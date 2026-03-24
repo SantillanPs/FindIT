@@ -45,6 +45,7 @@ def submit_claim(
         contact_method=claim.contact_method,
         contact_info=claim.contact_info,
         course_department=claim.course_department,
+        attributes=claim.attributes or {},
         tracking_id=str(uuid.uuid4()) if not current_user else None
     )
     db.add(new_claim)
@@ -81,6 +82,11 @@ def _populate_claim_details(db: Session, claim: database.Claim):
         "found_item_private_notes": found_item.private_admin_notes if found_item else None,
         "found_item_category": found_item.category if found_item else None,
         "found_item_description": found_item.description if found_item else None,
+        "found_item_attributes": found_item.attributes if found_item else {},
+        "found_item_verification_note": found_item.verification_note if found_item else None,
+        "found_item_challenge_question": found_item.challenge_question if found_item else None,
+        "lost_item_attributes": lost_report.attributes if lost_report else {},
+        "claim_attributes": claim.attributes,
         "status": claim.status,
         "admin_notes": claim.admin_notes,
         "is_pickup_ready": claim.is_pickup_ready,

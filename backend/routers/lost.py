@@ -51,6 +51,32 @@ def _calculate_hybrid_score(db: Session, base_score, lost_item, found_item):
         if not set(found_colors).intersection(set(lost_colors)):
             final_score -= 0.25 # Penalty for color contradiction (e.g. Red vs Blue)
 
+    # 1.5. Structured Attribute Scaling (HIGH CONFIDENCE)
+    if found_item.attributes and lost_item.attributes:
+        f_attrs = found_item.attributes
+        l_attrs = lost_item.attributes
+        
+        # Check for Brand Mismatch
+        if f_attrs.get('Brand') and l_attrs.get('Brand'):
+            if f_attrs['Brand'].lower() != l_attrs['Brand'].lower():
+                final_score -= 0.45 # Hard structural penalty for brand clash
+            else:
+                final_score += 0.10 # Boost for confirmed brand match
+        
+        # Check for Model Mismatch
+        if f_attrs.get('Model') and l_attrs.get('Model'):
+            if f_attrs['Model'].lower() != l_attrs['Model'].lower():
+                final_score -= 0.35 # Structural penalty for model clash
+            else:
+                final_score += 0.10 # Boost for confirmed model match
+                
+        # Check for Primary Color Mismatch (more reliable than text search)
+        if f_attrs.get('Color') and l_attrs.get('Color'):
+            if f_attrs['Color'].lower() != l_attrs['Color'].lower():
+                final_score -= 0.20
+            else:
+                final_score += 0.05
+
     # 2. Location Weighting
     if lost_item.zone_id and found_item.zone_id:
         distance = LocationService.get_shortest_path_distance(db, lost_item.zone_id, found_item.zone_id)
@@ -128,6 +154,7 @@ def report_lost_item_guest(
         guest_last_name=guest_last_name,
         guest_email=guest_email,
         tracking_id=str(uuid.uuid4()),
+        attributes=item.attributes,
         embedding=embedding_json,
         potential_zone_ids=str(item.potential_zone_ids) if item.potential_zone_ids else "[]"
     )
@@ -194,6 +221,7 @@ def report_lost_item(
         guest_last_name=guest_last_name,
         guest_email=guest_email,
         tracking_id=str(uuid.uuid4()),
+        attributes=item.attributes,
         embedding=embedding_json,
         potential_zone_ids=str(item.potential_zone_ids) if item.potential_zone_ids else "[]"
     )

@@ -30,7 +30,8 @@ const ReportFoundItem = () => {
     guest_first_name: '',
     guest_last_name: '',
     guest_email: '',
-    contact_info: ''
+    contact_info: '',
+    attributes: {}
   });
   
   const [loading, setLoading] = useState(false);
@@ -201,6 +202,11 @@ const ReportFoundItem = () => {
                   placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
                   value={formData.description}
                   category={formData.category}
+                  attributes={formData.attributes}
+                  onAttributeChange={(field, val) => setFormData(prev => ({
+                    ...prev,
+                    attributes: { ...prev.attributes, [field]: val }
+                  }))}
                   onChange={(val) => setFormData({...formData, description: val})}
                   onNext={() => goToStep(6)}
                 >

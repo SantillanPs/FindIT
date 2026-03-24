@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
 
 const Register = () => {
   const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
+  const [searchParams] = useSearchParams();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -14,10 +16,27 @@ const Register = () => {
   const [department, setDepartment] = useState('');
   const [proofUrl, setProofUrl] = useState('');
   const [error, setError] = useState('');
+  const [prefillNote, setPrefillNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 5;
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const pEmail = searchParams.get('email');
+    const pFirst = searchParams.get('first_name');
+    const pLast = searchParams.get('last_name');
+    const pCollege = searchParams.get('college');
+
+    if (pEmail || pFirst || pLast || pCollege) {
+      if (pEmail) setEmail(pEmail);
+      if (pFirst) setFirstName(pFirst);
+      if (pLast) setLastName(pLast);
+      if (pCollege) setDepartment(pCollege);
+      
+      setPrefillNote("We've pre-filled your details from your recent claim! Please set a password to continue.");
+    }
+  }, [searchParams]);
 
   const handleNext = () => {
     setError('');
@@ -104,6 +123,15 @@ const Register = () => {
            </div>
            <span className="text-[10px] font-bold text-sky-500/70 uppercase tracking-[0.2em]">Step {step} of {totalSteps}</span>
         </div>
+
+          {prefillNote && (
+            <div 
+              className="mb-6 p-4 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-xs font-black uppercase tracking-widest text-center rounded-2xl flex items-center justify-center gap-3 animate-pulse"
+            >
+               <i className="fa-solid fa-sparkles text-lg"></i>
+               {prefillNote}
+            </div>
+          )}
 
           {error && (
             <div 

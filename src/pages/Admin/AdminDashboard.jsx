@@ -13,6 +13,7 @@ import ReleasedItemsTable from './components/ReleasedItemsTable';
 import WitnessReportsTab from './components/WitnessReportsTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
+import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 
 // Modals
 import ReleaseItemModal from './components/ReleaseItemModal';
@@ -173,7 +174,8 @@ const AdminDashboard = () => {
       setShowIntakeModal({ 
         item, 
         verification_note: item.verification_note || '', 
-        challenge_question: item.challenge_question || '' 
+        challenge_question: item.challenge_question || '',
+        attributes: { ...(item.attributes || {}) }
       });
       return;
     }
@@ -191,13 +193,14 @@ const AdminDashboard = () => {
   };
 
   const handleIntakeSubmit = async () => {
-    const { item, verification_note, challenge_question } = showIntakeModal;
+    const { item, verification_note, challenge_question, attributes } = showIntakeModal;
     setActionLoading(item.id);
     try {
       await apiClient.put(`/admin/found/${item.id}/custody`, { 
-        notes: `Secured in vault with verification challenge`,
+        notes: `Secured in vault with verified attributes`,
         verification_note,
-        challenge_question
+        challenge_question,
+        attributes
       });
       setShowIntakeModal(null);
       await refreshActiveTab();
@@ -546,26 +549,77 @@ const AdminDashboard = () => {
                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Item #{showIntakeModal.item.id} • Intake to Vault</p>
                   </div>
                 </div>
-
                 <div className="space-y-6">
+                   {/* Data Integrity Audit: Structured Attributes */}
+                   <div className="bg-slate-950/50 p-6 rounded-3xl border border-white/5 space-y-4">
+                      <p className="text-[9px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-2 mb-2">
+                        <i className="fa-solid fa-clipboard-check"></i>
+                        Data Integrity Audit
+                      </p>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => (
+                          <div key={field} className="space-y-1.5">
+                            <label className="block text-[8px] font-black text-slate-500 tracking-widest uppercase ml-1">{field}</label>
+                            
+                            {field === 'Color' || field === 'Primary Color' || field === 'Frame Color' ? (
+                              <select
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-bold text-white focus:border-uni-500 outline-none"
+                                value={showIntakeModal.attributes[field] || ''}
+                                onChange={(e) => setShowIntakeModal({
+                                  ...showIntakeModal,
+                                  attributes: { ...showIntakeModal.attributes, [field]: e.target.value }
+                                })}
+                              >
+                                <option value="">Select Color</option>
+                                {COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            ) : field === 'Condition' ? (
+                              <select
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-bold text-white focus:border-uni-500 outline-none"
+                                value={showIntakeModal.attributes[field] || ''}
+                                onChange={(e) => setShowIntakeModal({
+                                  ...showIntakeModal,
+                                  attributes: { ...showIntakeModal.attributes, [field]: e.target.value }
+                                })}
+                              >
+                                <option value="">Select Condition</option>
+                                {CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                              </select>
+                            ) : (
+                              <input 
+                                type="text"
+                                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-[10px] font-black text-white focus:border-uni-500 outline-none tracking-widest uppercase"
+                                value={showIntakeModal.attributes[field] || ''}
+                                onChange={(e) => setShowIntakeModal({
+                                  ...showIntakeModal,
+                                  attributes: { ...showIntakeModal.attributes, [field]: e.target.value }
+                                })}
+                                placeholder={`Enter ${field}`}
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                   </div>
+
                    <div className="space-y-3">
                       <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1 flex items-center gap-2">
                         <i className="fa-solid fa-eye-slash text-[8px] text-uni-400"></i>
                         Secret Verification Note (Internal)
                       </label>
                       <textarea 
-                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all min-h-[100px]"
+                        className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all min-h-[80px]"
                         placeholder="E.g., Small sunflower sticker under the case..."
                         value={showIntakeModal.verification_note}
                         onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})}
                       />
-                      <p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest">This description is NEVER shown to the public.</p>
                    </div>
 
                    <div className="space-y-3">
                       <label className="block text-[10px] font-black text-slate-500 tracking-widest ml-1 flex items-center gap-2">
                         <i className="fa-solid fa-question-circle text-[8px] text-uni-400"></i>
-                        Challenge Question (Verbally ask student)
+                        Challenge Question (Ask student)
                       </label>
                       <input 
                         type="text"
@@ -584,6 +638,7 @@ const AdminDashboard = () => {
                    >
                      Cancel
                    </button>
+
                    <button 
                      onClick={handleIntakeSubmit}
                      disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note}

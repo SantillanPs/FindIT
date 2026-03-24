@@ -47,8 +47,6 @@ const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
                 className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-sm md:text-base border-2 transition-colors z-10 ${isActive ? 'text-white' : 'text-slate-600'}`}
               >
                 <i className={`fa-solid ${step.icon}`}></i>
-                
-                )}
               </motion.div>
               
               <div className="text-center space-y-1 min-w-[80px]">

@@ -1,16 +1,22 @@
 from sqlalchemy import Column, Integer, String, Boolean, Enum, create_engine, Text, DateTime, ForeignKey
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, backref
+from sqlalchemy.ext.hybrid import hybrid_property
 import enum
 from datetime import datetime
 
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 
-load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+# Load environment variables (force override to allow local .env to win over OS env)
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path, override=True)
+# Explicitly check the file to see if it's meant to be disabled
+env_file_vars = dotenv_values(env_path)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Check for DATABASE_URL environment variable (Supabase / Vercel)
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+# Prioritize .env file even if OS has a global variable set
+SQLALCHEMY_DATABASE_URL = env_file_vars.get("DATABASE_URL") or os.getenv("DATABASE_URL")
 
 # Fallback to local SQLite if no DATABASE_URL is provided
 if not SQLALCHEMY_DATABASE_URL:
@@ -107,6 +113,17 @@ class User(Base):
     is_certificate_eligible = Column(Boolean, default=False)
     show_full_name = Column(Boolean, default=False) # Privacy toggle for leaderboard
     
+    @hybrid_property
+    def full_name(self):
+        fname = self.first_name or ""
+        lname = self.last_name or ""
+        return f"{fname} {lname}".strip() or "Anonymous User"
+
+    @full_name.expression
+    def full_name(cls):
+        from sqlalchemy import func
+        return func.trim(func.coalesce(cls.first_name, '') + ' ' + func.coalesce(cls.last_name, ''))
+
     found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder")
     notifications = relationship("Notification", back_populates="user")
     claims = relationship("Claim", back_populates="student")
@@ -151,6 +168,7 @@ class FoundItem(Base):
     released_by_name = Column(String, nullable=True)
     released_at = Column(DateTime, nullable=True)
     released_to_photo_url = Column(String, nullable=True)
+    attributes_json = Column(Text, nullable=True) # JSON string of attributes
     
     finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
     released_to = relationship("User", foreign_keys=[released_to_id])
@@ -169,6 +187,22 @@ class FoundItem(Base):
             lname = self.guest_last_name or ""
             return f"{fname} {lname}".strip()
         return "Anonymous Finder"
+
+    @property
+    def attributes(self):
+        if not self.attributes_json:
+            return {}
+        try:
+            return json.loads(self.attributes_json)
+        except:
+            return {}
+
+    @attributes.setter
+    def attributes(self, value):
+        if value is None:
+            self.attributes_json = None
+        else:
+            self.attributes_json = json.dumps(value)
 
 class LostItem(Base):
     __tablename__ = "lost_items"
@@ -192,6 +226,8 @@ class LostItem(Base):
     safe_photo_url = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
     admin_notes = Column(Text, nullable=True)
+    attributes_json = Column(Text, nullable=True) # JSON string of attributes
+    
     owner = relationship("User", back_populates="lost_items")
     witness_reports = relationship("WitnessReport", back_populates="lost_item")
     zone = relationship("Zone", foreign_keys=[zone_id])
@@ -208,6 +244,22 @@ class LostItem(Base):
             lname = self.guest_last_name or ""
             return f"{fname} {lname}".strip()
         return "Anonymous Guest"
+
+    @property
+    def attributes(self):
+        if not self.attributes_json:
+            return {}
+        try:
+            return json.loads(self.attributes_json)
+        except:
+            return {}
+
+    @attributes.setter
+    def attributes(self, value):
+        if value is None:
+            self.attributes_json = None
+        else:
+            self.attributes_json = json.dumps(value)
 
     @property
     def owner_email(self):
@@ -313,6 +365,7 @@ class Claim(Base):
     admin_notes = Column(Text, nullable=True)
     is_pickup_ready = Column(Boolean, default=False)
     scheduled_pickup_time = Column(DateTime, nullable=True)
+    attributes_json = Column(Text, nullable=True) # JSON string of attributes
     created_at = Column(DateTime, default=datetime.utcnow)
 
     student = relationship("User", back_populates="claims")
@@ -331,11 +384,27 @@ class Claim(Base):
         return "Anonymous Guest"
 
     @property
+    def attributes(self):
+        if not self.attributes_json:
+            return {}
+        try:
+            return json.loads(self.attributes_json)
+        except:
+            return {}
+
+    @attributes.setter
+    def attributes(self, value):
+        if value is None:
+            self.attributes_json = None
+        else:
+            self.attributes_json = json.dumps(value)
+
+    @property
     def owner_email(self):
         if self.student_id and self.student:
             return self.student.email
         return self.guest_email
-    
+
     found_item = relationship("FoundItem")
 
 class CategoryStat(Base):

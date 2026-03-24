@@ -1,5 +1,5 @@
-import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
 
 const ClaimReviewModal = ({ 
   selectedClaim, 
@@ -66,23 +66,119 @@ const ClaimReviewModal = ({
                                <div className="flex items-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                   <span><i className="fa-solid fa-location-dot text-uni-500 mr-2"></i> {selectedClaim.found_item_location || 'Zone Not Specified'}</span>
                                   <span><i className="fa-solid fa-calendar text-uni-400 mr-2"></i> {selectedClaim.found_item_time ? new Date(selectedClaim.found_item_time).toLocaleDateString() : 'Date Unknown'}</span>
-                               </div>
+                                </div>
                                <p className="text-sm text-slate-500 font-bold leading-relaxed">{selectedClaim.found_item_description || 'No detailed description provided.'}</p>
                           </div>
+
+                          <div className="p-6 bg-uni-500/10 rounded-3xl border border-uni-500/20 space-y-4 text-left">
+                              <div className="flex items-center gap-2">
+                                 <i className="fa-solid fa-eye-slash text-[8px] text-uni-400"></i>
+                                 <span className="text-[9px] font-black text-uni-400 uppercase tracking-widest block">Secret Reference (Vault)</span>
+                              </div>
+                              <div className="space-y-3">
+                                 <div>
+                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Internal Verification Note</p>
+                                    <p className="text-[11px] font-bold text-slate-200 indent-2 border-l-2 border-uni-500/30 pl-3 py-1 mt-1 italic">
+                                       {selectedClaim.found_item_verification_note || "No secret note provided during intake."}
+                                    </p>
+                                 </div>
+                                 <div>
+                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Planned Challenge Question</p>
+                                    <p className="text-[10px] font-black text-white uppercase italic mt-1">
+                                       Q: {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
+                                     </p>
+                                 </div>
+                              </div>
+                          </div>
                       </div>
+
                       <div className="space-y-6">
-                           <span className="text-[10px] font-black text-uni-400 uppercase tracking-widest block">Claim Detail</span>
-                          <div className="p-6 bg-uni-500/5 rounded-3xl border border-uni-500/20 space-y-4 text-left">
-                               <p className="text-lg text-white font-black italic leading-tight">"{selectedClaim.proof_description}"</p>
-                               <div className="pt-4 border-t border-white/5 flex items-center justify-between">
-                                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Matching score</p>
-                                  <p className="text-[11px] font-black text-uni-400">
-                                    {selectedClaim.similarity_score ? `AI Conflict Match: ${(selectedClaim.similarity_score * 100).toFixed(0)}%` : 'High Confidence'}
-                                  </p>
-                               </div>
+                           <div className="flex items-center justify-between">
+                               <span className="text-[10px] font-black text-uni-400 uppercase tracking-widest block">Claimant's Response</span>
+                               {selectedClaim.similarity_score !== undefined && (
+                                   <div className="px-3 py-1 bg-uni-500/10 rounded-full border border-uni-500/20 text-[8px] font-black text-uni-400 uppercase tracking-widest">
+                                       AI Confidence: {(selectedClaim.similarity_score * 100).toFixed(0)}%
+                                   </div>
+                               )}
+                           </div>
+                           
+                          <div className="p-8 bg-slate-950/50 rounded-[2.5rem] border border-white/10 space-y-6 text-left relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-uni-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-uni-500/10 transition-colors" />
+                                
+                                {selectedClaim.found_item_challenge_question && (
+                                    <div className="space-y-2">
+                                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Prompted Question</p>
+                                        <p className="text-xs text-slate-300 font-bold italic">"{selectedClaim.found_item_challenge_question}"</p>
+                                    </div>
+                                )}
+
+                                <p className="text-xl text-white font-black italic leading-tight">"{selectedClaim.proof_description}"</p>
+                                
+                                {/* Data Integrity Audit: Structural Comparison */}
+                                {(selectedClaim.found_item_attributes || selectedClaim.lost_item_attributes || selectedClaim.claim_attributes) && (
+                                    <div className="pt-6 border-t border-white/5 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                                <i className="fa-solid fa-clipboard-check text-uni-400"></i>
+                                                Data Integrity Audit
+                                            </p>
+                                            {(() => {
+                                                const comparisonSource = selectedClaim.lost_item_attributes || selectedClaim.claim_attributes;
+                                                if (!comparisonSource) return null;
+                                                
+                                                const hasConflict = Object.keys(selectedClaim.found_item_attributes || {}).some(key => 
+                                                    comparisonSource[key] && 
+                                                    selectedClaim.found_item_attributes[key].toLowerCase() !== comparisonSource[key].toLowerCase()
+                                                );
+
+                                                return hasConflict ? (
+                                                    <span className="text-[8px] font-black text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20 uppercase tracking-widest animate-pulse">
+                                                        Conflict Detected
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-[8px] font-black text-green-500 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20 uppercase tracking-widest">
+                                                        Verified Integrity
+                                                    </span>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            {Object.keys(selectedClaim.found_item_attributes || {}).map(key => {
+                                                const foundVal = selectedClaim.found_item_attributes[key];
+                                                const claimVal = selectedClaim.claim_attributes?.[key];
+                                                const lostVal = selectedClaim.lost_item_attributes?.[key];
+                                                const verifiedVal = claimVal || lostVal;
+                                                const isMismatch = verifiedVal && foundVal.toLowerCase() !== verifiedVal.toLowerCase();
+
+                                                return (
+                                                    <div key={key} className={`flex items-center justify-between p-3 rounded-xl border ${isMismatch ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
+                                                        <div className="space-y-0.5">
+                                                            <p className="text-[7px] font-black text-slate-500 uppercase tracking-[0.2em]">{key}</p>
+                                                            <p className={`text-[10px] font-black uppercase tracking-widest ${isMismatch ? 'text-red-400' : 'text-white'}`}>
+                                                                {foundVal} {isMismatch && <span className="text-slate-500 mx-2 text-[8px]">vs</span>} {isMismatch && <span className="text-slate-300">{verifiedVal}</span>}
+                                                            </p>
+                                                        </div>
+                                                        {isMismatch ? (
+                                                            <i className="fa-solid fa-circle-exclamation text-red-500 text-xs"></i>
+                                                        ) : verifiedVal ? (
+                                                            <i className="fa-solid fa-check-circle text-green-500 text-[10px]"></i>
+                                                        ) : null}
+                                                    </div>
+                                                );
+                                            })}
+                                            {!selectedClaim.lost_item_attributes && !selectedClaim.claim_attributes && (
+                                                <p className="text-[8px] text-slate-600 font-bold uppercase tracking-widest italic text-center py-2">
+                                                    No structured data for comparison
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                           </div>
                       </div>
                   </div>
+
                   <button 
                       onClick={() => setClaimReviewStep(2)}
                       className="w-full bg-white text-black py-6 rounded-2xl font-black text-[11px] uppercase tracking-[0.4em] hover:bg-uni-500 hover:text-white transition-all group flex items-center justify-center gap-4"
@@ -92,6 +188,7 @@ const ClaimReviewModal = ({
                   </button>
               </motion.div>
             )}
+
 
             {claimReviewStep === 2 && (
               <motion.div 
@@ -136,17 +233,20 @@ const ClaimReviewModal = ({
                       </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                      <div className="md:col-span-1 p-6 bg-white/5 rounded-2xl border border-white/5 space-y-4">
-                           <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Verification Logic</p>
+                  {/* Enhanced Verification Guide */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
+                      <div className="md:col-span-1 p-8 bg-white/5 rounded-[2rem] border border-white/5 space-y-4 flex flex-col justify-center">
+                           <div className="flex items-center gap-3">
+                               <div className="w-8 h-8 rounded-xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
+                                   <i className="fa-solid fa-scale-balanced text-[10px]"></i>
+                               </div>
+                               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification Logic</p>
+                           </div>
                           <p className="text-[11px] text-white font-bold leading-relaxed">
-                            Compare the Found Item photo against the Claimant's proof. 
-                            {selectedClaim.id_photo_url && (
-                              <span className="block mt-2 text-uni-400">✓ This claim also includes a copy of their ID/Physical Proof.</span>
-                            )}
+                            Compare the found item context against the claimant's proof photo.
                           </p>
                       </div>
-                      <div className="md:col-span-2 p-6 bg-slate-950 rounded-[2rem] border border-white/5">
+                      <div className="md:col-span-3 p-8 bg-slate-950 rounded-[2.5rem] border border-white/5">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                              <div>
                                 <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-3">Claimant Account</p>
@@ -196,6 +296,17 @@ const ClaimReviewModal = ({
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-widest leading-relaxed">
                           Once approved, the student will be notified to visit the office for collection. If rejected, they can clarify their claim.
                       </p>
+                      
+                      <div className="p-6 bg-white/5 rounded-3xl border border-white/5 inline-flex items-center gap-6 mx-auto">
+                          <div className="text-left border-r border-white/10 pr-6">
+                               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Target Item</p>
+                               <p className="text-[10px] text-white font-black uppercase tracking-tight italic">{selectedClaim.found_item_name}</p>
+                          </div>
+                          <div className="text-left">
+                               <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Claimant</p>
+                               <p className="text-[10px] text-uni-400 font-black uppercase tracking-tight">{selectedClaim.owner_name}</p>
+                          </div>
+                      </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
@@ -205,7 +316,7 @@ const ClaimReviewModal = ({
                                 try {
                                     await apiClient.patch(`/admin/claims/${selectedClaim.id}/mark-ready`);
                                     setSelectedClaim(null);
-                                    window.location.reload(); // Refresh to sync stats
+                                    window.location.reload(); 
                                 } catch (err) { console.error(err); }
                             }}
                             disabled={actionLoading || selectedClaim.is_pickup_ready}
@@ -265,7 +376,7 @@ const ClaimReviewModal = ({
                         </>
                       )}
                   </div>
-
+                  
                   <button onClick={() => setClaimReviewStep(2)} className="text-[9px] font-black text-slate-600 uppercase tracking-widest hover:text-white transition-all">Review evidence again</button>
               </motion.div>
             )}

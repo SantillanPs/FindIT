@@ -50,6 +50,7 @@ def report_found_item_guest(
         guest_first_name=guest_first_name,
         guest_last_name=guest_last_name,
         guest_email=guest_email,
+        attributes=item.attributes,
         embedding=embedding_json
     )
     db.add(new_item)
@@ -141,6 +142,7 @@ def report_found_item(
     new_item = database.FoundItem(
         **item_data,
         finder_id=current_user.id,
+        attributes=item.attributes,
         embedding=embedding_json
     )
     db.add(new_item)
