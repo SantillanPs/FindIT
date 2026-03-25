@@ -13,7 +13,7 @@ import logging
 load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 import database
-from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges, feedbacks, assets, init
+from routers import auth as auth_router, admin_users, found, lost, claims, notifications, media, categories, analytics, zones, admin_zones, colleges, feedbacks, assets, init, leaderboard
 import seed_metadata
 
 # Ensure uploads directory exists (wrap in try-except for read-only environments like Vercel)
@@ -120,6 +120,7 @@ v1_router.include_router(colleges.router)
 v1_router.include_router(feedbacks.router)
 v1_router.include_router(assets.router)
 v1_router.include_router(init.router)
+v1_router.include_router(leaderboard.router)
 
 # Mount central router to app
 app.include_router(v1_router)

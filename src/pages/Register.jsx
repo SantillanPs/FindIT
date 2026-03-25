@@ -3,6 +3,27 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import apiClient from '../api/client';
 import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCard, Building } from 'lucide-react';
 
 const Register = () => {
   const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
@@ -107,39 +128,46 @@ const Register = () => {
       {/* Subtle Grid Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
 
-      <div 
-        className="w-full max-w-md mx-auto p-4 sm:p-8 relative z-10 my-8 flex flex-col justify-center"
-      >
-        <div className="text-center mb-8 relative z-20">
-           <h1 className="text-3xl font-extrabold tracking-tight mb-2 bg-gradient-to-br from-white via-white/90 to-slate-500 bg-clip-text text-transparent">Create an account</h1>
-           <p className="text-slate-400 text-sm mb-6 pb-2 mx-6">Join the university lost & found network.</p>
-           
-           {/* Liquid Progress Bar */}
-           <div className="relative w-full max-w-[200px] mx-auto h-1.5 bg-slate-800/50 rounded-full overflow-hidden mb-3 border border-white/5">
-                <div 
-                    style={{ width: `${(step / totalSteps) * 100}%` }}
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-sky-500 to-sky-300 rounded-full transition-all duration-300"
-                ></div>
-           </div>
-           <span className="text-[10px] font-bold text-sky-500/70 uppercase tracking-[0.2em]">Step {step} of {totalSteps}</span>
-        </div>
+      <Card className="w-full max-w-md mx-auto relative z-10 my-8 bg-slate-900/40 border-white/10 backdrop-blur-xl">
+        <CardHeader className="text-center space-y-4">
+          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-white via-white/90 to-slate-500 bg-clip-text text-transparent italic uppercase">
+            Create account
+          </CardTitle>
+          <CardDescription className="text-slate-400 font-medium italic">
+            Join the university lost & found network.
+          </CardDescription>
+          
+          <div className="space-y-2 pt-2">
+            <Progress value={(step / totalSteps) * 100} className="h-1.5 bg-slate-800/50" />
+            <p className="text-[10px] font-black text-sky-500/70 uppercase tracking-[0.4em] italic">Step {step} of {totalSteps}</p>
+          </div>
 
           {prefillNote && (
-            <div 
-              className="mb-6 p-4 bg-uni-500/10 border border-uni-500/20 text-uni-400 text-xs font-black uppercase tracking-widest text-center rounded-2xl flex items-center justify-center gap-3 animate-pulse"
-            >
-               <i className="fa-solid fa-sparkles text-lg"></i>
-               {prefillNote}
-            </div>
+            <Alert className="bg-uni-500/10 border-uni-500/20 text-uni-400 animate-pulse text-left py-3">
+              <Sparkles className="h-4 w-4" />
+              <div className="flex flex-col gap-0.5 ml-2">
+                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none">Prefilled Entry</AlertTitle>
+                <AlertDescription className="text-[10px] font-bold uppercase tracking-widest leading-none opacity-80">
+                  {prefillNote}
+                </AlertDescription>
+              </div>
+            </Alert>
           )}
 
           {error && (
-            <div 
-              className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium text-center rounded-2xl"
-            >
-               {error}
-            </div>
+            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500 text-left py-3">
+              <AlertCircle className="h-4 w-4" />
+              <div className="flex flex-col gap-0.5 ml-2">
+                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none">Registry Error</AlertTitle>
+                <AlertDescription className="text-xs font-medium italic leading-none">
+                  {error}
+                </AlertDescription>
+              </div>
+            </Alert>
           )}
+        </CardHeader>
+        
+        <CardContent>
         
         <div className="flex-grow flex flex-col justify-center">
             <div
@@ -148,21 +176,19 @@ const Register = () => {
             >
               {step === 1 && (
                   <div className="space-y-6">
-                      <div className="text-center mb-8">
-                          <h3 className="text-xl font-bold text-white tracking-tight">Account Details</h3>
-                          <p className="text-sm text-slate-400 mt-1 font-medium">Set up your login credentials.</p>
+                      <div className="text-center">
+                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Account Details</h3>
+                          <p className="text-xs text-slate-400 mt-1 font-medium italic">Set up your login credentials.</p>
                       </div>
-                      <div className="space-y-5 text-left mx-auto w-full">
+                      <div className="space-y-4">
                           <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Email Address</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                  <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
-                                      <i className="fa-solid fa-envelope text-sm"></i>
-                                  </div>
-                                  <input 
+                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</Label>
+                              <div className="relative">
+                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                  <Input 
                                       placeholder="yourname@email.com"
                                       type="email" 
-                                      className="w-full bg-transparent py-4 pr-4 text-sm text-white focus:outline-none placeholder-slate-600 font-medium"
+                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                                       value={email} 
                                       onChange={(e) => setEmail(e.target.value)} 
                                       autoFocus
@@ -171,15 +197,13 @@ const Register = () => {
                               </div>
                           </div>
                           <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Secure Password</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                  <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
-                                      <i className="fa-solid fa-key text-sm"></i>
-                                  </div>
-                                  <input 
+                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Secure Password</Label>
+                              <div className="relative">
+                                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                  <Input 
                                       placeholder="••••••••••"
                                       type="password" 
-                                      className="w-full bg-transparent py-4 pr-4 text-sm text-white focus:outline-none placeholder-slate-600 font-medium"
+                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                                       value={password} 
                                       onChange={(e) => setPassword(e.target.value)} 
                                       onKeyDown={(e) => e.key === 'Enter' && handleNext()}
@@ -192,22 +216,20 @@ const Register = () => {
 
               {step === 2 && (
                   <div className="space-y-6">
-                      <div className="text-center mb-8">
-                          <h3 className="text-xl font-bold text-white tracking-tight">Personal Information</h3>
-                          <p className="text-sm text-slate-400 mt-1 font-medium">How should we identify you?</p>
+                      <div className="text-center">
+                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Personal Info</h3>
+                          <p className="text-xs text-slate-400 mt-1 font-medium italic">How should we identify you?</p>
                       </div>
-                      <div className="space-y-5 text-left mx-auto w-full">
+                      <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2 text-left">
-                                  <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">First Name</label>
-                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                      <div className="w-10 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
-                                          <i className="fa-solid fa-user text-sm"></i>
-                                      </div>
-                                      <input 
+                              <div className="space-y-2">
+                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</Label>
+                                  <div className="relative">
+                                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                      <Input 
                                           placeholder="Juan"
                                           type="text" 
-                                          className="w-full bg-transparent py-4 pr-4 text-sm text-white focus:outline-none placeholder-slate-600 font-medium"
+                                          className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                                           value={firstName} 
                                           onChange={(e) => setFirstName(e.target.value)} 
                                           autoFocus
@@ -215,30 +237,26 @@ const Register = () => {
                                       />
                                   </div>
                               </div>
-                              <div className="space-y-2 text-left">
-                                  <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Last Name</label>
-                                  <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                      <input 
-                                          placeholder="Cruz"
-                                          type="text" 
-                                          className="w-full bg-transparent py-4 px-4 text-sm text-white focus:outline-none placeholder-slate-600 font-medium"
-                                          value={lastName} 
-                                          onChange={(e) => setLastName(e.target.value)} 
-                                          onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                      />
-                                  </div>
+                              <div className="space-y-2">
+                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</Label>
+                                  <Input 
+                                      placeholder="Cruz"
+                                      type="text" 
+                                      className="bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
+                                      value={lastName} 
+                                      onChange={(e) => setLastName(e.target.value)} 
+                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
+                                  />
                               </div>
                           </div>
-                          <div className="space-y-2 text-left">
-                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Student ID Number</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                  <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
-                                      <i className="fa-solid fa-id-badge text-sm"></i>
-                                  </div>
-                                  <input 
+                          <div className="space-y-2">
+                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Student ID Number</Label>
+                              <div className="relative">
+                                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                                  <Input 
                                       placeholder="2024-123456"
                                       type="text" 
-                                      className="w-full bg-transparent py-4 pr-4 font-mono tracking-wider text-sm text-white focus:outline-none placeholder-slate-600"
+                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12 font-mono tracking-wider"
                                       value={studentId} 
                                       onChange={(e) => setStudentId(e.target.value)} 
                                       onKeyDown={(e) => e.key === 'Enter' && handleNext()}
@@ -251,139 +269,128 @@ const Register = () => {
 
               {step === 3 && (
                   <div className="space-y-6">
-                      <div className="text-center mb-8">
-                          <h3 className="text-xl font-bold text-white tracking-tight">Department</h3>
-                          <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto font-medium">Select your primary college.</p>
+                      <div className="text-center">
+                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Department</h3>
+                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto font-medium italic">Select your primary college.</p>
                       </div>
-                      <div className="space-y-5 text-left mx-auto w-full">
-                          <div className="space-y-2">
-                              <label className="block text-[11px] font-bold text-slate-400 tracking-widest ml-1">Primary Department</label>
-                              <div className="relative flex items-center bg-slate-900/60 border border-white/5 focus-within:border-sky-500 focus-within:ring-1 focus-within:ring-sky-500/50 focus-within:bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group">
-                                  <div className="w-12 h-12 flex justify-center items-center text-slate-500 group-focus-within:text-sky-400 transition-colors">
-                                      <i className="fa-solid fa-building-columns text-sm"></i>
-                                  </div>
-                                  <select 
-                                      className="w-full bg-transparent py-4 pr-10 font-medium text-sm text-white focus:outline-none cursor-pointer appearance-none"
-                                      value={department} 
-                                      onChange={(e) => setDepartment(e.target.value)} 
-                                      autoFocus
-                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                  >
-                                      <option value="" disabled className="bg-slate-900 text-slate-500">Select your college</option>
-                                      {COLLEGES.map(college => (
-                                          <option key={college.id} value={college.label} className="bg-slate-900 text-white">{college.label}</option>
-                                      ))}
-                                  </select>
-                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none group-hover:text-white transition-colors">
-                                      <i className="fa-solid fa-chevron-down text-xs"></i>
-                                  </div>
+                      <div className="space-y-2">
+                          <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Primary Department</Label>
+                          <Select value={department} onValueChange={setDepartment}>
+                            <SelectTrigger className="bg-slate-950/50 border-white/5 focus:ring-sky-500 h-12 text-sm">
+                              <div className="flex items-center gap-3">
+                                <Building className="h-4 w-4 text-slate-500" />
+                                <SelectValue placeholder="Select your college" />
                               </div>
-                          </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-white/10 text-white">
+                              {COLLEGES.map(college => (
+                                <SelectItem key={college.id} value={college.label} className="focus:bg-sky-500 focus:text-white uppercase text-[10px] font-black tracking-widest">
+                                  {college.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                       </div>
                   </div>
               )}
 
               {step === 4 && (
                   <div className="space-y-6">
-                      <div className="text-center mb-6">
-                          <h3 className="text-xl font-bold text-white tracking-tight">Student Verification</h3>
-                          <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto font-medium">Upload a clear photo of your student ID.</p>
+                      <div className="text-center">
+                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic text-sky-500">Student Proof</h3>
+                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto font-medium italic">To activate your account, please upload a clear photo of your <span className="text-slate-200">Student ID</span> or <span className="text-slate-200">Certificate of Registration (COR)</span>.</p>
                       </div>
-                      <div className="text-left w-full h-[250px] relative z-20 group">
+                      <div className="h-[250px] relative z-20">
                           <ImageUpload 
-                              label="Upload ID Photo"
+                              label="Upload ID or COR Photo"
                               value={proofUrl}
                               onUploadSuccess={setProofUrl}
                           />
                       </div>
                   </div>
               )}
-
               {step === 5 && (
                   <div className="space-y-6">
-                      <div className="text-center mb-8">
-                          <h3 className="text-2xl font-semibold text-white tracking-tight">Almost done!</h3>
-                          <p className="text-sm text-slate-400 mt-1 max-w-xs mx-auto">Review your details before activating.</p>
+                      <div className="text-center">
+                          <h3 className="text-2xl font-black text-white tracking-tight uppercase italic">Almost done!</h3>
+                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto italic font-medium">Review your details before activating.</p>
                       </div>
                       
-                      <div className="mx-auto w-full space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5 relative z-20">
+                      <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5 relative z-20">
                            <div className="flex justify-between items-center py-2 border-b border-white/5">
-                               <span className="text-xs font-medium text-slate-400">Name</span>
-                               <span className="text-sm font-medium text-white">{firstName} {lastName}</span>
+                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Name</span>
+                               <span className="text-sm font-black text-white uppercase italic">{firstName} {lastName}</span>
                            </div>
                            <div className="flex justify-between items-center py-2 border-b border-white/5">
-                               <span className="text-xs font-medium text-slate-400">Student ID</span>
-                               <span className="text-sm font-medium text-white font-mono">{studentId}</span>
+                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Student ID</span>
+                               <span className="text-sm font-black text-white font-mono tracking-widest italic">{studentId}</span>
                            </div>
                            <div className="flex justify-between items-center py-2">
-                               <span className="text-xs font-medium text-slate-400">Department</span>
-                               <span className="text-sm font-medium text-amber-500 text-right max-w-[150px] truncate">{department}</span>
+                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Department</span>
+                               <span className="text-sm font-black text-sky-500 italic text-right break-words">{department}</span>
                            </div>
-                      </div>
-
-                      <div className="mx-auto w-full mt-8 relative z-20">
-                              <button 
-                              onClick={handleSubmit} 
-                              className="w-full bg-white text-black py-4 rounded-xl font-bold text-sm hover:bg-uni-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden"
-                              disabled={loading}
-                              >
-                              {loading ? (
-                                  <>
-                                     <div className="w-4 h-4 border-2 border-black border-t-transparent group-hover:border-white group-hover:border-t-transparent rounded-full animate-spin"></div>
-                                     Creating account...
-                                  </>
-                              ) : (
-                                  <>Create Account</>
-                              )}
-                              </button>
                       </div>
                   </div>
               )}
             </div>
         </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-4 border-t border-white/5 pt-6">
+          {step < totalSteps && (
+            <Button 
+              onClick={handleNext}
+              className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group"
+            >
+              Continue
+              <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          )}
 
-        {/* Footer Navigation */}
-        <div className="mt-8 flex flex-col items-center gap-4 relative z-20 w-full mx-auto">
-           {step < totalSteps && (
-              <button 
-                 onClick={handleNext}
-                 className="group w-full py-4 rounded-xl bg-gradient-to-r from-white to-slate-200 text-black font-bold text-sm transition-all flex justify-center items-center active:scale-[0.98] hover:-translate-y-0.5"
+          {step === 5 && (
+            <Button 
+              onClick={handleSubmit}
+              disabled={loading}
+              className="w-full bg-sky-500 hover:bg-sky-400 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all shadow-lg shadow-sky-500/20"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  Creating...
+                </div>
+              ) : (
+                "Complete Activation"
+              )}
+            </Button>
+          )}
+          
+          <div className="flex flex-col items-center gap-3 w-full">
+            {step > 1 && (
+              <Button 
+                variant="link" 
+                onClick={handlePrev}
+                className="text-slate-500 hover:text-white text-xs font-black uppercase tracking-widest italic"
               >
-                 <span className="flex items-center gap-2">
-                    Continue
-                    <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
-                 </span>
-              </button>
-           )}
-           
-           {step > 1 && step < 5 && (
-              <button 
-                 onClick={handlePrev}
-                 className="py-2 text-sm font-medium text-slate-500 hover:text-white transition-colors"
-              >
-                 Go Back
-              </button>
-           )}
+                <ChevronLeft className="mr-2 h-3 w-3" />
+                Go Back
+              </Button>
+            )}
 
-           {step === 5 && (
-               <div className="text-center mt-2">
-                   <p className="text-slate-500 text-xs font-medium">
-                        By creating an account, you agree to our <span className="text-slate-300">Terms & Conditions</span>.
-                   </p>
-               </div>
-           )}
-           
-           {step === 1 && (
-               <div className="text-center mt-2">
-                  <p className="text-slate-400 text-sm font-medium">
-                    Already have an account? 
-                    <Link to="/login" className="text-uni-400 hover:text-uni-300 transition-colors ml-2 font-semibold hover:underline relative z-30">Log in</Link>
-                  </p>
-               </div>
-           )}
-        </div>
+            {step === 1 && (
+              <p className="text-slate-400 text-xs font-medium italic">
+                Already have an account? 
+                <Link to="/login" className="text-sky-400 hover:underline ml-2 font-bold transition-all">Log in</Link>
+              </p>
+            )}
 
-      </div>
+            {step === 5 && (
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest text-center mt-2 leading-relaxed opacity-60">
+                By activating, you agree to our<br/>
+                <span className="text-slate-300">Institutional Terms & Conditions</span>
+              </p>
+            )}
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

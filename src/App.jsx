@@ -113,7 +113,6 @@ const AppContent = () => {
               <Route path="/super" element={<SuperAdminDashboard />} />
               <Route path="/super/staff" element={<SuperAdminDashboard />} />
               <Route path="/super/audit" element={<SuperAdminDashboard />} />
-              <Route path="/super/zones" element={<SuperAdminDashboard />} />
               <Route path="/super/feedback" element={<SuperAdminDashboard />} />
             </Route>
           </Route>
@@ -132,7 +131,7 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <MasterDataProvider>
-            <MotionConfig transition={isMobile ? { duration: 0 } : undefined}>
+            <MotionConfig transition={{ duration: 0 }} reducedMotion="always">
               <AppContent />
             </MotionConfig>
           </MasterDataProvider>

@@ -85,6 +85,7 @@ class FoundItemBase(BaseModel):
     zone_id: Optional[int] = None
     found_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
+    safe_photo_thumbnail_url: Optional[str] = None
     contact_info: Optional[str] = None
     matched_lost_id: Optional[int] = None
     attributes: Optional[Dict[str, str]] = None
@@ -110,6 +111,13 @@ class FoundItemPublic(FoundItemBase):
 
     class Config:
         from_attributes = True
+
+class PaginatedFoundItems(BaseModel):
+    items: list[FoundItemPublic]
+    total: int
+    page: int
+    limit: int
+    has_more: bool
 
 class FoundItemResponse(FoundItemBase):
     id: int
@@ -164,6 +172,7 @@ class LostItemBase(BaseModel):
     zone_id: Optional[int] = None
     last_seen_time: Optional[datetime] = None
     safe_photo_url: Optional[str] = None
+    safe_photo_thumbnail_url: Optional[str] = None
     potential_zone_ids: Optional[list[int]] = []
     potential_zone_names: Optional[list[str]] = []
     attributes: Optional[Dict[str, str]] = None
@@ -207,12 +216,20 @@ class LostItemPublic(BaseModel):
     contact_info: Optional[str] = None
     tracking_id: Optional[str] = None
     safe_photo_url: Optional[str] = None
+    safe_photo_thumbnail_url: Optional[str] = None
     owner_name: Optional[str] = None
     owner_email: Optional[str] = None
     admin_notes: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class PaginatedLostItems(BaseModel):
+    items: list[LostItemPublic]
+    total: int
+    page: int
+    limit: int
+    has_more: bool
 
 class LostItemUpdate(BaseModel):
     status: Optional[str] = None
@@ -221,10 +238,12 @@ class LostItemUpdate(BaseModel):
 class MatchSuggestion(BaseModel):
     item: FoundItemPublic
     similarity_score: float
+    tier: str # HIGH, MEDIUM, LOW
 
 class AdminMatchSuggestion(BaseModel):
     item: LostItemPublic
     similarity_score: float
+    tier: str # HIGH, MEDIUM, LOW
 
 class GlobalMatchGroup(BaseModel):
     found_item: FoundItemDetail

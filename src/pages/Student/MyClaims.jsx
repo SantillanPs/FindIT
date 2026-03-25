@@ -37,10 +37,11 @@ const MyClaims = () => {
       setSchedulingClaim(null);
       setPickupTime("");
       fetchMyClaims();
-      alert("Pickup scheduled! The office has been notified.");
+      fetchMyClaims();
+      // Removed success alert for non-intrusive UI
     } catch (error) {
       console.error("Failed to schedule pickup", error);
-      alert("Scheduling failed. Please try again.");
+      // Removed error alert
     }
   };
 

@@ -1,5 +1,4 @@
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 @tailwind base;
 @tailwind components;
@@ -24,18 +23,18 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
+    --primary: oklch(0.588 0.158 241.97);
     --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --secondary: oklch(0.145 0 0 / 4%);
+    --secondary-foreground: oklch(0.145 0 0);
+    --muted: oklch(0.145 0 0 / 8%);
+    --muted-foreground: oklch(0.445 0 0);
+    --accent: oklch(0.776 0.178 74.22);
+    --accent-foreground: oklch(0.145 0 0);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --border: oklch(0.145 0 0 / 8%);
+    --input: oklch(0.145 0 0 / 12%);
+    --ring: oklch(0.145 0 0 / 40%);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -70,24 +69,24 @@
     --font-sans: 'Geist Variable', sans-serif;
   }
   .dark {
-    --background: oklch(0.145 0 0);
+    --background: oklch(0.141 0.019 273.16);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: oklch(0.208 0.042 265.75);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: oklch(0.208 0.042 265.75);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
+    --primary: oklch(0.588 0.158 241.97);
+    --primary-foreground: oklch(0.145 0 0);
+    --secondary: oklch(0.985 0 0 / 10%);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
+    --muted: oklch(0.985 0 0 / 15%);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --accent: oklch(0.776 0.178 74.22);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
+    --border: oklch(1 0 0 / 12%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
+    --ring: oklch(0.588 0.158 241.97 / 60%);
     --chart-1: oklch(0.87 0 0);
     --chart-2: oklch(0.556 0 0);
     --chart-3: oklch(0.439 0 0);
@@ -103,17 +102,12 @@
     --sidebar-ring: oklch(0.556 0 0);
   }
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
+    outline-color: var(--ring);
   }
   body {
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
-@layer base {
-  body {
+    background-color: var(--background);
+    color: var(--foreground);
     @apply font-sans antialiased;
     &::selection {
       background-color: theme('colors.brand.primary / 20%');
@@ -122,7 +116,12 @@
     color: var(--text-main);
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+  html {
+    @apply font-sans;
+  }
+}
 
+@layer base {
   h1, h2, h3, h4, h5, h6 {
     color: var(--text-header);
   }
@@ -163,21 +162,7 @@
     filter: contrast(120%) brightness(120%);
   }
 
-  .glass-panel {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-  }
-
-  @media (min-width: 1024px) {
-    .glass-panel {
-      backdrop-filter: blur(12px);
-    }
-  }
-
-  .glass-panel-hover:hover {
-    background: rgba(51, 65, 85, 0.8);
-    border-color: rgba(56, 189, 248, 0.3);
-  }
+  /* Deprecated: legacy decorative glass utilities replaced by shadcn Card */
 
   .item-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -315,61 +300,25 @@
     @apply min-h-[100dvh] relative overflow-x-hidden;
     background-color: var(--bg-main);
     background-image: 
-        radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%),
-        radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
+        radial-gradient(at 50% 0%, rgba(14, 165, 233, 0.03) 0px, transparent 50%);
     transition: background-color 0.3s ease;
   }
 
-  @media (min-width: 1024px) {
-    .app-bg-main {
-      background-image: 
-          radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.1) 0px, transparent 50%),
-          radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
-          radial-gradient(at 50% 100%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(251, 191, 36, 0.05) 0px, transparent 50%),
-          radial-gradient(at 0% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
-    }
-  }
-
   /* Utilities */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.mask-fade-right {
-  mask-image: linear-gradient(to right, black 80%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
-}
-  /* Ambient Glow Effects as global utilities */
-  .ambient-uni {
-    background-color: theme('colors.uni.500 / 10%');
-    @apply absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full pointer-events-none;
-    filter: blur(80px);
-    will-change: transform;
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  .ambient-accent {
-    background-color: theme('colors.accent.default / 10%');
-    @apply absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full pointer-events-none;
-    filter: blur(80px);
-    will-change: transform;
+  .mask-fade-right {
+    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
   }
-
-  @media (min-width: 1024px) {
-    .ambient-uni {
-      @apply blur-[120px] animate-float;
-      filter: blur(120px);
-    }
-    .ambient-accent {
-      @apply blur-[120px] animate-float;
-      filter: blur(120px);
-      animation-delay: 3s;
-    }
-  }
+    /* Ambient Glow Effects as global utilities */
+  /* Deprecated: decorative ambient glows */
 
   .glass-header {
     background-color: theme('colors.brand.background / 95%');
@@ -399,21 +348,25 @@
     background: rgba(148, 163, 184, 0.4);
   }
 
-  /* GLOBAL MOBILE ANIMATION KILL SWITCH */
-  @media (max-width: 1023px) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+  /* GLOBAL ANIMATION KILL SWITCH (Universal) */
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 
-    .animate-float, .animate-glow, .animate-pulse-slow, .animate-shimmer {
-      animation: none !important;
-    }
+  /* Exempt theme transitions */
+  body, html, [class*="transition-transform"] {
+    transition-duration: 0.3s !important;
+    transition-property: background-color, color, transform !important;
+  }
 
-    [class*="animate-"] {
-      animation: none !important;
-    }
+  .animate-float, .animate-glow, .animate-pulse-slow, .animate-shimmer, .animate-ping {
+    animation: none !important;
+  }
+
+  [class*="animate-"] {
+    animation: none !important;
   }
 }

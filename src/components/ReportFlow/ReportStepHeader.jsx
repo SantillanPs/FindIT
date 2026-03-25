@@ -12,40 +12,18 @@ const ReportStepHeader = ({ title, label, step, totalSteps, error, icon }) => {
              </p>
              <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter leading-none italic">{title}</h1>
           </div>
-          <div className="flex items-center gap-6 bg-white/5 p-4 rounded-[2rem] border border-white/5">
+          <div className="flex flex-col items-end gap-3 min-w-[140px]">
              <div className="text-right">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Progress</p>
-                <p className="text-sm font-black text-white uppercase italic">Step {step} of {totalSteps}</p>
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Progress</p>
+                <p className="text-sm font-black text-white uppercase italic leading-none">Step {step} of {totalSteps}</p>
              </div>
-             <div className="relative w-12 h-12 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90">
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="transparent"
-                    className="text-uni-500/20"
-                  />
-                  <motion.circle
-                    cx="24"
-                    cy="24"
-                    r="20"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="transparent"
-                    strokeDasharray="125.66"
-                    initial={{ strokeDashoffset: 125.66 }}
-                    animate={{ strokeDashoffset: 125.66 - (125.66 * (step / totalSteps)) }}
-                    transition={{ duration: 0.8, ease: "circOut" }}
-                    strokeLinecap="round"
-                    className="text-uni-500"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white italic">
-                  {Math.round((step / totalSteps) * 100)}%
-                </div>
+             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(step / totalSteps) * 100}%` }}
+                  transition={{ duration: 0.8, ease: "circOut" }}
+                  className="h-full bg-uni-500 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.5)]"
+                />
              </div>
           </div>
       </div>

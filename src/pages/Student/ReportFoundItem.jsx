@@ -207,7 +207,7 @@ const ReportFoundItem = () => {
                     ...prev,
                     attributes: { ...prev.attributes, [field]: val }
                   }))}
-                  onChange={(val) => setFormData({...formData, description: val})}
+                  onChange={(val) => setFormData(prev => ({...prev, description: val}))}
                   onNext={() => goToStep(6)}
                 >
                   <div className="space-y-6 pt-6 mt-6 border-t border-white/5">

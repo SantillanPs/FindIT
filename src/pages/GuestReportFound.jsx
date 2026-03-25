@@ -30,7 +30,8 @@ const GuestReportFound = () => {
     contact_info: '',
     identified_student_id: '',
     identified_name: '',
-    category: ''
+    category: '',
+    attributes: {}
   });
   
   const [loading, setLoading] = useState(false);
@@ -193,7 +194,12 @@ const GuestReportFound = () => {
                   placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
                   value={formData.description}
                   category={formData.category}
-                  onChange={(val) => setFormData({...formData, description: val})}
+                  attributes={formData.attributes}
+                  onAttributeChange={(field, val) => setFormData(prev => ({
+                    ...prev,
+                    attributes: { ...prev.attributes, [field]: val }
+                  }))}
+                  onChange={(val) => setFormData(prev => ({...prev, description: val}))}
                   onNext={() => goToStep(6)}
                 >
                   <IdentificationStep 

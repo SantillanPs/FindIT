@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, Enum, create_engine, Te
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 import enum
+import json
 from datetime import datetime
 
 import os
@@ -124,7 +125,7 @@ class User(Base):
         from sqlalchemy import func
         return func.trim(func.coalesce(cls.first_name, '') + ' ' + func.coalesce(cls.last_name, ''))
 
-    found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder")
+    found_items = relationship("FoundItem", foreign_keys="[FoundItem.finder_id]", back_populates="finder", lazy="selectin")
     notifications = relationship("Notification", back_populates="user")
     claims = relationship("Claim", back_populates="student")
     witness_reports = relationship("WitnessReport", back_populates="reporter")
@@ -141,6 +142,7 @@ class FoundItem(Base):
     zone_id = Column(Integer, ForeignKey("zones.id"), nullable=True) # New graph zone
     found_time = Column(DateTime, default=datetime.utcnow)
     safe_photo_url = Column(String, nullable=True)
+    safe_photo_thumbnail_url = Column(String, nullable=True)
     private_admin_notes = Column(Text)
     status = Column(String, default=ItemStatus.REPORTED.value)
     embedding = Column(Text, nullable=True)
@@ -170,10 +172,10 @@ class FoundItem(Base):
     released_to_photo_url = Column(String, nullable=True)
     attributes_json = Column(Text, nullable=True) # JSON string of attributes
     
-    finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items")
-    released_to = relationship("User", foreign_keys=[released_to_id])
-    zone = relationship("Zone", foreign_keys=[zone_id])
-    matched_lost_report = relationship("LostItem", foreign_keys=[matched_lost_id])
+    finder = relationship("User", foreign_keys=[finder_id], back_populates="found_items", lazy="joined")
+    released_to = relationship("User", foreign_keys=[released_to_id], lazy="joined")
+    zone = relationship("Zone", foreign_keys=[zone_id], lazy="joined")
+    matched_lost_report = relationship("LostItem", foreign_keys=[matched_lost_id], lazy="joined")
 
     @property
     def owner_name(self):
@@ -224,13 +226,14 @@ class LostItem(Base):
     guest_email = Column(String, nullable=True)
     contact_info = Column(Text, nullable=True) # "How can we contact you?"
     safe_photo_url = Column(String, nullable=True)
+    safe_photo_thumbnail_url = Column(String, nullable=True)
     tracking_id = Column(String, unique=True, index=True, nullable=True) # UUID for guest management
     admin_notes = Column(Text, nullable=True)
     attributes_json = Column(Text, nullable=True) # JSON string of attributes
     
-    owner = relationship("User", back_populates="lost_items")
-    witness_reports = relationship("WitnessReport", back_populates="lost_item")
-    zone = relationship("Zone", foreign_keys=[zone_id])
+    owner = relationship("User", back_populates="lost_items", lazy="joined")
+    witness_reports = relationship("WitnessReport", back_populates="lost_item", lazy="selectin")
+    zone = relationship("Zone", foreign_keys=[zone_id], lazy="joined")
 
     @property
     def owner_name(self):
@@ -296,7 +299,7 @@ class Feedback(Base):
     admin_notes = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User")
+    user = relationship("User", lazy="joined")
     
     @property
     def user_name(self):
@@ -318,7 +321,7 @@ class AuditLog(Base):
     notes = Column(Text, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     
-    admin_user = relationship("User", foreign_keys=[admin_id])
+    admin_user = relationship("User", foreign_keys=[admin_id], lazy="joined")
 
 class Notification(Base):
     __tablename__ = "notifications"
@@ -334,12 +337,12 @@ class Notification(Base):
     found_item_id = Column(Integer, ForeignKey("found_items.id"), nullable=True)
     lost_item_id = Column(Integer, ForeignKey("lost_items.id"), nullable=True)
 
-    user = relationship("User", back_populates="notifications")
+    user = relationship("User", back_populates="notifications", lazy="joined")
 
 # Update User model to include lost_items relationship
-User.lost_items = relationship("LostItem", back_populates="owner")
-User.claims = relationship("Claim", back_populates="student")
-User.witness_reports = relationship("WitnessReport", back_populates="reporter")
+User.lost_items = relationship("LostItem", back_populates="owner", lazy="selectin")
+User.claims = relationship("Claim", back_populates="student", lazy="selectin")
+User.witness_reports = relationship("WitnessReport", back_populates="reporter", lazy="selectin")
 
 class ClaimStatus(str, enum.Enum):
     PENDING = "pending"
@@ -368,7 +371,7 @@ class Claim(Base):
     attributes_json = Column(Text, nullable=True) # JSON string of attributes
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    student = relationship("User", back_populates="claims")
+    student = relationship("User", back_populates="claims", lazy="joined")
 
     @property
     def owner_name(self):
@@ -405,7 +408,7 @@ class Claim(Base):
             return self.student.email
         return self.guest_email
 
-    found_item = relationship("FoundItem")
+    found_item = relationship("FoundItem", lazy="joined")
 
 class CategoryStat(Base):
     __tablename__ = "category_stats"

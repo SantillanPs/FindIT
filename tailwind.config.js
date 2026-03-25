@@ -42,6 +42,39 @@ export default {
         'glass-bg': 'var(--glass-bg)',
         'glass-border': 'var(--glass-border)',
         'input-bg': 'var(--input-bg)',
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        primary: {
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+        },
+        secondary: {
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
+        },
+        destructive: {
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
+        },
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        accent: {
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
+        },
+        popover: {
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
       },
       fontFamily: {
         sans: ["Outfit", "Inter", "System-ui", "Segoe UI", "sans-serif"],
@@ -74,5 +107,16 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    ({ addBase, addUtilities, theme }) => {
+      addUtilities({
+        '.border-border': {
+          borderColor: "var(--border)",
+        },
+        '.outline-ring': {
+          outlineColor: "var(--ring)",
+        },
+      })
+    }
+  ],
 }

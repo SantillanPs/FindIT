@@ -37,7 +37,7 @@ const FeedbackHub = () => {
       setNotes('');
     } catch (error) {
       console.error('Failed to update status', error);
-      alert('Failed to update feedback status.');
+      // Removed alert for cleaner UX
     }
   };
 

@@ -12,21 +12,35 @@ export const MasterDataProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const fetchSystemConfig = async () => {
+        const initializeSystem = async () => {
+            // Step 1: Fetch critical bootstrap data (Categories, Colleges)
             try {
-                const response = await apiClient.get('/init/');
-                setCategories(response.data.categories);
-                setColleges(response.data.colleges);
-                setLeaderboard(response.data.leaderboard);
+                const initResponse = await apiClient.get('/init/');
+                setCategories(initResponse.data.categories);
+                setColleges(initResponse.data.colleges);
+                
+                // Set loading to false as soon as critical UI data is ready
+                setLoading(false);
+                
+                // Step 2: Fetch non-critical data (Leaderboard) in background
+                fetchLeaderboard();
             } catch (err) {
-                console.error('Failed to fetch system initialization data', err);
+                console.error('Critical initialization failed', err);
                 setError(err);
-            } finally {
                 setLoading(false);
             }
         };
 
-        fetchSystemConfig();
+        const fetchLeaderboard = async () => {
+            try {
+                const response = await apiClient.get('/leaderboard/');
+                setLeaderboard(response.data);
+            } catch (err) {
+                console.error('Failed to fetch leaderboard in background', err);
+            }
+        };
+
+        initializeSystem();
     }, []);
 
     return (

@@ -29,28 +29,26 @@ const StaffManagement = () => {
   };
 
   const handlePromote = async (userId, name) => {
-    if (!window.confirm(`Are you sure you want to promote ${name} to Admin?`)) return;
     setActionLoading(userId);
     try {
       await apiClient.post(`/admin/staff/${userId}/promote`);
       await fetchStaff();
     } catch (err) {
       console.error('Promotion failed', err);
-      alert(err.response?.data?.detail || 'Failed to promote user.');
+      setError(err.response?.data?.detail || 'Failed to promote user.');
     } finally {
       setActionLoading(null);
     }
   };
 
   const handleDemote = async (userId, name) => {
-    if (!window.confirm(`Are you sure you want to demote ${name} back to Student?`)) return;
     setActionLoading(userId);
     try {
       await apiClient.post(`/admin/staff/${userId}/demote`);
       await fetchStaff();
     } catch (err) {
       console.error('Demotion failed', err);
-      alert(err.response?.data?.detail || 'Failed to demote user.');
+      setError(err.response?.data?.detail || 'Failed to demote user.');
     } finally {
       setActionLoading(null);
     }

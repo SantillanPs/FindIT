@@ -51,7 +51,7 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error('Screenshot failed:', error);
       if (modalElement) modalElement.style.visibility = 'visible';
-      alert(`Screenshot failed: ${error.message}. Please try manual upload.`);
+      // Removed alert
     } finally {
       setIsCapturing(false);
     }
@@ -90,11 +90,10 @@ const FeedbackModal = ({ isOpen, onClose }) => {
       setScreenshot(null);
       setPreviewUrl(null);
       onClose();
-      // Optional: replace with a nice toast icon
-      alert('Feedback submitted! Our team will review this shortly. Thank you!');
+      // Optional: replace with a nice toast icon in future
     } catch (error) {
       console.error('Failed to submit feedback', error);
-      alert('Submission failed. Please check your connection and try again.');
+      // Removed alert
     } finally {
       setIsSubmitting(false);
     }

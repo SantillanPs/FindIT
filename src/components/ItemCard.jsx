@@ -26,9 +26,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
       <div className="relative aspect-[16/10] overflow-hidden bg-bg-elevated/20 transition-all duration-700">
         {item.safe_photo_url ? (
           <img 
-            src={item.safe_photo_url} 
+            src={item.safe_photo_thumbnail_url || item.safe_photo_url} 
             alt={item.item_name} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-bg-elevated to-bg-main">

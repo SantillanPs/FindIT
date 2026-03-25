@@ -1,6 +1,9 @@
+from typing import Optional
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import os
 import uuid
+import io
+from PIL import Image
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -31,26 +34,68 @@ async def upload_file(file: UploadFile = File(...)):
     if file.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Invalid file type. Only JPEG, PNG, and WebP are allowed.")
     
-    # Create unique filename
-    file_extension = os.path.splitext(file.filename)[1]
-    new_filename = f"{uuid.uuid4()}{file_extension}"
-    
     try:
         # Read file content
         file_content = await file.read()
         
-        # Upload to Supabase Storage
-        res = supabase.storage.from_(SUPABASE_BUCKET).upload(
-            path=new_filename,
-            file=file_content,
-            file_options={"content-type": file.content_type}
+        # Open image with Pillow for optimization
+        img = Image.open(io.BytesIO(file_content))
+        
+        # 1. OPTIMIZED VERSION (Max Width: 1200px)
+        optimized_img = img.copy()
+        optimized_img.thumbnail((1200, 1200), Image.Resampling.LANCZOS)
+        
+        # Fix orientation / transparency
+        if optimized_img.mode in ("RGBA", "P"):
+            optimized_img = optimized_img.convert("RGBA")
+        else:
+            optimized_img = optimized_img.convert("RGB")
+            
+        opt_buffer = io.BytesIO()
+        optimized_img.save(opt_buffer, format="WEBP", quality=80)
+        optimized_content = opt_buffer.getvalue()
+        
+        # 2. THUMBNAIL VERSION (Max Width: 400px)
+        thumbnail_img = img.copy()
+        thumbnail_img.thumbnail((400, 400), Image.Resampling.LANCZOS)
+        
+        if thumbnail_img.mode in ("RGBA", "P"):
+            thumbnail_img = thumbnail_img.convert("RGBA")
+        else:
+            thumbnail_img = thumbnail_img.convert("RGB")
+
+        thumb_buffer = io.BytesIO()
+        thumbnail_img.save(thumb_buffer, format="WEBP", quality=70) # Lower quality for faster thumbnails
+        thumbnail_content = thumb_buffer.getvalue()
+        
+        # Create unique filenames
+        base_uuid = uuid.uuid4()
+        opt_filename = f"{base_uuid}_opt.webp"
+        thumb_filename = f"{base_uuid}_thumb.webp"
+        
+        # Upload Optimized version
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=opt_filename,
+            file=optimized_content,
+            file_options={"content-type": "image/webp"}
         )
         
-        # Get Public URL
-        public_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(new_filename)
+        # Upload Thumbnail version
+        supabase.storage.from_(SUPABASE_BUCKET).upload(
+            path=thumb_filename,
+            file=thumbnail_content,
+            file_options={"content-type": "image/webp"}
+        )
         
-        return {"url": public_url}
+        # Get URLs
+        url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(opt_filename)
+        thumbnail_url = supabase.storage.from_(SUPABASE_BUCKET).get_public_url(thumb_filename)
+        
+        return {
+            "url": url,
+            "thumbnail_url": thumbnail_url
+        }
         
     except Exception as e:
         print(f"UPLOAD ERROR: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Could not upload file to cloud storage: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Could not process or upload image: {str(e)}")

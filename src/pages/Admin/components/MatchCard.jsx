@@ -1,47 +1,63 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent } from '../../../components/ui/card';
+import { Button } from '../../../components/ui/button';
+import { Badge } from '../../../components/ui/badge';
 
 const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLoading, setPreviewImage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
+  const getConfidenceTier = (score) => {
+    if (score >= 0.85) return { label: 'High Match', variant: 'brand', icon: 'fa-shield-check', color: 'text-brand-primary' };
+    if (score >= 0.60) return { label: 'Medium Match', variant: 'accent', icon: 'fa-magnifying-glass-chart', color: 'text-brand-secondary' };
+    return { label: 'Potential Match', variant: 'outline', icon: 'fa-microchip', color: 'text-muted-foreground' };
+  };
+
+  const tier = getConfidenceTier(match.similarity_score);
+
   return (
-    <div className="bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-[3rem] p-0 hover:border-uni-500/40 transition-all relative group overflow-hidden">
+    <Card className="overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm hover:border-brand-primary/30 transition-all duration-300 shadow-lg">
       {/* Match Header Bar */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between px-12 py-8 border-b border-white/10 bg-white/[0.03] cursor-pointer hover:bg-white/[0.06] transition-colors"
+        className="flex items-center justify-between px-8 py-6 border-b border-border/40 bg-muted/20 cursor-pointer hover:bg-muted/40 transition-colors"
       >
-        <div className="flex items-center gap-8">
-          <div className={`px-6 py-3 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] flex items-center gap-4 ${match.similarity_score > 0.8 ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-uni-400/10 text-uni-400 border border-uni-400/20'}`}>
-            <i className={`fa-solid ${match.similarity_score > 0.8 ? 'fa-shield-check' : 'fa-microchip'}`}></i>
-            Match Confidence: {(match.similarity_score * 100).toFixed(0)}%
+        <div className="flex items-center gap-6">
+          <Badge variant={tier.variant} className="py-1.5 px-4 text-[10px] font-black uppercase tracking-widest gap-2 shadow-sm">
+            <i className={`fa-solid ${tier.icon}`}></i>
+            Confidence: {Math.round(match.similarity_score * 100)}%
+          </Badge>
+          
+          <div className="hidden md:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-xl border border-border/10">
+            Case Ref: <span className="text-white ml-1">#LR-{match.item.id}</span>
           </div>
-          <div className="text-[11px] font-black text-slate-500 uppercase tracking-[0.3em]">
-            Case Reference <span className="text-slate-300 ml-2">#LR-{match.item.id}</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-            <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-uni-400`}></i>
-            {isExpanded ? 'Hide Details' : 'View Full Comparison'}
+
+          <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+            <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-brand-primary`}></i>
+            {isExpanded ? 'Hide Comparison' : 'View Comparison'}
           </div>
         </div>
         
-        <div className="flex items-center gap-6" onClick={(e) => e.stopPropagation()}>
-          <button 
+        <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+          <Button 
+            variant="outline"
+            size="sm"
             onClick={() => onDeepCompare({ found: foundItem, lost: match.item, score: match.similarity_score })}
-            className="text-[11px] font-black text-slate-400 uppercase tracking-widest hover:text-white transition-all px-6 py-3 border border-white/5 hover:border-white/20 rounded-xl"
+            className="hidden lg:flex font-black text-[10px] uppercase tracking-widest border-border/50 hover:bg-white/5"
           >
             Side-By-Side Review
-          </button>
-          <button 
+          </Button>
+          <Button 
+            size="sm"
             onClick={() => onAuthorizeMatch(foundItem.id, match.item.id)}
             disabled={actionLoading === `match-${foundItem.id}-${match.item.id}`}
-            className={`px-10 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] transition-all flex items-center gap-4 active:scale-95 ${
-  match.similarity_score > 0.8 ? 'bg-uni-600 hover:bg-uni-500 text-white' : 'bg-white text-black hover:bg-uni-500 hover:text-white'
-}`}
+            className={`px-8 font-black text-[10px] uppercase tracking-widest transition-all ${
+              match.similarity_score >= 0.85 ? 'bg-brand-primary text-white' : 'bg-white text-black hover:bg-brand-primary hover:text-white'
+            }`}
           >
-            <i className="fa-solid fa-link-slash group-hover:fa-link transition-all"></i>
+            <i className="fa-solid fa-link mr-2"></i>
             Authorize Link
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -51,116 +67,93 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            {/* Comparison Grid */}
-            <div className="p-12 space-y-2">
-              {/* Row Headers */}
-              <div className="grid grid-cols-12 gap-8 mb-4 px-4 text-[10px] font-black text-slate-600 uppercase tracking-[0.4em]">
+            <CardContent className="p-8 space-y-2">
+              {/* Comparison Grid */}
+              <div className="grid grid-cols-12 gap-8 mb-6 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 <div className="col-span-2">Attribute</div>
-                <div className="col-span-5 flex items-center gap-3 text-uni-400"><i className="fa-solid fa-vault"></i> 1. The Vault</div>
-                <div className="col-span-5 flex items-center gap-3 text-amber-500"><i className="fa-solid fa-user-graduate"></i> 2. The Report</div>
+                <div className="col-span-5 flex items-center gap-3 text-brand-primary"><i className="fa-solid fa-vault"></i> 1. The Vault</div>
+                <div className="col-span-5 flex items-center gap-3 text-brand-secondary"><i className="fa-solid fa-user-graduate"></i> 2. The Report</div>
               </div>
 
-              {/* Row: Object Type */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/[0.02] p-6 rounded-2xl transition-all items-center">
-                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                  <i className="fa-solid fa-tag w-6 text-slate-600"></i> Type
+              {/* Attributes Rows */}
+              {[
+                { label: 'Type', icon: 'fa-tag', val1: foundItem.item_name, val2: match.item.item_name, highlight: true },
+                { label: 'Location', icon: 'fa-location-dot', val1: foundItem.location_zone, val2: match.item.location_zone, color1: 'text-brand-primary', color2: 'text-brand-secondary' },
+                { label: 'Date', icon: 'fa-calendar', val1: new Date(foundItem.found_time).toLocaleDateString(), val2: new Date(match.item.last_seen_time).toLocaleDateString() }
+              ].map((row, i) => (
+                <div key={i} className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-xl transition-all items-center border-t border-border/10">
+                  <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest">
+                    <i className={`fa-solid ${row.icon} w-6 text-muted-foreground/40`}></i> {row.label}
+                  </div>
+                  <div className={`col-span-5 text-sm font-black uppercase tracking-tight ${row.highlight ? 'text-white text-lg' : row.color1 || 'text-slate-300'}`}>{row.val1}</div>
+                  <div className={`col-span-5 text-sm font-black uppercase tracking-tight ${row.highlight ? 'text-white text-lg' : row.color2 || 'text-slate-300'}`}>{row.val2}</div>
                 </div>
-                <div className="col-span-5 text-lg font-black text-white uppercase tracking-tight">{foundItem.item_name}</div>
-                <div className="col-span-5 text-lg font-black text-white uppercase tracking-tight">{match.item.item_name}</div>
-              </div>
+              ))}
 
-              {/* Row: Location */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/[0.02] p-6 rounded-2xl transition-all items-center border-t border-white/[0.03]">
-                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                  <i className="fa-solid fa-location-dot w-6 text-slate-600"></i> Location
-                </div>
-                <div className="col-span-5 text-sm font-bold text-uni-400 uppercase">{foundItem.location_zone}</div>
-                <div className="col-span-5 text-sm font-bold text-amber-500 uppercase">{match.item.location_zone}</div>
-              </div>
-
-              {/* Row: Date */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/[0.02] p-6 rounded-2xl transition-all items-center border-t border-white/[0.03]">
-                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">
-                  <i className="fa-solid fa-calendar w-6 text-slate-600"></i> Date
-                </div>
-                <div className="col-span-5 text-sm font-black text-slate-300">{new Date(foundItem.found_time).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                <div className="col-span-5 text-sm font-black text-slate-300">{new Date(match.item.last_seen_time).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</div>
-              </div>
-
-              {/* Row: Description */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/[0.02] p-6 rounded-2xl transition-all items-start border-t border-white/[0.03]">
-                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-slate-400 uppercase tracking-widest pt-4">
-                  <i className="fa-solid fa-align-left w-6 text-slate-600"></i> Details
+              {/* Description Details */}
+              <div className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-xl transition-all items-start border-t border-border/10">
+                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest pt-4">
+                  <i className="fa-solid fa-align-left w-6 text-muted-foreground/40"></i> Details
                 </div>
                 <div className="col-span-5">
-                  <div className="bg-slate-950/50 p-6 rounded-[2rem] border border-uni-500/10 min-h-[100px]">
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium italic">
-                      "{foundItem.description || 'No office notes provided.'}"
-                    </p>
+                  <div className="bg-muted/30 p-5 rounded-2xl border border-border/10 min-h-[100px]">
+                    <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{foundItem.description || 'No office notes.'}"</p>
                   </div>
                 </div>
                 <div className="col-span-5">
-                  <div className="bg-slate-950/50 p-6 rounded-[2rem] border border-amber-500/10 min-h-[100px]">
-                    <p className="text-xs text-slate-200 leading-relaxed font-medium italic">
-                      "{match.item.description || 'No student description provided.'}"
-                    </p>
+                  <div className="bg-muted/30 p-5 rounded-2xl border border-border/10 min-h-[100px]">
+                    <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{match.item.description || 'No student info.'}"</p>
                   </div>
                 </div>
               </div>
 
-              {/* Footer: User Identity / Channel */}
-              <div className="mt-10 pt-10 border-t border-white/10 flex items-center justify-between px-4">
-                <div className="flex items-center gap-12">
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-400 overflow-hidden">
+              {/* Footer: User Identity */}
+              <div className="mt-8 pt-6 border-t border-border/40 flex items-center justify-between px-4">
+                <div className="flex items-center gap-10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-muted border border-border/20 flex items-center justify-center text-muted-foreground overflow-hidden">
                       {match.item.safe_photo_url ? (
-                        <img src={match.item.safe_photo_url} className="w-full h-full object-cover" />
+                        <img src={match.item.safe_photo_url} className="w-full h-full object-cover" alt="" />
                       ) : (
-                        <i className="fa-solid fa-user-shield text-2xl"></i>
+                        <i className="fa-solid fa-user-shield text-xl opacity-30"></i>
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Student / Owner</p>
-                      <div className="flex items-center gap-3">
-                        <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.owner_name}</p>
-                        <span className={`w-2 h-2 rounded-full ${match.item.owner_name !== 'Anonymous Guest' && match.item.owner_name !== 'Anonymous Student' ? 'bg-green-500' : 'bg-slate-600'}`}></span>
-                      </div>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Owner / Reporter</p>
+                      <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.owner_name}</p>
                     </div>
                   </div>
                   
-                  <div className="h-12 w-px bg-white/10"></div>
+                  <div className="h-10 w-px bg-border/40"></div>
                   
                   <div>
-                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] mb-1">Verification Status</p>
-                    <p className={`text-[11px] font-black uppercase tracking-widest ${match.item.owner_name ? 'text-uni-400' : 'text-amber-500'}`}>
-                      {match.item.owner_name ? (
-                        <><i className="fa-solid fa-check-circle mr-2"></i>Verified Institutional Member</>
-                      ) : (
-                        <><i className="fa-solid fa-user-secret mr-2"></i>Guest Submission (Pending)</>
-                      )}
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Verification</p>
+                    <p className={`text-[11px] font-black uppercase tracking-widest ${match.item.owner_name?.includes('Anonymous') ? 'text-brand-secondary' : 'text-brand-primary'}`}>
+                      <i className={`fa-solid ${match.item.owner_name?.includes('Anonymous') ? 'fa-user-secret' : 'fa-certificate'} mr-2`}></i>
+                      {match.item.owner_name?.includes('Anonymous') ? 'Guest Record' : 'Institutional Member'}
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex gap-4">
-                  {match.item.safe_photo_url && (
-                    <button 
-                      onClick={() => setPreviewImage(match.item.safe_photo_url)}
-                      className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black text-amber-500 uppercase tracking-widest transition-all"
-                    >
-                      View Item Photo
-                    </button>
-                  )}
-                </div>
+                {match.item.safe_photo_url && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => setPreviewImage(match.item.safe_photo_url)}
+                    className="text-brand-secondary font-black text-[10px] uppercase tracking-widest"
+                  >
+                    View Attached Evidence
+                  </Button>
+                )}
               </div>
-            </div>
+            </CardContent>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   );
 };
 

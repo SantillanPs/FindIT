@@ -72,7 +72,6 @@ const AssetVault = () => {
   };
 
   const handleDeleteAsset = async (assetId) => {
-    if (!window.confirm('Are you sure you want to remove this asset?')) return;
     try {
       await apiClient.delete(`/assets/${assetId}`);
       fetchAssets();

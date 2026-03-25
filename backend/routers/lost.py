@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -14,100 +15,119 @@ admin_router = APIRouter(prefix="/admin", tags=["Admin Lost Items"])
 
 def _calculate_hybrid_score(db: Session, base_score, lost_item, found_item):
     """
-    Combines AI semantic score with metadata (location/time) boosts and penalties.
+    Rethink: Transition from subtractive penalties to a Weighted Probability Model.
+    Final Score = (Semantic * 0.4) + (Spatial * 0.25) + (Attribute * 0.25) + (Temporal * 0.1)
     """
-    final_score = base_score
     
-    # 0. Information Density Check
-    found_desc_len = len(found_item.description.strip())
-    if found_desc_len < 5:
-        final_score -= 0.35 
-    elif found_desc_len < 15:
-        final_score -= 0.10
-        
-    if not found_item.location_zone or found_item.location_zone.strip() in ["", "Unknown", "none"]:
-        final_score -= 0.10
+    # 1. Semantic Component (40%)
+    # base_score is the AI similarity [0.0 to 1.0]
+    semantic_component = base_score
     
-    # 1. Attribute Cross-Check (Brands/Colors)
-    # Detect clear contradictions that the embedding might soften
-    brands = ["iphone", "infinix", "samsung", "oppo", "vivo", "realme", "huawei", "xaomi", "macbook", "ipad", "nike", "adidas"]
-    colors = ["black", "white", "blue", "red", "green", "yellow", "pink", "purple", "orange", "grey", "gray", "silver", "gold"]
+    # 2. Spatial Component (25%) - SET THEORY MODEL
+    l_zone_id = lost_item.zone_id
+    f_zone_id = found_item.zone_id
     
-    found_text = (found_item.item_name + " " + found_item.description).lower()
-    lost_text = (lost_item.item_name + " " + lost_item.description).lower()
-    
-    # Brand Clash Check
-    found_brands = [b for b in brands if b in found_text]
-    lost_brands = [b for b in brands if b in lost_text]
-    if found_brands and lost_brands:
-        # If there's a brand mentioned in both but they don't share any common brand
-        if not set(found_brands).intersection(set(lost_brands)):
-            final_score -= 0.40 # Heavy penalty for brand contradiction (e.g. iPhone vs Infinix)
-            
-    # Color Clash Check
-    found_colors = [c for c in colors if c in found_text]
-    lost_colors = [c for c in colors if c in lost_text]
-    if found_colors and lost_colors:
-        if not set(found_colors).intersection(set(lost_colors)):
-            final_score -= 0.25 # Penalty for color contradiction (e.g. Red vs Blue)
+    # Parse potential_zone_ids from string to list of ints
+    p_ids = []
+    if lost_item.potential_zone_ids:
+        try:
+            id_str = lost_item.potential_zone_ids.strip("[]")
+            if id_str:
+                p_ids = [int(i.strip()) for i in id_str.split(",") if i.strip()]
+        except Exception as e:
+            print(f"Error parsing potential_zone_ids in scoring: {e}")
 
-    # 1.5. Structured Attribute Scaling (HIGH CONFIDENCE)
-    if found_item.attributes and lost_item.attributes:
-        f_attrs = found_item.attributes
-        l_attrs = lost_item.attributes
-        
-        # Check for Brand Mismatch
+    spatial_score = LocationService.get_spatial_similarity(db, l_zone_id, f_zone_id, p_ids)
+
+    # 3. Attribute Component (25%) 
+    # Handles Brand, Color, and Identity (Serial Numbers/Stickers)
+    attribute_score = 0.5 # Neutral start
+    
+    f_attrs = found_item.attributes or {}
+    l_attrs = lost_item.attributes or {}
+    
+    # Unique Identifier "Force-Boost" (Stickers/Serial Numbers)
+    unique_identifiers = ["serial", "sticker", "scratch", "engraving", "custom", "name tag"]
+    found_desc = found_item.description.lower()
+    lost_text = (found_item.item_name + " " + found_item.description).lower()
+    lost_desc = lost_item.description.lower()
+    
+    unique_match_found = False
+    for ui in unique_identifiers:
+        if ui in found_desc and ui in lost_desc:
+            # If both mention a sticker/serial, check if they share unique keywords
+            f_words = set(found_desc.split())
+            l_words = set(lost_desc.split())
+            shared = f_words.intersection(l_words)
+            meaningful_shared = [w for w in shared if len(w) > 3 and w not in unique_identifiers]
+            if meaningful_shared:
+                unique_match_found = True
+                break
+
+    identity_clash = False
+    if unique_match_found:
+        attribute_score = 1.0 # High confidence identity match
+    else:
+        # Standard Brand/Color matching
+        brand_match = 0
         if f_attrs.get('Brand') and l_attrs.get('Brand'):
-            if f_attrs['Brand'].lower() != l_attrs['Brand'].lower():
-                final_score -= 0.45 # Hard structural penalty for brand clash
+            if f_attrs['Brand'].lower() == l_attrs['Brand'].lower():
+                brand_match = 1.0
             else:
-                final_score += 0.10 # Boost for confirmed brand match
+                brand_match = -1.0
+                identity_clash = True # HARD CLASH
         
-        # Check for Model Mismatch
+        # Check for Model Mismatch (e.g. iPhone 13 vs 15)
         if f_attrs.get('Model') and l_attrs.get('Model'):
             if f_attrs['Model'].lower() != l_attrs['Model'].lower():
-                final_score -= 0.35 # Structural penalty for model clash
-            else:
-                final_score += 0.10 # Boost for confirmed model match
-                
-        # Check for Primary Color Mismatch (more reliable than text search)
+                identity_clash = True # HARD CLASH
+        
+        color_match = 0
         if f_attrs.get('Color') and l_attrs.get('Color'):
-            if f_attrs['Color'].lower() != l_attrs['Color'].lower():
-                final_score -= 0.20
-            else:
-                final_score += 0.05
+            color_match = 1.0 if f_attrs['Color'].lower() == l_attrs['Color'].lower() else -0.5
 
-    # 2. Location Weighting
-    if lost_item.zone_id and found_item.zone_id:
-        distance = LocationService.get_shortest_path_distance(db, lost_item.zone_id, found_item.zone_id)
-        final_score += LocationService.calculate_location_score(distance)
-    elif lost_item.location_zone and found_item.location_zone:
-        if lost_item.location_zone == found_item.location_zone:
-            final_score += 0.15
-        else:
-            # Check for building mismatch in strings (e.g. "ICT" vs "MIDWIFERY")
-            l_loc = lost_item.location_zone.upper()
-            f_loc = found_item.location_zone.upper()
-            # If buildings (first word/part) appear different
-            l_building = l_loc.split(' - ')[0] if ' - ' in l_loc else l_loc.split(' ')[0]
-            f_building = f_loc.split(' - ')[0] if ' - ' in f_loc else f_loc.split(' ')[0]
-            
-            if l_building != f_building:
-                final_score -= 0.30 # Increased building mismatch penalty
-            else:
-                final_score -= 0.15 # Still different rooms in same building
+        # Factor in clashes detected in text if attributes are missing
+        if not identity_clash:
+            brands = ["iphone", "samsung", "nike", "adidas", "hydroflask", "aquaflask", "infinix", "oppo", "vivo"]
+            found_b = [b for b in brands if b in found_desc]
+            lost_b = [b for b in brands if b in lost_desc]
+            if found_b and lost_b and not set(found_b).intersection(set(lost_b)):
+                brand_match = -1.0
+                identity_clash = True
+                
+        # Combine attribute signals
+        attribute_score = 0.5 + (brand_match * 0.3) + (color_match * 0.2)
+        attribute_score = max(0.0, min(1.0, attribute_score))
 
-    # 3. Time Weighting
+    # 4. Temporal Component (10%)
+    temporal_score = 0.8 # Neutral baseline
     if lost_item.last_seen_time and found_item.found_time:
         delta = abs((lost_item.last_seen_time - found_item.found_time).days)
         if delta <= 2:
-            final_score += 0.05
+            temporal_score = 1.0
         elif delta > 14:
-            final_score -= 0.30 # Heavier long-term penalty
+            temporal_score = 0.3
         elif delta > 5:
-            final_score -= 0.20 # Increased gap penalty
+            temporal_score = 0.6
 
-    # Clamp results to reasonable range [0.01, 0.99]
+    # FINAL WEIGHTED CALCULATION
+    final_score = (
+        (semantic_component * 0.40) + 
+        (spatial_score * 0.25) + 
+        (attribute_score * 0.25) + 
+        (temporal_score * 0.10)
+    )
+    
+    # --- HARD IDENTITY CLASH SCALING ---
+    # If brands/models explicitly clash, the item is almost certainly NOT it.
+    # Scale down the total significantly to push it into the "LOW" tier (<0.4).
+    if identity_clash:
+        final_score *= 0.4
+    
+    # Apply "Zombie Report" penalty to final total (Hard floor)
+    if len(found_item.description.strip()) < 15:
+        final_score *= 0.8 # Scale down 20% for vague reports
+        
     return max(0.01, min(0.99, final_score))
 
 @router.post("/lost/report/guest", response_model=schemas.LostItemResponse)
@@ -321,11 +341,18 @@ def get_matches_for_lost_item(
             base_score = AIService.calculate_similarity(lost_embedding, found_embedding)
             hybrid_score = _calculate_hybrid_score(db, base_score, lost_item, found)
             
-            # For students, only show items with a decent hybrid confidence
-            if hybrid_score >= 0.4:
+            # Show matches with at least 30% confidence (Tiered in UI)
+            if hybrid_score >= 0.3:
+                tier = "LOW"
+                if hybrid_score >= 0.75:
+                    tier = "HIGH"
+                elif hybrid_score >= 0.45:
+                    tier = "MEDIUM"
+                    
                 suggestions.append(schemas.MatchSuggestion(
                     item=found,
-                    similarity_score=hybrid_score
+                    similarity_score=hybrid_score,
+                    tier=tier
                 ))
     
     suggestions.sort(key=lambda x: x.similarity_score, reverse=True)
@@ -455,15 +482,42 @@ def admin_get_matches_for_found_item(
     
     suggestions.sort(key=lambda x: x['similarity_score'], reverse=True)
     return suggestions
-@router.get("/lost/public", response_model=list[schemas.LostItemPublic])
-def list_public_lost_items(db: Session = Depends(auth.get_db)):
-    reports = db.query(database.LostItem).filter(
+@router.get("/lost/public", response_model=schemas.PaginatedLostItems)
+def list_public_lost_items(
+    page: int = 1,
+    limit: int = 6,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(auth.get_db)
+):
+    offset = (page - 1) * limit
+    query = db.query(database.LostItem).filter(
         database.LostItem.status == "reported"
-    ).all()
+    )
     
-    for r in reports:
+    if category and category != 'all':
+        query = query.filter(database.LostItem.category == category)
+    if search:
+        query = query.filter(
+            (database.LostItem.item_name.ilike(f"%{search}%")) |
+            (database.LostItem.location_zone.ilike(f"%{search}%"))
+        )
+        
+    query = query.order_by(database.LostItem.last_seen_time.desc())
+    
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+    
+    for r in items:
         r.potential_zone_names = _populate_zone_names(r, db)
-    return reports
+        
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "has_more": total > offset + limit
+    }
 
 @router.get("/lost/public/{report_id}", response_model=schemas.LostItemPublic)
 def get_public_lost_item(report_id: int, db: Session = Depends(auth.get_db)):

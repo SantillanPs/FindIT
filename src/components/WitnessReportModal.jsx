@@ -29,7 +29,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       setPhotoUrl(response.data.url);
     } catch (error) {
       console.error('Upload failed', error);
-      alert('Failed to upload image. Please try again.');
+      // Removed alert
     } finally {
       setUploading(false);
     }
@@ -42,7 +42,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
     // Guest validation
     if (!user) {
       if (!guestName.trim() || !guestEmail.trim()) {
-        alert('Please provide your name and email.');
+        // Silent validation - the button is already disabled or fields are required
         return;
       }
     }
@@ -68,7 +68,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       setGuestEmail('');
     } catch (error) {
       console.error('Submission failed', error);
-      alert('Failed to submit report. Please try again.');
+      // Removed alert
     } finally {
       setLoading(false);
     }

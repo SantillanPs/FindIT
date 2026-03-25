@@ -33,7 +33,7 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
       await fetchWitnessReports();
     } catch (error) {
       console.error('Failed to update status', error);
-      alert('Failed to update status');
+      // Removed alert
     } finally {
       setActionLoading(null);
     }

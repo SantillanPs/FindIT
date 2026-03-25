@@ -13,3 +13,4 @@ python-dotenv
 supabase
 requests
 google-genai
+Pillow==11.3.0

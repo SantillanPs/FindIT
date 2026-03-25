@@ -174,7 +174,7 @@ const ReportLostItem = () => {
                     ...prev,
                     attributes: { ...prev.attributes, [field]: val }
                 }))}
-                onChange={(val) => setFormData({...formData, description: val})}
+                onChange={(val) => setFormData(prev => ({...prev, description: val}))}
                 onNext={() => goToStep(6)}
               />
             )}

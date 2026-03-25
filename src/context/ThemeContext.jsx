@@ -10,14 +10,8 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    console.log('Applying theme:', theme);
-    if (theme === 'light') {
-      root.classList.add('light-theme');
-      console.log('Root classes after add:', root.className);
-    } else {
-      root.classList.remove('light-theme');
-      console.log('Root classes after remove:', root.className);
-    }
+    root.classList.toggle('dark', theme === 'dark');
+    root.classList.toggle('light-theme', theme === 'light');
     localStorage.setItem('findIT-theme', theme);
   }, [theme]);
 

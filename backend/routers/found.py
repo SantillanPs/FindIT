@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -36,16 +37,17 @@ def report_found_item_guest(
     combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
+    # Extract data to avoid multiple value errors during unpacking
     item_data = item.model_dump()
-    item_data['category'] = category
-
-    # Extract guest info to avoid potential conflicts or duplicates
     guest_first_name = item_data.pop('guest_first_name', None)
     guest_last_name = item_data.pop('guest_last_name', None)
     guest_email = item_data.pop('guest_email', None)
+    item_data.pop('attributes', None)
+    item_data.pop('category', None)
 
     new_item = database.FoundItem(
         **item_data,
+        category=category,
         finder_id=None,
         guest_first_name=guest_first_name,
         guest_last_name=guest_last_name,
@@ -131,16 +133,17 @@ def report_found_item(
     combined_text = f"{item.item_name}: {item.description}"
     embedding_json = AIService.generate_embedding(combined_text)
 
+    # Extract and clean data to avoid multiple value errors
     item_data = item.model_dump()
-    item_data['category'] = category
-
-    # Ensure guest info is cleared for verified student reports
     item_data.pop('guest_first_name', None)
     item_data.pop('guest_last_name', None)
     item_data.pop('guest_email', None)
+    item_data.pop('attributes', None)
+    item_data.pop('category', None)
 
     new_item = database.FoundItem(
         **item_data,
+        category=category,
         finder_id=current_user.id,
         attributes=item.attributes,
         embedding=embedding_json
@@ -216,12 +219,39 @@ def get_match_detail(found_id: int, current_user: database.User = Depends(auth.g
             
     raise HTTPException(status_code=403, detail="Not authorized to view this item detail")
 
-@router.get("/found/public", response_model=list[schemas.FoundItemPublic])
-def list_public_found_items(db: Session = Depends(auth.get_db)):
-    # Items only appear in the public feed once they are in USG custody
-    return db.query(database.FoundItem).filter(
+@router.get("/found/public", response_model=schemas.PaginatedFoundItems)
+def list_public_found_items(
+    page: int = 1,
+    limit: int = 6,
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    db: Session = Depends(auth.get_db)
+):
+    offset = (page - 1) * limit
+    query = db.query(database.FoundItem).filter(
         database.FoundItem.status == database.ItemStatus.IN_CUSTODY.value
-    ).all()
+    )
+    
+    if category and category != 'all':
+        query = query.filter(database.FoundItem.category == category)
+    if search:
+        query = query.filter(
+            (database.FoundItem.item_name.ilike(f"%{search}%")) |
+            (database.FoundItem.location_zone.ilike(f"%{search}%"))
+        )
+        
+    query = query.order_by(database.FoundItem.found_time.desc())
+    
+    total = query.count()
+    items = query.offset(offset).limit(limit).all()
+    
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "has_more": total > offset + limit
+    }
 
 @admin_router.get("/found", response_model=list[schemas.FoundItemDetail])
 def list_admin_found_items(

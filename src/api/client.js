@@ -45,7 +45,13 @@ apiClient.interceptors.request.use((config) => {
 
 // Handle 401 Unauthorized and populate cache
 apiClient.interceptors.response.use((response) => {
-  // Store GET responses in cache
+  // 1. If this was a Mutation (POST, PUT, DELETE), clear the entire cache
+  // This ensures subsequent GETs fetch fresh data after a change.
+  if (['post', 'put', 'delete', 'patch'].includes(response.config.method)) {
+    cache.clear();
+  }
+
+  // 2. Store GET responses in cache
   if (response.config.method === 'get') {
     const cacheKey = response.config.url + JSON.stringify(response.config.params || {});
     cache.set(cacheKey, {
@@ -55,6 +61,11 @@ apiClient.interceptors.response.use((response) => {
   }
   return response;
 }, (error) => {
+  // Also clear cache on mutation errors just in case server state changed partially
+  if (error.config && ['post', 'put', 'delete', 'patch'].includes(error.config.method)) {
+    cache.clear();
+  }
+  
   if (error.response && error.response.status === 401) {
     localStorage.removeItem('token');
     window.location.href = '/login';

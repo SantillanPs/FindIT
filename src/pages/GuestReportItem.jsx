@@ -27,7 +27,8 @@ const GuestReportItem = () => {
     guest_email: '',
     contact_info: '',
     category: '',
-    safe_photo_url: ''
+    safe_photo_url: '',
+    attributes: {}
   });
   
   const [loading, setLoading] = useState(false);
@@ -154,14 +155,19 @@ const GuestReportItem = () => {
 
             {step === 5 && (
               <DetailsStep 
-                stepLabel="Step 4: Item Details"
+                stepLabel="Step 5: Item Details"
                 title="Item Description"
                 description="Briefly describe the item's appearance, brand, or other details."
                 placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
                 value={formData.description}
                 category={formData.category}
-                onChange={(val) => setFormData({...formData, description: val})}
-                onNext={() => goToStep(5)}
+                attributes={formData.attributes}
+                onAttributeChange={(field, val) => setFormData(prev => ({
+                    ...prev,
+                    attributes: { ...prev.attributes, [field]: val }
+                }))}
+                onChange={(val) => setFormData(prev => ({...prev, description: val}))}
+                onNext={() => goToStep(6)}
               />
             )}
 

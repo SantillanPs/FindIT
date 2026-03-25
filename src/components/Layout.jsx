@@ -84,17 +84,12 @@ const Layout = ({ children }) => {
       {user ? (
         <>
           {/* Mobile Sidebar Backdrop */}
-          <AnimatePresence>
-            {isSidebarOpen && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsSidebarOpen(false)}
-                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
-              />
-            )}
-          </AnimatePresence>
+          {isSidebarOpen && (
+            <div 
+              onClick={() => setIsSidebarOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
+            />
+          )}
 
           {/* Sidebar */}
           <aside className={`fixed inset-y-0 left-0 z-[60] w-72 flex-shrink-0 bg-bg-surface border-r border-border-main flex flex-col h-full overflow-hidden transition-all duration-300 lg:translate-x-0 lg:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -119,7 +114,6 @@ const Layout = ({ children }) => {
                   <>
                     <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Super Admin Workspace</p>
                     <SideNavLink to="/super" icon="fa-globe" label="System Overview" />
-                    <SideNavLink to="/super/zones" icon="fa-route" label="Map Builder" />
                     <SideNavLink to="/super/feedback" icon="fa-comments" label="Feedback Hub" count={adminStats.feedbacks} />
                     <SideNavLink to="/super/staff" icon="fa-users-gear" label="Staff Management" />
                     <SideNavLink to="/super/audit" icon="fa-shield-halved" label="Security Audit Logs" />
@@ -211,14 +205,8 @@ const Layout = ({ children }) => {
 
              <main className="flex-grow overflow-y-auto p-4 md:p-10 custom-scrollbar">
                 <div className={`${location.pathname === '/super/zones' ? 'max-w-[1600px] w-full' : 'max-w-6xl'} mx-auto`}>
-                    <AnimatePresence mode="wait">
                     {user.role === 'student' && !user.is_verified && (
-                        <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="mb-8 app-card border-brand-gold/30 bg-brand-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md"
-                        >
+                        <div className="mb-8 app-card border-brand-gold/30 bg-brand-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md">
                         <div className="flex items-start sm:items-center gap-3 text-left">
                             <span className="text-xl">🏛️</span>
                             <div>
@@ -229,21 +217,12 @@ const Layout = ({ children }) => {
                         <div className="px-6 py-2 rounded-lg bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[8px] font-black uppercase tracking-[0.2em] flex-shrink-0 w-full sm:w-auto text-center">
                            Awaiting Admin Approval
                         </div>
-                        </motion.div>
+                        </div>
                     )}
-                    </AnimatePresence>
 
-                    <AnimatePresence mode="wait">
-                    <motion.div
-                        key={location.pathname}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    >
+                    <div key={location.pathname}>
                         {children}
-                    </motion.div>
-                    </AnimatePresence>
+                    </div>
                 </div>
              </main>
           </div>
@@ -277,17 +256,9 @@ const Layout = ({ children }) => {
           </header>
 
           <main className="flex-grow w-full relative z-10">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
+              <div key={location.pathname}>
                 {children}
-              </motion.div>
-            </AnimatePresence>
+              </div>
           </main>
           
           <footer className="py-16 border-t border-brand-border mt-16 bg-slate-950/20 relative z-10 w-full">
@@ -300,37 +271,28 @@ const Layout = ({ children }) => {
         </div>
       )}
       {/* Floating Feedback Trigger */}
-      <motion.button
+      <button
         onClick={() => setIsFeedbackOpen(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="fixed bottom-8 right-8 z-[70] group"
-        whileTap={{ scale: 0.95 }}
       >
         <div className="relative">
           <div className="absolute inset-0 bg-uni-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
-          <motion.div 
-            animate={{ width: isHovered ? '160px' : '48px' }}
-            transition={{ type: "spring", stiffness: 200, damping: 25 }}
-            className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden ${isHovered ? 'px-4 justify-start' : 'justify-center'}`}
+          <div 
+            className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden transition-all duration-300 ${isHovered ? 'w-40 px-4 justify-start' : 'w-12 justify-center'}`}
           >
             <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-uni-500 text-white flex items-center justify-center border border-white/5">
               <i className="fa-solid fa-comment-dots text-sm"></i>
             </div>
-            <motion.span 
-              initial={false}
-              animate={{ 
-                opacity: isHovered ? 1 : 0,
-                x: isHovered ? 0 : 20,
-              }}
-              transition={{ duration: 0.3 }}
-              className={`text-[9px] font-black text-text-header uppercase tracking-widest whitespace-nowrap ml-3 ${!isHovered && 'hidden'}`}
+            <span 
+              className={`text-[9px] font-black text-text-header uppercase tracking-widest whitespace-nowrap ml-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 hidden'}`}
             >
               Feedback
-            </motion.span>
-          </motion.div>
+            </span>
+          </div>
         </div>
-      </motion.button>
+      </button>
     </div>
   );
 };
@@ -344,24 +306,12 @@ const BackgroundEffects = () => (
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-uni-500/10 blur-[120px] rounded-full"></div>
     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[400px] bg-uni-500/15 blur-[120px] rounded-full"></div>
 
-    {/* Dynamic Blobs */}
+    {/* Dynamic Blobs (Static Version) */}
     <div className="absolute inset-0">
-      <motion.div 
-        animate={{ 
-          x: [0, 100, -50, 0],
-          y: [0, -100, 50, 0],
-          scale: [1, 1.2, 0.9, 1]
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      <div 
         className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-uni-500/10 rounded-full blur-[120px]"
       />
-      <motion.div 
-        animate={{ 
-          x: [0, -120, 80, 0],
-          y: [0, 120, -60, 0],
-          scale: [1, 0.8, 1.1, 1]
-        }}
-        transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+      <div 
         className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-default/10 rounded-full blur-[120px]"
       />
     </div>
@@ -397,8 +347,7 @@ const SideNavLink = ({ to, icon, label, count }) => {
       )}
 
       {isActive && (
-        <motion.div 
-          layoutId="sidebar-active"
+        <div 
           className="absolute -left-1 w-1 h-6 rounded-r-full bg-uni-400 border border-uni-400/50"
         />
       )}

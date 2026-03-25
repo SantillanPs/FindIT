@@ -130,14 +130,13 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
       fetchGraphData();
     } catch (err) {
       console.error('Failed to create zone', err);
-      alert(err.response?.data?.detail || "Failed to create place");
+      // Removed alert for cleaner UX
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteZone = async (id) => {
-    if (!window.confirm("Remove this place? This will also disconnect any pathways attached to it.")) return;
     setActionLoading(true);
     try {
       await apiClient.delete(`/admin/zones/${id}`);
@@ -190,7 +189,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     // Extracted util functions to utils.js
 
   const handleDeleteEdge = async (edgeId) => {
-    if (!window.confirm("Remove this pathway?")) return;
     setActionLoading(true);
     try {
       await apiClient.delete(`/admin/adjacencies/${edgeId}`);
