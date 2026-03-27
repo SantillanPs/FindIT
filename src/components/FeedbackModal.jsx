@@ -1,8 +1,34 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { domToPng } from 'modern-screenshot';
+import { 
+  MessageSquare, 
+  Bug, 
+  Lightbulb, 
+  Sparkles, 
+  Camera, 
+  Upload, 
+  Trash2, 
+  X, 
+  Send,
+  Loader2,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const FeedbackModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
@@ -18,27 +44,22 @@ const FeedbackModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
 
   const types = [
-    { id: 'bug', label: 'Report a Bug', icon: 'fa-bug', color: 'text-red-400' },
-    { id: 'feature', label: 'New Feature', icon: 'fa-lightbulb', color: 'text-yellow-400' },
-    { id: 'ux', label: 'User Experience', icon: 'fa-wand-magic-sparkles', color: 'text-blue-400' },
-    { id: 'general', label: 'General Feedback', icon: 'fa-message', color: 'text-green-400' },
+    { id: 'bug', label: 'Report a Bug', icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+    { id: 'feature', label: 'New Feature', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
+    { id: 'ux', label: 'User Experience', icon: Sparkles, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+    { id: 'general', label: 'General Feedback', icon: MessageSquare, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
   ];
 
   const handleCapture = async () => {
     setIsCapturing(true);
     
-    // Hide the modal root temporarily for a clean capture
-    const modalElement = document.querySelector('.feedback-modal-root')?.parentElement;
+    const modalElement = document.querySelector('[role="dialog"]');
     if (modalElement) modalElement.style.visibility = 'hidden';
 
     try {
-      // modern-screenshot uses SVG foreignObject, which is a lot more accurate than html2canvas
       const dataUrl = await domToPng(document.body, {
-        features: {
-          // Disable filters if they cause issues, but generally it's better to keep them
-        },
         scale: window.devicePixelRatio || 1,
-        backgroundColor: '#0f172a',
+        backgroundColor: '#020617', // Match dark theme
       });
       
       const blob = await (await fetch(dataUrl)).blob();
@@ -51,7 +72,6 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error('Screenshot failed:', error);
       if (modalElement) modalElement.style.visibility = 'visible';
-      // Removed alert
     } finally {
       setIsCapturing(false);
     }
@@ -90,90 +110,76 @@ const FeedbackModal = ({ isOpen, onClose }) => {
       setScreenshot(null);
       setPreviewUrl(null);
       onClose();
-      // Optional: replace with a nice toast icon in future
     } catch (error) {
       console.error('Failed to submit feedback', error);
-      // Removed alert
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/80 backdrop-blur-md"
-        />
-        
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="feedback-modal-root relative w-full max-w-2xl bg-bg-surface border border-border-main rounded-3xl overflow-hidden flex flex-col max-h-[90vh]"
-        >
-          {/* Header */}
-          <div className="p-6 border-b border-border-main flex items-center justify-between bg-white/[0.02]">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-uni-500/10 rounded-2xl flex items-center justify-center text-uni-400">
-                <i className="fa-solid fa-comment-dots text-xl"></i>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-text-header">Institutional Feedback</h3>
-                <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mt-0.5">Direct line to the University Super Admin</p>
-              </div>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-xl bg-slate-900/40 backdrop-blur-2xl border-white/10 shadow-2xl p-0 overflow-hidden rounded-[24px] max-h-[90vh] flex flex-col ring-1 ring-white/10">
+        {/* Header */}
+        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.03] to-transparent shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-uni-500/10 rounded-xl flex items-center justify-center text-uni-400 ring-1 ring-uni-500/20">
+              <MessageSquare className="w-6 h-6" />
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-slate-500">
-              <i className="fa-solid fa-xmark"></i>
-            </button>
+            <div>
+              <DialogTitle className="text-lg font-bold text-white tracking-tight italic uppercase">Institutional Feedback</DialogTitle>
+              <DialogDescription className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Direct channel to University Super Admin</DialogDescription>
+            </div>
           </div>
+        </div>
 
-          <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto custom-scrollbar p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
+          <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-grow">
             {/* Type Selector */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {types.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setFormData({ ...formData, type: t.id })}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
-                    formData.type === t.id
-                      ? 'bg-uni-500/10 border-uni-500/30 ring-1 ring-uni-500/20'
-                      : 'bg-white/5 border-white/5 grayscale opacity-60 hover:opacity-100 hover:grayscale-0'
-                  }`}
-                >
-                  <i className={`fa-solid ${t.icon} text-lg ${t.color}`}></i>
-                  <span className="text-[8px] font-black uppercase tracking-widest">{t.label}</span>
-                </button>
-              ))}
+              {types.map((t) => {
+                const Icon = t.icon;
+                const isActive = formData.type === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, type: t.id })}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-3 rounded-[16px] border transition-all duration-300",
+                      isActive
+                        ? "bg-uni-500/10 border-uni-500/40 ring-1 ring-uni-500/20 shadow-[0_0_20px_rgba(var(--uni-primary-rgb),0.1)]"
+                        : "bg-white/[0.02] border-white/5 opacity-50 hover:opacity-100 hover:bg-white/[0.05]"
+                    )}
+                  >
+                    <Icon className={cn("w-5 h-5", isActive ? t.color : "text-slate-400")} />
+                    <span className={cn("text-[8px] font-black uppercase tracking-widest text-center", isActive ? "text-white" : "text-slate-500")}>
+                      {t.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Subject Line</label>
-                <input
-                  type="text"
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Subject Line</Label>
+                <Input
                   required
-                  placeholder="Summarize your feedback in a few words..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-uni-500/50 transition-all outline-none"
+                  placeholder="Summarize your feedback..."
+                  className="h-10 bg-white/5 border-white/10 rounded-lg focus:ring-uni-500/30 transition-all italic font-medium"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                 />
               </div>
 
-              <div>
-                <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Message Body</label>
-                <textarea
+              <div className="space-y-2">
+                <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Message Body</Label>
+                <Textarea
                   required
-                  rows={4}
-                  placeholder="Please provide details. If this is a bug, mention the steps you took..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-uni-500/50 transition-all outline-none resize-none"
+                  rows={3}
+                  placeholder="Provide detailed context. For bugs, include steps to reproduce..."
+                  className="bg-white/5 border-white/10 rounded-xl focus:ring-uni-500/30 transition-all leading-relaxed"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                 />
@@ -181,55 +187,50 @@ const FeedbackModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Screenshot Section */}
-            <div>
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Visual Attachments (Optional)</label>
-              <div className="flex flex-wrap gap-4">
-                {previewUrl ? (
-                  <div className="relative group w-full h-48 rounded-2xl overflow-hidden border border-white/10">
-                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <button 
-                        type="button" 
-                        onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
-                        className="bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center border border-black/10 transform scale-75 group-hover:scale-100 transition-transform"
-                      >
-                        <i className="fa-solid fa-trash"></i>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 w-full gap-4">
-                    <button
-                      type="button"
-                      disabled={isCapturing}
-                      onClick={handleCapture}
-                      className="flex flex-col items-center justify-center gap-3 h-32 rounded-2xl bg-white/5 border border-dashed border-white/10 hover:border-uni-500/50 hover:bg-uni-500/5 transition-all group"
+            <div className="space-y-3">
+              <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Visual Evidence (Optional)</Label>
+              {previewUrl ? (
+                <div className="relative group w-full h-48 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover grayscale-[0.2] transition-all group-hover:grayscale-0" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
+                    <Button 
+                      type="button" 
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
+                      className="w-10 h-10 rounded-full border border-white/10 shadow-lg transform scale-90 group-hover:scale-100 transition-transform"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-uni-500 group-hover:text-white transition-all">
-                        {isCapturing ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-camera"></i>}
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div 
+                    onClick={handleCapture}
+                    className="group/capture h-24 rounded-2xl border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-uni-500/30 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
+                  >
+                    {isCapturing ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-slate-500 group-hover/capture:text-white" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover/capture:text-white group-hover/capture:bg-uni-500/20 transition-all">
+                        <Camera className="w-5 h-5" />
                       </div>
-                      <div className="text-center px-4">
-                        <p className="text-[9px] font-black uppercase tracking-widest mb-1">Capture Screen</p>
-                        <p className="text-[7px] text-slate-500 uppercase tracking-widest">Auto-Snapshot Current View</p>
-                      </div>
-                    </button>
+                    )}
+                    <span className="text-[10px] font-black text-slate-500 group-hover/capture:text-white uppercase tracking-widest italic relative z-10 transition-colors">Capture Screen</span>
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center gap-3 h-32 rounded-2xl bg-white/5 border border-dashed border-white/10 hover:border-uni-500/50 hover:bg-uni-500/5 transition-all group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-uni-500 group-hover:text-white transition-all">
-                        <i className="fa-solid fa-upload"></i>
-                      </div>
-                      <div className="text-center px-4">
-                        <p className="text-[9px] font-black uppercase tracking-widest mb-1">Upload Manual</p>
-                        <p className="text-[7px] text-slate-500 uppercase tracking-widest">Image from storage</p>
-                      </div>
-                    </button>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="group/upload h-24 rounded-2xl border border-dashed border-white/10 bg-slate-900/20 hover:bg-slate-900/40 hover:border-uni-500/20 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover/upload:text-white group-hover/upload:bg-uni-500/20 transition-all">
+                        <Upload className="w-5 h-5" />
+                    </div>
+                    <span className="text-[10px] font-black text-slate-500 group-hover/upload:text-white uppercase tracking-widest italic transition-colors">Upload Evidence</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
               <input 
                 type="file" 
                 hidden 
@@ -238,45 +239,49 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                 onChange={handleFileChange}
               />
             </div>
-          </form>
-
-          {/* Footer */}
-          <div className="p-6 border-t border-border-main bg-white/[0.02] flex items-center justify-between">
-            <div className="hidden sm:block">
-               <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.2em]">Archival Metadata Included</p>
-               <p className="text-[7px] text-slate-600 uppercase tracking-widest mt-1">Browser version & full Page URL</p>
-            </div>
-            <div className="flex gap-3 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex-grow sm:flex-grow-0 px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-[9px] font-black uppercase tracking-widest transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting || !formData.subject || !formData.message}
-                className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-gradient-to-r from-uni-600 to-uni-500 hover:from-uni-500 hover:to-uni-400 disabled:opacity-50 disabled:grayscale text-white text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 border border-black/5"
-              >
-                {isSubmitting ? (
-                  <>
-                    <i className="fa-solid fa-spinner fa-spin"></i>
-                    Sending Archive...
-                  </>
-                ) : (
-                  <>
-                    <i className="fa-solid fa-paper-plane"></i>
-                    Seal and Submit
-                  </>
-                )}
-              </button>
-            </div>
           </div>
-        </motion.div>
-      </div>
-    </AnimatePresence>
+        </form>
+
+        {/* Footer */}
+        <div className="p-6 border-t border-white/5 bg-slate-900/20 flex flex-col sm:flex-row items-center justify-between gap-6 shrink-0">
+          <div className="hidden sm:block space-y-1">
+             <div className="flex items-center gap-2">
+               <AlertCircle className="w-3 h-3 text-slate-600" />
+               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Metadata Encrypted</p>
+             </div>
+             <p className="text-[8px] text-slate-600 uppercase tracking-[0.15em] font-medium ml-5">Browser & Page URL included</p>
+          </div>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="flex-grow sm:flex-grow-0 h-10 px-6 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 text-[9px] font-black uppercase tracking-widest transition-all"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit" // Changed to submit to trigger form onSubmit
+              onClick={handleSubmit}
+              disabled={isSubmitting || !formData.subject || !formData.message}
+              className="flex-grow sm:flex-grow-0 h-10 px-8 rounded-lg bg-gradient-to-br from-uni-600 to-uni-500 hover:from-uni-500 hover:to-uni-400 text-white text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_4px_20px_rgba(var(--uni-primary-rgb),0.3)] transition-all flex items-center justify-center gap-2 border-none group"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Transmitting...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  Seal and Submit
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

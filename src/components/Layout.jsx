@@ -20,19 +20,18 @@ import {
   SidebarProvider,
   useSidebar
 } from "@/components/ui/sidebar";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   LogOut, 
-  Compass, 
   Globe, 
   MessageSquare, 
   Users, 
@@ -45,7 +44,6 @@ import {
   Trophy, 
   PieChart, 
   History, 
-  UserCircle,
   Home,
   ClipboardCheck,
   Search,
@@ -96,7 +94,7 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
       >
           <Link 
             to={to} 
-            onClick={() => setOpenMobile(false)} // Explicitly close on click
+            onClick={() => setOpenMobile(false)}
             className="flex items-center gap-4 px-4 w-full h-full no-underline relative z-[110] pointer-events-auto"
           >
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${isActive ? 'bg-black/5 text-black' : 'bg-slate-950 border border-white/5 text-slate-600 group-hover:text-sky-400'}`}>
@@ -124,11 +122,10 @@ const LayoutContents = ({ children }) => {
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
-  const { toggleSidebar, setOpenMobile, openMobile } = useSidebar();
+  const { toggleSidebar, setOpenMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close sidebar on route change
   useEffect(() => {
     setOpenMobile(false);
   }, [location.pathname, setOpenMobile]);
@@ -188,7 +185,6 @@ const LayoutContents = ({ children }) => {
                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1.5 pl-0.5">Asset Registry</p>
                   </div>
                 </Link>
-                {/* Mobile Close Button */}
                 <button 
                   onClick={() => setOpenMobile(false)}
                   className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-white"
@@ -280,7 +276,7 @@ const LayoutContents = ({ children }) => {
                     side="top" 
                     align="end" 
                     sideOffset={12}
-                    className="w-[180px] bg-[#0f172a] border border-border-main p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
+                    className="w-[180px] bg-[#0f172a] border border-white/10 p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
                   >
                     <DropdownMenuItem 
                       onClick={handleLogout}
@@ -342,7 +338,6 @@ const LayoutContents = ({ children }) => {
         </div>
       ) : (
         <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed w-full text-left">
-          {/* Universal Grid Background Overlay */}
           <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
           
           <header className="sticky top-0 z-[60] h-24 flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
@@ -372,15 +367,43 @@ const LayoutContents = ({ children }) => {
         </div>
       )}
 
-      <button onClick={() => setIsFeedbackOpen(true)} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="fixed bottom-8 right-8 z-[70] group">
-        <div className="relative">
-          <div className="absolute inset-0 bg-uni-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
-          <div className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden transition-all duration-300 ${isHovered ? 'w-40 px-4 justify-start' : 'w-12 justify-center'}`}>
-            <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-uni-500 text-white flex items-center justify-center border border-white/5"><MessageSquare size={16} /></div>
-            <span className={`text-[9px] font-black text-white uppercase tracking-widest whitespace-nowrap ml-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 hidden'}`}>Feedback</span>
-          </div>
-        </div>
-      </button>
+      {/* Modern Feedback Trigger with Smooth Expansion */}
+      <div className="fixed bottom-8 right-8 z-[70] group">
+        <div className="absolute inset-0 bg-uni-500 blur-2xl opacity-10 group-hover:opacity-40 transition-opacity"></div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setIsFeedbackOpen(true)}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+              className={cn(
+                "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-uni-500/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-sky-500/20",
+                isHovered ? "w-52 px-5 opacity-100" : "w-16 px-3"
+              )}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-7 h-7 text-white transition-transform group-hover:scale-110" />
+                </div>
+                <AnimatePresence>
+                  {isHovered && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                      animate={{ opacity: 1, width: "auto", marginLeft: "12px" }}
+                      exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                      className="text-sm font-black text-white uppercase tracking-[0.2em] italic whitespace-nowrap overflow-hidden"
+                    >
+                      Feedback
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Button>
+          </TooltipTrigger>
+        </Tooltip>
+      </div>
     </div>
   );
 };
