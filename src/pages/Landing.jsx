@@ -114,7 +114,7 @@ const Landing = () => {
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-sky-500/5 rounded-full pointer-events-none"></div>
 
       {/* Hero Section */}
-      <section className="relative pt-0 pb-16 md:pt-0 md:pb-32 overflow-hidden">
+      <section className="relative pt-20 pb-16 md:pt-0 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-6 relative z-10">
           
           <h1 className="text-6xl md:text-9xl lg:text-[11rem] font-black text-white italic tracking-tighter leading-[0.8] uppercase mb-8 md:mb-12">
