@@ -80,6 +80,14 @@ def migrate():
         if 'last_name' not in columns:
             print("Adding last_name to users table...")
             cursor.execute("ALTER TABLE users ADD COLUMN last_name TEXT")
+            
+        if 'password_reset_token' not in columns:
+            print("Adding password_reset_token to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN password_reset_token TEXT")
+            
+        if 'password_reset_expires' not in columns:
+            print("Adding password_reset_expires to users table...")
+            cursor.execute("ALTER TABLE users ADD COLUMN password_reset_expires DATETIME")
 
         # Found items table
         cursor.execute("PRAGMA table_info(found_items)")

@@ -1,61 +1,95 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ShieldCheck, 
+  Search, 
+  Cpu, 
+  ChevronDown, 
+  ChevronUp, 
+  Link as LinkIcon, 
+  FileSearch, 
+  Tag, 
+  MapPin, 
+  Calendar, 
+  AlignLeft, 
+  UserCheck, 
+  Lock,
+  ExternalLink,
+  Bot
+} from "lucide-react";
 
 const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLoading, setPreviewImage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getConfidenceTier = (score) => {
-    if (score >= 0.85) return { label: 'High Match', variant: 'brand', icon: 'fa-shield-check', color: 'text-brand-primary' };
-    if (score >= 0.60) return { label: 'Medium Match', variant: 'accent', icon: 'fa-magnifying-glass-chart', color: 'text-brand-secondary' };
-    return { label: 'Potential Match', variant: 'outline', icon: 'fa-microchip', color: 'text-muted-foreground' };
+    if (score >= 0.85) return { 
+      label: 'High Match', 
+      variant: 'default', 
+      icon: ShieldCheck, 
+      color: 'bg-uni-600/10 text-uni-400 border-uni-500/20' 
+    };
+    if (score >= 0.60) return { 
+      label: 'Medium Match', 
+      variant: 'secondary', 
+      icon: FileSearch, 
+      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+    };
+    return { 
+      label: 'Potential Match', 
+      variant: 'outline', 
+      icon: Cpu, 
+      color: 'bg-slate-800 text-slate-400 border-white/5' 
+    };
   };
 
   const tier = getConfidenceTier(match.similarity_score);
 
   return (
-    <Card className="overflow-hidden border-border/50 bg-card/60 backdrop-blur-sm hover:border-brand-primary/30 transition-all duration-300 shadow-lg">
+    <Card className="overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-sm hover:border-uni-500/30 transition-all duration-300 shadow-xl group">
       {/* Match Header Bar */}
       <div 
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between px-8 py-6 border-b border-border/40 bg-muted/20 cursor-pointer hover:bg-muted/40 transition-colors"
+        className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-slate-950/20 cursor-pointer hover:bg-slate-950/40 transition-colors"
       >
         <div className="flex items-center gap-6">
-          <Badge variant={tier.variant} className="py-1.5 px-4 text-[10px] font-black uppercase tracking-widest gap-2 shadow-sm">
-            <i className={`fa-solid ${tier.icon}`}></i>
+          <Badge className={`py-1.5 px-4 text-[13px] font-bold gap-2 shadow-sm ${tier.color}`}>
+            <tier.icon size={14} />
             Confidence: {Math.round(match.similarity_score * 100)}%
           </Badge>
           
-          <div className="hidden md:flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/30 px-4 py-2 rounded-xl border border-border/10">
+          <div className="hidden md:flex items-center gap-2 text-[13px] font-bold text-slate-300 uppercase tracking-wider bg-slate-900/50 px-4 py-2 rounded-xl border border-white/10">
             Case Ref: <span className="text-white ml-1">#LR-{match.item.id}</span>
           </div>
 
-          <div className="flex items-center gap-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-            <i className={`fa-solid ${isExpanded ? 'fa-chevron-up' : 'fa-chevron-down'} text-brand-primary`}></i>
-            {isExpanded ? 'Hide Comparison' : 'View Comparison'}
+          <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-uni-400 transition-colors">
+            {isExpanded ? <ChevronUp size={16} className="text-uni-400" /> : <ChevronDown size={16} className="text-uni-400" />}
+            {isExpanded ? 'Hide Data Comparison' : 'View Data Comparison'}
           </div>
         </div>
         
-        <div className="flex items-center gap-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
           <Button 
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => onDeepCompare({ found: foundItem, lost: match.item, score: match.similarity_score })}
-            className="hidden lg:flex font-black text-[10px] uppercase tracking-widest border-border/50 hover:bg-white/5"
+            className="hidden lg:flex font-bold text-[13px] uppercase tracking-wider text-slate-300 hover:text-white hover:bg-white/5 h-12 px-6 rounded-xl"
           >
-            Side-By-Side Review
+            Deep Compare
           </Button>
           <Button 
             size="sm"
             onClick={() => onAuthorizeMatch(foundItem.id, match.item.id)}
             disabled={actionLoading === `match-${foundItem.id}-${match.item.id}`}
-            className={`px-8 font-black text-[10px] uppercase tracking-widest transition-all ${
-              match.similarity_score >= 0.85 ? 'bg-brand-primary text-white' : 'bg-white text-black hover:bg-brand-primary hover:text-white'
+            className={`h-12 px-10 font-bold text-[13px] uppercase tracking-wider transition-all rounded-xl shadow-lg active:scale-95 ${
+              match.similarity_score >= 0.85 
+              ? 'bg-uni-600 text-white hover:bg-uni-700 shadow-uni-600/20' 
+              : 'bg-white text-slate-950 hover:bg-uni-600 hover:text-white'
             }`}
           >
-            <i className="fa-solid fa-link mr-2"></i>
+            <LinkIcon size={16} className="mr-2" />
             Authorize Link
           </Button>
         </div>
@@ -67,73 +101,75 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <CardContent className="p-8 space-y-2">
-              {/* Comparison Grid */}
-              <div className="grid grid-cols-12 gap-8 mb-6 px-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+            <CardContent className="p-8 space-y-2 bg-slate-950/20">
+              {/* Comparison Grid Header */}
+              <div className="grid grid-cols-12 gap-8 mb-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 <div className="col-span-2">Attribute</div>
-                <div className="col-span-5 flex items-center gap-3 text-brand-primary"><i className="fa-solid fa-vault"></i> 1. The Vault</div>
-                <div className="col-span-5 flex items-center gap-3 text-brand-secondary"><i className="fa-solid fa-user-graduate"></i> 2. The Report</div>
+                <div className="col-span-10 md:col-span-10 grid grid-cols-2 gap-8">
+                   <div className="flex items-center gap-3 text-uni-400"><Tag size={14} /> Found Item</div>
+                   <div className="flex items-center gap-3 text-amber-500"><UserCheck size={14} /> Lost Report</div>
+                </div>
               </div>
 
               {/* Attributes Rows */}
               {[
-                { label: 'Type', icon: 'fa-tag', val1: foundItem.item_name, val2: match.item.item_name, highlight: true },
-                { label: 'Location', icon: 'fa-location-dot', val1: foundItem.location_zone, val2: match.item.location_zone, color1: 'text-brand-primary', color2: 'text-brand-secondary' },
-                { label: 'Date', icon: 'fa-calendar', val1: new Date(foundItem.found_time).toLocaleDateString(), val2: new Date(match.item.last_seen_time).toLocaleDateString() }
+                { label: 'Item Type', icon: Tag, val1: foundItem.item_name, val2: match.item.item_name, highlight: true },
+                { label: 'Location', icon: MapPin, val1: foundItem.location_zone, val2: match.item.location_zone, color1: 'text-uni-400', color2: 'text-amber-500' },
+                { label: 'Timestamp', icon: Calendar, val1: new Date(foundItem.found_time).toLocaleDateString(), val2: new Date(match.item.last_seen_time).toLocaleDateString() }
               ].map((row, i) => (
-                <div key={i} className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-xl transition-all items-center border-t border-border/10">
-                  <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest">
-                    <i className={`fa-solid ${row.icon} w-6 text-muted-foreground/40`}></i> {row.label}
+                <div key={i} className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-2xl transition-all items-center border-t border-white/5">
+                  <div className="col-span-2 flex items-center gap-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">
+                    <row.icon size={16} className="opacity-40" /> {row.label}
                   </div>
-                  <div className={`col-span-5 text-sm font-black uppercase tracking-tight ${row.highlight ? 'text-white text-lg' : row.color1 || 'text-slate-300'}`}>{row.val1}</div>
-                  <div className={`col-span-5 text-sm font-black uppercase tracking-tight ${row.highlight ? 'text-white text-lg' : row.color2 || 'text-slate-300'}`}>{row.val2}</div>
+                  <div className="col-span-10 grid grid-cols-2 gap-8">
+                     <div className={`text-sm font-bold uppercase tracking-tight ${row.highlight ? 'text-white text-base' : row.color1 || 'text-slate-200'}`}>{row.val1}</div>
+                     <div className={`text-sm font-bold uppercase tracking-tight ${row.highlight ? 'text-white text-base' : row.color2 || 'text-slate-200'}`}>{row.val2}</div>
+                  </div>
                 </div>
               ))}
 
               {/* Description Details */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-xl transition-all items-start border-t border-border/10">
-                <div className="col-span-2 flex items-center gap-4 text-[11px] font-black text-muted-foreground uppercase tracking-widest pt-4">
-                  <i className="fa-solid fa-align-left w-6 text-muted-foreground/40"></i> Details
+              <div className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-2xl transition-all items-start border-t border-white/5">
+                <div className="col-span-2 flex items-center gap-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider pt-6">
+                  <AlignLeft size={16} className="opacity-40" /> Context
                 </div>
-                <div className="col-span-5">
-                  <div className="bg-muted/30 p-5 rounded-2xl border border-border/10 min-h-[100px]">
-                    <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{foundItem.description || 'No office notes.'}"</p>
+                <div className="col-span-10 grid grid-cols-2 gap-8">
+                  <div className="bg-slate-900/50 p-5 rounded-2xl border border-white/5 min-h-[100px]">
+                    <p className="text-[13px] text-slate-300 leading-relaxed font-medium italic">"{foundItem.description || 'No additional office notes.'}"</p>
                   </div>
-                </div>
-                <div className="col-span-5">
-                  <div className="bg-muted/30 p-5 rounded-2xl border border-border/10 min-h-[100px]">
-                    <p className="text-xs text-slate-300 leading-relaxed font-medium italic">"{match.item.description || 'No student info.'}"</p>
+                  <div className="bg-slate-900/50 p-5 rounded-2xl border border-white/5 min-h-[100px]">
+                    <p className="text-[13px] text-slate-300 leading-relaxed font-medium italic">"{match.item.description || 'No student description.'}"</p>
                   </div>
                 </div>
               </div>
 
-              {/* Footer: User Identity */}
-              <div className="mt-8 pt-6 border-t border-border/40 flex items-center justify-between px-4">
-                <div className="flex items-center gap-10">
+              {/* Footer: User Identity & Evidence */}
+              <div className="mt-8 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex flex-col sm:flex-row items-center gap-10">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-muted border border-border/20 flex items-center justify-center text-muted-foreground overflow-hidden">
+                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-600 overflow-hidden shadow-inner">
                       {match.item.safe_photo_url ? (
                         <img src={match.item.safe_photo_url} className="w-full h-full object-cover" alt="" />
                       ) : (
-                        <i className="fa-solid fa-user-shield text-xl opacity-30"></i>
+                        <Lock className="opacity-20" size={24} />
                       )}
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Owner / Reporter</p>
-                      <p className="text-sm font-black text-white uppercase tracking-tight">{match.item.owner_name}</p>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Authenticated Holder</p>
+                      <p className="text-[15px] font-bold text-white tracking-tight">{match.item.owner_name}</p>
                     </div>
                   </div>
                   
-                  <div className="h-10 w-px bg-border/40"></div>
+                  <div className="hidden sm:block h-10 w-px bg-white/10"></div>
                   
                   <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Verification</p>
-                    <p className={`text-[11px] font-black uppercase tracking-widest ${match.item.owner_name?.includes('Anonymous') ? 'text-brand-secondary' : 'text-brand-primary'}`}>
-                      <i className={`fa-solid ${match.item.owner_name?.includes('Anonymous') ? 'fa-user-secret' : 'fa-certificate'} mr-2`}></i>
-                      {match.item.owner_name?.includes('Anonymous') ? 'Guest Record' : 'Institutional Member'}
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Verification Level</p>
+                    <p className={`text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 ${match.item.owner_name?.includes('Anonymous') ? 'text-amber-500' : 'text-uni-400'}`}>
+                       {match.item.owner_name?.includes('Anonymous') ? <Bot size={14} /> : <ShieldCheck size={14} />}
+                       {match.item.owner_name?.includes('Anonymous') ? 'Non-institutional Guest' : 'Verified Institutional Member'}
                     </p>
                   </div>
                 </div>
@@ -143,9 +179,10 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                     variant="ghost" 
                     size="sm"
                     onClick={() => setPreviewImage(match.item.safe_photo_url)}
-                    className="text-brand-secondary font-black text-[10px] uppercase tracking-widest"
+                    className="h-12 w-full md:w-auto px-8 rounded-xl hover:bg-uni-500/10 text-uni-400 font-bold text-[12px] uppercase tracking-wider flex items-center gap-2 group/btn"
                   >
-                    View Attached Evidence
+                    <ExternalLink size={14} className="group-hover/btn:scale-110 transition-transform" />
+                    Inspect Evidence Metadata
                   </Button>
                 )}
               </div>

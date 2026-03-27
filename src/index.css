@@ -348,25 +348,5 @@
     background: rgba(148, 163, 184, 0.4);
   }
 
-  /* GLOBAL ANIMATION KILL SWITCH (Universal) */
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
 
-  /* Exempt theme transitions */
-  body, html, [class*="transition-transform"] {
-    transition-duration: 0.3s !important;
-    transition-property: background-color, color, transform !important;
-  }
-
-  .animate-float, .animate-glow, .animate-pulse-slow, .animate-shimmer, .animate-ping {
-    animation: none !important;
-  }
-
-  [class*="animate-"] {
-    animation: none !important;
-  }
 }

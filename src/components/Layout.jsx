@@ -6,36 +6,145 @@ import NotificationCenter from './NotificationCenter';
 import apiClient from '../api/client';
 import ThemeToggle from './ThemeToggle';
 import FeedbackModal from './FeedbackModal';
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarFooter, 
+  SidebarHeader, 
+  SidebarMenu, 
+  SidebarMenuButton, 
+  SidebarMenuItem, 
+  SidebarSeparator,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarProvider,
+  useSidebar
+} from "@/components/ui/sidebar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  LogOut, 
+  Compass, 
+  Globe, 
+  MessageSquare, 
+  Users, 
+  ShieldCheck, 
+  Warehouse, 
+  HelpCircle, 
+  Stamp, 
+  Eye, 
+  Sparkles, 
+  Trophy, 
+  PieChart, 
+  History, 
+  UserCircle,
+  Home,
+  ClipboardCheck,
+  Search,
+  AlertTriangle,
+  HeartHandshake,
+  Archive,
+  Menu,
+  X,
+  ChevronDown
+} from "lucide-react";
 
-const Layout = ({ children }) => {
+// Refined Logo Component
+const Logo = ({ className = "" }) => (
+  <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-black text-3xl italic shadow-2xl shadow-sky-500/10 active:scale-95 transition-all duration-500 border border-white/10 ${className}`}>
+    <span className="translate-x-[-4px]">f</span>
+  </div>
+);
+
+// Helper components moved up for hoisting
+const BackgroundEffects = () => (
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div className="absolute inset-0 bg-grid opacity-[0.03]"></div>
+    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-uni-500/10 blur-[120px] rounded-full"></div>
+    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[400px] bg-uni-500/15 blur-[120px] rounded-full"></div>
+    <div className="absolute inset-0">
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-uni-500/10 rounded-full blur-[120px]" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-default/10 rounded-full blur-[120px]" />
+    </div>
+    <div className="absolute inset-0 bg-noise opacity-[0.03]"></div>
+  </div>
+);
+
+const SideNavItem = ({ to, icon: Icon, label, count }) => {
+  const location = useLocation();
+  const { setOpenMobile } = useSidebar();
+  const isActive = (to === '/admin' || to === '/super')
+    ? location.pathname === to 
+    : location.pathname.startsWith(to);
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton 
+        asChild
+        isActive={isActive}
+        className={`h-14 w-full transition-all duration-300 group border border-transparent !p-0 ${
+          isActive ? 'bg-white text-black shadow-2xl shadow-sky-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'
+        }`}
+      >
+          <Link 
+            to={to} 
+            onClick={() => setOpenMobile(false)} // Explicitly close on click
+            className="flex items-center gap-4 px-4 w-full h-full no-underline relative z-[110] pointer-events-auto"
+          >
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${isActive ? 'bg-black/5 text-black' : 'bg-slate-950 border border-white/5 text-slate-600 group-hover:text-sky-400'}`}>
+              <Icon size={16} />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] italic flex-grow truncate">{label}</span>
+            {count > 0 && (
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black ${isActive ? 'bg-black text-white' : 'bg-sky-500/20 text-sky-400'}`}>
+                {count}
+              </span>
+            )}
+            {isActive && (
+              <div className="absolute -left-1 w-1.5 h-6 rounded-r-full bg-black shadow-lg" />
+            )}
+          </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+};
+
+const LayoutContents = ({ children }) => {
   const { user, logout } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAdminStatsFetched, setIsAdminStatsFetched] = useState(false);
   const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0, feedbacks: 0 });
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  
+  const { toggleSidebar, setOpenMobile, openMobile } = useSidebar();
   const navigate = useNavigate();
   const location = useLocation();
 
   // Close sidebar on route change
   useEffect(() => {
-    setIsSidebarOpen(false);
-  }, [location.pathname]);
+    setOpenMobile(false);
+  }, [location.pathname, setOpenMobile]);
 
-  // Listen for custom trigger events
   useEffect(() => {
     const handleOpenFeedback = () => setIsFeedbackOpen(true);
     window.addEventListener('open-feedback', handleOpenFeedback);
     return () => window.removeEventListener('open-feedback', handleOpenFeedback);
   }, []);
 
-  // Fetch admin stats if user is admin or super_admin
   useEffect(() => {
     if ((user?.role === 'admin' || user?.role === 'super_admin') && !isAdminStatsFetched) {
       setIsAdminStatsFetched(true);
       fetchAdminStats();
     }
-  }, [user]);
+  }, [user, isAdminStatsFetched]);
 
   const fetchAdminStats = async () => {
     try {
@@ -44,13 +153,8 @@ const Layout = ({ children }) => {
         apiClient.get('/admin/matches/all'),
         apiClient.get('/admin/lost/all')
       ];
-
-      if (user?.role === 'super_admin') {
-        endpoints.push(apiClient.get('/feedbacks'));
-      }
-
+      if (user?.role === 'super_admin') endpoints.push(apiClient.get('/feedbacks'));
       const results = await Promise.all(endpoints);
-      
       setAdminStats({
         claims: results[0].data.length,
         matches: results[1].data.length,
@@ -62,234 +166,218 @@ const Layout = ({ children }) => {
     }
   };
 
-
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
   return (
-    <div className="app-bg-main h-screen text-text-main flex overflow-hidden transition-colors duration-300">
-      {/* Ambient Glow Effects */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="ambient-uni opacity-30"></div>
-        <div className="ambient-accent opacity-20"></div>
-      </div>
-
-      <FeedbackModal 
-        isOpen={isFeedbackOpen} 
-        onClose={() => setIsFeedbackOpen(false)} 
-      />
+    <div className="app-bg-main h-screen text-text-main flex overflow-hidden transition-colors duration-300 w-full relative">
+      <BackgroundEffects />
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
       {user ? (
-        <>
-          {/* Mobile Sidebar Backdrop */}
-          {isSidebarOpen && (
-            <div 
-              onClick={() => setIsSidebarOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] lg:hidden"
-            />
-          )}
-
-          {/* Sidebar */}
-          <aside className={`fixed inset-y-0 left-0 z-[60] w-72 flex-shrink-0 bg-bg-surface border-r border-border-main flex flex-col h-full overflow-hidden transition-all duration-300 lg:translate-x-0 lg:static ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-             <div className="p-8 pb-4 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-3 group no-underline">
-                  <div className="w-10 h-10 bg-gradient-to-br from-uni-600 to-uni-400 rounded-xl flex items-center justify-center text-white text-xl group-hover:rotate-6 transition-transform border border-white/5">
-                    <i className="fa-solid fa-compass"></i>
-                  </div>
-                  <div>
-                    <h1 className="font-display font-bold text-xl tracking-tight text-text-header leading-none">FindIT</h1>
-                    <p className="text-[8px] text-text-muted font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
+        <div className="flex w-full h-full overflow-hidden relative">
+          <Sidebar className="bg-slate-900/40 backdrop-blur-xl border-r border-white/5 shadow-[20px_0_50px_rgba(0,0,0,0.3)] transition-all">
+            <SidebarHeader className="p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-4 group no-underline">
+                  <Logo className="group-hover:rotate-12 group-hover:scale-105" />
+                  <div className="text-left">
+                    <h1 className="text-xl font-black text-white italic tracking-tighter leading-none uppercase">FindIT</h1>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1.5 pl-0.5">Asset Registry</p>
                   </div>
                 </Link>
-                <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-white p-2">
-                   <i className="fa-solid fa-xmark"></i>
+                {/* Mobile Close Button */}
+                <button 
+                  onClick={() => setOpenMobile(false)}
+                  className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-white"
+                >
+                  <X size={20} />
                 </button>
-             </div>
+              </div>
+            </SidebarHeader>
 
-             <nav className="flex-grow px-4 mt-8 space-y-2 overflow-y-auto custom-scrollbar">
-                <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Main Navigation</p>
-                {location.pathname.startsWith('/super') && user.role === 'super_admin' ? (
-                  <>
-                    <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Super Admin Workspace</p>
-                    <SideNavLink to="/super" icon="fa-globe" label="System Overview" />
-                    <SideNavLink to="/super/feedback" icon="fa-comments" label="Feedback Hub" count={adminStats.feedbacks} />
-                    <SideNavLink to="/super/staff" icon="fa-users-gear" label="Staff Management" />
-                    <SideNavLink to="/super/audit" icon="fa-shield-halved" label="Security Audit Logs" />
-                    <div className="h-px bg-white/5 mx-4 my-4"></div>
-                    <SideNavLink to="/admin" icon="fa-warehouse" label="Exit to Admin Panel" />
-                  </>
-                ) : ['admin', 'super_admin'].includes(user.role) ? (
-                  <>
-                    <p className="px-5 text-[9px] font-black text-slate-700 uppercase tracking-[0.4em] mb-4 mt-8">Command Center</p>
-                    <SideNavLink to="/admin" icon="fa-warehouse" label="Inventory" />
-                    <SideNavLink to="/admin/lost" icon="fa-file-circle-question" label="Lost Reports" count={adminStats.lost} />
-                    <SideNavLink to="/admin/claims" icon="fa-stamp" label="Verify Claims" count={adminStats.claims} />
-                    <SideNavLink to="/admin/witnesses" icon="fa-eye" label="Witness Intel" />
-                    <SideNavLink to="/admin/matches" icon="fa-wand-magic-sparkles" label="Matchmaker" count={adminStats.matches} />
-                    <SideNavLink to="/admin/users" icon="fa-trophy" label="Leaderboard" />
-                    <SideNavLink to="/admin/analytics" icon="fa-chart-pie" label="System Insights" />
-                    <div className="h-px bg-white/5 mx-4 my-4"></div>
-                    <SideNavLink to="/admin/released" icon="fa-history" label="History" />
-                    
-                    {user.role === 'super_admin' && (
-                      <>
-                        <div className="h-px bg-white/5 mx-4 my-4"></div>
-                        <SideNavLink to="/super" icon="fa-user-shield" label="Super Admin Workspace" />
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Terminal</p>
-                    <SideNavLink to="/student" icon="fa-house" label="Mission Control" />
-                    <SideNavLink to="/my-claims" icon="fa-clipboard-check" label="My Claims" />
-                    
-                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 mt-6">Registry</p>
-                    <SideNavLink to="/public-feed" icon="fa-magnifying-glass" label="Found Inventory" />
-                    <SideNavLink to="/lost-reports" icon="fa-file-circle-question" label="Lost Reports" />
-                    <SideNavLink to="/hall-of-integrity" icon="fa-trophy" label="Hall of Integrity" />
-                    
-                    <p className="px-5 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4 mt-6">Personal</p>
-                    <SideNavLink to="/report/lost" icon="fa-triangle-exclamation" label="Report Lost" />
-                    <SideNavLink to="/report/found" icon="fa-hand-holding-heart" label="Report Found" />
-                    <SideNavLink to="/asset-vault" icon="fa-box-archive" label="Asset Vault" />
-                  </>
-                )}
-             </nav>
-          </aside>
+            <SidebarContent className="px-4 mt-6">
+               {(location.pathname.startsWith('/super') && user.role === 'super_admin') ? (
+                 <SidebarGroup>
+                   <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6">Super Admin Workspace</SidebarGroupLabel>
+                   <SidebarMenu>
+                     <SideNavItem to="/super" icon={Globe} label="System Overview" />
+                     <SideNavItem to="/super/feedback" icon={MessageSquare} label="Feedback Hub" count={adminStats.feedbacks} />
+                     <SideNavItem to="/super/staff" icon={Users} label="Staff Management" />
+                     <SideNavItem to="/super/audit" icon={ShieldCheck} label="Security Audit Logs" />
+                   </SidebarMenu>
+                   <SidebarSeparator className="my-4 bg-white/5 mx-2" />
+                   <SidebarMenu>
+                     <SideNavItem to="/admin" icon={Warehouse} label="Exit to Admin Panel" />
+                   </SidebarMenu>
+                 </SidebarGroup>
+               ) : ['admin', 'super_admin'].includes(user.role) ? (
+                 <SidebarGroup>
+                   <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6">Command Center</SidebarGroupLabel>
+                   <SidebarMenu>
+                     <SideNavItem to="/admin" icon={Warehouse} label="Inventory" />
+                     <SideNavItem to="/admin/lost" icon={HelpCircle} label="Lost Reports" count={adminStats.lost} />
+                     <SideNavItem to="/admin/claims" icon={Stamp} label="Verify Claims" count={adminStats.claims} />
+                     <SideNavItem to="/admin/witnesses" icon={Eye} label="Witness Intel" />
+                     <SideNavItem to="/admin/matches" icon={Sparkles} label="Matchmaker" count={adminStats.matches} />
+                     <SideNavItem to="/admin/users" icon={Trophy} label="Leaderboard" />
+                     <SideNavItem to="/admin/analytics" icon={PieChart} label="System Insights" />
+                   </SidebarMenu>
+                   <SidebarSeparator className="my-4 bg-white/5 mx-2" />
+                   <SidebarMenu>
+                     <SideNavItem to="/admin/released" icon={History} label="History" />
+                     {user.role === 'super_admin' && (
+                       <>
+                         <SidebarSeparator className="my-4 bg-white/5 mx-2" />
+                         <SideNavItem to="/super" icon={ShieldCheck} label="Super Admin Workspace" />
+                       </>
+                     )}
+                   </SidebarMenu>
+                 </SidebarGroup>
+               ) : (
+                 <SidebarGroup>
+                   <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6">Terminal</SidebarGroupLabel>
+                   <SidebarMenu>
+                     <SideNavItem to="/student" icon={Home} label="Mission Control" />
+                     <SideNavItem to="/my-claims" icon={ClipboardCheck} label="My Claims" />
+                   </SidebarMenu>
+                   <SidebarGroupLabel className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 mt-6">Registry</SidebarGroupLabel>
+                   <SidebarMenu>
+                     <SideNavItem to="/public-feed" icon={Search} label="Found Inventory" />
+                     <SideNavItem to="/lost-reports" icon={HelpCircle} label="Lost Reports" />
+                     <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" />
+                   </SidebarMenu>
+                   <SidebarGroupLabel className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 mt-6">Personal</SidebarGroupLabel>
+                   <SidebarMenu>
+                     <SideNavItem to="/report/lost" icon={AlertTriangle} label="Report Lost" />
+                     <SideNavItem to="/report/found" icon={HeartHandshake} label="Report Found" />
+                     <SideNavItem to="/asset-vault" icon={Archive} label="Asset Vault" />
+                   </SidebarMenu>
+                 </SidebarGroup>
+               )}
+            </SidebarContent>
 
-          {/* Main Content Area */}
-          <div className="flex-grow flex flex-col relative z-10 overflow-hidden w-full">
-             <header className="h-20 flex-shrink-0 border-b border-border-main flex items-center justify-between px-6 md:px-10 bg-bg-surface/80 backdrop-blur-xl">
+            <SidebarFooter className="p-3 border-t border-white/5 bg-slate-950/20">
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all w-full text-left outline-none group/profile">
+                       <Avatar className="h-8 w-8 border border-white/10 ring-2 ring-uni-500/10 transition-all">
+                         <AvatarImage src={user.photo_url} />
+                         <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-black uppercase">
+                           {user.email.substring(0, 2).toUpperCase()}
+                         </AvatarFallback>
+                       </Avatar>
+                       <div className="flex flex-col min-w-0 flex-grow">
+                          <span className="text-sm font-semibold text-white truncate">{user.email.split('@')[0]}</span>
+                          <span className="text-[11px] font-bold text-slate-400 capitalize">{user.role.replace('_', ' ')}</span>
+                       </div>
+                       <ChevronDown size={14} className="text-slate-600 mr-1" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    side="top" 
+                    align="end" 
+                    sideOffset={12}
+                    className="w-[180px] bg-[#0f172a] border border-border-main p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
+                  >
+                    <DropdownMenuItem 
+                      onClick={handleLogout}
+                      className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white hover:text-black border border-white/5 rounded-xl cursor-pointer transition-all duration-300 group no-underline outline-none focus:bg-white focus:text-black shadow-2xl"
+                    >
+                      <LogOut size={18} className="transition-transform group-hover:scale-110" />
+                      <span className="text-[10px] font-black tracking-[0.2em] uppercase italic">Sign Out Protocol</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
+            </SidebarFooter>
+          </Sidebar>
+
+          <div className="flex-grow flex flex-col relative overflow-hidden">
+            <header className="h-24 flex-shrink-0 border-b border-white/5 flex items-center justify-between px-6 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[40]">
                 <div className="flex items-center gap-4">
-                   <button 
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="lg:hidden w-10 h-10 flex items-center justify-center bg-white/5 rounded-xl border border-white/5 text-slate-400"
-                   >
-                      <i className="fa-solid fa-bars-staggered"></i>
-                   </button>
-                   <div>
-                      <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] md:tracking-[0.3em] mb-1">
-                         {location.pathname === '/student' ? 'dashboard overview' : location.pathname.split('/').pop()?.replace('-', ' ') || 'overview'}
+                  {user && (
+                    <button 
+                      onClick={toggleSidebar}
+                      className="lg:hidden w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 transition-colors active:scale-95 shadow-lg relative z-[50]"
+                    >
+                        <Menu size={24} />
+                    </button>
+                  )}
+                  <div className="text-left space-y-1">
+                      <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic">
+                        {location.pathname === '/student' ? 'Mission Control' : location.pathname.split('/').pop()?.replace('-', ' ') || 'Overview'}
                       </h2>
-                      <div className="flex items-center gap-2">
-                         <div className={`w-2 h-2 rounded-full ${user.is_verified ? 'bg-uni-500' : 'bg-brand-gold'}`}></div>
-                         <span className="text-[9px] md:text-[10px] font-black text-white uppercase tracking-widest">
-                           {user.is_verified ? 'Verified' : 'Pending Review'}
-                         </span>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-1.5 h-1.5 rounded-full ${user?.is_verified ? 'bg-sky-500' : 'bg-amber-500'} animate-pulse`}></div>
+                        <span className="text-xs font-black text-white italic uppercase tracking-widest">{user?.is_verified ? 'Verified Identity' : 'Queue Pending'}</span>
                       </div>
-                   </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4 md:gap-6">
-                   <ThemeToggle />
-                   {user?.role === 'student' && <NotificationCenter />}
-                   <div className="hidden sm:block h-8 w-px bg-white/10 mx-2"></div>
-                   
-                   <div className="hidden md:flex flex-col items-end mr-2">
-                       <span className="text-[10px] font-black text-text-header uppercase tracking-widest truncate max-w-[120px]">{user.email.split('@')[0]}</span>
-                       <span className="text-[8px] font-black text-text-muted uppercase tracking-[0.2em]">{user.role}</span>
-                   </div>
-
-                   <button 
-                     onClick={handleLogout}
-                     className="w-10 h-10 md:w-auto md:px-5 flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all border border-red-500/20"
-                     title="Sign Out"
-                   >
-                     <i className="fa-solid fa-sign-out text-xs"></i>
-                     <span className="hidden md:inline text-[9px] font-black uppercase tracking-widest">Sign Out</span>
-                   </button>
+                <div className="flex items-center gap-4">
+                  <ThemeToggle />
+                  {user.role === 'student' && <NotificationCenter />}
                 </div>
-             </header>
+            </header>
 
-             <main className="flex-grow overflow-y-auto p-4 md:p-10 custom-scrollbar">
-                <div className={`${location.pathname === '/super/zones' ? 'max-w-[1600px] w-full' : 'max-w-6xl'} mx-auto`}>
-                    {user.role === 'student' && !user.is_verified && (
-                        <div className="mb-8 app-card border-brand-gold/30 bg-brand-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md">
+            <main className="flex-grow overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-[10] text-left">
+              <div className={`${(location.pathname.startsWith('/admin') || location.pathname.startsWith('/super')) ? 'max-w-[1700px] w-full' : 'max-w-6xl'} mx-auto`}>
+                  {user.role === 'student' && !user.is_verified && (
+                      <div className="mb-8 app-card border-brand-gold/30 bg-brand-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md">
                         <div className="flex items-start sm:items-center gap-3 text-left">
                             <span className="text-xl">🏛️</span>
                             <div>
-                               <p className="font-black text-[9px] text-brand-gold uppercase tracking-widest mb-0.5">Verification Status: Pending</p>
-                               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">Your student identity is currently in the queue. An administrator will review your documents shortly.</p>
+                                <p className="font-bold text-[12px] text-brand-gold uppercase tracking-wider mb-0.5">Verification Pending</p>
+                                <p className="text-[13px] text-slate-300 font-medium leading-relaxed">Identity queue active. USG administration will verify your status shortly.</p>
                             </div>
                         </div>
-                        <div className="px-6 py-2 rounded-lg bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[8px] font-black uppercase tracking-[0.2em] flex-shrink-0 w-full sm:w-auto text-center">
-                           Awaiting Admin Approval
-                        </div>
-                        </div>
-                    )}
-
-                    <div key={location.pathname}>
-                        {children}
-                    </div>
-                </div>
-             </main>
+                        <div className="px-6 py-2 rounded-lg bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[11px] font-bold uppercase tracking-wider flex-shrink-0 w-full sm:w-auto text-center">Awaiting Approval</div>
+                      </div>
+                  )}
+                  <div key={location.pathname}>{children}</div>
+              </div>
+            </main>
           </div>
-        </>
-
+        </div>
       ) : (
-        /* Guest Layout (Landing Page) */
-        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed">
-          <BackgroundEffects />
+        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed w-full text-left">
+          {/* Universal Grid Background Overlay */}
+          <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
           
-          <header className="glass-header sticky top-0 z-[60] h-14 flex-shrink-0">
+          <header className="sticky top-0 z-[60] h-24 flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
               <div className="flex justify-between h-full items-center">
-                <Link to="/" className="flex items-center gap-3 group no-underline">
-                  <div className="w-10 h-10 bg-gradient-to-br from-uni-600 to-uni-400 rounded-xl flex items-center justify-center text-white text-xl shadow-lg shadow-uni-500/30 group-hover:rotate-6 transition-transform">
-                    <i className="fa-solid fa-compass"></i>
-                  </div>
+                <Link to="/" className="flex items-center gap-4 group no-underline">
+                  <Logo className="w-10 h-10 text-2xl rounded-xl group-hover:rotate-12 group-hover:scale-105" />
                   <div className="hidden sm:block text-left">
-                    <h1 className="font-display font-bold text-xl tracking-tight text-text-header leading-none">FindIT</h1>
-                    <p className="text-[8px] text-text-muted font-black uppercase tracking-widest mt-0.5">Lost & Found</p>
+                    <h1 className="font-display font-black text-xl tracking-tighter text-white leading-none uppercase italic">FindIT</h1>
+                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1 pl-0.5">Asset Registry</p>
                   </div>
                 </Link>
-                
                 <div className="flex items-center gap-3 md:gap-6">
                   <ThemeToggle />
-                  <Link to="/login" className="text-slate-500 hover:text-white font-black text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-uni-600 hover:bg-uni-500 text-white px-3 md:px-6 py-1.5 md:py-2 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-wide md:tracking-widest transition-all whitespace-nowrap border border-black/5">Register</Link>
+                  <Link to="/login" className="text-slate-500 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] italic transition-colors">Sign In</Link>
+                  <Link to="/register" className="bg-white hover:bg-slate-200 text-black px-8 h-12 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] italic transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Register</Link>
                 </div>
               </div>
             </div>
           </header>
-
-          <main className="flex-grow w-full relative z-10">
-              <div key={location.pathname}>
-                {children}
-              </div>
-          </main>
-          
-          <footer className="py-16 border-t border-brand-border mt-16 bg-slate-950/20 relative z-10 w-full">
-            <div className="max-w-7xl mx-auto px-4 text-center">
-               <p className="text-slate-700 text-[9px] font-black uppercase tracking-[0.3em]">
-                  FindIT &bull; Institutional Recovery Platform &bull; &copy; 2026
-               </p>
-            </div>
+          <main className="flex-grow w-full relative z-10"><div key={location.pathname}>{children}</div></main>
+          <footer className="py-20 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
+              <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] italic opacity-60">
+                FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
+              </p>
           </footer>
         </div>
       )}
-      {/* Floating Feedback Trigger */}
-      <button
-        onClick={() => setIsFeedbackOpen(true)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className="fixed bottom-8 right-8 z-[70] group"
-      >
+
+      <button onClick={() => setIsFeedbackOpen(true)} onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)} className="fixed bottom-8 right-8 z-[70] group">
         <div className="relative">
           <div className="absolute inset-0 bg-uni-500 blur-xl opacity-20 group-hover:opacity-60 transition-opacity"></div>
-          <div 
-            className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden transition-all duration-300 ${isHovered ? 'w-40 px-4 justify-start' : 'w-12 justify-center'}`}
-          >
-            <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-uni-500 text-white flex items-center justify-center border border-white/5">
-              <i className="fa-solid fa-comment-dots text-sm"></i>
-            </div>
-            <span 
-              className={`text-[9px] font-black text-text-header uppercase tracking-widest whitespace-nowrap ml-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 hidden'}`}
-            >
-              Feedback
-            </span>
+          <div className={`relative flex items-center bg-bg-surface border border-uni-500/30 group-hover:border-uni-500 h-12 rounded-xl backdrop-blur-xl overflow-hidden transition-all duration-300 ${isHovered ? 'w-40 px-4 justify-start' : 'w-12 justify-center'}`}>
+            <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-uni-500 text-white flex items-center justify-center border border-white/5"><MessageSquare size={16} /></div>
+            <span className={`text-[9px] font-black text-white uppercase tracking-widest whitespace-nowrap ml-3 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0 hidden'}`}>Feedback</span>
           </div>
         </div>
       </button>
@@ -297,61 +385,13 @@ const Layout = ({ children }) => {
   );
 };
 
-const BackgroundEffects = () => (
-  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    {/* Grid Layer */}
-    <div className="absolute inset-0 bg-grid opacity-[0.03]"></div>
-    
-    {/* Institutional Ambient Glows */}
-    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[400px] bg-uni-500/10 blur-[120px] rounded-full"></div>
-    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1000px] h-[400px] bg-uni-500/15 blur-[120px] rounded-full"></div>
-
-    {/* Dynamic Blobs (Static Version) */}
-    <div className="absolute inset-0">
-      <div 
-        className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-uni-500/10 rounded-full blur-[120px]"
-      />
-      <div 
-        className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-default/10 rounded-full blur-[120px]"
-      />
-    </div>
-
-    {/* Grain Overlay */}
-    <div className="absolute inset-0 bg-noise opacity-[0.03]"></div>
-  </div>
-);
-
-const SideNavLink = ({ to, icon, label, count }) => {
-  const location = useLocation();
-  // Exact match for base routes to prevent highlighting when at sub-routes
-  const isActive = (to === '/admin' || to === '/super')
-    ? location.pathname === to 
-    : location.pathname.startsWith(to);
-
+const Layout = ({ children }) => {
   return (
-    <Link 
-      to={to} 
-      className={`relative flex items-center gap-4 px-5 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest no-underline transition-all group ${
-        isActive ? 'bg-uni-500/10 text-white border border-uni-500/50' : 'text-slate-500 hover:text-slate-300 hover:bg-white/5 border border-transparent'
-      }`}
-    >
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isActive ? 'bg-uni-500 text-white' : 'bg-slate-900 border border-white/5 text-slate-600 group-hover:text-slate-400'}`}>
-        <i className={`fa-solid ${icon} text-sm`}></i>
-      </div>
-      <span className="flex-grow">{label}</span>
-      
-      {count > 0 && (
-        <span className={`px-2 py-0.5 rounded-md text-[8px] font-black ${isActive ? 'bg-white text-uni-600' : 'bg-uni-500/20 text-uni-400'}`}>
-          {count}
-        </span>
-      )}
-
-      {isActive && (
-        <div 
-          className="absolute -left-1 w-1 h-6 rounded-r-full bg-uni-400 border border-uni-400/50"
-        />
-      )}
-    </Link>
+    <TooltipProvider delayDuration={0}>
+      <SidebarProvider>
+        <LayoutContents>{children}</LayoutContents>
+      </SidebarProvider>
+    </TooltipProvider>
   );
 };
 

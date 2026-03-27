@@ -108,7 +108,7 @@ export default {
     },
   },
   plugins: [
-    ({ addBase, addUtilities, theme }) => {
+    ({ addBase, addUtilities, addVariant, theme }) => {
       addUtilities({
         '.border-border': {
           borderColor: "var(--border)",
@@ -117,6 +117,20 @@ export default {
           outlineColor: "var(--ring)",
         },
       })
+      
+      // Base UI Data Variants
+      addVariant('data-open', '&[data-state="open"]')
+      addVariant('data-closed', '&[data-state="closed"]')
+      addVariant('data-active', '&[data-state="active"]')
+      addVariant('data-horizontal', '&[data-orientation="horizontal"]')
+      addVariant('data-vertical', '&[data-orientation="vertical"]')
+      addVariant('data-placeholder', '&[data-placeholder]')
+      addVariant('data-disabled', '&[data-disabled]')
+      
+      // Group variants for scoped components
+      addVariant('group-data-horizontal', ':merge(.group)[data-orientation="horizontal"] &')
+      addVariant('group-data-vertical', ':merge(.group)[data-orientation="vertical"] &')
+      addVariant('group-data-active', ':merge(.group)[data-state="active"] &')
     }
   ],
 }

@@ -114,6 +114,10 @@ class User(Base):
     is_certificate_eligible = Column(Boolean, default=False)
     show_full_name = Column(Boolean, default=False) # Privacy toggle for leaderboard
     
+    # Password Reset
+    password_reset_token = Column(String, nullable=True, index=True)
+    password_reset_expires = Column(DateTime, nullable=True)
+    
     @hybrid_property
     def full_name(self):
         fname = self.first_name or ""

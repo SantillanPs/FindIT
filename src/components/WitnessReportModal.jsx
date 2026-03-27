@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, Send, Shield, ShieldOff, User } from 'lucide-react';
+import { X, Camera, Send, Shield, ShieldOff, User, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
+import { Button } from './ui/Button';
 
 const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
   const { user } = useAuth();
@@ -29,7 +30,6 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       setPhotoUrl(response.data.url);
     } catch (error) {
       console.error('Upload failed', error);
-      // Removed alert
     } finally {
       setUploading(false);
     }
@@ -39,13 +39,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
     e.preventDefault();
     if (!description.trim()) return;
     
-    // Guest validation
-    if (!user) {
-      if (!guestName.trim() || !guestEmail.trim()) {
-        // Silent validation - the button is already disabled or fields are required
-        return;
-      }
-    }
+    if (!user && (!guestName.trim() || !guestEmail.trim())) return;
 
     setLoading(true);
     try {
@@ -58,9 +52,8 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       };
 
       await apiClient.post(`/lost/${report.id}/witness`, payload);
-      onSuccess('Your witness report has been submitted to the USG office for review.');
+      onSuccess('Witness report logged. USG staff will verify this information.');
       onClose();
-      // Reset form
       setDescription('');
       setPhotoUrl('');
       setIsAnonymous(false);
@@ -68,7 +61,6 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       setGuestEmail('');
     } catch (error) {
       console.error('Submission failed', error);
-      // Removed alert
     } finally {
       setLoading(false);
     }
@@ -84,56 +76,59 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-bg-main/80 backdrop-blur-md"
+          className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
         />
         
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.9, opacity: 0, y: 20 }}
-          className="relative w-full max-w-xl glass-panel rounded-[2.5rem] border border-border-main/20 overflow-hidden bg-bg-surface"
+          exit={{ scale: 0.95, opacity: 0, y: 20 }}
+          className="relative w-full max-w-xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)]"
         >
           {/* Header */}
-          <div className="p-8 border-b border-border-main/10 flex items-center justify-between bg-bg-elevated/10">
+          <div className="p-10 border-b border-white/5 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-black text-text-header uppercase tracking-tight">Report as Witness</h2>
-              <p className="text-accent-default text-[10px] font-black uppercase tracking-widest mt-1">Item: {report.item_name}</p>
+              <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Report as Witness</h2>
+              <div className="flex items-center gap-3 mt-2">
+                 <div className="w-1.5 h-1.5 rounded-full bg-rose-500"></div>
+                 <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest italic">Item ID/Asset: {report.id}</p>
+              </div>
             </div>
             <button 
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-bg-elevated/50 flex items-center justify-center text-text-muted hover:bg-bg-elevated hover:text-text-header transition-all border border-border-main/10"
+              className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all border border-white/5"
             >
               <X size={20} />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          <form onSubmit={handleSubmit} className="p-10 space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
             {/* Guest Info Section */}
             {!user && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-3xl bg-bg-elevated/5 border border-border-main/10">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Your Full Name</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8 rounded-[2rem] bg-white/5 border border-white/5">
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Reporter Name</label>
                   <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                    <User className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
                     <input
                       type="text"
                       required
-                      placeholder="Enter your name"
-                      className="input-field pl-12"
+                      placeholder="Your Full Name"
+                      className="w-full h-14 pl-14 pr-6 rounded-xl bg-slate-950/50 border border-white/5 text-xs font-black italic uppercase tracking-widest focus:border-white/20 outline-none transition-all placeholder:text-slate-700"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1">Email Address</label>
+                <div className="space-y-3">
+                  <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Contact Email</label>
                   <div className="relative">
-                    <Send className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={16} />
+                    <Send className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
                     <input
                       type="email"
                       required
-                      placeholder="yourname@email.com"
-                      className="input-field pl-12"
+                      placeholder="edu@email.com"
+                      className="w-full h-14 pl-14 pr-6 rounded-xl bg-slate-950/50 border border-white/5 text-xs font-black italic uppercase tracking-widest focus:border-white/20 outline-none transition-all placeholder:text-slate-700"
                       value={guestEmail}
                       onChange={(e) => setGuestEmail(e.target.value)}
                     />
@@ -144,14 +139,14 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
 
             {/* Description */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1 flex items-center gap-2">
-                <Send size={12} className="text-accent-default" />
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2 italic">
+                <Send size={12} className="text-sky-400" />
                 Witness Statement
               </label>
               <textarea
                 required
-                className="input-field min-h-[120px] py-4 resize-none"
-                placeholder="Where did you see the item? In whose possession? Please be as specific as possible (e.g., 'Saw it with a student in Blue shirt at Canteen')."
+                className="w-full min-h-[140px] p-6 rounded-[2rem] bg-white/5 border border-white/5 text-xs font-black italic uppercase tracking-widest focus:border-white/10 outline-none transition-all placeholder:text-slate-700 resize-none leading-relaxed"
+                placeholder="Where did you see the item? In whose possession? Please be as specific as possible regarding the location and time."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
@@ -159,38 +154,38 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
 
             {/* Photo Upload */}
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-text-muted uppercase tracking-widest ml-1 flex items-center gap-2">
-                <Camera size={12} className="text-accent-default" />
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2 italic">
+                <Camera size={12} className="text-sky-400" />
                 Visual Evidence (Optional)
               </label>
               
               <div className="grid grid-cols-1 gap-4">
                 {photoUrl ? (
-                  <div className="relative group rounded-3xl overflow-hidden aspect-video border-2 border-accent-default/30">
+                  <div className="relative group rounded-[2rem] overflow-hidden aspect-video border border-white/10">
                     <img src={photoUrl} alt="Evidence" className="w-full h-full object-cover" />
                     <button
                       type="button"
                       onClick={() => setPhotoUrl('')}
-                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-4 right-4 w-12 h-12 rounded-2xl bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border border-white/10"
                     >
                       <X size={20} />
                     </button>
                   </div>
                 ) : (
-                  <label className="relative flex flex-col items-center justify-center py-10 border-2 border-dashed border-border-main/20 rounded-[2rem] hover:border-accent-default/30 hover:bg-bg-elevated/5 transition-all cursor-pointer group">
+                  <label className="relative flex flex-col items-center justify-center py-16 border border-dashed border-white/10 rounded-[2rem] hover:border-white/20 hover:bg-white/5 transition-all cursor-pointer group">
                     <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={uploading} />
                     {uploading ? (
                       <div className="flex flex-col items-center gap-4">
-                         <div className="w-10 h-10 border-4 border-accent-default/30 border-t-accent-default rounded-full animate-spin"></div>
-                         <p className="text-[10px] font-black text-accent-default uppercase tracking-widest">Uploading...</p>
+                         <div className="w-10 h-10 border-2 border-sky-500/30 border-t-sky-400 rounded-full animate-spin"></div>
+                         <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest italic">Syncing evidence...</p>
                       </div>
                     ) : (
                       <>
-                        <div className="w-16 h-16 rounded-2xl bg-bg-elevated/50 flex items-center justify-center text-text-muted mb-4 group-hover:scale-110 group-hover:bg-accent-default/10 group-hover:text-accent-default transition-all">
+                        <div className="w-20 h-20 rounded-3xl bg-white/5 flex items-center justify-center text-slate-500 mb-6 group-hover:scale-110 group-hover:bg-sky-500/10 group-hover:text-sky-400 transition-all border border-white/5">
                           <Camera size={32} />
                         </div>
-                        <p className="text-text-header text-xs font-black uppercase tracking-widest">Tap to upload photo</p>
-                        <p className="text-text-muted text-[9px] font-black uppercase tracking-[0.2em] mt-2">Secret snapshots or evidence</p>
+                        <p className="text-white text-xs font-black uppercase tracking-[0.2em] italic">Upload Capture</p>
+                        <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.2em] mt-3 italic">Max file size 5MB</p>
                       </>
                     )}
                   </label>
@@ -199,50 +194,49 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
             </div>
 
             {/* Anonymity Toggle */}
-            <div className="p-6 rounded-3xl bg-bg-elevated/5 border border-border-main/10 flex items-center justify-between group cursor-pointer" onClick={() => setIsAnonymous(!isAnonymous)}>
-              <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isAnonymous ? 'bg-accent-default/10 text-accent-default' : 'bg-bg-elevated/50 text-text-muted'}`}>
-                  {isAnonymous ? <Shield size={24} /> : <ShieldOff size={24} />}
+            <div 
+              className="p-8 rounded-[2rem] bg-white/5 border border-white/5 flex items-center justify-between group cursor-pointer transition-all hover:bg-white/10" 
+              onClick={() => setIsAnonymous(!isAnonymous)}
+            >
+              <div className="flex items-center gap-6">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${isAnonymous ? 'bg-sky-500/20 text-sky-400' : 'bg-white/5 text-slate-600'}`}>
+                  {isAnonymous ? <Shield size={28} /> : <ShieldOff size={28} />}
                 </div>
                 <div>
-                  <h4 className="text-xs font-black text-text-header uppercase tracking-widest">Submit Anonymously</h4>
-                  <p className="text-[9px] font-black text-text-muted uppercase tracking-widest mt-1">Your identity won't be shown to anyone.</p>
+                  <h4 className="text-sm font-black text-white italic uppercase tracking-widest">Confidential Mode</h4>
+                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1 italic">Identity scrubbing protocols active</p>
                 </div>
               </div>
-              <div className={`w-12 h-6 rounded-full relative transition-all ${isAnonymous ? 'bg-accent-default' : 'bg-bg-elevated'}`}>
-                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${isAnonymous ? 'right-1' : 'left-1'}`} />
+              <div className={`w-14 h-7 rounded-full relative transition-all ${isAnonymous ? 'bg-sky-500' : 'bg-slate-800'}`}>
+                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-xl ${isAnonymous ? 'right-1' : 'left-1'}`} />
               </div>
             </div>
 
             {/* Points Benefit Notice */}
             {!isAnonymous && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="p-4 rounded-2xl bg-uni-500/10 border border-uni-500/20 text-uni-400 text-center"
-              >
-                <p className="text-[9px] font-black uppercase tracking-[0.2em]">
-                  <i className="fa-solid fa-star mr-2"></i>
-                  Earn Integrity Points after verification
-                </p>
-              </motion.div>
+              <div className="p-6 rounded-2xl bg-sky-500/5 border border-sky-500/20 text-sky-400/80 text-center animate-in fade-in zoom-in-95 duration-500">
+                <div className="flex items-center justify-center gap-3">
+                   <Star size={14} className="animate-pulse" />
+                   <p className="text-[9px] font-black uppercase tracking-[0.3em] italic">Honor ranking eligible upon verification</p>
+                </div>
+              </div>
             )}
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
-              disabled={loading || uploading}
-              className="w-full py-6 rounded-[1.5rem] bg-accent-default hover:bg-accent-light text-black font-black text-[10px] md:text-xs uppercase tracking-[0.3em] transition-all disabled:opacity-50 border border-black/5 flex items-center justify-center gap-4 group"
+              disabled={loading || uploading || !description.trim()}
+              className="w-full h-20 rounded-2xl bg-white hover:bg-slate-200 text-black font-black text-xs md:text-sm uppercase tracking-[0.3em] italic transition-all disabled:opacity-50 flex items-center justify-center gap-6 group shadow-2xl"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <Send size={16} className="group-hover:translate-x-1 transition-transform" />
-                  Submit Witness Report
+                  Submit Protocol
+                  <Send size={20} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
         </motion.div>
       </div>

@@ -11,17 +11,39 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  CardFooter,
 } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Mail, Key, ChevronRight, AlertCircle, Lock } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-   const [showRecoveryInfo, setShowRecoveryInfo] = useState(false);
-   const { login } = useAuth();
+  const [view, setView] = useState('login'); // 'login' or 'forgot'
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError('');
+    
+    try {
+      await apiClient.post('/auth/forgot-password', { email: resetEmail });
+      setResetSuccess(true);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to send reset link.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,108 +69,175 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[85vh] px-4 relative">
-      <Card className="w-full max-w-md overflow-hidden z-20 my-8 border border-border/50 bg-card/95 backdrop-blur-sm shadow-[0_0_50px_-12px_rgba(2,132,199,0.3)]">
-        <CardHeader className="text-left space-y-2 pt-8">
-          <div className="flex items-center gap-4 mb-1">
-             <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-brand-secondary to-brand-primary rounded-xl flex items-center justify-center text-xl text-white shadow-lg shadow-brand-primary/20">
-                <i className="fa-solid fa-lock"></i>
-             </div>
-             <div className="space-y-0.5">
-               <CardTitle className="text-2xl md:text-3xl font-bold tracking-tight font-sans">
-                 Sign In
-               </CardTitle>
-               <CardDescription className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
-                 FindIT Lost & Found
-               </CardDescription>
-             </div>
-          </div>
-          <p className="text-muted-foreground text-sm pt-2">
+    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 md:py-20 relative overflow-hidden">
+
+      <Card className="w-full max-w-md mx-auto relative z-10 my-8 bg-slate-900/40 border-white/10 backdrop-blur-xl">
+        <CardHeader className="text-center space-y-4">
+          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-white via-white/90 to-slate-500 bg-clip-text text-transparent italic uppercase">
+            Sign In
+          </CardTitle>
+          <CardDescription className="text-slate-400 font-medium italic">
+            FindIT Lost & Found
+          </CardDescription>
+          
+          <p className="text-slate-400 text-xs font-medium italic">
             Enter your credentials to manage your reports and items.
           </p>
+
+          {error && (
+            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500 text-left py-3">
+              <AlertCircle className="h-4 w-4" />
+              <div className="flex flex-col gap-0.5 ml-2">
+                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none">Sign In Error</AlertTitle>
+                <AlertDescription className="text-xs font-medium italic leading-none">
+                  {error}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
         </CardHeader>
 
-        <CardContent className="pt-0">
-          {error && (
-              <div 
-                className="mb-6 p-3 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg text-center"
-              >
-                 {error}
-              </div>
-            )}
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                  <i className="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs z-20"></i>
+        <CardContent>
+          {view === 'login' ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <Input 
                     id="email"
                     placeholder="name@example.com"
                     type="email" 
-                    className="pl-10"
+                    className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)} 
                     required 
                   />
+                </div>
               </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                  <i className="fa-solid fa-key absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs z-20"></i>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between items-end">
+                  <Label htmlFor="password" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Password</Label>
+                  <button 
+                    type="button"
+                    onClick={() => setView('forgot')}
+                    className="text-[9px] font-black text-sky-500/60 hover:text-sky-500 transition-all uppercase tracking-widest italic mb-1"
+                  >
+                    Forgot?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <Input 
                     id="password"
                     placeholder="••••••••"
                     type="password" 
-                    className="pl-10"
+                    className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                   />
+                </div>
               </div>
-              <div className="flex justify-end">
-                <button 
-                  type="button"
-                  onClick={() => setShowRecoveryInfo(!showRecoveryInfo)}
-                  className="text-[10px] font-bold text-brand-primary/60 hover:text-brand-primary hover:underline transition-all uppercase tracking-wider focus:outline-none"
-                >
-                  {showRecoveryInfo ? 'Close Instructions' : 'Forgot password?'}
-                </button>
-              </div>
-              {showRecoveryInfo && (
-                <div className="p-3 bg-brand-primary/5 border border-brand-primary/10 rounded-lg space-y-2 mt-1">
-                  <p className="text-[11px] leading-relaxed text-text-header/80 italic">
-                    "Password recovery is handled via manual verification. Please visit the <strong>USG Office</strong> or the <strong>Student Affairs Desk</strong> with your Student ID to reset your credentials."
-                  </p>
+
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group mt-4"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                    Signing In...
+                  </div>
+                ) : (
+                  <>
+                    Sign In
+                    <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            </form>
+          ) : (
+            <div className="space-y-6">
+              {!resetSuccess ? (
+                <form onSubmit={handleForgotPassword} className="space-y-6">
+                  <div className="space-y-2 text-center pb-2">
+                    <h3 className="text-sm font-black text-white uppercase italic">Account Recovery</h3>
+                    <p className="text-[10px] text-slate-400 italic">Enter your email to receive a secure reset link.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Recovery Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Input 
+                        id="reset-email"
+                        placeholder="yourname@email.com"
+                        type="email" 
+                        className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
+                        value={resetEmail} 
+                        onChange={(e) => setResetEmail(e.target.value)} 
+                        required 
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={resetLoading} 
+                    className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group"
+                  >
+                    {resetLoading ? 'Sending...' : 'Send Reset Link'}
+                    {!resetLoading && <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
+                  </Button>
+                  <button 
+                    type="button"
+                    onClick={() => { setView('login'); setError(''); }}
+                    className="w-full text-[10px] font-black text-slate-500 hover:text-white transition-all uppercase tracking-[0.3em] italic"
+                  >
+                    Back to Login
+                  </button>
+                </form>
+              ) : (
+                <div className="text-center space-y-6 py-4">
+                  <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="h-8 w-8 text-emerald-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-black text-white uppercase italic">Check your Inbox</h3>
+                    <p className="text-[10px] text-slate-400 italic leading-relaxed px-4">
+                      If an account exists for <span className="text-slate-200">{resetEmail}</span>, a recovery link has been generated. 
+                      <br/><br/>
+                      <span className="text-sky-400 font-bold uppercase tracking-widest">Dev Note:</span> Check your backend terminal output for the mock reset link.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => { setView('login'); setResetSuccess(false); setResetEmail(''); }}
+                    className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all"
+                  >
+                    Return to Sign In
+                  </Button>
                 </div>
               )}
             </div>
-
-            <Button 
-              type="submit" 
-              disabled={loading} 
-              className="w-full mt-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  Signing In...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-          </form>
-          
-          <div className="mt-8 pt-6 border-t border-border/40 text-center">
-            <p className="text-muted-foreground text-sm">
-              Don't have an account? 
-              <Link to="/register" className="text-brand-primary hover:text-brand-primary/80 hover:underline font-bold ml-2 transition-colors">Create account</Link>
-            </p>
-          </div>
+          )}
         </CardContent>
+
+        <CardFooter className="flex flex-col gap-4 border-t border-white/5 pt-6 pb-8">
+          {view === 'login' && (
+            <p className="text-slate-400 text-xs font-medium italic">
+              Don't have an account? 
+              <Link to="/register" className="text-sky-400 hover:underline ml-2 font-bold transition-all">Create account</Link>
+            </p>
+          )}
+          {view === 'forgot' && !resetSuccess && (
+            <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl">
+               <p className="text-[9px] leading-relaxed text-slate-500 italic text-center">
+                 "In case of immediate access needs, you may still visit the <span className="text-slate-300">USG Office</span> for manual identity verification."
+               </p>
+            </div>
+          )}
+        </CardFooter>
       </Card>
     </div>
   );

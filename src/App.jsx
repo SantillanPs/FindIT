@@ -13,6 +13,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const GuestReportItem = lazy(() => import('./pages/GuestReportItem'));
 const GuestReportFound = lazy(() => import('./pages/GuestReportFound'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 
 // Student Pages
 const StudentDashboard = lazy(() => import('./pages/Student/StudentDashboard'));
@@ -74,6 +75,7 @@ const AppContent = () => {
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>

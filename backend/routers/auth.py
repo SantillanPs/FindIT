@@ -325,3 +325,45 @@ def update_my_preference(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+@router.post("/forgot-password")
+def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depends(auth.get_db)):
+    email_lower = request.email.lower()
+    user = db.query(database.User).filter(database.User.email == email_lower).first()
+    
+    # Security: Always return success to prevent email enumeration
+    if not user:
+        return {"message": "If an account with that email exists, a reset link has been sent."}
+    
+    import secrets
+    import datetime
+    
+    token = secrets.token_urlsafe(32)
+    user.password_reset_token = token
+    user.password_reset_expires = datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+    db.commit()
+    
+    # Mock Email: In a real app, send this via SMTP
+    # For local testing, we log it to the console
+    reset_link = f"http://localhost:5173/reset-password?token={token}"
+    print(f"\n[MOCK EMAIL] Password Reset Link for {user.email}: {reset_link}\n")
+    
+    return {"message": "If an account with that email exists, a reset link has been sent."}
+
+@router.post("/reset-password")
+def reset_password(request: schemas.ResetPasswordConfirm, db: Session = Depends(auth.get_db)):
+    import datetime
+    user = db.query(database.User).filter(
+        database.User.password_reset_token == request.token,
+        database.User.password_reset_expires > datetime.datetime.utcnow()
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    user.hashed_password = auth.get_password_hash(request.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    db.commit()
+    
+    return {"message": "Password successfully reset. You can now login with your new password."}

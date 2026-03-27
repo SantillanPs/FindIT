@@ -1,7 +1,8 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useMasterData } from '../context/MasterDataContext';
 import { useAuth } from '../context/AuthContext';
+import { AlignLeft, Calendar, Heart, Eye, Search } from 'lucide-react';
 
 const LostReportCard = ({ report, onWitness }) => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const LostReportCard = ({ report, onWitness }) => {
 
   return (
     <div 
-      className="group relative bg-bg-surface/30 backdrop-blur-md rounded-[2rem] border border-white/10 hover:border-accent-default/40 transition-all duration-500 overflow-hidden flex flex-col"
+      className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-rose-500/40 transition-all duration-500 overflow-hidden flex flex-col"
     >
       {/* 1. Image/Header Section */}
       <div className={`relative overflow-hidden bg-bg-elevated/20 transition-all duration-700 ${
@@ -36,12 +37,12 @@ const LostReportCard = ({ report, onWitness }) => {
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-between px-8 bg-gradient-to-br from-bg-elevated to-bg-main">
-             <div className="text-5xl opacity-20 group-hover:scale-110 transition-transform duration-700">
-                {categoryData?.emoji || '🔍'}
+          <div className="w-full h-full flex items-center justify-between px-8 bg-gradient-to-br from-slate-900 to-slate-950">
+             <div className="text-5xl text-slate-500/20 group-hover:scale-110 transition-transform duration-700">
+                <Search className="h-16 w-16" />
              </div>
              <div className="text-right">
-                <div className="text-[11px] font-black text-accent-default uppercase tracking-[0.4em] leading-tight">
+                <div className="text-[11px] font-black text-rose-500 uppercase tracking-[0.4em] leading-tight italic">
                   Lost <br/> Report
                 </div>
              </div>
@@ -89,13 +90,13 @@ const LostReportCard = ({ report, onWitness }) => {
                         {report.potential_zone_names.slice(0, 2).map((name, i) => (
                             <span 
                                 key={i}
-                                className="text-[10px] font-black text-accent-default uppercase tracking-widest bg-accent-default/5 px-2 py-0.5 rounded-full border border-accent-default/20 whitespace-nowrap"
+                                className="text-[10px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/5 px-2 py-0.5 rounded-full border border-white/5 whitespace-nowrap italic"
                             >
                                 {name}
                             </span>
                         ))}
                         {report.potential_zone_names.length > 2 && (
-                            <span className="text-[10px] font-black text-accent-default/60 uppercase tracking-widest px-1 py-0.5">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-1 py-0.5 italic">
                                 +{report.potential_zone_names.length - 2} more
                             </span>
                         )}
@@ -106,8 +107,8 @@ const LostReportCard = ({ report, onWitness }) => {
         {/* Description List */}
         <div className="space-y-3 mb-6 flex-grow">
             <div className="flex items-start gap-3">
-                <div className="mt-1 w-5 h-5 rounded-full bg-accent-default/10 flex items-center justify-center shrink-0 border border-accent-default/20">
-                    <i className="fa-solid fa-align-left text-[10px] text-accent-default"></i>
+                <div className="mt-1 w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 border border-white/5">
+                    <AlignLeft className="h-3 w-3 text-rose-400" />
                 </div>
                 <p className="text-[13px] text-white/80 font-medium leading-relaxed line-clamp-3 italic">
                     {report.description}
@@ -115,8 +116,8 @@ const LostReportCard = ({ report, onWitness }) => {
             </div>
             
             <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-accent-default/10 flex items-center justify-center shrink-0 border border-accent-default/20">
-                    <i className="fa-solid fa-calendar text-[10px] text-accent-default"></i>
+                <div className="w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 border border-white/5">
+                    <Calendar className="h-3 w-3 text-rose-400" />
                 </div>
                 <div className="flex gap-2 items-center">
                     <span className="text-[12px] font-bold text-white">{formattedDate}</span>
@@ -137,9 +138,9 @@ const LostReportCard = ({ report, onWitness }) => {
                     navigate(`/report-found-guest?match=${report.id}`);
                   }
                 }}
-                className="flex-grow bg-accent-default hover:bg-accent-light text-white py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
             >
-                <i className="fa-solid fa-hand-holding-heart"></i>
+                <Heart className="h-4 w-4" />
                 <span>I Found This!</span>
             </button>
             <button 
@@ -147,10 +148,10 @@ const LostReportCard = ({ report, onWitness }) => {
                   e.stopPropagation();
                   onWitness(report);
                 }}
-                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-accent-default hover:bg-accent-default/10 transition-all active:scale-90"
+                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
                 title="I've seen this item!"
             >
-                <i className="fa-solid fa-eye"></i>
+                <Eye className="h-4 w-4" />
             </button>
         </div>
       </div>

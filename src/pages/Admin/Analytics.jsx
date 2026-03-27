@@ -97,8 +97,8 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
       {/* Header & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">System Intelligence</h2>
-          <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Advanced reporting and data analysis</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight">System Intelligence</h2>
+          <p className="text-[13px] text-slate-400 font-medium mt-1">Advanced reporting and data analysis</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
@@ -389,11 +389,11 @@ const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl">
-                <p className="text-[10px] font-black text-white uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{label}</p>
+                <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{label}</p>
                 {payload.map((p, i) => (
                     <div key={i} className="flex justify-between gap-8 mb-1">
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{p.name}:</span>
-                        <span className="text-[9px] font-black text-white">{p.value}</span>
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{p.name}:</span>
+                        <span className="text-2xl font-black text-white">{p.value}</span>
                     </div>
                 ))}
             </div>

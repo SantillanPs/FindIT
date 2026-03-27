@@ -101,12 +101,12 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-10">
       <motion.header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6" variants={itemVariants}>
         <div className="space-y-2">
-            <h1 className="text-3xl font-black text-white tracking-tight uppercase flex items-center gap-4">
-                <Trophy className="text-amber-500" size={32} />
+            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-4">
+                <Trophy className="text-amber-500" size={28} />
                 Integrity Leaderboard
             </h1>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-relaxed">
-               Monitoring community contribution and institutional trustworthiness.
+            <p className="text-[13px] text-slate-400 font-medium mt-1">
+               Monitoring community contribution and institutional trustworthiness
             </p>
         </div>
 

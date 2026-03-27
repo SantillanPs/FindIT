@@ -3,6 +3,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Database, 
+  RefreshCw, 
+  Search
+} from "lucide-react";
 
 // Modular Components
 import InventoryTab from './components/InventoryTab';
@@ -36,7 +45,10 @@ const AdminDashboard = () => {
   
   const location = useLocation();
   const navigate = useNavigate();
-  const currentTab = location.pathname.split('/').pop() === 'admin' ? 'found' : location.pathname.split('/').pop();
+  
+  // Robust tab determination
+  const lastSegment = location.pathname.split('/').filter(Boolean).pop();
+  const currentTab = (!lastSegment || lastSegment === 'admin') ? 'found' : lastSegment;
   
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
@@ -372,71 +384,99 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="space-y-12 pb-32">
-        <div className="flex justify-between items-center bg-slate-900/40 p-6 rounded-3xl border border-white/5">
+    <div className="space-y-8 pb-32">
+        {/* Module Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
           <div className="flex items-center gap-4">
-             <div className="w-10 h-10 rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
-                <i className="fa-solid fa-server text-[16px]"></i>
-             </div>
-             <div>
-                <h3 className="text-sm font-black text-white uppercase tracking-tight">Data Management</h3>
-                <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{currentTab} module active</p>
-             </div>
+            <div className="w-12 h-12 rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20 shadow-inner">
+              <Database size={20} />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Command Center</h2>
+              <div className="flex items-baseline gap-2">
+                <h1 className="text-2xl font-bold text-white tracking-tight">Registry</h1>
+                <Badge variant="outline" className="bg-uni-500/10 text-uni-400 border-uni-500/20 text-[11px] px-2 py-0">
+                  Active
+                </Badge>
+              </div>
+            </div>
           </div>
-          <button 
-            onClick={refreshActiveTab}
-            disabled={isSyncing}
-            className={`flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-2xl border border-white/5 text-[9px] font-black uppercase tracking-widest transition-all ${isSyncing ? 'opacity-50' : ''}`}
-          >
-            {isSyncing ? (
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-                <i className="fa-solid fa-rotate text-[12px]"></i>
-            )}
-            {isSyncing ? 'Syncing...' : 'Sync Data'}
-          </button>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+            <div className="relative group w-full md:w-80">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-uni-400 transition-colors">
+                <Search size={16} />
+              </div>
+              <input 
+                type="text" 
+                placeholder="Search Registry..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-14 bg-slate-900/40 border border-white/10 rounded-2xl pl-12 pr-4 text-sm font-semibold text-white placeholder:text-slate-500 focus:border-uni-500/50 outline-none backdrop-blur-md transition-all"
+              />
+            </div>
+
+            <button 
+              onClick={refreshActiveTab}
+              disabled={isSyncing}
+              className={`flex items-center justify-center gap-3 bg-uni-600 hover:bg-uni-500 text-white h-14 px-8 rounded-2xl border border-uni-400/20 text-sm font-bold uppercase tracking-wider transition-all shadow-lg shadow-uni-600/10 active:scale-[0.98] ${isSyncing ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isSyncing ? (
+                <RefreshCw className="w-4 h-4 animate-spin text-white/70" />
+              ) : (
+                <RefreshCw size={18} className="transition-transform duration-500" />
+              )}
+              {isSyncing ? 'Syncing...' : 'Sync Data'}
+            </button>
+          </div>
         </div>
 
+        {/* Navigation & Content Root */}
+        <Tabs 
+          value={currentTab} 
+          onValueChange={(val) => navigate(`/admin/${val === 'found' ? '' : val}`)}
+          className="w-full space-y-4"
+        >
 
-        <section className="space-y-6">
-          <div className="glass-panel rounded-3xl overflow-hidden border border-white/5">
-            {currentTab === 'found' && (
-               <InventoryTab 
-                inventoryFilter={inventoryFilter}
-                setInventoryFilter={setInventoryFilter}
-                filteredItems={filteredItems}
-                matches={matches}
-                pendingClaims={pendingClaims}
-                navigate={navigate}
-                setSearchTerm={setSearchTerm}
-                handleStatusUpdate={handleStatusUpdate}
-                handleBulkStatusUpdate={handleBulkStatusUpdate}
-                setShowReleaseModal={setShowReleaseModal}
-                setReleaseForm={setReleaseForm}
-                actionLoading={actionLoading}
-                activeFilter={searchTerm}
-              />
-            )}
+          <div className="bg-slate-950/20 rounded-[2rem] border border-white/5 backdrop-blur-sm shadow-2xl overflow-hidden min-h-[600px] w-full">
+            <div className="p-6 md:p-10 lg:p-12 w-full">
+              <TabsContent value="found" className="m-0 focus-visible:outline-none">
+                <InventoryTab 
+                  inventoryFilter={inventoryFilter}
+                  setInventoryFilter={setInventoryFilter}
+                  filteredItems={filteredItems}
+                  matches={matches}
+                  pendingClaims={pendingClaims}
+                  navigate={navigate}
+                  setSearchTerm={setSearchTerm}
+                  handleStatusUpdate={handleStatusUpdate}
+                  handleBulkStatusUpdate={handleBulkStatusUpdate}
+                  setShowReleaseModal={setShowReleaseModal}
+                  setReleaseForm={setReleaseForm}
+                  actionLoading={actionLoading}
+                  activeFilter={searchTerm}
+                />
+              </TabsContent>
 
-            {currentTab === 'claims' && (
-              <ClaimsTab 
-                filteredClaims={filteredClaims}
-                setSelectedClaim={setSelectedClaim}
-                setClaimReviewStep={setClaimReviewStep}
-              />
-            )}
+              <TabsContent value="claims" className="m-0 focus-visible:outline-none">
+                <ClaimsTab 
+                  filteredClaims={filteredClaims}
+                  setSelectedClaim={setSelectedClaim}
+                  setClaimReviewStep={setClaimReviewStep}
+                />
+              </TabsContent>
 
-            {currentTab === 'matches' && (
-              <MatchmakerTab 
-                filteredMatches={filteredMatches}
-                setSelectedMatchPair={setSelectedMatchPair}
-                handleConnectMatch={handleConnectMatch}
-                actionLoading={actionLoading}
-                setPreviewImage={setPreviewImage}
-              />
-            )}
+              <TabsContent value="matches" className="m-0 focus-visible:outline-none">
+                <MatchmakerTab 
+                  filteredMatches={filteredMatches}
+                  setSelectedMatchPair={setSelectedMatchPair}
+                  handleConnectMatch={handleConnectMatch}
+                  actionLoading={actionLoading}
+                  setPreviewImage={setPreviewImage}
+                />
+              </TabsContent>
 
-            {currentTab === 'lost' && (
+              <TabsContent value="lost" className="m-0 focus-visible:outline-none">
                 <LostReportsTab 
                   filteredLostReports={filteredLostReports}
                   matches={matches}
@@ -447,42 +487,38 @@ const AdminDashboard = () => {
                   setPreviewImage={setPreviewImage}
                   activeFilter={searchTerm}
                 />
-            )}
+              </TabsContent>
 
-            {currentTab === 'witnesses' && (
-              <WitnessReportsTab 
-                setPreviewImage={setPreviewImage} 
-                refreshTrigger={syncTriggers.witnesses}
-                setIsSyncing={setIsSyncing}
-              />
-            )}
+              <TabsContent value="witnesses" className="m-0 focus-visible:outline-none">
+                <WitnessReportsTab 
+                  setPreviewImage={setPreviewImage} 
+                  refreshTrigger={syncTriggers.witnesses}
+                  setIsSyncing={setIsSyncing}
+                />
+              </TabsContent>
 
-            {currentTab === 'history' || currentTab === 'released' ? (
-              <ReleasedItemsTable releasedItems={historyFiltered} />
-            ) : null}
+              <TabsContent value="released" className="m-0 focus-visible:outline-none">
+                <ReleasedItemsTable releasedItems={historyFiltered} />
+              </TabsContent>
 
-            {currentTab === 'analytics' && (
-              <div className="p-8 md:p-12">
+              <TabsContent value="analytics" className="m-0 focus-visible:outline-none">
                  <Analytics 
                    onNavigateToTab={(tab) => navigate(`/admin/${tab}`)}
                    onSetSearchTerm={setSearchTerm}
                    refreshTrigger={syncTriggers.analytics}
                    setIsSyncing={setIsSyncing}
                  />
-              </div>
-            )}
+              </TabsContent>
 
-            {currentTab === 'users' && (
-              <div className="p-8 md:p-12 pb-32">
+              <TabsContent value="users" className="m-0 focus-visible:outline-none">
                  <Leaderboard 
                    refreshTrigger={syncTriggers.leaderboard} 
                    setIsSyncing={setIsSyncing}
                  />
-              </div>
-            )}
-
+              </TabsContent>
+            </div>
           </div>
-        </section>
+        </Tabs>
 
         {/* Modals */}
         <AnimatePresence>
