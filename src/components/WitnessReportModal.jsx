@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, Send, Shield, ShieldOff, User, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 
 const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
   const { user } = useAuth();

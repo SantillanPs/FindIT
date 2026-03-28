@@ -369,7 +369,7 @@ const LayoutContents = ({ children }) => {
 
       {/* Modern Feedback Trigger with Smooth Expansion */}
       <div className="fixed bottom-8 right-8 z-[70] group">
-        <div className="absolute inset-0 bg-uni-500 blur-2xl opacity-10 group-hover:opacity-40 transition-opacity"></div>
+        <div className="absolute inset-0 bg-white blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -379,7 +379,7 @@ const LayoutContents = ({ children }) => {
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className={cn(
-                "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-uni-500/50 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-sky-500/20",
+                "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-white/10",
                 isHovered ? "w-52 px-5 opacity-100" : "w-16 px-3"
               )}
             >
