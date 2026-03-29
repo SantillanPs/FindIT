@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Enum, create_engine, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, Enum, create_engine, Text, DateTime, ForeignKey, text
 from sqlalchemy.orm import sessionmaker, declarative_base, relationship, backref
 from sqlalchemy.ext.hybrid import hybrid_property
 import enum
@@ -22,13 +22,32 @@ SQLALCHEMY_DATABASE_URL = env_file_vars.get("DATABASE_URL") or os.getenv("DATABA
 # Fallback to local SQLite if no DATABASE_URL is provided
 if not SQLALCHEMY_DATABASE_URL:
     if os.getenv("VERCEL"):
+        print(f"[{datetime.utcnow()}] WARNING: No DATABASE_URL found in environment variables. Falling back to ephemeral SQLite at /tmp/findit.db.")
         SQLALCHEMY_DATABASE_URL = "sqlite:////tmp/findit.db"
     else:
+        print(f"[{datetime.utcnow()}] INFO: Using local SQLite database at backend/findit.db")
         SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(BASE_DIR, 'findit.db')}"
 
 # PostgreSQL needs a small fix in the URL for SQLAlchemy if it starts with postgres:// (standard for some providers)
-if SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# Mask password in logs
+if SQLALCHEMY_DATABASE_URL:
+    masked_url = SQLALCHEMY_DATABASE_URL
+    if "@" in masked_url:
+        try:
+            prefix, rest = masked_url.split("@", 1)
+            if ":" in prefix:
+                # Handle cases like postgresql://user:pass
+                protocol_part, user_pass = prefix.split("://", 1)
+                if ":" in user_pass:
+                    user, _ = user_pass.rsplit(":", 1)
+                    masked_url = f"{protocol_part}://{user}:****@{rest}"
+        except Exception:
+            masked_url = "REDACTED_URL"
+    
+    print(f"[{datetime.utcnow()}] INFO: Database connection initialized for {SQLALCHEMY_DATABASE_URL.split('://')[0]}://")
 
 # SQLite needs check_same_thread=False, PostgreSQL does not
 connect_args = {}

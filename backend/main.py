@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, Request
+from fastapi import FastAPI, APIRouter, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
@@ -52,9 +52,20 @@ async def setup_logging_timestamps():
     for handler in logging.getLogger("uvicorn").handlers:
         handler.setFormatter(default_formatter)
 
-    # Auto-seed metadata if empty
-    print(f"[{datetime.utcnow()}] INFO: Checking database for initial metadata...")
-    seed_metadata.seed_metadata()
+    # 1. Initialize Database
+    try:
+        print(f"[{datetime.utcnow()}] INFO: Initializing database schema...")
+        database.init_db()
+    except Exception as e:
+        print(f"[{datetime.utcnow()}] ERROR: Database initialization failed: {str(e)}")
+        # We don't raise here so the app can still start and serve health checks
+
+    # 2. Auto-seed metadata if empty
+    try:
+        print(f"[{datetime.utcnow()}] INFO: Checking database for initial metadata...")
+        seed_metadata.seed_metadata()
+    except Exception as e:
+        print(f"[{datetime.utcnow()}] ERROR: Metadata seeding failed: {str(e)}")
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -92,11 +103,24 @@ app.add_middleware(
 )
 
 @app.get("/health", tags=["System"])
-def health_check():
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+def health_check(db: database.SessionLocal = Depends(database.SessionLocal)): # Use SessionLocal directly to test connection
+    db_status = "healthy"
+    try:
+        # Simple test query to check DB connectivity
+        db.execute(database.text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    finally:
+        db.close()
+        
+    return {
+        "status": "online",
+        "database": db_status,
+        "environment": "vercel" if os.getenv("VERCEL") else "local",
+        "timestamp": datetime.utcnow()
+    }
 
-# Initialize DB
-database.init_db()
+# Central v1 Router (Database init moved to startup)
 
 # Central v1 Router
 v1_router = APIRouter(prefix="/api/v1")
