@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import LostReportCard from '../../components/LostReportCard';
 import WitnessReportModal from '../../components/WitnessReportModal';
 import EmptyState from '../../components/EmptyState';
@@ -22,10 +22,17 @@ const LostReportsRegistry = () => {
 
   const fetchLostReports = async () => {
     try {
-      const resp = await apiClient.get('/lost/public');
-      setLostReports(resp.data);
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('*')
+        .eq('is_public', true)
+        .order('last_seen_time', { ascending: false });
+
+      if (error) throw error;
+      setLostReports(data || []);
     } catch (err) {
-      console.error("Failed to fetch lost reports", err);
+      console.error("Failed to fetch lost reports from Supabase", err);
     } finally {
       setLoading(false);
     }

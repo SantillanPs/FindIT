@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -105,16 +105,22 @@ const AdminDashboard = () => {
     if (!isSync) setLoading(true);
     else setIsSyncing(true);
     try {
-      const [foundRes, matchesRes, claimsRes] = await Promise.all([
-        apiClient.get('/admin/found'),
-        apiClient.get('/admin/matches/all'),
-        apiClient.get('/admin/claims/pending')
+      const [foundRes, claimsRes, lostRes] = await Promise.all([
+        supabase.from('found_items').select('*').neq('status', 'released'),
+        supabase.from('claims').select('*, found_items(*)').eq('status', 'pending'),
+        supabase.from('lost_items').select('*')
       ]);
-      setRecentFound(foundRes.data);
-      setMatches(matchesRes.data);
-      setPendingClaims(claimsRes.data);
+      
+      if (foundRes.error) throw foundRes.error;
+      if (claimsRes.error) throw claimsRes.error;
+      if (lostRes.error) throw lostRes.error;
+
+      // Group matches on-the-fly or placeholder for now (Matchmaker tab will handle its own fetch)
+      setRecentFound(foundRes.data || []);
+      setPendingClaims(claimsRes.data || []);
+      setLostReports(lostRes.data || []);
     } catch (error) {
-      console.error('Failed to fetch inventory', error);
+      console.error('Failed to fetch inventory from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -125,10 +131,15 @@ const AdminDashboard = () => {
     if (!isSync) setLoading(true);
     else setIsSyncing(true);
     try {
-      const res = await apiClient.get('/admin/claims/pending');
-      setPendingClaims(res.data);
+      const { data, error } = await supabase
+        .from('claims')
+        .select('*, found_items(*)')
+        .eq('status', 'pending');
+        
+      if (error) throw error;
+      setPendingClaims(data || []);
     } catch (error) {
-      console.error('Failed to fetch claims', error);
+      console.error('Failed to fetch claims from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -139,10 +150,15 @@ const AdminDashboard = () => {
     if (!isSync) setLoading(true);
     else setIsSyncing(true);
     try {
-      const res = await apiClient.get('/admin/matches/all');
-      setMatches(res.data);
+      const { data, error } = await supabase.rpc('get_admin_matches', {
+        match_threshold: 0.3,
+        match_count: 5
+      });
+        
+      if (error) throw error;
+      setMatches(data || []);
     } catch (error) {
-      console.error('Failed to fetch matches', error);
+      console.error('Failed to fetch matches from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -153,10 +169,14 @@ const AdminDashboard = () => {
     if (!isSync) setLoading(true);
     else setIsSyncing(true);
     try {
-      const res = await apiClient.get('/admin/lost/all');
-      setLostReports(res.data);
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('*');
+      
+      if (error) throw error;
+      setLostReports(data || []);
     } catch (error) {
-      console.error('Failed to fetch lost reports', error);
+      console.error('Failed to fetch lost reports from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -167,15 +187,21 @@ const AdminDashboard = () => {
     if (!isSync) setLoading(true);
     else setIsSyncing(true);
     try {
-      const res = await apiClient.get('/analytics/history');
-      setHistoryItems(res.data);
+      const { data, error } = await supabase
+        .from('found_items')
+        .select('*')
+        .eq('status', 'released');
+        
+      if (error) throw error;
+      setHistoryItems(data || []);
     } catch (error) {
-      console.error('Failed to fetch history', error);
+      console.error('Failed to fetch history from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
     }
   };
+ Josephson
 
   // Keep this for updates
   const refreshActiveTab = () => loadTabData(true);
@@ -195,10 +221,18 @@ const AdminDashboard = () => {
     // Fallback for other status updates
     setActionLoading(item.id);
     try {
-      await apiClient.put(`/admin/found/${item.id}/custody`, { notes: `Status updated to ${status}` });
+      const { error } = await supabase
+        .from('found_items')
+        .update({ status })
+        .eq('id', item.id);
+      
+      if (error) throw error;
+      
+      // Update local state for immediate feedback
+      setRecentFound(prev => prev.map(i => i.id === item.id ? { ...i, status } : i));
       await refreshActiveTab();
     } catch (err) {
-      console.error('Update failed', err);
+      console.error('Update failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -208,16 +242,22 @@ const AdminDashboard = () => {
     const { item, verification_note, challenge_question, attributes } = showIntakeModal;
     setActionLoading(item.id);
     try {
-      await apiClient.put(`/admin/found/${item.id}/custody`, { 
-        notes: `Secured in vault with verified attributes`,
-        verification_note,
-        challenge_question,
-        attributes
-      });
+      const { error } = await supabase
+        .from('found_items')
+        .update({ 
+          status: 'in_custody',
+          verification_note,
+          challenge_question,
+          attributes
+        })
+        .eq('id', item.id);
+      
+      if (error) throw error;
+      
       setShowIntakeModal(null);
       await refreshActiveTab();
     } catch (err) {
-      console.error('Intake failed', err);
+      console.error('Intake failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -226,19 +266,22 @@ const AdminDashboard = () => {
   const handleBulkStatusUpdate = async (itemIds, status) => {
     // Optimistic Update
     const prevItems = [...recentFound];
-    setRecentFound(prev => prev.map(i => itemIds.includes(i.id) ? { ...i, status: 'in_custody' } : i));
+    setRecentFound(prev => prev.map(i => itemIds.includes(i.id) ? { ...i, status } : i));
     
     setActionLoading('bulk');
     try {
-      await apiClient.post('/admin/found/bulk/custody', { 
-        item_ids: itemIds,
-        notes: `Bulk status update to ${status}` 
-      });
+      const { error } = await supabase
+        .from('found_items')
+        .update({ status })
+        .in('id', itemIds);
+      
+      if (error) throw error;
     } catch (err) {
-      console.error('Bulk update failed', err);
+      console.error('Bulk update failed in Supabase', err);
       setRecentFound(prevItems); // Rollback
     } finally {
       setActionLoading(null);
+      await refreshActiveTab();
     }
   };
 
@@ -246,18 +289,26 @@ const AdminDashboard = () => {
     if (e) e.preventDefault();
     setActionLoading(showReleaseModal.id);
     try {
-      await apiClient.post(`/admin/found/${showReleaseModal.id}/direct-release`, {
-        released_to_name: releaseForm.name,
-        released_to_id_number: releaseForm.id_number,
-        released_by_name: user.full_name || 'Admin Staff',
-        released_to_photo_url: releaseForm.photo_url
-      });
+      const { error } = await supabase
+        .from('found_items')
+        .update({
+          status: 'released',
+          released_to_name: releaseForm.name,
+          released_to_id_number: releaseForm.id_number,
+          released_by_name: user?.full_name || 'Admin Staff',
+          released_to_photo_url: releaseForm.photo_url,
+          released_at: new Date().toISOString()
+        })
+        .eq('id', showReleaseModal.id);
+        
+      if (error) throw error;
+
       setShowReleaseModal(null);
       setReleaseStep(1);
       setReleaseForm({ name: '', id_number: '', photo_url: '' });
       await refreshActiveTab();
     } catch (err) {
-      console.error('Release failed', err);
+      console.error('Release failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -266,13 +317,30 @@ const AdminDashboard = () => {
   const handleClaimReview = async (claimId, status) => {
     setActionLoading(`claim-${claimId}`);
     try {
-      await apiClient.post(`/admin/claims/${claimId}/review`, { 
-        status, 
-        admin_notes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
-      });
+      const { error } = await supabase
+        .from('claims')
+        .update({ 
+          status, 
+          admin_notes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
+        })
+        .eq('id', claimId);
+        
+      if (error) throw error;
+
+      // Also update the item status if approved
+      if (status === 'approved') {
+          const claim = pendingClaims.find(c => c.id === claimId);
+          if (claim && claim.found_item_id) {
+              await supabase
+                .from('found_items')
+                .update({ status: 'claimed' })
+                .eq('id', claim.found_item_id);
+          }
+      }
+
       await refreshActiveTab();
     } catch (err) {
-      console.error('Review failed', err);
+      console.error('Review failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -281,13 +349,23 @@ const AdminDashboard = () => {
   const handleConnectMatch = async (foundId, lostId) => {
     setActionLoading(`match-${foundId}-${lostId}`);
     try {
-      await apiClient.post('/admin/matches/connect', { 
-        found_item_id: foundId, 
-        lost_item_id: lostId 
-      });
+      // In Supabase, we mark items as 'claimed' or 'matched'
+      // Or we can just log this in audit_logs for now as we don't have a matches table
+      const { error: fError } = await supabase
+        .from('found_items')
+        .update({ status: 'claimed' })
+        .eq('id', foundId);
+        
+      const { error: lError } = await supabase
+        .from('lost_items')
+        .update({ status: 'resolved' })
+        .eq('id', lostId);
+
+      if (fError || lError) throw (fError || lError);
+      
       await refreshActiveTab();
     } catch (err) {
-      console.error('Connection failed', err);
+      console.error('Connection failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -296,14 +374,20 @@ const AdminDashboard = () => {
   const handleLostReportUpdate = async (reportId, updates) => {
     setActionLoading(`lost-${reportId}`);
     try {
-      await apiClient.put(`/admin/lost/${reportId}/status`, updates);
+      const { error } = await supabase
+        .from('lost_items')
+        .update(updates)
+        .eq('id', reportId);
+        
+      if (error) throw error;
       await refreshActiveTab();
     } catch (err) {
-      console.error('Lost report update failed', err);
+      console.error('Lost report update failed in Supabase', err);
     } finally {
       setActionLoading(null);
     }
   };
+ Josephson
 
   // Filter Logic
   const filteredItems = recentFound.filter(item => {

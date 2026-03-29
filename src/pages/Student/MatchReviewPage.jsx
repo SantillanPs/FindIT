@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 const MatchReviewPage = () => {
@@ -15,13 +15,17 @@ const MatchReviewPage = () => {
     useEffect(() => {
         const fetchMatch = async () => {
             try {
-                // Use the student-accessible secure endpoints
                 const [lostResp, foundResp] = await Promise.all([
-                    apiClient.get(`/lost/my-reports/${lostId}`), 
-                    apiClient.get(`/found/match-detail/${foundId}`) 
+                    supabase.from('lost_items').select('*').eq('id', lostId).single(),
+                    supabase.from('found_items').select('*').eq('id', foundId).single()
                 ]);
+                
+                if (lostResp.error) throw lostResp.error;
+                if (foundResp.error) throw foundResp.error;
+                
                 setMatchData({ lost: lostResp.data, found: foundResp.data });
             } catch (err) {
+                console.error("Match load error", err);
                 setError('Could not load match details.');
             } finally {
                 setLoading(false);
@@ -32,12 +36,35 @@ const MatchReviewPage = () => {
 
     const handleAction = async (action) => {
         try {
-            await apiClient.post(`/lost/${lostId}/matches/${foundId}/respond`, { action });
+            const status = action === 'confirm' ? 'confirmed' : 'rejected';
+            
+            // Upsert match response
+            const { error } = await supabase
+                .from('matches')
+                .upsert({
+                    found_item_id: foundId,
+                    lost_item_id: lostId,
+                    status: status,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'found_item_id, lost_item_id' });
+                
+            if (error) throw error;
+            
+            // If confirmed, update item status
+            if (status === 'confirmed') {
+                await supabase
+                    .from('found_items')
+                    .update({ status: 'claimed' })
+                    .eq('id', foundId);
+            }
+            
             navigate('/student');
         } catch (err) {
+            console.error("Action error", err);
             setError('Failed to process response.');
         }
     };
+ Josephson
 
     if (loading) return <div className="p-20 text-center text-white">Loading Verification Data...</div>;
 

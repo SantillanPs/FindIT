@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,20 +36,22 @@ const ResetPassword = () => {
     setError('');
 
     try {
-      await apiClient.post('/auth/reset-password', {
-        token: token,
-        new_password: password
+      const { error } = await supabase.auth.updateUser({
+        password: password
       });
+
+      if (error) throw error;
+      
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to reset password. The link may be invalid or expired.');
+      setError(err.message || 'Failed to reset password. The link may be invalid or expired.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!token) {
+  if (!token && !supabase.auth.getSession()) {
     return (
       <div className="flex items-center justify-center min-h-[80vh] px-4">
         <Alert variant="destructive" className="max-w-md">

@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 import {
   Dialog,
@@ -93,25 +93,42 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     try {
       let screenshotUrl = null;
       if (screenshot) {
-        const uploadData = new FormData();
-        uploadData.append('file', screenshot);
-        const uploadRes = await apiClient.post('/upload', uploadData);
-        screenshotUrl = uploadRes.data.url;
+        const fileExt = screenshot.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `feedback/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(filePath, screenshot);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('images')
+          .getPublicUrl(filePath);
+          
+        screenshotUrl = publicUrl;
       }
 
-      await apiClient.post('/feedbacks', {
-        ...formData,
-        screenshot_url: screenshotUrl,
-        page_url: window.location.href,
-        browser_info: navigator.userAgent,
-      });
+      const { error } = await supabase
+        .from('feedbacks')
+        .insert([{
+          ...formData,
+          screenshot_url: screenshotUrl,
+          page_url: window.location.href,
+          browser_info: navigator.userAgent,
+          user_id: user?.id || null,
+          status: 'pending'
+        }]);
+
+      if (error) throw error;
 
       setFormData({ type: 'general', subject: '', message: '' });
       setScreenshot(null);
       setPreviewUrl(null);
       onClose();
     } catch (error) {
-      console.error('Failed to submit feedback', error);
+      console.error('Failed to submit feedback to Supabase', error);
     } finally {
       setIsSubmitting(false);
     }

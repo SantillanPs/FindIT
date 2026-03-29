@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const HallOfIntegrity = () => {
   const [leaderboardType, setLeaderboardType] = useState('students');
@@ -15,14 +15,33 @@ const HallOfIntegrity = () => {
   const fetchLeaderboardData = async () => {
     setLoading(true);
     try {
-      const [collegesResp, studentsResp] = await Promise.all([
-        apiClient.get('/admin/leaderboard/departments'),
-        apiClient.get('/auth/leaderboard')
-      ]);
-      setTopColleges(collegesResp.data);
-      setTopStudents(studentsResp.data);
+      // Fetch department leaderboard from the view we created earlier
+      const { data: colleges, error: colError } = await supabase
+        .from('department_leaderboard')
+        .select('*');
+
+      // Fetch student leaderboard from users table
+      const { data: students, error: studError } = await supabase
+        .from('users')
+        .select('id, full_name, email, department, integrity_points')
+        .eq('role', 'student')
+        .gt('integrity_points', 0)
+        .order('integrity_points', { ascending: false })
+        .limit(20);
+
+      if (colError) throw colError;
+      if (studError) throw studError;
+
+      // Map students to include masked name for privacy
+      const maskedStudents = (students || []).map(s => ({
+        ...s,
+        full_name_masked: s.full_name ? `${s.full_name.split(' ')[0]} ${s.full_name.split(' ').slice(1).map(n => n[0] + '.').join(' ')}` : 'Anonymous Student'
+      }));
+
+      setTopColleges(colleges || []);
+      setTopStudents(maskedStudents);
     } catch (err) {
-      console.error("Failed to fetch leaderboard data", err);
+      console.error("Failed to fetch leaderboard data from Supabase", err);
     } finally {
       setLoading(false);
     }

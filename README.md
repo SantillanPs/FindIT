@@ -1,16 +1,51 @@
-# React + Vite
+# FindIT: Institutional Asset Recovery Protocol
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+FindIT is a high-performance, community-driven asset recovery platform designed for modern university environments. Built with a **Supabase-native architecture**, it eliminates legacy backend overhead to provide real-time sighted intelligence, semantic item matching, and secure recovery workflows.
 
-Currently, two official plugins are available:
+## 🚀 Key Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Semantic Matchmaker**: Leveraging `pgvector` for high-speed similarity search between lost and found assets.
+- **Communal Recovery Network**: Real-time witness reporting and sighting verification protocols.
+- **Administrative Command Center**: Comprehensive analytics, staff management, and automated claim adjudication.
+- **Secure Asset Vault**: Encrypted personal inventory management for student assets.
+- **Zero-Latency Interface**: Built with React + Vite and Framer Motion for a premium, responsive experience.
 
-## React Compiler
+## 🛠️ Technology Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Core**: React 19, Vite 7
+- **Database**: Supabase (PostgreSQL with `pgvector`)
+- **Storage**: Supabase Storage
+- **Logic**: Supabase PL/pgSQL RPCs
+- **Styling**: Vanilla CSS, Shadcn UI, Lucide Icons
+- **Animation**: Framer Motion
 
-## Expanding the ESLint configuration
+## 📦 Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Environment Configuration
+Create a `.env` file in the root directory:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+### Installation
+```bash
+npm install
+```
+
+### Local Development
+```bash
+npm run dev
+```
+
+### Production Build
+```bash
+npm run build
+```
+
+## 🏗️ Architecture Note
+
+This project is fully **Supabase-native**. All legacy Python/FastAPI components have been decommissioned. Matching logic and data aggregation are now handled directly by Supabase RPCs, ensuring maximum efficiency and simplified deployment.
+
+---
+FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026

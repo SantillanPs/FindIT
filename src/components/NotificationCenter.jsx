@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
@@ -16,19 +16,29 @@ const NotificationCenter = () => {
 
   const fetchNotifications = async () => {
     try {
-      const resp = await apiClient.get('/notifications');
-      setNotifications(resp.data);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifications(data || []);
     } catch (err) {
-      console.error('Failed to fetch notifications');
+      console.error('Failed to fetch notifications from Supabase', err);
     }
   };
 
   const markAsRead = async (id) => {
     try {
-      await apiClient.put(`/notifications/${id}/read`, { is_read: true });
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id);
+
+      if (error) throw error;
       fetchNotifications();
     } catch (err) {
-      console.error('Failed to mark as read');
+      console.error('Failed to mark as read in Supabase', err);
     }
   };
 

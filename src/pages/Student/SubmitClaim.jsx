@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import ImageUpload from '../../components/ImageUpload';
 import { useAuth } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
@@ -44,14 +44,21 @@ const SubmitClaim = () => {
 
   const fetchItem = async () => {
     try {
-      const response = await apiClient.get('/found/public');
-      const foundItem = response.data.find(i => i.id === parseInt(itemId));
-      if (foundItem) {
-        setItem(foundItem);
+      const { data, error } = await supabase
+        .from('found_items')
+        .select('*')
+        .eq('id', itemId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setItem(data);
       } else {
         setError('Registry entry not found or no longer available.');
       }
     } catch (err) {
+      console.error('Fetch error:', err);
       setError('System error retrieving item context.');
     } finally {
       setLoading(false);
@@ -64,6 +71,8 @@ const SubmitClaim = () => {
     setError('');
 
     try {
+      const genTrackingId = user ? null : `TRK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       const payload = {
         found_item_id: parseInt(itemId),
         proof_description: proof,
@@ -74,18 +83,28 @@ const SubmitClaim = () => {
         contact_method: contactMethod,
         contact_info: contactInfo,
         course_department: courseDepartment,
-        attributes: attributes
+        attributes_json: JSON.stringify(attributes),
+        student_id: user?.id || null,
+        status: 'pending',
+        tracking_id: genTrackingId,
+        created_at: new Date().toISOString()
       };
 
-      const response = await apiClient.post('/claims/submit', payload);
+      const { data, error } = await supabase
+        .from('claims')
+        .insert([payload])
+        .select()
+        .single();
       
-      if (!user && response.data.tracking_id) {
-        setTrackingId(response.data.tracking_id);
+      if (error) throw error;
+      
+      if (!user && genTrackingId) {
+        setTrackingId(genTrackingId);
       } else {
         navigate('/my-claims');
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Submission failure. Please try again.');
+      setError(err.message || 'Submission failure. Please try again.');
       setStep(4); // Go back to proof if error
     } finally {
       setSubmitting(false);

@@ -23,6 +23,9 @@ __pycache__/
 !backend/findit.db
 
 
+.agent
+
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

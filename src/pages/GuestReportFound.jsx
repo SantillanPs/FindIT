@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
@@ -52,10 +52,27 @@ const GuestReportFound = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const resp = await apiClient.get('/categories/stats');
-        setCategoryStats(resp.data);
+        // Fetch category counts from found_items
+        const { data, error } = await supabase
+          .from('found_items')
+          .select('category');
+        
+        if (error) throw error;
+        
+        // Group by category manually or use a specialized view if needed
+        const statsMap = (data || []).reduce((acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const formattedStats = Object.keys(statsMap).map(cat => ({
+          category: cat,
+          count: statsMap[cat]
+        }));
+
+        setCategoryStats(formattedStats);
       } catch (err) {
-        console.error("Failed to fetch cluster stats", err);
+        console.error("Failed to fetch category stats from Supabase", err);
       }
     };
     fetchStats();
@@ -63,15 +80,22 @@ const GuestReportFound = () => {
     const fetchMatchedReport = async () => {
       if (matchId) {
         try {
-          const resp = await apiClient.get(`/lost/public/${matchId}`); 
-          setMatchedReport(resp.data);
+          const { data, error } = await supabase
+            .from('lost_items')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+          
+          if (error) throw error;
+          
+          setMatchedReport(data);
           setFormData(prev => ({
             ...prev,
-            category: resp.data.category,
+            category: data.category,
             matched_lost_id: parseInt(matchId)
           }));
         } catch (err) {
-          console.error("Failed to fetch matched report", err);
+          console.error("Failed to fetch matched report from Supabase", err);
         }
       }
     };
@@ -94,12 +118,28 @@ const GuestReportFound = () => {
         finalData.item_name = formData.category;
       }
 
-      const resp = await apiClient.post('/found/report/guest', finalData);
-      setReportData(resp.data);
+      // Add default metadata
+      const reportPayload = {
+        ...finalData,
+        status: 'reported',
+        reporter_type: 'guest',
+        is_verified: false,
+        created_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('found_items')
+        .insert([reportPayload])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setReportData(data);
       setSuccess(true);
       window.scrollTo(0, 0);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

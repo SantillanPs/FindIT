@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import apiClient from '../../api/client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import AchievementBadge from '../../components/AchievementBadge';
 
@@ -18,35 +18,43 @@ const StudentDashboard = () => {
   const [pendingMatches, setPendingMatches] = useState([]);
 
   useEffect(() => {
-    fetchDashData();
-  }, []);
+    if (user) {
+      fetchDashData();
+    }
+  }, [user]);
 
   const fetchDashData = async () => {
     setLoading(true);
     try {
-      const [pLostRes, pFoundRes, pubFoundRes, pubLostRes, deptRes, assetRes] = await Promise.allSettled([
-        apiClient.get('/lost/my-reports'),
-        apiClient.get('/found/my-reports'),
-        apiClient.get('/found/public'),
-        apiClient.get('/lost/public'),
-        apiClient.get('/admin/leaderboard/departments'),
-        apiClient.get('/assets/')
+      const [pLostRes, pFoundRes, pubFoundRes, pubLostRes, deptsRes, assetsRes, notifsRes] = await Promise.all([
+        supabase.from('lost_items').select('*').eq('guest_email', user.email),
+        supabase.from('found_items').select('*').eq('guest_email', user.email),
+        supabase.from('found_items').select('*').order('found_time', { ascending: false }).limit(3),
+        supabase.from('lost_items').select('*').order('last_seen_time', { ascending: false }).limit(3),
+        supabase.from('department_leaderboard').select('*'),
+        supabase.from('assets').select('*'),
+        supabase.from('notifications').select('*').eq('user_id', user.id).eq('is_read', false)
       ]);
       
-      if (pLostRes.status === 'fulfilled') setPersonalLost(pLostRes.value.data);
-      if (pFoundRes.status === 'fulfilled') setPersonalFound(pFoundRes.value.data);
-      if (pubFoundRes.status === 'fulfilled') setPublicFound(pubFoundRes.value.data.slice(0, 3));
-      if (pubLostRes.status === 'fulfilled') setPublicLost(pubLostRes.value.data.slice(0, 3));
-      if (assetRes.status === 'fulfilled') setAssets(assetRes.value.data);
-      if (deptRes.status === 'fulfilled' && user?.department) {
-        const rankings = deptRes.value.data;
+      setPersonalLost(pLostRes.data || []);
+      setPersonalFound(pFoundRes.data || []);
+      setPublicFound(pubFoundRes.data || []);
+      setPublicLost(pubLostRes.data || []);
+      setAssets(assetsRes.data || []);
+      
+      if (deptsRes.data && user.department) {
+        const rankings = deptsRes.data;
         const index = rankings.findIndex(r => r.department === user.department);
-        if (index !== -1) setDeptRank({ rank: index + 1, total: rankings.length, points: rankings[index].total_points });
+        if (index !== -1) {
+          setDeptRank({ 
+            rank: index + 1, 
+            total: rankings.length, 
+            points: rankings[index].total_points 
+          });
+        }
       }
 
-      // Fetch potential matches (notifications or direct check)
-      const notifRes = await apiClient.get('/notifications');
-      const matches = notifRes.data.filter(n => !n.is_read && n.title.includes("Direct Match"));
+      const matches = (notifsRes.data || []).filter(n => n.title?.includes("Direct Match"));
       setPendingMatches(matches);
     } catch (error) {
       console.error('Fatal dashboard sync error', error);

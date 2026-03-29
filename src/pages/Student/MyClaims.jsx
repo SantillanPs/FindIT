@@ -1,26 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 import EmptyState from '../../components/EmptyState';
 import ResolutionTimeline from './components/ResolutionTimeline';
 
 const MyClaims = () => {
+  const { user } = useAuth();
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [schedulingClaim, setSchedulingClaim] = useState(null);
   const [pickupTime, setPickupTime] = useState("");
 
   useEffect(() => {
-    fetchMyClaims();
-  }, []);
+    if (user?.id) {
+        fetchMyClaims();
+    }
+  }, [user]);
 
   const fetchMyClaims = async () => {
     try {
-      const response = await apiClient.get('/claims/my-claims');
-      setClaims(response.data);
+      const { data, error } = await supabase
+        .from('claims')
+        .select('*, found_items(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      
+      // Flatten for UI if necessary
+      const formatted = (data || []).map(c => ({
+          ...c,
+          found_item_category: c.found_items?.category
+      }));
+      
+      setClaims(formatted);
     } catch (error) {
-      console.error('Failed to fetch my claims', error);
+      console.error('Failed to fetch my claims from Supabase', error);
     } finally {
       setLoading(false);
     }
@@ -31,19 +48,23 @@ const MyClaims = () => {
     if (!schedulingClaim || !pickupTime) return;
 
     try {
-      await apiClient.patch(`/claims/${schedulingClaim.id}/schedule-pickup`, {
-        scheduled_pickup_time: new Date(pickupTime).toISOString()
-      });
+      const { error } = await supabase
+        .from('claims')
+        .update({
+          scheduled_pickup_time: new Date(pickupTime).toISOString()
+        })
+        .eq('id', schedulingClaim.id);
+        
+      if (error) throw error;
+      
       setSchedulingClaim(null);
       setPickupTime("");
       fetchMyClaims();
-      fetchMyClaims();
-      // Removed success alert for non-intrusive UI
     } catch (error) {
-      console.error("Failed to schedule pickup", error);
-      // Removed error alert
+      console.error("Failed to schedule pickup in Supabase", error);
     }
   };
+ Josephson
 
   const containerVariants = {
     hidden: { opacity: 0 },

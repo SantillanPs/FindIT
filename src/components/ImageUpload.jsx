@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 const ImageUpload = ({ onUploadSuccess, value }) => {
   const [uploading, setUploading] = useState(false);
@@ -22,23 +22,22 @@ const ImageUpload = ({ onUploadSuccess, value }) => {
     setUploading(true);
     setError('');
 
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const response = await apiClient.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
       
-      const { url } = response.data;
-      // Get the full URL (prepend the base if it's relative)
-      const fullUrl = url.startsWith('http') 
-        ? url 
-        : `http://${window.location.hostname}:8000${url}`;
-      
-      onUploadSuccess(fullUrl);
+      onUploadSuccess(publicUrl);
     } catch (err) {
       console.error('Upload failed', err);
       setError('Image upload failed. Please try again.');

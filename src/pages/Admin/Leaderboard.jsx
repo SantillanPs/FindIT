@@ -4,7 +4,7 @@ import {
   Trophy, Shield, AlertTriangle, UserX, UserCheck, 
   ArrowUpCircle, ArrowDownCircle, Search, Filter 
 } from 'lucide-react';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const [users, setUsers] = useState([]);
@@ -19,10 +19,15 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const fetchLeaderboard = async (isSync = false) => {
     if (isSync) setIsSyncing(true);
     try {
-      const response = await apiClient.get('/admin/leaderboard');
-      setUsers(response.data);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('integrity_points', { ascending: false });
+        
+      if (error) throw error;
+      setUsers(data || []);
     } catch (error) {
-      console.error('Failed to fetch leaderboard', error);
+      console.error('Failed to fetch leaderboard from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -32,13 +37,16 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const adjustReputation = async (userId, points, strikes) => {
     setActionLoading(userId);
     try {
-      await apiClient.put(`/admin/users/${userId}/reputation`, {
-        points_modifier: points,
-        strikes_modifier: strikes
+      const { error } = await supabase.rpc('adjust_user_reputation', {
+        user_id: userId,
+        points_mod: points,
+        strikes_mod: strikes
       });
+      
+      if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to adjust reputation');
+      console.error('Failed to adjust reputation in Supabase', err);
     } finally {
       setActionLoading(null);
     }
@@ -47,10 +55,15 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const toggleVerification = async (userId, currentStatus) => {
     setActionLoading(`verify-${userId}`);
     try {
-      await apiClient.put(`/admin/users/${userId}/verify`, { is_verified: !currentStatus });
+      const { error } = await supabase
+        .from('users')
+        .update({ is_verified: !currentStatus })
+        .eq('id', userId);
+        
+      if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to update verification status.');
+      console.error('Failed to update verification status in Supabase');
     } finally {
       setActionLoading(null);
     }
@@ -59,10 +72,15 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const toggleCertificate = async (userId, currentStatus) => {
     setActionLoading(`cert-${userId}`);
     try {
-      await apiClient.put(`/admin/users/${userId}/certificate`, { is_eligible: !currentStatus });
+      const { error } = await supabase
+        .from('users')
+        .update({ is_certificate_eligible: !currentStatus })
+        .eq('id', userId);
+        
+      if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to toggle certificate eligibility');
+      console.error('Failed to toggle certificate eligibility in Supabase');
     } finally {
       setActionLoading(null);
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
 
 const AuditLogs = () => {
@@ -16,10 +16,15 @@ const AuditLogs = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await apiClient.get('/admin/audit-logs');
-      setLogs(res.data);
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) throw error;
+      setLogs(data || []);
     } catch (err) {
-      console.error('Failed to fetch audit logs', err);
+      console.error('Failed to fetch audit logs from Supabase', err);
       setError('Could not load system logs. Please check your permissions.');
     } finally {
       setLoading(false);

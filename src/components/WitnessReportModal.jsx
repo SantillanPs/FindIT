@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, Send, Shield, ShieldOff, User, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 import { Button } from './ui/button';
 
 const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
@@ -20,16 +20,24 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const response = await apiClient.post('/media/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setPhotoUrl(response.data.url);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `witnesses/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setPhotoUrl(publicUrl);
     } catch (error) {
-      console.error('Upload failed', error);
+      console.error('Upload to Supabase failed', error);
     } finally {
       setUploading(false);
     }
@@ -43,15 +51,21 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
 
     setLoading(true);
     try {
-      const payload = {
-        witness_description: description,
-        witness_photo_url: photoUrl,
-        is_anonymous: isAnonymous,
-        guest_name: user ? null : guestName,
-        guest_email: user ? null : guestEmail,
-      };
+      const { error } = await supabase
+        .from('witness_reports')
+        .insert([{
+          lost_item_id: report.id,
+          reporter_id: user?.id || null,
+          witness_description: description,
+          witness_photo_url: photoUrl,
+          is_anonymous: isAnonymous,
+          guest_name: user ? null : guestName,
+          guest_email: user ? null : guestEmail,
+          status: 'pending'
+        }]);
 
-      await apiClient.post(`/lost/${report.id}/witness`, payload);
+      if (error) throw error;
+
       onSuccess('Witness report logged. USG staff will verify this information.');
       onClose();
       setDescription('');
@@ -60,7 +74,7 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
       setGuestName('');
       setGuestEmail('');
     } catch (error) {
-      console.error('Submission failed', error);
+      console.error('Submission to Supabase failed', error);
     } finally {
       setLoading(false);
     }

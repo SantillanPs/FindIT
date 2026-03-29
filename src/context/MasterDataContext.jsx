@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 const MasterDataContext = createContext();
 
@@ -13,19 +13,25 @@ export const MasterDataProvider = ({ children }) => {
 
     useEffect(() => {
         const initializeSystem = async () => {
-            // Step 1: Fetch critical bootstrap data (Categories, Colleges)
             try {
-                const initResponse = await apiClient.get('/init/');
-                setCategories(initResponse.data.categories);
-                setColleges(initResponse.data.colleges);
+                // Step 1: Fetch Categories and Colleges in parallel
+                const [categoriesRes, collegesRes] = await Promise.all([
+                    supabase.from('master_categories').select('*').eq('is_active', true),
+                    supabase.from('master_colleges').select('*').eq('is_active', true)
+                ]);
+
+                if (categoriesRes.error) throw categoriesRes.error;
+                if (collegesRes.error) throw collegesRes.error;
+
+                setCategories(categoriesRes.data || []);
+                setColleges(collegesRes.data || []);
                 
-                // Set loading to false as soon as critical UI data is ready
                 setLoading(false);
                 
-                // Step 2: Fetch non-critical data (Leaderboard) in background
+                // Step 2: Fetch Leaderboards
                 fetchLeaderboard();
             } catch (err) {
-                console.error('Critical initialization failed', err);
+                console.error('Supabase initialization failed', err);
                 setError(err);
                 setLoading(false);
             }
@@ -33,10 +39,46 @@ export const MasterDataProvider = ({ children }) => {
 
         const fetchLeaderboard = async () => {
             try {
-                const response = await apiClient.get('/leaderboard/');
-                setLeaderboard(response.data);
+                // Use parallel fetching with Promise.all
+                const [studentsRes, deptsRes] = await Promise.all([
+                    supabase
+                        .from('users')
+                        .select('id, first_name, last_name, show_full_name, department, integrity_points')
+                        .eq('role', 'student')
+                        .order('integrity_points', { ascending: false })
+                        .limit(5),
+                    supabase
+                        .from('department_leaderboard')
+                        .select('*')
+                ]);
+
+                if (studentsRes.error) throw studentsRes.error;
+                if (deptsRes.error) throw deptsRes.error;
+
+                // Apply masking in the frontend if show_full_name is false
+                const maskedStudents = (studentsRes.data || []).map((user, i) => {
+                    const fname = user.first_name || "";
+                    const lname = user.last_name || "";
+                    const maskedFirst = fname ? `${fname[0]}***` : "*";
+                    const maskedLast = lname ? `${lname[0]}***` : "*";
+                    const maskedName = `${maskedFirst} ${maskedLast}`.trim();
+                    const finalName = user.show_full_name ? `${fname} ${lname}`.trim() : maskedName;
+
+                    return {
+                        id: user.id,
+                        full_name_masked: finalName || "Anonymous Student",
+                        department: user.department || "General Education",
+                        integrity_points: user.integrity_points,
+                        rank: i + 1
+                    };
+                });
+
+                setLeaderboard({
+                    students: maskedStudents,
+                    departments: deptsRes.data || []
+                });
             } catch (err) {
-                console.error('Failed to fetch leaderboard in background', err);
+                console.error('Failed to fetch leaderboard from Supabase', err);
             }
         };
 

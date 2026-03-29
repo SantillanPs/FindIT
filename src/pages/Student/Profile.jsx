@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 const Profile = () => {
@@ -21,15 +21,26 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await apiClient.get(`/auth/user/${targetId}/profile`);
-        setProfileUser(res.data);
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*, found_items(*), claims(*)')
+          .eq('id', targetId)
+          .single();
+          
+        if (userError) throw userError;
+        setProfileUser(userData);
         
         if (isOwnProfile) {
-          const feedbackRes = await apiClient.get('/feedbacks/my');
-          setMyFeedbacks(feedbackRes.data);
+          const { data: feedbackData, error: feedbackError } = await supabase
+            .from('feedbacks')
+            .select('*')
+            .eq('user_id', targetId);
+            
+          if (feedbackError) throw feedbackError;
+          setMyFeedbacks(feedbackData || []);
         }
       } catch (err) {
-        console.error('Failed to fetch profile', err);
+        console.error('Failed to fetch profile from Supabase', err);
       } finally {
         setLoading(false);
       }
@@ -46,10 +57,17 @@ const Profile = () => {
   const handleTogglePrivacy = async () => {
     setPrivacyLoading(true);
     try {
-      const res = await apiClient.put('/auth/me/preference', { show_full_name: !showFullName });
-      setShowFullName(res.data.show_full_name);
+      const { data, error } = await supabase
+        .from('users')
+        .update({ show_full_name: !showFullName })
+        .eq('id', currentUser.id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      setShowFullName(data.show_full_name);
     } catch (err) {
-      console.error('Failed to update privacy preference', err);
+      console.error('Failed to update privacy preference in Supabase', err);
     } finally {
       setPrivacyLoading(false);
     }

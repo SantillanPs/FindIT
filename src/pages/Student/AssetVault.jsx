@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import EmptyState from '../../components/EmptyState';
 
 const AssetVault = () => {
+  const { user } = useAuth();
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -19,16 +20,24 @@ const AssetVault = () => {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchAssets();
-  }, []);
+    if (user?.id) {
+      fetchAssets();
+    }
+  }, [user]);
 
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get('/assets/');
-      setAssets(response.data);
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAssets(data || []);
     } catch (error) {
-      console.error('Failed to fetch assets', error);
+      console.error('Failed to fetch assets from Supabase', error);
     } finally {
       setLoading(false);
     }
@@ -39,12 +48,22 @@ const AssetVault = () => {
     if (!file) return;
 
     setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
     try {
-      const response = await apiClient.post('/media/upload', formData);
-      setNewAsset({ ...newAsset, photo_url: response.data.url });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `assets/${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('images')
+        .getPublicUrl(filePath);
+
+      setNewAsset({ ...newAsset, photo_url: publicUrl });
     } catch (error) {
       console.error('Upload failed', error);
     } finally {
@@ -55,7 +74,18 @@ const AssetVault = () => {
   const handleAddAsset = async (e) => {
     e.preventDefault();
     try {
-      await apiClient.post('/assets/', newAsset);
+      const { error } = await supabase
+        .from('assets')
+        .insert([
+          {
+            ...newAsset,
+            owner_id: user.id,
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) throw error;
+
       setIsAddModalOpen(false);
       setNewAsset({
         category: '',
@@ -67,16 +97,23 @@ const AssetVault = () => {
       });
       fetchAssets();
     } catch (error) {
-      console.error('Failed to add asset', error);
+      console.error('Failed to add asset to Supabase', error);
     }
   };
 
   const handleDeleteAsset = async (assetId) => {
+    if (!window.confirm("Are you sure you want to remove this asset from your vault?")) return;
+    
     try {
-      await apiClient.delete(`/assets/${assetId}`);
+      const { error } = await supabase
+        .from('assets')
+        .delete()
+        .eq('id', assetId);
+
+      if (error) throw error;
       fetchAssets();
     } catch (error) {
-      console.error('Failed to delete asset', error);
+      console.error('Failed to delete asset from Supabase', error);
     }
   };
 

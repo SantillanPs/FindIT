@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
+import { supabase } from '../../../lib/supabase';
 
 const ClaimReviewModal = ({ 
   selectedClaim, 
@@ -314,10 +315,18 @@ const ClaimReviewModal = ({
                           <button 
                             onClick={async () => {
                                 try {
-                                    await apiClient.patch(`/admin/claims/${selectedClaim.id}/mark-ready`);
+                                    const { error } = await supabase
+                                        .from('claims')
+                                        .update({ is_pickup_ready: true, status: 'approved' })
+                                        .eq('id', selectedClaim.id);
+                                    
+                                    if (error) throw error;
+
                                     setSelectedClaim(null);
                                     window.location.reload(); 
-                                } catch (err) { console.error(err); }
+                                } catch (err) { 
+                                    console.error('Failed to mark as ready in Supabase', err); 
+                                }
                             }}
                             disabled={actionLoading || selectedClaim.is_pickup_ready}
                             className={`col-span-2 group p-8 rounded-[2.5rem] border transition-all text-center space-y-4 ${

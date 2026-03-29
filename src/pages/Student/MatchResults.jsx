@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
@@ -19,10 +19,47 @@ const MatchResults = () => {
   const fetchMatches = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/lost/${reportId}/matches`);
-      setMatches(response.data);
+      
+      // 1. Fetch the lost item's embedding
+      const { data: lostItem, error: fetchError } = await supabase
+        .from('lost_items')
+        .select('embedding')
+        .eq('id', reportId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!lostItem?.embedding) {
+        setMatches([]);
+        return;
+      }
+
+      // 2. Call RPC to match against found_items
+      const { data: matchedData, error: matchError } = await supabase.rpc('match_found_items', {
+        query_embedding: lostItem.embedding,
+        match_threshold: 0.1, // Adjusted for broader matching
+        match_count: 50
+      });
+
+      if (matchError) throw matchError;
+
+      // 3. Format matches to fit the UI expectation
+      // The UI expects { item: object, similarity_score: number }
+      const formattedMatches = (matchedData || []).map(m => ({
+        item: {
+          id: m.id,
+          item_name: m.item_name,
+          category: m.category,
+          description: m.description,
+          location_zone: m.location_zone,
+          found_time: m.found_time,
+          safe_photo_url: m.safe_photo_url
+        },
+        similarity_score: m.similarity
+      }));
+
+      setMatches(formattedMatches);
     } catch (error) {
-      console.error('Failed to fetch matches', error);
+      console.error('Failed to fetch matches from Supabase', error);
     } finally {
       setLoading(false);
     }

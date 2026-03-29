@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const ReportSuccess = ({ 
   type = 'lost', 
@@ -22,17 +22,46 @@ const ReportSuccess = ({
   const handleGhostUpgrade = async (e) => {
     e.preventDefault();
     setGhosting(true);
+    setError('');
+
     try {
-      await apiClient.post('/auth/upgrade-guest', {
+      // 1. Sign up with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email: ghostEmail,
-        full_name: fullName,
-        student_id_number: studentId,
-        password: ghostPassword
+        password: ghostPassword,
       });
+
+      if (authError) throw authError;
+
+      // 2. Initial Profile creation in public.users
+      const names = fullName.split(' ');
+      const firstName = names[0] || '';
+      const lastName = names.slice(1).join(' ') || '';
+
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert([
+          {
+            email: ghostEmail,
+            role: 'student',
+            first_name: firstName,
+            last_name: lastName,
+            student_id_number: studentId,
+            integrity_points: 0,
+            fraud_strikes: 0,
+            is_blacklisted: false,
+            is_verified: false,
+            show_full_name: false
+          }
+        ]);
+
+      if (dbError) throw dbError;
+
       setGhostDone(true);
       setTimeout(() => navigate('/student'), 2000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Account creation failed.');
+      console.error("Upgrade failed:", err);
+      setError(err.message || 'Account creation failed. Please try again.');
     } finally {
       setGhosting(false);
     }

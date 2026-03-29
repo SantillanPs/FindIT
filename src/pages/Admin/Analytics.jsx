@@ -8,7 +8,7 @@ import {
   Clock, Package, FileText, ChevronDown 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSyncing }) => {
   const [period, setPeriod] = useState('today');
@@ -26,16 +26,17 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
     if (isSync) setIsSyncing(true);
     else setLoading(true);
     try {
-      const [reportsRes, claimsRes, insightsRes] = await Promise.all([
-        apiClient.get(`/analytics/reports/stats?period=${period}`),
-        apiClient.get(`/analytics/claims/stats?period=${period}`),
-        apiClient.get('/analytics/insights')
-      ]);
-      setReportData(reportsRes.data);
-      setClaimData(claimsRes.data);
-      setInsights(insightsRes.data);
+      const { data, error } = await supabase.rpc('get_analytics_stats', {
+        time_period: period
+      });
+
+      if (error) throw error;
+
+      setReportData(data.reports || { found: [], lost: [] });
+      setClaimData(data.claims || []);
+      setInsights(data.insights || null);
     } catch (error) {
-      console.error('Failed to fetch analytics', error);
+      console.error('Failed to fetch analytics from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -45,18 +46,35 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
   const handleExport = async (type = 'all') => {
     setExporting(true);
     try {
-      const response = await apiClient.get(`/analytics/export?data_type=${type}`, {
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `findit_export_${type}_${new Date().toISOString().split('T')[0]}.csv`);
+      let csvContent = "data:text/csv;charset=utf-8,";
+      
+      if (type === 'all' || type === 'found') {
+        const { data: foundItems } = await supabase.from('found_items').select('*');
+        if (foundItems && foundItems.length > 0) {
+          const headers = Object.keys(foundItems[0]).join(",");
+          const rows = foundItems.map(item => Object.values(item).map(v => `"${v}"`).join(",")).join("\n");
+          csvContent += "FOUND ITEMS\n" + headers + "\n" + rows + "\n\n";
+        }
+      }
+
+      if (type === 'all' || type === 'lost') {
+        const { data: lostItems } = await supabase.from('lost_items').select('*');
+        if (lostItems && lostItems.length > 0) {
+          const headers = Object.keys(lostItems[0]).join(",");
+          const rows = lostItems.map(item => Object.values(item).map(v => `"${v}"`).join(",")).join("\n");
+          csvContent += "LOST ITEMS\n" + headers + "\n" + rows + "\n\n";
+        }
+      }
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `findit_export_${type}_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error) {
-      console.error('Export failed', error);
+      console.error('Export from Supabase failed', error);
     } finally {
       setExporting(false);
     }

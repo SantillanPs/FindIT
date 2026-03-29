@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const ZoneSelectorStep = ({ 
   stepLabel, 
@@ -25,14 +25,49 @@ const ZoneSelectorStep = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [zonesRes, statsRes] = await Promise.all([
-          apiClient.get('/zones'),
-          apiClient.get('/zones/stats')
-        ]);
-        setZonesTree(zonesRes.data);
-        setZoneStats(statsRes.data);
+        // 1. Fetch all zones
+        const { data: allZones, error: zonesError } = await supabase
+          .from('zones')
+          .select('*');
+        
+        if (zonesError) throw zonesError;
+
+        // 2. Fetch zone stats (hit counts from found_items)
+        const { data: statsData, error: statsError } = await supabase
+          .from('found_items')
+          .select('zone_id');
+        
+        if (statsError) throw statsError;
+
+        // Build stats map
+        const statsMap = (statsData || []).reduce((acc, item) => {
+          if (item.zone_id) {
+            acc[item.zone_id] = (acc[item.zone_id] || 0) + 1;
+          }
+          return acc;
+        }, {});
+
+        const formattedStats = Object.keys(statsMap).map(id => ({
+          zone_id: parseInt(id),
+          hit_count: statsMap[id]
+        }));
+        setZoneStats(formattedStats);
+
+        // 3. Build tree
+        const buildTree = (nodes, parentId = null) => {
+          return nodes
+            .filter(node => node.parent_zone_id === parentId)
+            .map(node => ({
+              ...node,
+              children: buildTree(nodes, node.id)
+            }));
+        };
+
+        const tree = buildTree(allZones || []);
+        setZonesTree(tree);
+
       } catch (err) {
-        console.error("Failed to fetch zone data", err);
+        console.error("Failed to fetch zone data from Supabase", err);
       } finally {
         setLoading(false);
       }

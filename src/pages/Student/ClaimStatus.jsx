@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const ClaimStatus = () => {
   const { trackingId } = useParams();
@@ -15,9 +15,32 @@ const ClaimStatus = () => {
 
   const fetchStatus = async () => {
     try {
-      const response = await apiClient.get(`/claims/status/${trackingId}`);
-      setClaim(response.data);
+      const { data, error } = await supabase
+        .from('claims')
+        .select(`
+          *,
+          found_items (
+            id,
+            category,
+            description,
+            location_zone
+          )
+        `)
+        .eq('tracking_id', trackingId)
+        .single();
+      
+      if (error) throw error;
+      
+      // Flatten the data for easier consumption in the existing UI
+      const formattedClaim = {
+        ...data,
+        found_item_category: data.found_items?.category,
+        found_item_description: data.found_items?.description
+      };
+      
+      setClaim(formattedClaim);
     } catch (err) {
+      console.error('Fetch error:', err);
       setError('Invalid or expired tracking link.');
     } finally {
       setLoading(false);

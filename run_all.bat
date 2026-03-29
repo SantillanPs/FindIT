@@ -1,6 +1,0 @@
-@echo off
-echo Starting FindIT Backend...
-start cmd /k "npm run backend"
-echo Starting FindIT Frontend...
-start cmd /k "npm run dev"
-echo Both servers are starting in separate windows.

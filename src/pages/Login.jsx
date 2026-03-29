@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,21 +30,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setResetLoading(true);
-    setError('');
-    
-    try {
-      await apiClient.post('/auth/forgot-password', { email: resetEmail });
-      setResetSuccess(true);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to send reset link.');
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -53,18 +38,38 @@ const Login = () => {
     const queryParams = new URLSearchParams(location.search);
     const redirectPath = queryParams.get('redirect') || '/';
     
-    const formData = new FormData();
-    formData.append('username', email);
-    formData.append('password', password);
-
     try {
-      const response = await apiClient.post('/auth/login', formData);
-      login(response.data.access_token, response.data.user);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      // AuthContext listener will handle the user state
       navigate(redirectPath);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Invalid email or password.');
+      setError(err.message || 'Invalid email or password.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError('');
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) throw error;
+      setResetSuccess(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset link.');
+    } finally {
+      setResetLoading(false);
     }
   };
 

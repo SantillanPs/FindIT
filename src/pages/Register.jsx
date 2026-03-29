@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
 import { Button } from "@/components/ui/button";
@@ -90,22 +90,45 @@ const Register = () => {
     setLoading(true);
     setError('');
 
-    const payload = { 
-      email, 
-      password, 
-      role: 'student',
-      first_name: firstName,
-      last_name: lastName,
-      student_id_number: studentId,
-      department: department,
-      verification_proof_url: proofUrl
-    };
-
     try {
-      await apiClient.post('/auth/register', payload);
-      navigate('/login');
+      // 1. Sign up in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      // 2. Insert into public.users table
+      const { error: dbError } = await supabase
+        .from('users')
+        .insert([
+          {
+            email,
+            role: 'student',
+            first_name: firstName,
+            last_name: lastName,
+            student_id_number: studentId,
+            department: department,
+            verification_proof_url: proofUrl,
+            integrity_points: 0,
+            fraud_strikes: 0,
+            is_blacklisted: false,
+            is_verified: false,
+            show_full_name: false
+          }
+        ]);
+
+      if (dbError) {
+        console.error('Database insertion error:', dbError);
+        // We might want to handle this (e.g., delete the auth user if this fails)
+        // But for now, we'll just report it to the user
+        throw new Error("Account created but profile setup failed. Please contact support.");
+      }
+
+      navigate('/login?registered=true');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please check your details.');
+      setError(err.message || 'Registration failed. Please check your details.');
     } finally {
       setLoading(false);
     }

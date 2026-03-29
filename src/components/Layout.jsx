@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
-import apiClient from '../api/client';
 import ThemeToggle from './ThemeToggle';
 import FeedbackModal from './FeedbackModal';
 import { 
@@ -145,21 +144,26 @@ const LayoutContents = ({ children }) => {
 
   const fetchAdminStats = async () => {
     try {
-      const endpoints = [
-        apiClient.get('/admin/claims/pending'),
-        apiClient.get('/admin/matches/all'),
-        apiClient.get('/admin/lost/all')
-      ];
-      if (user?.role === 'super_admin') endpoints.push(apiClient.get('/feedbacks'));
-      const results = await Promise.all(endpoints);
+      const [claimsRes, matchesRes, lostRes] = await Promise.all([
+        supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }), // Re-using matches logic
+        supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported')
+      ]);
+
+      let feedbacksCount = 0;
+      if (user?.role === 'super_admin') {
+        const { count } = await supabase.from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        feedbacksCount = count || 0;
+      }
+
       setAdminStats({
-        claims: results[0].data.length,
-        matches: results[1].data.length,
-        lost: results[2].data.length,
-        feedbacks: user?.role === 'super_admin' ? results[3].data.filter(f => f.status === 'pending').length : 0
+        claims: claimsRes.count || 0,
+        matches: matchesRes.data?.length || 0,
+        lost: lostRes.count || 0,
+        feedbacks: feedbacksCount
       });
     } catch (error) {
-      console.error('Failed to fetch admin sidebar stats', error);
+      console.error('Failed to fetch admin sidebar stats from Supabase', error);
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 const StaffManagement = () => {
@@ -14,45 +14,61 @@ const StaffManagement = () => {
     fetchStaff();
   }, []);
 
-  const fetchStaff = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await apiClient.get('/admin/staff');
-      setStaff(res.data);
-    } catch (err) {
-      console.error('Failed to fetch staff list', err);
-      setError('Could not load staff members. Please ensure you have Super Admin permissions.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchStaff = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .order('role', { ascending: false });
 
-  const handlePromote = async (userId, name) => {
-    setActionLoading(userId);
-    try {
-      await apiClient.post(`/admin/staff/${userId}/promote`);
-      await fetchStaff();
-    } catch (err) {
-      console.error('Promotion failed', err);
-      setError(err.response?.data?.detail || 'Failed to promote user.');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+        if (error) throw error;
+        setStaff(data || []);
+      } catch (err) {
+        console.error('Failed to fetch staff list from Supabase', err);
+        setError('Could not load staff members. Please ensure you have Super Admin permissions.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDemote = async (userId, name) => {
-    setActionLoading(userId);
-    try {
-      await apiClient.post(`/admin/staff/${userId}/demote`);
-      await fetchStaff();
-    } catch (err) {
-      console.error('Demotion failed', err);
-      setError(err.response?.data?.detail || 'Failed to demote user.');
-    } finally {
-      setActionLoading(null);
-    }
-  };
+    const handlePromote = async (userId, name) => {
+      setActionLoading(userId);
+      try {
+        const { error } = await supabase
+          .from('users')
+          .update({ role: 'admin' })
+          .eq('id', userId);
+        
+        if (error) throw error;
+        await fetchStaff();
+      } catch (err) {
+        console.error('Promotion failed', err);
+        setError(err.message || 'Failed to promote user.');
+      } finally {
+        setActionLoading(null);
+      }
+    };
+
+    const handleDemote = async (userId, name) => {
+      setActionLoading(userId);
+      try {
+        const { error } = await supabase
+          .from('users')
+          .update({ role: 'student' })
+          .eq('id', userId);
+        
+        if (error) throw error;
+        await fetchStaff();
+      } catch (err) {
+        console.error('Demotion failed', err);
+        setError(err.message || 'Failed to demote user.');
+      } finally {
+        setActionLoading(null);
+      }
+    };
 
   const filteredStaff = staff.filter(s => 
     s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

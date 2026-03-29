@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
 import { 
@@ -58,17 +58,63 @@ const Landing = () => {
   const fetchItems = async () => {
     try {
       setItemsLoading(true);
-      const res = await apiClient.get('/found/public', {
-        params: { 
-          limit: 12,
-          search: searchQuery || undefined,
-          category: selectedCategory === 'all' ? undefined : selectedCategory
+      
+      let data, error;
+
+      if (searchQuery && searchQuery.trim().length > 2) {
+        // AI-POWERED VECTOR SEARCH
+        // 1. Generate embedding using Edge Function
+        const { data: embedData, error: embedError } = await supabase.functions.invoke('embed', {
+          body: { text: searchQuery }
+        });
+
+        if (embedError) {
+          console.error('Embedding error, falling back to text search:', embedError);
+          // Fallback to text search
+          const query = supabase
+            .from('found_items')
+            .select('*')
+            .ilike('item_name', `%${searchQuery}%`)
+            .order('found_time', { ascending: false })
+            .limit(12);
+          
+          const fallbackRes = await query;
+          data = fallbackRes.data;
+          error = fallbackRes.error;
+        } else {
+          // 2. Call Postgres function for similarity search
+          const { data: searchData, error: searchError } = await supabase.rpc('match_found_items', {
+            query_embedding: embedData.embedding,
+            match_threshold: 0.2, // Adjust threshold as needed
+            match_count: 12
+          });
+
+          data = searchData;
+          error = searchError;
         }
-      });
-      setItems(res.data.items);
+      } else {
+        // REGULAR FETCH (Latest items)
+        let query = supabase
+          .from('found_items')
+          .select('*')
+          .order('found_time', { ascending: false })
+          .limit(12);
+
+        if (selectedCategory && selectedCategory !== 'all') {
+          query = query.eq('category', selectedCategory);
+        }
+
+        const res = await query;
+        data = res.data;
+        error = res.error;
+      }
+      
+      if (error) throw error;
+      
+      setItems(data || []);
       setItemsLoading(false);
     } catch (error) {
-      console.error('Error fetching items:', error);
+      console.error('Error fetching items from Supabase:', error);
       setItemsLoading(false);
     }
   };
@@ -76,10 +122,16 @@ const Landing = () => {
   const fetchLostReports = async () => {
     try {
       setReportsLoading(true);
-      const res = await apiClient.get('/lost/public', {
-        params: { limit: 12 }
-      });
-      setLostReports(res.data.items);
+      
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('*')
+        .order('last_seen_time', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+
+      setLostReports(data || []);
       setReportsLoading(false);
     } catch (error) {
       console.error('Error fetching reports:', error);

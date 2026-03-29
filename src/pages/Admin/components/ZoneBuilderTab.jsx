@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import apiClient from '../../../api/client';
+import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import ZoneCatalog from './zone-builder/ZoneCatalog';
 import ZoneCanvas from './zone-builder/ZoneCanvas';
@@ -84,13 +84,17 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     
     try {
       const [zonesRes, edgesRes] = await Promise.all([
-        apiClient.get('/admin/zones/all'),
-        apiClient.get('/admin/adjacencies/all')
+        supabase.from('zones').select('*'),
+        supabase.from('adjacencies').select('*')
       ]);
-      setZones(zonesRes.data);
-      setAdjacencies(edgesRes.data);
+
+      if (zonesRes.error) throw zonesRes.error;
+      if (edgesRes.error) throw edgesRes.error;
+
+      setZones(zonesRes.data || []);
+      setAdjacencies(edgesRes.data || []);
     } catch (err) {
-      console.error('Failed to load map graph data', err);
+      console.error('Failed to load map graph data from Supabase', err);
     } finally {
       setLoading(false);
       setActionLoading(false);
@@ -99,14 +103,20 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
 
   const updateZonePosition = async (zoneId, x, y) => {
     try {
-      await apiClient.put(`/admin/zones/${zoneId}`, { 
-        pos_x: Math.round(x), 
-        pos_y: Math.round(y) 
-      });
+      const { error } = await supabase
+        .from('zones')
+        .update({ 
+          pos_x: Math.round(x), 
+          pos_y: Math.round(y) 
+        })
+        .eq('id', zoneId);
+
+      if (error) throw error;
+      
       // Update local state for immediate feedback
       setZones(prev => prev.map(z => z.id === zoneId ? { ...z, pos_x: x, pos_y: y } : z));
     } catch (err) {
-      console.error('Failed to update zone position', err);
+      console.error('Failed to update zone position in Supabase', err);
     }
   };
 
@@ -125,24 +135,35 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
       if (!payload.parent_zone_id) payload.parent_zone_id = null;
       else payload.parent_zone_id = parseInt(payload.parent_zone_id);
 
-      await apiClient.post('/admin/zones', payload);
+      const { error } = await supabase
+        .from('zones')
+        .insert([payload]);
+
+      if (error) throw error;
+
       setNewZone(prev => ({ ...prev, name: '' }));
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to create zone', err);
-      // Removed alert for cleaner UX
+      console.error('Failed to create zone in Supabase', err);
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteZone = async (id) => {
+    if (!window.confirm("Are you sure? This will delete the zone and all its connections.")) return;
+    
     setActionLoading(true);
     try {
-      await apiClient.delete(`/admin/zones/${id}`);
+      const { error } = await supabase
+        .from('zones')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to delete zone', err);
+      console.error('Failed to delete zone from Supabase', err);
     } finally {
       setActionLoading(false);
     }
@@ -172,30 +193,41 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
         weight = Math.max(1, Math.min(10, Math.round(dist / 50)));
       }
 
-      await apiClient.post('/admin/adjacencies', {
-        zone_a_id: parseInt(zoneAId),
-        zone_b_id: parseInt(zoneBId),
-        distance_weight: weight
-      });
+      const { error } = await supabase
+        .from('adjacencies')
+        .insert([
+          {
+            zone_a_id: parseInt(zoneAId),
+            zone_b_id: parseInt(zoneBId),
+            distance_weight: weight
+          }
+        ]);
+
+      if (error) throw error;
+
       setNewEdge({ zone_a_id: '', zone_b_id: '', distance_weight: 1 });
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to create pathway', err);
+      console.error('Failed to create pathway in Supabase', err);
     } finally {
       setActionLoading(false);
     }
   };
 
-    // Extracted util functions to utils.js
-
   const handleDeleteEdge = async (edgeId) => {
     setActionLoading(true);
     try {
-      await apiClient.delete(`/admin/adjacencies/${edgeId}`);
+      const { error } = await supabase
+        .from('adjacencies')
+        .delete()
+        .eq('id', edgeId);
+
+      if (error) throw error;
+      
       setSelectedEdge(null);
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to delete pathway', err);
+      console.error('Failed to delete pathway from Supabase', err);
     } finally {
       setActionLoading(false);
     }

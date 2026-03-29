@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import EmptyState from '../../components/EmptyState';
 import { useAuth } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
@@ -24,10 +24,15 @@ const FoundPublicFeed = () => {
 
   const fetchPublicFeed = async () => {
     try {
-      const response = await apiClient.get('/found/public');
-      setItems(response.data);
+      const { data, error } = await supabase
+        .from('found_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setItems(data || []);
     } catch (error) {
-      console.error('Failed to fetch public feed', error);
+      console.error('Failed to fetch public feed from Supabase', error);
     } finally {
       setLoading(false);
     }
@@ -35,10 +40,26 @@ const FoundPublicFeed = () => {
 
   const fetchStats = async () => {
     try {
-      const resp = await apiClient.get('/categories/stats');
-      setCategoryStats(resp.data);
+      // Simple aggregation of counts per category
+      const { data, error } = await supabase
+        .from('found_items')
+        .select('category');
+      
+      if (error) throw error;
+      
+      const counts = data.reduce((acc, curr) => {
+        acc[curr.category] = (acc[curr.category] || 0) + 1;
+        return acc;
+      }, {});
+      
+      const stats = Object.keys(counts).map(key => ({
+        category_id: key,
+        hit_count: counts[key]
+      }));
+      
+      setCategoryStats(stats);
     } catch (err) {
-      console.error("Failed to fetch stats", err);
+      console.error("Failed to fetch stats from Supabase", err);
     }
   };
 

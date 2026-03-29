@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { motion } from 'framer-motion';
 
 const SystemOverview = () => {
@@ -7,6 +7,7 @@ const SystemOverview = () => {
     totalUsers: 0,
     totalAdmins: 0,
     totalSuperAdmins: 0,
+    students: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -17,8 +18,11 @@ const SystemOverview = () => {
   const fetchOverviewData = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/admin/staff');
-      const users = res.data;
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('role');
+      
+      if (error) throw error;
       
       setStats({
         totalUsers: users.length,
@@ -27,7 +31,7 @@ const SystemOverview = () => {
         students: users.filter(u => u.role === 'student').length
       });
     } catch (err) {
-      console.error('Failed to fetch system overview', err);
+      console.error('Failed to fetch system overview from Supabase', err);
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const LostReportStatus = () => {
   const { trackingId } = useParams();
@@ -16,13 +16,34 @@ const LostReportStatus = () => {
 
   const fetchData = async () => {
     try {
-      const resp = await apiClient.get(`/lost/status/${trackingId}`);
-      setReport(resp.data);
+      const { data: reportData, error: reportError } = await supabase
+        .from('lost_items')
+        .select('*')
+        .eq('tracking_id', trackingId)
+        .single();
       
-      // Fetch matches for this lost report
-      const matchResp = await apiClient.get(`/lost/${resp.data.id}/matches`);
-      setMatches(matchResp.data);
+      if (reportError) throw reportError;
+      setReport(reportData);
+      
+      // Fetch matches using pgvector RPC if embedding exists
+      if (reportData.embedding) {
+          const { data: matchData, error: matchError } = await supabase
+            .rpc('match_found_items', {
+                query_embedding: reportData.embedding,
+                match_threshold: 0.3, // Lower threshold for broader results in tracking
+                match_count: 5
+            });
+          
+          if (matchError) throw matchError;
+          
+          // Map to match the expected UI structure
+          setMatches((matchData || []).map(m => ({
+              item: m,
+              similarity_score: m.similarity
+          })));
+      }
     } catch (err) {
+      console.error('Fetch error:', err);
       setError('Invalid tracking link or report no longer exists.');
     } finally {
       setLoading(false);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 
 const UserVerification = () => {
   const [users, setUsers] = useState([]);
@@ -12,10 +12,15 @@ const UserVerification = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await apiClient.get('/admin/users');
-      setUsers(response.data);
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setUsers(data || []);
     } catch (error) {
-      console.error('Failed to fetch users', error);
+      console.error('Failed to fetch users from Supabase', error);
     } finally {
       setLoading(false);
     }
@@ -23,12 +28,18 @@ const UserVerification = () => {
 
   const toggleVerification = async (userId, currentStatus) => {
     try {
-      await apiClient.put(`/admin/users/${userId}/verify`, { is_verified: !currentStatus });
+      const { error } = await supabase
+        .from('users')
+        .update({ is_verified: !currentStatus })
+        .eq('id', userId);
+      
+      if (error) throw error;
       fetchUsers(); 
     } catch (err) {
-      console.error('Failed to update verification status.');
+      console.error('Failed to update verification status in Supabase', err);
     }
   };
+ Josephson
 
   const containerVariants = {
     hidden: { opacity: 0 },

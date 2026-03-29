@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
 
 const FeedbackHub = () => {
@@ -17,10 +17,15 @@ const FeedbackHub = () => {
   const fetchFeedbacks = async () => {
     try {
       setLoading(true);
-      const res = await apiClient.get('/feedbacks');
-      setFeedbacks(res.data);
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setFeedbacks(data || []);
     } catch (error) {
-      console.error('Failed to fetch feedbacks', error);
+      console.error('Failed to fetch feedbacks from Supabase', error);
     } finally {
       setLoading(false);
     }
@@ -28,16 +33,23 @@ const FeedbackHub = () => {
 
   const handleStatusUpdate = async (id, status) => {
     try {
-      const res = await apiClient.patch(`/feedbacks/${id}`, { 
-        status,
-        admin_notes: notes 
-      });
-      setFeedbacks(feedbacks.map(f => f.id === id ? res.data : f));
-      setSelectedFeedback(res.data);
+      const { data, error } = await supabase
+        .from('feedbacks')
+        .update({ 
+          status,
+          admin_notes: notes 
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      setFeedbacks(feedbacks.map(f => f.id === id ? data : f));
+      setSelectedFeedback(data);
       setNotes('');
     } catch (error) {
-      console.error('Failed to update status', error);
-      // Removed alert for cleaner UX
+      console.error('Failed to update status in Supabase', error);
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 // Shared Flow Components
@@ -45,10 +45,25 @@ const ReportLostItem = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const resp = await apiClient.get('/categories/stats');
-        setCategoryStats(resp.data);
+        const { data, error } = await supabase
+          .from('found_items')
+          .select('category');
+        
+        if (error) throw error;
+        
+        const statsMap = (data || []).reduce((acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const formattedStats = Object.keys(statsMap).map(cat => ({
+          category: cat,
+          count: statsMap[cat]
+        }));
+
+        setCategoryStats(formattedStats);
       } catch (err) {
-        console.error("Failed to fetch cluster stats", err);
+        console.error("Failed to fetch stats from Supabase", err);
       }
     };
     fetchStats();
@@ -80,10 +95,24 @@ const ReportLostItem = () => {
         finalData.item_name = formData.category;
       }
 
-      await apiClient.post('/lost/report', finalData);
+      const reportPayload = {
+        ...finalData,
+        user_id: user.id || null, // Link to the student's account
+        status: 'reported',
+        reporter_type: 'student',
+        is_verified: true, // Auto-verified for logged-in students
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('lost_items')
+        .insert([reportPayload]);
+
+      if (error) throw error;
+
       navigate('/student');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

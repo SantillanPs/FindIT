@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../../api/client';
+import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 
 // Shared Flow Components
@@ -51,10 +51,25 @@ const ReportFoundItem = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const resp = await apiClient.get('/categories/stats');
-        setCategoryStats(resp.data);
+        const { data, error } = await supabase
+          .from('found_items')
+          .select('category');
+        
+        if (error) throw error;
+        
+        const statsMap = (data || []).reduce((acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const formattedStats = Object.keys(statsMap).map(cat => ({
+          category: cat,
+          count: statsMap[cat]
+        }));
+
+        setCategoryStats(formattedStats);
       } catch (err) {
-        console.error("Failed to fetch cluster stats", err);
+        console.error("Failed to fetch statistics from Supabase", err);
       }
     };
     fetchStats();
@@ -72,19 +87,22 @@ const ReportFoundItem = () => {
     const fetchMatchedReport = async () => {
       if (matchId) {
         try {
-          // We need a public endpoint for lost item details
-          const resp = await apiClient.get(`/lost/public/${matchId}`); 
-          // Note: lost/status uses tracking_id, but here we might have an ID. 
-          // Let's assume /lost/public returns IDs and we can fetch by ID if we add an endpoint or use filtering.
-          // For now, I'll add a check or use a placeholder if the endpoint isn't ready.
-          setMatchedReport(resp.data);
+          const { data, error } = await supabase
+            .from('lost_items')
+            .select('*')
+            .eq('id', matchId)
+            .single();
+          
+          if (error) throw error;
+          
+          setMatchedReport(data);
           setFormData(prev => ({
             ...prev,
-            category: resp.data.category,
+            category: data.category,
             matched_lost_id: parseInt(matchId)
           }));
         } catch (err) {
-          console.error("Failed to fetch matched report", err);
+          console.error("Failed to fetch matched report from Supabase", err);
         }
       }
     };
@@ -107,10 +125,24 @@ const ReportFoundItem = () => {
         finalData.item_name = formData.category;
       }
 
-      await apiClient.post('/found/report', finalData);
+      const reportPayload = {
+        ...finalData,
+        user_id: user.id || null, // Link to the student's account
+        status: 'reported',
+        reporter_type: 'student',
+        is_verified: true, // Auto-verified for logged-in students
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('found_items')
+        .insert([reportPayload]);
+
+      if (error) throw error;
+
       navigate('/student');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

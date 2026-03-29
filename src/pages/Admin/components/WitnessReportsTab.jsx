@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Eye, CheckCircle, XCircle, Clock, User, Mail, Camera } from 'lucide-react';
-import apiClient from '../../../api/client';
+import { supabase } from '../../../lib/supabase';
 
 const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) => {
   const [reports, setReports] = useState([]);
@@ -16,10 +16,15 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
   const fetchWitnessReports = async (isSync = false) => {
     if (isSync) setIsSyncing(true);
     try {
-      const response = await apiClient.get('/admin/witness-reports');
-      setReports(response.data);
+      const { data, error } = await supabase
+        .from('witness_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setReports(data || []);
     } catch (error) {
-      console.error('Failed to fetch witness reports', error);
+      console.error('Failed to fetch witness reports from Supabase', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -29,11 +34,15 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
   const handleUpdateStatus = async (reportId, status) => {
     setActionLoading(reportId);
     try {
-      await apiClient.put(`/admin/witness-reports/${reportId}/status`, { status });
+      const { error } = await supabase
+        .from('witness_reports')
+        .update({ status })
+        .eq('id', reportId);
+
+      if (error) throw error;
       await fetchWitnessReports();
     } catch (error) {
-      console.error('Failed to update status', error);
-      // Removed alert
+      console.error('Failed to update status in Supabase', error);
     } finally {
       setActionLoading(null);
     }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import apiClient from '../api/client';
+import { supabase } from '../lib/supabase';
 
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
@@ -43,10 +43,25 @@ const GuestReportItem = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const resp = await apiClient.get('/categories/stats');
-        setCategoryStats(resp.data);
+        const { data, error } = await supabase
+          .from('found_items')
+          .select('category');
+        
+        if (error) throw error;
+        
+        const statsMap = (data || []).reduce((acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+          return acc;
+        }, {});
+
+        const formattedStats = Object.keys(statsMap).map(cat => ({
+          category: cat,
+          count: statsMap[cat]
+        }));
+
+        setCategoryStats(formattedStats);
       } catch (err) {
-        console.error("Failed to fetch cluster stats", err);
+        console.error("Failed to fetch cluster stats from Supabase", err);
       }
     };
     fetchStats();
@@ -68,11 +83,24 @@ const GuestReportItem = () => {
         finalData.item_name = formData.category;
       }
 
-      await apiClient.post('/lost/report/guest', finalData);
+      const reportPayload = {
+        ...finalData,
+        status: 'reported',
+        reporter_type: 'guest',
+        is_verified: false,
+        created_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('lost_items')
+        .insert([reportPayload]);
+
+      if (error) throw error;
+
       setSuccess(true);
       window.scrollTo(0, 0);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
