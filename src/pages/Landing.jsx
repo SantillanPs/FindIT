@@ -9,7 +9,6 @@ import {
   Search, 
   Users, 
   ChevronRight, 
-  ShieldCheck, 
   MapPin, 
   Clock, 
   Share2, 
@@ -366,46 +365,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Member Benefits Strip */}
-      {!user && (
-        <section className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-24">
-          <Card className="p-8 md:p-20 border border-white/10 bg-slate-900/40 backdrop-blur-xl flex flex-col lg:flex-row items-center justify-between gap-16 shadow-2xl overflow-hidden relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            
-            <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24 flex-grow relative z-10">
-              <div className="text-center md:text-left space-y-4">
-                <h3 className="text-2xl md:text-5xl font-black text-white italic tracking-tighter uppercase leading-none">Security <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">First</span></h3>
-                <p className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-[0.3em] italic">Join the official platform</p>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-20 w-full">
-                {[
-                  { icon: ShieldCheck, title: 'Smart Alerts', desc: 'Instant item match', color: 'text-sky-400' },
-                  { icon: Trophy, title: 'Honor Points', desc: 'Build your rank', color: 'text-amber-400' },
-                  { icon: CheckCircle2, title: 'Verification', desc: 'Secure recovery', color: 'text-emerald-400' }
-                ].map((perk, i) => (
-                  <div key={i} className="flex items-center gap-6 group/perk">
-                    <div className={`p-4 rounded-2xl bg-white/5 border border-white/5 transition-all group-hover/perk:scale-110 group-hover/perk:border-white/10 ${perk.color}`}>
-                       <perk.icon className="h-6 w-6 md:h-8 md:w-8" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm md:text-xl font-black text-white italic uppercase tracking-tight leading-none group-hover/perk:text-sky-400 transition-colors">{perk.title}</p>
-                      <p className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-widest italic mt-3">{perk.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <Button 
-                onClick={() => navigate('/register')}
-                className="shrink-0 px-16 h-20 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] italic bg-white hover:bg-slate-200 text-black shadow-2xl shadow-sky-500/10 relative z-10 transition-all active:scale-95"
-            >
-                Get Started
-            </Button>
-          </Card>
-        </section>
-      )}
+
 
       {/* Public Registry Section */}
       <section id="browse" className="py-12 md:py-24 border-t border-white/5 relative">
