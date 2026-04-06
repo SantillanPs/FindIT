@@ -170,8 +170,13 @@ const Register = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-20 relative">
-      <Card className="w-full max-w-md bg-slate-900/40 border-white/10 backdrop-blur-xl transition-all">
+    <div className="flex items-center justify-center min-h-[90vh] px-4 py-20 relative overflow-hidden">
+      <motion.div 
+        layout 
+        className="w-full max-w-md"
+        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+      >
+        <Card className="bg-slate-900/40 border-white/10 backdrop-blur-xl transition-all shadow-2xl overflow-hidden">
         <CardHeader className="text-center space-y-4">
           <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent italic uppercase">
             Create account
@@ -198,7 +203,7 @@ const Register = () => {
           )}
         </CardHeader>
         
-        <CardContent className="min-h-[350px]">
+        <CardContent className="pb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -262,7 +267,7 @@ const Register = () => {
               {step === 4 && (
                 <div className="space-y-4 text-center">
                   <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-2 italic leading-none">Verification Required</p>
-                  <div className="h-[250px] relative z-20">
+                  <div className="relative z-20">
                     <ImageUpload label="Upload your COR or ID" value={proofUrl} onUploadSuccess={setProofUrl} />
                   </div>
                 </div>
@@ -305,7 +310,8 @@ const Register = () => {
           )}
         </CardFooter>
       </Card>
-    </div>
+    </motion.div>
+  </div>
   );
 };
 

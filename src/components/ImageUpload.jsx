@@ -63,7 +63,7 @@ const ImageUpload = ({ onUploadSuccess, value }) => {
       
       <div 
         onClick={triggerFileInput}
-        className={`upload-zone relative overflow-hidden group transition-all ${
+        className={`upload-zone relative overflow-hidden group transition-all aspect-video flex items-center justify-center p-0 ${
           preview ? 'border-uni-500/50' : 'border-white/10'
         } ${uploading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
       >
