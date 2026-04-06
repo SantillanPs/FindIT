@@ -374,39 +374,35 @@ const LayoutContents = ({ children }) => {
       {/* Modern Feedback Trigger with Smooth Expansion */}
       <div className="fixed bottom-8 right-8 z-[70] group">
         <div className="absolute inset-0 bg-white blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setIsFeedbackOpen(true)}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-              className={cn(
-                "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-white/10",
-                isHovered ? "w-52 px-5 opacity-100" : "w-16 px-3"
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsFeedbackOpen(true)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          className={cn(
+            "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-white/10",
+            isHovered ? "w-52 px-5 opacity-100" : "w-16 px-3"
+          )}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-7 h-7 text-white transition-transform group-hover:scale-110" />
+            </div>
+            <AnimatePresence>
+              {isHovered && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0, marginLeft: 0 }}
+                  animate={{ opacity: 1, width: "auto", marginLeft: "12px" }}
+                  exit={{ opacity: 0, width: 0, marginLeft: 0 }}
+                  className="text-sm font-black text-white uppercase tracking-[0.2em] italic whitespace-nowrap overflow-hidden"
+                >
+                  Feedback
+                </motion.span>
               )}
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                  <MessageSquare className="w-7 h-7 text-white transition-transform group-hover:scale-110" />
-                </div>
-                <AnimatePresence>
-                  {isHovered && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                      animate={{ opacity: 1, width: "auto", marginLeft: "12px" }}
-                      exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                      className="text-sm font-black text-white uppercase tracking-[0.2em] italic whitespace-nowrap overflow-hidden"
-                    >
-                      Feedback
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-            </Button>
-          </TooltipTrigger>
-        </Tooltip>
+            </AnimatePresence>
+          </div>
+        </Button>
       </div>
     </div>
   );

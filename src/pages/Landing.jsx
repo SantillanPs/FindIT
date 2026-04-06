@@ -52,6 +52,15 @@ const Landing = () => {
 
   useEffect(() => {
     fetchLostReports();
+    
+    // Check for "Welcome" message on first arrival after registration
+    const justRegistered = sessionStorage.getItem('just_registered');
+    if (justRegistered === 'true') {
+      setTimeout(() => {
+        showToast('Welcome to FindIT! Your account is active and ready.');
+        sessionStorage.removeItem('just_registered');
+      }, 1000);
+    }
   }, []);
 
   const fetchItems = async () => {
@@ -103,17 +112,22 @@ const Landing = () => {
           query = query.eq('category', selectedCategory);
         }
 
-        const res = await query;
+        const res = await Promise.race([
+          query,
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 8000))
+        ]);
         data = res.data;
         error = res.error;
       }
       
       if (error) throw error;
       
+      console.info(`Supabase Fetch [Found Items]:`, data?.length || 0, 'records');
       setItems(data || []);
       setItemsLoading(false);
     } catch (error) {
       console.error('Error fetching items from Supabase:', error);
+      setItems([]);
       setItemsLoading(false);
     }
   };
@@ -122,18 +136,23 @@ const Landing = () => {
     try {
       setReportsLoading(true);
       
-      const { data, error } = await supabase
-        .from('lost_items')
-        .select('*')
-        .order('last_seen_time', { ascending: false })
-        .limit(12);
+      const { data, error } = await Promise.race([
+        supabase
+          .from('lost_items')
+          .select('*')
+          .order('last_seen_time', { ascending: false })
+          .limit(12),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 8000))
+      ]);
 
       if (error) throw error;
 
+      console.info(`Supabase Fetch [Lost Reports]:`, data?.length || 0, 'records');
       setLostReports(data || []);
       setReportsLoading(false);
     } catch (error) {
       console.error('Error fetching reports:', error);
+      setLostReports([]);
       setReportsLoading(false);
     }
   };

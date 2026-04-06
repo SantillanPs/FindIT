@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext();
 
-export const AuthProvider = ({ children }) => {
+const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11,50 +11,78 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // 1. Initial Session Check
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      if (session) {
-        await fetchUserProfile(session.user.id);
+      try {
+        // Race getSession against a 4s timeout to prevent library-level hangs
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 4000));
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        
+        setSession(session);
+        if (session) {
+          await fetchUserProfile(session);
+        }
+      } catch (err) {
+        console.warn('Initialization session fetch failed or timed out:', err.message);
+        // We still allow the app to load in "Guest Mode" rather than hanging
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     initializeAuth();
 
+    // Watchdog Timer (Force loading false after 5s)
+    const watchdog = setTimeout(() => {
+      console.warn('Auth Watchdog: Initialization timed out. Forcing ready state.');
+      setLoading(false);
+    }, 5000);
+
     // 2. Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      if (session) {
-        await fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
+      try {
+        setSession(session);
+        if (session) {
+          await fetchUserProfile(session);
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('Auth change error:', err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {
+      clearTimeout(watchdog);
       subscription.unsubscribe();
     };
   }, []);
 
-  const fetchUserProfile = async (userId) => {
+  const fetchUserProfile = async (session, retries = 3) => {
+    if (!session?.user?.email) return;
+
     try {
       // Fetch extended data from public.users
-      // Note: We use string ID comparison or link auth.users.id -> public.users.supabase_id
-      // For now, assuming standard setup where we fetch by id or email
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', (await supabase.auth.getUser()).data.user.email)
+        .eq('email', session.user.email)
         .single();
 
       if (error) {
-        console.warn('Profile fetch error (might not exist yet):', error.message);
+        if (retries > 0 && error.code === 'PGRST116') { // PGRST116 = No rows found
+           console.log(`Profile not found yet, retrying... (${retries} left)`);
+           await new Promise(resolve => setTimeout(resolve, 1000));
+           return fetchUserProfile(session, retries - 1);
+        }
+        console.warn('Profile fetch (public.users) error:', error.message);
       } else {
         setUser(data);
       }
     } catch (err) {
-      console.error('Error in fetchUserProfile:', err);
+      console.error('Critical fetchUserProfile error:', err);
     }
   };
 
@@ -64,11 +92,30 @@ export const AuthProvider = ({ children }) => {
     setSession(null);
   };
 
+  const fetchUser = (id) => {
+    if (session) fetchUserProfile(session);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, token: session?.access_token, loading, logout, fetchUser: () => fetchUserProfile(session?.user?.id) }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      token: session?.access_token, 
+      loading, 
+      logout, 
+      fetchUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export { AuthProvider, useAuth };

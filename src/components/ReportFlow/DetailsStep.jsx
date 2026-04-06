@@ -1,5 +1,4 @@
 import React from 'react';
-import HallOfFame from './HallOfFame';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 
 const DetailsStep = ({ 
@@ -65,7 +64,7 @@ const DetailsStep = ({
           )}
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic">Unique Nuance / Extra Notes</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic">Unique Nuance / Extra Notes (Optional)</label>
             <textarea 
                 rows="4"
                 placeholder="Any unique stickers, scratches, or details that help distinguish it?"
@@ -77,11 +76,9 @@ const DetailsStep = ({
           
           {children}
           
-          <HallOfFame category={category} />
 
           <button 
             onClick={onNext} 
-            disabled={!value || value.length < 5}
             className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-white hover:text-black transition-all border border-black/5 active:scale-95"
           >
             Next Step →

@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { MasterDataProvider } from './context/MasterDataContext';
 import Layout from './components/Layout';
 import { ProtectedRoute, GuestRoute } from './components/SafeRoute';
+import { useState, useEffect } from 'react';
 
 // Lazy Loaded Pages
 const Landing = lazy(() => import('./pages/Landing'));
@@ -48,6 +49,23 @@ const PageLoader = () => (
 const AppContent = () => {
   const { user, token, loading } = useAuth();
   const location = useLocation();
+  const [showRescueLink, setShowRescueLink] = useState(false);
+
+  useEffect(() => {
+    let timeout;
+    if (loading) {
+      timeout = setTimeout(() => setShowRescueLink(true), 3000);
+    } else {
+      setShowRescueLink(false);
+    }
+    return () => clearTimeout(timeout);
+  }, [loading]);
+
+  const handleRescue = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.reload();
+  };
   
   if (loading) {
     return (
@@ -55,6 +73,15 @@ const AppContent = () => {
         <div className="flex flex-col items-center gap-4">
            <div className="w-12 h-12 border-4 border-uni-500/20 border-t-uni-500 rounded-full animate-spin"></div>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Initializing FindIT</p>
+           
+           {showRescueLink && (
+             <button 
+               onClick={handleRescue}
+               className="mt-6 text-[9px] font-bold text-sky-500/40 hover:text-sky-500 uppercase tracking-widest transition-all animate-in fade-in slide-in-from-bottom-2 duration-700"
+             >
+               Stuck? Clear Session & Retry
+             </button>
+           )}
         </div>
       </div>
     );

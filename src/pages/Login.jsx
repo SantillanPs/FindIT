@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, Key, ChevronRight, AlertCircle, Lock } from 'lucide-react';
+import { Mail, Key, ChevronRight, AlertCircle, Lock, CheckCircle } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -29,6 +29,8 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const isRegistered = searchParams.get('registered') === 'true';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -85,6 +87,18 @@ const Login = () => {
             FindIT Lost & Found
           </CardDescription>
           
+          {isRegistered && (
+            <Alert className="bg-emerald-500/10 border-emerald-500/20 text-emerald-500 text-left py-3 animate-in fade-in slide-in-from-top-4 duration-500">
+              <CheckCircle className="h-4 w-4" />
+              <div className="flex flex-col gap-0.5 ml-2">
+                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none text-emerald-400">Success</AlertTitle>
+                <AlertDescription className="text-xs font-medium italic leading-tight">
+                  Your account has been created and verified! You can now sign in.
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
+
           <p className="text-slate-400 text-xs font-medium italic">
             Enter your credentials to manage your reports and items.
           </p>

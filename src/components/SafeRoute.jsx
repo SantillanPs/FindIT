@@ -22,5 +22,9 @@ export const ProtectedRoute = ({ allowedRoles, requireVerification = false }) =>
 
 export const GuestRoute = () => {
   const { token } = useAuth();
-  return token ? <Navigate to="/" replace /> : <Outlet />;
+  const searchParams = new URLSearchParams(window.location.search);
+  const isRegistered = searchParams.get('registered') === 'true';
+  
+  // Only redirect to landing if user has a token AND is NOT looking at a "Registration Success" view
+  return (token && !isRegistered) ? <Navigate to="/" replace /> : <Outlet />;
 };

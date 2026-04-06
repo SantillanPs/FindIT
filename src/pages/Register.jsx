@@ -61,23 +61,50 @@ const Register = () => {
 
   const handleNext = () => {
     setError('');
-    // Basic step validation
-    if (step === 1 && (!email || !password)) {
-      setError("Please provide both email and password.");
-      return;
+    
+    // Step 1: Account Details
+    if (step === 1) {
+      if (!email || !password) {
+        setError("Please provide both email and password.");
+        return;
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setError("Please provide a valid email address.");
+        return;
+      }
+      if (password.length < 6) {
+        setError("Password should be at least 6 characters.");
+        return;
+      }
     }
-    if (step === 2 && (!firstName || !lastName || !studentId)) {
-      setError("Please fill in all identity fields.");
-      return;
+
+    // Step 2: Personal Identity
+    if (step === 2) {
+      if (!firstName || !lastName || !studentId) {
+        setError("Please fill in all identity fields.");
+        return;
+      }
+      // Optional: Check student ID format (e.g., numbers or dashes)
+      const idRegex = /^[a-zA-Z0-9-]+$/;
+      if (!idRegex.test(studentId)) {
+        setError("Invalid Student ID format. Use letters, numbers, or dashes.");
+        return;
+      }
     }
+
+    // Step 3: Department
     if (step === 3 && !department) {
       setError("Please select your department.");
       return;
     }
+
+    // Step 4: Verification Proof
     if (step === 4 && !proofUrl) {
       setError("Please upload your verification proof.");
       return;
     }
+
     setStep(s => Math.min(s + 1, totalSteps));
   };
   
@@ -126,6 +153,7 @@ const Register = () => {
         throw new Error("Account created but profile setup failed. Please contact support.");
       }
 
+      sessionStorage.setItem('just_registered', 'true');
       navigate('/login?registered=true');
     } catch (err) {
       setError(err.message || 'Registration failed. Please check your details.');
