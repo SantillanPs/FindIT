@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import EmptyState from '../../components/EmptyState';
 import { useAuth } from '../../context/AuthContext';
+import { logSupabaseError } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
 import ItemCard from '../../components/ItemCard';
 
@@ -26,13 +27,13 @@ const FoundPublicFeed = () => {
     try {
       const { data, error } = await supabase
         .from('found_items')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('id, item_name, category, description, safe_photo_url, found_time, location_zone')
+        .order('found_time', { ascending: false });
       
       if (error) throw error;
       setItems(data || []);
     } catch (error) {
-      console.error('Failed to fetch public feed from Supabase', error);
+      logSupabaseError('Public Feed Submission', error);
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ const FoundPublicFeed = () => {
       
       setCategoryStats(stats);
     } catch (err) {
-      console.error("Failed to fetch stats from Supabase", err);
+      logSupabaseError('Feed Stats Registry', err);
     }
   };
 

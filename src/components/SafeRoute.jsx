@@ -1,30 +1,36 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export const ProtectedRoute = ({ allowedRoles, requireVerification = false }) => {
-  const { user, loading, token } = useAuth();
+export const ProtectedRoute = ({ children }) => {
+  const { session, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) return <div>Loading access...</div>;
-  if (!token) return <Navigate to="/login" replace />;
-  
-  // Role check
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/" replace />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="w-8 h-8 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  // Verification check for students
-  if (requireVerification && user?.role === 'student' && !user?.is_verified) {
-    return <Navigate to="/student" replace />;
+  if (!session) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return <Outlet />;
+  return children ? children : <Outlet />;
 };
 
 export const GuestRoute = () => {
-  const { token } = useAuth();
-  const searchParams = new URLSearchParams(window.location.search);
-  const isRegistered = searchParams.get('registered') === 'true';
-  
-  // Only redirect to landing if user has a token AND is NOT looking at a "Registration Success" view
-  return (token && !isRegistered) ? <Navigate to="/" replace /> : <Outlet />;
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <div className="w-8 h-8 border-4 border-sky-500/20 border-t-sky-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return session ? <Navigate to="/" replace /> : <Outlet />;
 };

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import { logSupabaseError } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
 import { Button } from "@/components/ui/button";
@@ -23,12 +25,14 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCard, Building } from 'lucide-react';
+import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCard, Building, CheckCircle } from 'lucide-react';
 
 const Register = () => {
-  const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
+  const { colleges: COLLEGES } = useMasterData();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   
+  // Form State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -36,74 +40,41 @@ const Register = () => {
   const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
   const [proofUrl, setProofUrl] = useState('');
+  
+  // UI State
   const [error, setError] = useState('');
-  const [prefillNote, setPrefillNote] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 5;
-  const navigate = useNavigate();
 
+  // Pre-fill Logic
   useEffect(() => {
     const pEmail = searchParams.get('email');
     const pFirst = searchParams.get('first_name');
     const pLast = searchParams.get('last_name');
     const pCollege = searchParams.get('college');
 
-    if (pEmail || pFirst || pLast || pCollege) {
-      if (pEmail) setEmail(pEmail);
-      if (pFirst) setFirstName(pFirst);
-      if (pLast) setLastName(pLast);
-      if (pCollege) setDepartment(pCollege);
-      
-      setPrefillNote("We've pre-filled your details from your recent claim! Please set a password to continue.");
-    }
+    if (pEmail) setEmail(pEmail);
+    if (pFirst) setFirstName(pFirst);
+    if (pLast) setLastName(pLast);
+    if (pCollege) setDepartment(pCollege);
   }, [searchParams]);
 
   const handleNext = () => {
     setError('');
     
-    // Step 1: Account Details
     if (step === 1) {
-      if (!email || !password) {
-        setError("Please provide both email and password.");
-        return;
-      }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setError("Please provide a valid email address.");
-        return;
-      }
-      if (password.length < 6) {
-        setError("Password should be at least 6 characters.");
-        return;
-      }
+      if (!email || !password) return setError("Email and password are required.");
+      if (password.length < 6) return setError("Password must be at least 6 characters.");
     }
 
-    // Step 2: Personal Identity
     if (step === 2) {
-      if (!firstName || !lastName || !studentId) {
-        setError("Please fill in all identity fields.");
-        return;
-      }
-      // Optional: Check student ID format (e.g., numbers or dashes)
-      const idRegex = /^[a-zA-Z0-9-]+$/;
-      if (!idRegex.test(studentId)) {
-        setError("Invalid Student ID format. Use letters, numbers, or dashes.");
-        return;
-      }
+      if (!firstName || !lastName || !studentId) return setError("All identity fields are required.");
     }
 
-    // Step 3: Department
-    if (step === 3 && !department) {
-      setError("Please select your department.");
-      return;
-    }
-
-    // Step 4: Verification Proof
-    if (step === 4 && !proofUrl) {
-      setError("Please upload your verification proof.");
-      return;
-    }
+    if (step === 3 && !department) return setError("Please select your college.");
+    if (step === 4 && !proofUrl) return setError("Verification proof is required.");
 
     setStep(s => Math.min(s + 1, totalSteps));
   };
@@ -118,7 +89,7 @@ const Register = () => {
     setError('');
 
     try {
-      // 1. Sign up in Supabase Auth
+      // 1. Auth Sign Up
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -126,307 +97,212 @@ const Register = () => {
 
       if (authError) throw authError;
 
-      // 2. Insert into public.users table
+      // 2. Profile Creation
       const { error: dbError } = await supabase
         .from('users')
-        .insert([
-          {
-            email,
-            role: 'student',
-            first_name: firstName,
-            last_name: lastName,
-            student_id_number: studentId,
-            department: department,
-            verification_proof_url: proofUrl,
-            integrity_points: 0,
-            fraud_strikes: 0,
-            is_blacklisted: false,
-            is_verified: false,
-            show_full_name: false
-          }
-        ]);
+        .insert([{
+          email,
+          role: 'student',
+          first_name: firstName,
+          last_name: lastName,
+          student_id_number: studentId,
+          department: department,
+          verification_proof_url: proofUrl,
+          integrity_points: 0,
+          is_verified: false,
+          show_full_name: false
+        }]);
 
-      if (dbError) {
-        console.error('Database insertion error:', dbError);
-        // We might want to handle this (e.g., delete the auth user if this fails)
-        // But for now, we'll just report it to the user
-        throw new Error("Account created but profile setup failed. Please contact support.");
-      }
+      if (dbError) throw dbError;
 
+      // 3. Set local storage flag for Dashboard Success Banner
       sessionStorage.setItem('just_registered', 'true');
-      navigate('/login?registered=true');
+      setIsSuccess(true);
     } catch (err) {
-      setError(err.message || 'Registration failed. Please check your details.');
+      logSupabaseError('Registration Submission', err);
+      setError({
+        message: err.message || 'Registration failed.',
+        hint: err.hint || err.details || ''
+      });
     } finally {
       setLoading(false);
     }
   };
 
+  if (isSuccess) {
+    return (
+      <div className="flex items-center justify-center min-h-[90vh] px-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }} 
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md"
+        >
+          <Card className="bg-slate-900/60 border-emerald-500/20 backdrop-blur-2xl text-center py-10 px-6">
+            <CardHeader className="space-y-6">
+              <div className="flex justify-center">
+                <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/30">
+                  <CheckCircle className="w-10 h-10 text-emerald-500" />
+                </div>
+              </div>
+              <CardTitle className="text-3xl font-black text-white uppercase italic tracking-tighter">Registration Complete</CardTitle>
+              <CardDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                Your university identity has been archived successfully.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              <div className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-left">
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 italic leading-none">Security Note</p>
+                <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
+                  You are now automatically logged in. Your registration is pending administrative verification, but you can start using the dashboard immediately.
+                </p>
+              </div>
+              <Button 
+                onClick={() => navigate('/student')}
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl"
+              >
+                Access Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 md:py-20 relative overflow-hidden">
-
-      <Card className="w-full max-w-md mx-auto relative z-10 my-8 bg-slate-900/40 border-white/10 backdrop-blur-xl">
+    <div className="flex items-center justify-center min-h-[90vh] px-4 py-20 relative">
+      <Card className="w-full max-w-md bg-slate-900/40 border-white/10 backdrop-blur-xl transition-all">
         <CardHeader className="text-center space-y-4">
-          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-white via-white/90 to-slate-500 bg-clip-text text-transparent italic uppercase">
+          <CardTitle className="text-3xl font-extrabold tracking-tight bg-gradient-to-br from-white to-slate-500 bg-clip-text text-transparent italic uppercase">
             Create account
           </CardTitle>
-          <CardDescription className="text-slate-400 font-medium italic">
-            Join the university lost & found network.
-          </CardDescription>
-          
           <div className="space-y-2 pt-2">
             <Progress value={(step / totalSteps) * 100} className="h-1.5 bg-slate-800/50" />
             <p className="text-[10px] font-black text-sky-500/70 uppercase tracking-[0.4em] italic">Step {step} of {totalSteps}</p>
           </div>
-
-          {prefillNote && (
-            <Alert className="bg-uni-500/10 border-uni-500/20 text-uni-400 animate-pulse text-left py-3">
-              <Sparkles className="h-4 w-4" />
-              <div className="flex flex-col gap-0.5 ml-2">
-                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none">Prefilled Entry</AlertTitle>
-                <AlertDescription className="text-[10px] font-bold uppercase tracking-widest leading-none opacity-80">
-                  {prefillNote}
-                </AlertDescription>
-              </div>
-            </Alert>
-          )}
-
           {error && (
-            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500 text-left py-3">
+            <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500 py-3 text-left">
               <AlertCircle className="h-4 w-4" />
-              <div className="flex flex-col gap-0.5 ml-2">
-                <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none">Registry Error</AlertTitle>
-                <AlertDescription className="text-xs font-medium italic leading-none">
-                  {error}
+              <div className="flex flex-col gap-1 ml-2">
+                <AlertTitle className="text-[10px] font-black uppercase tracking-widest mb-0 italic leading-none">Registry Error</AlertTitle>
+                <AlertDescription className="text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                  {error.message}
+                  {error.hint && (
+                    <span className="block mt-1 text-red-400 opacity-60 font-medium lowercase italic border-t border-red-500/10 pt-1">
+                      TECHNICAL HINT: {error.hint}
+                    </span>
+                  )}
                 </AlertDescription>
               </div>
             </Alert>
           )}
         </CardHeader>
         
-        <CardContent>
-        
-        <div className="flex-grow flex flex-col justify-center">
-            <div
+        <CardContent className="min-h-[350px]">
+          <AnimatePresence mode="wait">
+            <motion.div
               key={step}
-              className="w-full flex flex-col justify-center h-full"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              className="space-y-6"
             >
               {step === 1 && (
-                  <div className="space-y-6">
-                      <div className="text-center">
-                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Account Details</h3>
-                          <p className="text-xs text-slate-400 mt-1 font-medium italic">Set up your login credentials.</p>
-                      </div>
-                      <div className="space-y-4">
-                          <div className="space-y-2">
-                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Email Address</Label>
-                              <div className="relative">
-                                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                                  <Input 
-                                      placeholder="yourname@email.com"
-                                      type="email" 
-                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
-                                      value={email} 
-                                      onChange={(e) => setEmail(e.target.value)} 
-                                      autoFocus
-                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                  />
-                              </div>
-                          </div>
-                          <div className="space-y-2">
-                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Secure Password</Label>
-                              <div className="relative">
-                                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                                  <Input 
-                                      placeholder="••••••••••"
-                                      type="password" 
-                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
-                                      value={password} 
-                                      onChange={(e) => setPassword(e.target.value)} 
-                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                  />
-                              </div>
-                          </div>
-                      </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Input placeholder="yourname@email.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10 h-12 bg-slate-950/50" />
+                    </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Password</Label>
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Input type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="pl-10 h-12 bg-slate-950/50" />
+                    </div>
+                  </div>
+                </div>
               )}
 
               {step === 2 && (
-                  <div className="space-y-6">
-                      <div className="text-center">
-                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Personal Info</h3>
-                          <p className="text-xs text-slate-400 mt-1 font-medium italic">How should we identify you?</p>
-                      </div>
-                      <div className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</Label>
-                                  <div className="relative">
-                                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                                      <Input 
-                                          placeholder="Juan"
-                                          type="text" 
-                                          className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
-                                          value={firstName} 
-                                          onChange={(e) => setFirstName(e.target.value)} 
-                                          autoFocus
-                                          onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                      />
-                                  </div>
-                              </div>
-                              <div className="space-y-2">
-                                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</Label>
-                                  <Input 
-                                      placeholder="Cruz"
-                                      type="text" 
-                                      className="bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
-                                      value={lastName} 
-                                      onChange={(e) => setLastName(e.target.value)} 
-                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                  />
-                              </div>
-                          </div>
-                          <div className="space-y-2">
-                              <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Student ID Number</Label>
-                              <div className="relative">
-                                  <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                                  <Input 
-                                      placeholder="2024-123456"
-                                      type="text" 
-                                      className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12 font-mono tracking-wider"
-                                      value={studentId} 
-                                      onChange={(e) => setStudentId(e.target.value)} 
-                                      onKeyDown={(e) => e.key === 'Enter' && handleNext()}
-                                  />
-                              </div>
-                          </div>
-                      </div>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">First Name</Label>
+                      <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} className="h-12 bg-slate-950/50" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Last Name</Label>
+                      <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value)} className="h-12 bg-slate-950/50" />
+                    </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Student ID</Label>
+                    <Input placeholder="2024-12345" value={studentId} onChange={e => setStudentId(e.target.value)} className="h-12 bg-slate-950/50" />
+                  </div>
+                </div>
               )}
 
               {step === 3 && (
-                  <div className="space-y-6">
-                      <div className="text-center">
-                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic">Department</h3>
-                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto font-medium italic">Select your primary college.</p>
-                      </div>
-                      <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Primary Department</Label>
-                          <Select value={department} onValueChange={setDepartment}>
-                            <SelectTrigger className="bg-slate-950/50 border-white/5 focus:ring-sky-500 h-12 text-sm">
-                              <div className="flex items-center gap-3">
-                                <Building className="h-4 w-4 text-slate-500" />
-                                <SelectValue placeholder="Select your college" />
-                              </div>
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-white/10 text-white">
-                              {COLLEGES.map(college => (
-                                <SelectItem key={college.id} value={college.label} className="focus:bg-sky-500 focus:text-white uppercase text-[10px] font-black tracking-widest">
-                                  {college.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                      </div>
-                  </div>
+                <div className="space-y-4">
+                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Select College</Label>
+                  <Select value={department} onValueChange={setDepartment}>
+                    <SelectTrigger className="h-12 bg-slate-950/50">
+                      <SelectValue placeholder="Select your college" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-900 border-white/10 text-white">
+                      {COLLEGES.map(c => <SelectItem key={c.id} value={c.label} className="focus:bg-sky-500 italic uppercase text-[10px] font-black">{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
 
               {step === 4 && (
-                  <div className="space-y-6">
-                      <div className="text-center">
-                          <h3 className="text-xl font-bold text-white tracking-tight uppercase italic text-sky-500">Student Proof</h3>
-                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto font-medium italic">To activate your account, please upload a clear photo of your <span className="text-slate-200">Student ID</span> or <span className="text-slate-200">Certificate of Registration (COR)</span>.</p>
-                      </div>
-                      <div className="h-[250px] relative z-20">
-                          <ImageUpload 
-                              label="Upload ID or COR Photo"
-                              value={proofUrl}
-                              onUploadSuccess={setProofUrl}
-                          />
-                      </div>
+                <div className="space-y-4 text-center">
+                  <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-2 italic leading-none">Verification Required</p>
+                  <div className="h-[250px] relative z-20">
+                    <ImageUpload label="Upload your COR or ID" value={proofUrl} onUploadSuccess={setProofUrl} />
                   </div>
-              )}
-              {step === 5 && (
-                  <div className="space-y-6">
-                      <div className="text-center">
-                          <h3 className="text-2xl font-black text-white tracking-tight uppercase italic">Almost done!</h3>
-                          <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto italic font-medium">Review your details before activating.</p>
-                      </div>
-                      
-                      <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5 relative z-20">
-                           <div className="flex justify-between items-center py-2 border-b border-white/5">
-                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Name</span>
-                               <span className="text-sm font-black text-white uppercase italic">{firstName} {lastName}</span>
-                           </div>
-                           <div className="flex justify-between items-center py-2 border-b border-white/5">
-                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Student ID</span>
-                               <span className="text-sm font-black text-white font-mono tracking-widest italic">{studentId}</span>
-                           </div>
-                           <div className="flex justify-between items-center py-2">
-                               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Department</span>
-                               <span className="text-sm font-black text-sky-500 italic text-right break-words">{department}</span>
-                           </div>
-                      </div>
-                  </div>
-              )}
-            </div>
-        </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4 border-t border-white/5 pt-6">
-          {step < totalSteps && (
-            <Button 
-              onClick={handleNext}
-              className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group"
-            >
-              Continue
-              <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          )}
-
-          {step === 5 && (
-            <Button 
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-400 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all shadow-lg shadow-sky-500/20"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  Creating...
                 </div>
-              ) : (
-                "Complete Activation"
               )}
+
+              {step === 5 && (
+                <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5">
+                  <div className="flex justify-between py-2 border-b border-white/5">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">User</span>
+                    <span className="text-sm font-black text-white italic">{firstName} {lastName}</span>
+                  </div>
+                  <div className="flex justify-between py-2 border-b border-white/5">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">ID</span>
+                    <span className="text-sm font-black text-white italic">{studentId}</span>
+                  </div>
+                  <div className="flex justify-between py-2">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">COLLEGE</span>
+                    <span className="text-sm font-black text-sky-500 italic text-right">{department}</span>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-4 border-t border-white/5 pt-6">
+          {step < totalSteps ? (
+            <Button onClick={handleNext} className="w-full bg-white text-black font-black uppercase tracking-[0.2em] italic h-12 rounded-xl">
+              Next Step
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={loading} className="w-full bg-sky-500 text-white font-black uppercase tracking-[0.2em] italic h-12 rounded-xl">
+              {loading ? "Activating..." : "Complete Registry"}
             </Button>
           )}
-          
-          <div className="flex flex-col items-center gap-3 w-full">
-            {step > 1 && (
-              <Button 
-                variant="link" 
-                onClick={handlePrev}
-                className="text-slate-500 hover:text-white text-xs font-black uppercase tracking-widest italic"
-              >
-                <ChevronLeft className="mr-2 h-3 w-3" />
-                Go Back
-              </Button>
-            )}
-
-            {step === 1 && (
-              <p className="text-slate-400 text-xs font-medium italic">
-                Already have an account? 
-                <Link to="/login" className="text-sky-400 hover:underline ml-2 font-bold transition-all">Log in</Link>
-              </p>
-            )}
-
-            {step === 5 && (
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest text-center mt-2 leading-relaxed opacity-60">
-                By activating, you agree to our<br/>
-                <span className="text-slate-300">Institutional Terms & Conditions</span>
-              </p>
-            )}
-          </div>
+          {step > 1 && (
+            <Button variant="link" onClick={handlePrev} className="text-slate-500 font-black uppercase text-[10px] tracking-widest italic">
+              Go Back
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

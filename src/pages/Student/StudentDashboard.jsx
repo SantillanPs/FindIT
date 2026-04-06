@@ -16,6 +16,15 @@ const StudentDashboard = () => {
   const navigate = useNavigate();
   const [deptRank, setDeptRank] = useState(null);
   const [pendingMatches, setPendingMatches] = useState([]);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+
+  useEffect(() => {
+    const justRegistered = sessionStorage.getItem('just_registered');
+    if (justRegistered === 'true') {
+      setShowSuccessBanner(true);
+      sessionStorage.removeItem('just_registered');
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -74,6 +83,32 @@ const StudentDashboard = () => {
 
   return (
     <div className="space-y-12">
+      {/* Registration Success Banner */}
+      <AnimatePresence>
+        {showSuccessBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            className="relative overflow-hidden bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div className="flex items-center gap-6">
+              <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-2xl border border-emerald-500/30">✨</div>
+              <div className="text-left space-y-1">
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest italic">Institutional Registry Complete</p>
+                <p className="text-sm font-bold text-white leading-relaxed">Welcome, {user?.first_name || 'Agent'}! Your university identity has been verified. You can now track items and earn integrity points.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowSuccessBanner(false)}
+              className="px-6 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] transition-all border border-emerald-500/30"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">

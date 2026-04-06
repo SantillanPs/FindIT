@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { logSupabaseError } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
 import { 
   Trophy, 
@@ -47,20 +48,14 @@ const Landing = () => {
   const [toast, setToast] = useState({ show: false, message: '' });
 
   useEffect(() => {
-    fetchItems();
-  }, [searchQuery, selectedCategory]);
+    // Only fetch items if we are NOT in the middle of a search
+    if (!searchQuery || searchQuery.trim().length <= 2) {
+      fetchItems();
+    }
+  }, [selectedCategory]);
 
   useEffect(() => {
     fetchLostReports();
-    
-    // Check for "Welcome" message on first arrival after registration
-    const justRegistered = sessionStorage.getItem('just_registered');
-    if (justRegistered === 'true') {
-      setTimeout(() => {
-        showToast('Welcome to FindIT! Your account is active and ready.');
-        sessionStorage.removeItem('just_registered');
-      }, 1000);
-    }
   }, []);
 
   const fetchItems = async () => {
@@ -104,7 +99,7 @@ const Landing = () => {
         // REGULAR FETCH (Latest items)
         let query = supabase
           .from('found_items')
-          .select('*')
+          .select('id, item_name, category, description, safe_photo_url, found_time, location_zone')
           .order('found_time', { ascending: false })
           .limit(12);
 
@@ -114,7 +109,7 @@ const Landing = () => {
 
         const res = await Promise.race([
           query,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 8000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 12000))
         ]);
         data = res.data;
         error = res.error;
@@ -139,10 +134,10 @@ const Landing = () => {
       const { data, error } = await Promise.race([
         supabase
           .from('lost_items')
-          .select('*')
+          .select('id, item_name, category, description, safe_photo_url, last_seen_time, location_zone')
           .order('last_seen_time', { ascending: false })
           .limit(12),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 8000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 12000))
       ]);
 
       if (error) throw error;
@@ -151,7 +146,7 @@ const Landing = () => {
       setLostReports(data || []);
       setReportsLoading(false);
     } catch (error) {
-      console.error('Error fetching reports:', error);
+      logSupabaseError('Landing Page [Lost Reports]', error);
       setLostReports([]);
       setReportsLoading(false);
     }
