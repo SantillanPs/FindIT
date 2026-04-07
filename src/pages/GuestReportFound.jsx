@@ -124,6 +124,8 @@ const GuestReportFound = () => {
         category: formData.category,
         location: formData.location,
         date_found: formData.date_found,
+        photo_url: formData.photo_url,
+        photo_thumbnail_url: formData.photo_url,
         guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
         guest_email: formData.guest_email,
         guest_phone: formData.contact_info,

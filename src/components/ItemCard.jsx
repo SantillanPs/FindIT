@@ -49,13 +49,6 @@ const ItemCard = ({ item, onClick, onShare }) => {
             </div>
         </div>
 
-        {/* Ref ID (Top Right) */}
-        <div className="absolute top-4 right-4 z-20">
-            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest bg-black/20 px-2 py-1 rounded-md border border-white/5">
-                #{item.id.toString().padStart(4, '0')}
-            </span>
-        </div>
-
         {/* Gradient Bottom Fade */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       </div>

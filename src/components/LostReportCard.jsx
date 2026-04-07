@@ -58,13 +58,6 @@ const LostReportCard = ({ report, onWitness }) => {
             </div>
         </div>
 
-        {/* Case ID (Top Right) */}
-        <div className="absolute top-4 right-4 z-20">
-            <span className="text-[11px] font-black text-white uppercase tracking-widest bg-black/40 px-2 py-1 rounded-md border border-white/10">
-                Case: #{report.id.toString().padStart(4, '0')}
-            </span>
-        </div>
-
         {/* Gradient Bottom Fade */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       </div>

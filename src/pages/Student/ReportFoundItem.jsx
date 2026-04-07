@@ -131,6 +131,8 @@ const ReportFoundItem = () => {
         category: formData.category,
         location: formData.location,
         date_found: formData.date_found,
+        photo_url: formData.photo_url,
+        photo_thumbnail_url: formData.photo_url,
         finder_id: user?.id || null,
         status: 'reported',
         is_verified: true,

@@ -101,6 +101,8 @@ const ReportLostItem = () => {
         category: formData.category,
         location: formData.location,
         date_lost: formData.date_lost,
+        photo_url: formData.photo_url,
+        photo_thumbnail_url: formData.photo_url,
         owner_id: user?.id || null,
         status: 'reported',
         is_verified: true,
