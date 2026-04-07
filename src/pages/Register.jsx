@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
-import { logSupabaseError } from '../context/AuthContext';
+import { logSupabaseError, useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCa
 const Register = () => {
   const { colleges: COLLEGES } = useMasterData();
   const [searchParams] = useSearchParams();
+  const { refreshUser } = useAuth();
   const navigate = useNavigate();
   
   // Form State
@@ -87,20 +88,34 @@ const Register = () => {
   const handleSubmit = async () => {
     setLoading(true);
     setError('');
+    // Lock the redirect so we can show the success screen
+    sessionStorage.setItem('registration_in_progress', 'true');
 
     try {
       // 1. Auth Sign Up
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            student_id_number: studentId,
+            department: department
+          }
+        }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        sessionStorage.removeItem('registration_in_progress');
+        throw authError;
+      }
 
-      // 2. Profile Creation
+      // 2. Profile Creation (Final shift to stable profiles table v1)
       const { error: dbError } = await supabase
-        .from('users')
+        .from('user_profiles_v1')
         .insert([{
+          id: authData.user.id,
           email,
           role: 'student',
           first_name: firstName,
@@ -113,7 +128,13 @@ const Register = () => {
           show_full_name: false
         }]);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        sessionStorage.removeItem('registration_in_progress');
+        throw dbError;
+      }
+      
+      // 2.5 Force sync the AuthContext session now that DB record exists
+      await refreshUser();
 
       // 3. Set local storage flag for Dashboard Success Banner
       sessionStorage.setItem('just_registered', 'true');
@@ -127,6 +148,12 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAccessDashboard = () => {
+    // Clear the lock and finally enter the protected student area
+    sessionStorage.removeItem('registration_in_progress');
+    navigate('/student');
   };
 
   if (isSuccess) {
@@ -157,7 +184,7 @@ const Register = () => {
                 </p>
               </div>
               <Button 
-                onClick={() => navigate('/student')}
+                onClick={handleAccessDashboard}
                 className="w-full bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl"
               >
                 Access Dashboard

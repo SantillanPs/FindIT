@@ -22,7 +22,7 @@ const HallOfIntegrity = () => {
 
       // Fetch student leaderboard from users table
       const { data: students, error: studError } = await supabase
-        .from('users')
+        .from('users_profiles')
         .select('id, full_name, email, department, integrity_points')
         .eq('role', 'student')
         .gt('integrity_points', 0)

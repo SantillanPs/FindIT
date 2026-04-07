@@ -85,12 +85,11 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton 
-        asChild
         isActive={isActive}
         className={`h-14 w-full transition-all duration-300 group border border-transparent !p-0 ${
           isActive ? 'bg-white text-black shadow-2xl shadow-sky-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'
         }`}
-      >
+        render={
           <Link 
             to={to} 
             onClick={() => setOpenMobile(false)}
@@ -109,13 +108,14 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
               <div className="absolute -left-1 w-1.5 h-6 rounded-r-full bg-black shadow-lg" />
             )}
           </Link>
-      </SidebarMenuButton>
+        }
+      />
     </SidebarMenuItem>
   );
 };
 
 const LayoutContents = ({ children }) => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const [isAdminStatsFetched, setIsAdminStatsFetched] = useState(false);
   const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0, feedbacks: 0 });
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -168,7 +168,7 @@ const LayoutContents = ({ children }) => {
   };
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/login');
   };
 
@@ -260,37 +260,46 @@ const LayoutContents = ({ children }) => {
             </SidebarContent>
 
             <SidebarFooter className="p-3 border-t border-white/5 bg-slate-950/20">
-               <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-3 p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all w-full text-left outline-none group/profile">
-                       <Avatar className="h-8 w-8 border border-white/10 ring-2 ring-uni-500/10 transition-all">
-                         <AvatarImage src={user.photo_url} />
-                         <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-black uppercase">
-                           {user.email.substring(0, 2).toUpperCase()}
-                         </AvatarFallback>
-                       </Avatar>
-                       <div className="flex flex-col min-w-0 flex-grow">
-                          <span className="text-sm font-semibold text-white truncate">{user.email.split('@')[0]}</span>
-                          <span className="text-[11px] font-bold text-slate-400 capitalize">{user.role.replace('_', ' ')}</span>
-                       </div>
-                       <ChevronDown size={14} className="text-slate-600 mr-1" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    side="top" 
-                    align="end" 
-                    sideOffset={12}
-                    className="w-[180px] bg-[#0f172a] border border-white/10 p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
-                  >
-                    <DropdownMenuItem 
-                      onClick={handleLogout}
-                      className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white hover:text-black border border-white/5 rounded-xl cursor-pointer transition-all duration-300 group no-underline outline-none focus:bg-white focus:text-black shadow-2xl"
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger 
+                      render={
+                        <SidebarMenuButton 
+                          size="lg"
+                          className="data-[state=open]:bg-white/10 group/profile-button focus-visible:ring-0"
+                        >
+                           <Avatar className="h-8 w-8 rounded-lg border border-white/10 ring-2 ring-uni-500/10 transition-all">
+                             <AvatarImage src={user.photo_url} />
+                             <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-black uppercase">
+                               {user.email.substring(0, 2).toUpperCase()}
+                             </AvatarFallback>
+                           </Avatar>
+                           <div className="flex flex-col min-w-0 flex-grow text-left">
+                              <span className="text-sm font-semibold text-white truncate">{user.email.split('@')[0]}</span>
+                              <span className="text-[11px] font-bold text-slate-400 capitalize">{user.role.replace('_', ' ')}</span>
+                           </div>
+                           <ChevronDown size={14} className="text-slate-600 mr-1 group-data-[state=open]/profile-button:rotate-180 transition-transform" />
+                        </SidebarMenuButton>
+                      }
+                    />
+                    <DropdownMenuContent 
+                      side="top" 
+                      align="end" 
+                      sideOffset={12}
+                      className="w-[180px] bg-[#0f172a] border border-white/10 p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
                     >
-                      <LogOut size={18} className="transition-transform group-hover:scale-110" />
-                      <span className="text-[10px] font-black tracking-[0.2em] uppercase italic">Sign Out Protocol</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-               </DropdownMenu>
+                      <DropdownMenuItem 
+                        onClick={handleLogout}
+                        className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white hover:text-black border border-white/5 rounded-xl cursor-pointer transition-all duration-300 group no-underline outline-none focus:bg-white focus:text-black shadow-2xl"
+                      >
+                        <LogOut size={18} className="transition-transform group-hover:scale-110" />
+                        <span className="text-[10px] font-black tracking-[0.2em] uppercase italic">Sign Out Protocol</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </SidebarMenuItem>
+              </SidebarMenu>
             </SidebarFooter>
           </Sidebar>
 

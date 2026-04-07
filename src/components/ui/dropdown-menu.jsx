@@ -1,7 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+import { 
+  Menu as MenuPrimitive,
+} from "@base-ui/react/menu"
+import { useRender } from "@base-ui/react/use-render"
+import { mergeProps } from "@base-ui/react/merge-props"
 
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
@@ -19,9 +23,18 @@ function DropdownMenuPortal({
 }
 
 function DropdownMenuTrigger({
+  render,
+  className,
   ...props
 }) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
+  return (
+    <MenuPrimitive.Trigger 
+      data-slot="dropdown-menu-trigger" 
+      className={cn("outline-none cursor-default", className)}
+      render={render}
+      {...props} 
+    />
+  );
 }
 
 function DropdownMenuContent({

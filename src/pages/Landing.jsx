@@ -109,7 +109,7 @@ const Landing = () => {
 
         const res = await Promise.race([
           query,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 12000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 20000))
         ]);
         data = res.data;
         error = res.error;
@@ -137,7 +137,7 @@ const Landing = () => {
           .select('id, item_name, category, description, safe_photo_url, last_seen_time, location_zone')
           .order('last_seen_time', { ascending: false })
           .limit(12),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 12000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 20000))
       ]);
 
       if (error) throw error;

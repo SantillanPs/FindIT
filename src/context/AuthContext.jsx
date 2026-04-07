@@ -20,24 +20,64 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   // 1. Central Profile Sync Logic
-  const fetchUserProfile = async (currentSession) => {
-    if (!currentSession?.user) return;
+  const fetchUserProfile = async (currentSession, retry = 0) => {
+    if (!currentSession?.user) {
+      setUser(null);
+      return;
+    }
     
     try {
+      // Use the newly deployed RPC function (Fixes "integer" type-casting ghosts)
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', currentSession.user.email)
+        .rpc('get_user_profile_v1', { p_user_id: currentSession.user.id })
         .single();
 
       if (error) {
-        logSupabaseError('Profile Sync', error);
+        // PGRST116 means "0 rows found" - wait for DB catchup
+        if (error.code === 'PGRST116' && retry < 5) {
+          console.groupCollapsed(`[AUTH] Profile sync retry ${retry + 1}/5...`);
+          console.info('Context: User signed up but public.users record isn\'t visible yet.');
+          
+          // CRITICAL: TRIGER THE SELF-REPAIR (Handles orphaned items and missing user profiles)
+          if (retry === 0) {
+             console.info('[AUTH] Triggering self-repair / profile claiming...');
+             await supabase.rpc('sync_missing_profile');
+          }
+          
+          console.groupEnd();
+          
+          await new Promise(r => setTimeout(r, 2000));
+          return fetchUserProfile(currentSession, retry + 1);
+        }
+        
+        // CRITICAL FAIL-SAFE: If session exists but profile cannot be loaded (due to schema error), 
+        // we MUST force a logout to prevent the user from being trapped in a loading loop.
+        if (error.code !== 'PGRST116') {
+          logSupabaseError('Profile Sync Failure', error);
+          if (retry >= 2) {
+             console.warn('[AUTH] Hard-resetting broken session state...');
+             localStorage.clear();
+             sessionStorage.clear();
+             await supabase.auth.signOut();
+             window.location.reload();
+             return;
+          }
+        }
         throw error;
       }
+
+      console.info(`[AUTH] Profile synced successfully.`);
       setUser(data);
     } catch (err) {
-      // Background fail: Just log it loudly
+      if (retry >= 5 || err.code !== 'PGRST116') {
+        setUser(null);
+      }
     }
+  };
+
+  const refreshUser = async () => {
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (currentSession) await fetchUserProfile(currentSession);
   };
 
   useEffect(() => {
@@ -45,24 +85,29 @@ export const AuthProvider = ({ children }) => {
     const initialize = async () => {
       const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
-      if (initialSession) {
-        await fetchUserProfile(initialSession);
-      }
+      
+      // UNLOCK INSTANTLY: Don't wait for profile to show the UI
       setLoading(false);
+
+      if (initialSession) {
+        fetchUserProfile(initialSession);
+      }
     };
 
     initialize();
 
     // 3. Reactive Auth Listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       
+      // UNLOCK INSTANTLY: Don't wait for profile sync to release the UI
+      setLoading(false);
+
       if (currentSession) {
-        await fetchUserProfile(currentSession);
+        fetchUserProfile(currentSession);
       } else {
         setUser(null);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -82,7 +127,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, login, signOut, fetchUserProfile }}>
+    <AuthContext.Provider value={{ user, session, loading, login, signOut, fetchUserProfile, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

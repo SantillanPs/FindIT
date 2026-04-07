@@ -15,7 +15,7 @@ const MasterDataProvider = ({ children }) => {
         try {
             const [studentsRes, deptsRes] = await Promise.all([
                 supabase
-                    .from('users')
+                    .from('user_profiles_v1')
                     .select('id, first_name, last_name, show_full_name, department, integrity_points')
                     .eq('role', 'student')
                     .order('integrity_points', { ascending: false })

@@ -23,6 +23,8 @@ export const ProtectedRoute = ({ children }) => {
 
 export const GuestRoute = () => {
   const { session, loading } = useAuth();
+  // Bypass redirect if in the middle of a registration success flow
+  const isRegistering = sessionStorage.getItem('registration_in_progress') === 'true';
 
   if (loading) {
     return (
@@ -32,5 +34,5 @@ export const GuestRoute = () => {
     );
   }
 
-  return session ? <Navigate to="/" replace /> : <Outlet />;
+  return (session && !isRegistering) ? <Navigate to="/" replace /> : <Outlet />;
 };

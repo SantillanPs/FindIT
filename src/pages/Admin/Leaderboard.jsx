@@ -20,7 +20,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     if (isSync) setIsSyncing(true);
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('users_profiles')
         .select('*')
         .order('integrity_points', { ascending: false });
         
@@ -56,7 +56,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     setActionLoading(`verify-${userId}`);
     try {
       const { error } = await supabase
-        .from('users')
+        .from('users_profiles')
         .update({ is_verified: !currentStatus })
         .eq('id', userId);
         
@@ -73,7 +73,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     setActionLoading(`cert-${userId}`);
     try {
       const { error } = await supabase
-        .from('users')
+        .from('users_profiles')
         .update({ is_certificate_eligible: !currentStatus })
         .eq('id', userId);
         
