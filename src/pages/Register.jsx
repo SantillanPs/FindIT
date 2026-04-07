@@ -30,7 +30,7 @@ import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCa
 const Register = () => {
   const { colleges: COLLEGES } = useMasterData();
   const [searchParams] = useSearchParams();
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   
   // Form State
@@ -61,6 +61,18 @@ const Register = () => {
     if (pLast) setLastName(pLast);
     if (pCollege) setDepartment(pCollege);
   }, [searchParams]);
+
+  // Auth Guard: Redirect if already logged in and not in success flow
+  useEffect(() => {
+    const userRole = user?.role;
+    // If session exists, we aren't in success mode, and we aren't currently submitting
+    if (user && !isSuccess && !loading) {
+      sessionStorage.removeItem('registration_in_progress');
+      // Navigate to their specific role dashboard
+      const dashboardPath = userRole === 'student' ? '/student' : '/admin';
+      navigate(dashboardPath);
+    }
+  }, [user, isSuccess, loading, navigate]);
 
   const handleNext = () => {
     setError('');
