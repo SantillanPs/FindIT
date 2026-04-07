@@ -190,7 +190,7 @@ const ReportSuccess = ({
             <div className="grid grid-cols-2 gap-4 border-t border-white/5 pt-6">
                 <div>
                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Found Location</p>
-                   <p className="text-xs font-bold text-white uppercase tracking-tight">{reportData?.location_zone}</p>
+                   <p className="text-xs font-bold text-white uppercase tracking-tight">{reportData?.location}</p>
                 </div>
                 <div>
                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Receipt ID</p>

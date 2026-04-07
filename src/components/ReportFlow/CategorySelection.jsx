@@ -48,7 +48,7 @@ const CategorySelection = ({
             <button
               key={cat.id}
               onClick={() => {
-                setFormData({ ...formData, category: cat.id, item_name: cat.id });
+                setFormData({ ...formData, category: cat.id, title: cat.id });
                 setTimeout(onNext, 400);
               }}
               className={`p-8 rounded-[2.5rem] border-2 transition-all flex flex-col items-center gap-6 group relative overflow-hidden ${
@@ -85,7 +85,7 @@ const CategorySelection = ({
                   <button
                     key={cat.id}
                     onClick={() => {
-                      setFormData({ ...formData, category: cat.id, item_name: cat.id });
+                      setFormData({ ...formData, category: cat.id, title: cat.id });
                       setTimeout(onNext, 400);
                     }}
                     className={`p-6 rounded-3xl border transition-all flex flex-col items-center gap-4 group ${

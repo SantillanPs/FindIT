@@ -244,10 +244,10 @@ const Profile = () => {
                                 </div>
                                 <div className="text-left">
                                     <p className="text-[11px] font-black text-white uppercase tracking-widest">
-                                        {item.subject || item.item_name || item.found_item_description || 'Surrendered Item'}
+                                        {item.subject || item.title || item.found_item_description || 'Surrendered Item'}
                                     </p>
                                     <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">
-                                        {new Date(item.created_at || item.found_time).toLocaleDateString()}
+                                        {new Date(item.created_at || item.date_found).toLocaleDateString()}
                                     </p>
                                     {activeTab === 'feedback' && item.admin_notes && (
                                         <p className="text-[9px] text-uni-400 font-bold mt-2 border-l-2 border-uni-500/30 pl-3 py-1 bg-uni-500/5 rounded-r-lg max-w-xs italic whitespace-pre-wrap">

@@ -6,13 +6,13 @@ const ItemCard = ({ item, onClick, onShare }) => {
   const { categories: CATEGORIES } = useMasterData();
   const categoryData = CATEGORIES.find(c => c.id === item.category);
   
-  const formattedDate = new Date(item.found_time).toLocaleDateString('en-US', {
+  const formattedDate = new Date(item.date_found).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   }).toUpperCase();
 
-  const formattedTime = new Date(item.found_time).toLocaleTimeString('en-US', {
+  const formattedTime = new Date(item.date_found).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
@@ -25,10 +25,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
     >
       {/* 1. Image Header Section */}
       <div className="relative aspect-[16/10] overflow-hidden bg-bg-elevated/20 transition-all duration-700">
-        {item.safe_photo_url ? (
+        {item.photo_url ? (
           <img 
-            src={item.safe_photo_thumbnail_url || item.safe_photo_url} 
-            alt={item.item_name} 
+            src={item.photo_thumbnail_url || item.photo_url} 
+            alt={item.title} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
             loading="lazy"
           />
@@ -73,7 +73,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
                 <h3 className="text-xl font-bold text-white leading-tight group-hover:text-uni-400 transition-colors line-clamp-1">
-                    {item.location_zone}
+                    {item.location}
                 </h3>
             </div>
 

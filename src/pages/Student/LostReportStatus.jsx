@@ -71,7 +71,7 @@ const LostReportStatus = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
         <div className="space-y-2">
            <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.4em]">Lost Item Report Management</p>
-           <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none italic">"Searching for your {report.item_name}"</h1>
+           <h1 className="text-4xl font-black text-white uppercase tracking-tighter leading-none italic">"Searching for your {report.title}"</h1>
         </div>
         <div className="px-6 py-3 bg-uni-500/10 border border-uni-500/20 rounded-2xl">
            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Status</p>
@@ -91,9 +91,9 @@ const LostReportStatus = () => {
                     </div>
                     <div className="space-y-1">
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Last Seen</p>
-                        <p className="text-sm font-bold text-white uppercase">{report.location_zone}</p>
+                        <p className="text-sm font-bold text-white uppercase">{report.location}</p>
                         <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                            {new Date(report.last_seen_time).toLocaleDateString()}
+                            {new Date(report.date_lost).toLocaleDateString()}
                         </p>
                     </div>
                 </div>
@@ -154,7 +154,7 @@ const LostReportStatus = () => {
                                         {match.item.description}
                                     </p>
                                     <p className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
-                                        Found at {match.item.location_zone}
+                                        Found at {match.item.location}
                                     </p>
                                 </div>
                                 <Link 

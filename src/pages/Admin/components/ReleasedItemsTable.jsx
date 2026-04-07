@@ -17,14 +17,14 @@ const ReleasedItemsTable = ({ releasedItems }) => {
           {releasedItems.map(item => (
             <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
               <td className="px-8 py-6">
-                <div className="font-black text-white text-[11px] uppercase tracking-widest mb-1">{item.item_name}</div>
+                <div className="font-black text-white text-[11px] uppercase tracking-widest mb-1">{item.title}</div>
                 <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest">#{item.id.toString().padStart(4, '0')} • {item.category}</div>
               </td>
                 <td className="px-8 py-6">
                  <div className="flex items-center gap-3">
-                    {(item.released_to_photo_url || item.safe_photo_url) && (
+                    {(item.released_to_photo_url || item.photo_url) && (
                         <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden shrink-0">
-                            <img src={item.released_to_photo_url || item.safe_photo_url} className="w-full h-full object-cover" />
+                            <img src={item.released_to_photo_url || item.photo_url} className="w-full h-full object-cover" />
                         </div>
                     )}
                     <div>

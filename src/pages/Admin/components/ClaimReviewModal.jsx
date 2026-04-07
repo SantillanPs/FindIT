@@ -57,7 +57,7 @@ const ClaimReviewModal = ({
                           <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Original Found Item</span>
                           <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-4 text-left">
                                <div className="flex justify-between items-start">
-                                  <h4 className="text-2xl font-black text-white uppercase italic">{selectedClaim.found_item_name || 'Electronics'}</h4>
+                                  <h4 className="text-2xl font-black text-white uppercase italic">{selectedClaim.found_items?.title || 'Electronics'}</h4>
                                   {selectedClaim.found_item_photo_url && (
                                      <div className="w-10 h-10 rounded-lg bg-uni-500/10 border border-uni-500/20 flex items-center justify-center text-uni-400">
                                         <i className="fa-solid fa-image text-xs"></i>
@@ -65,8 +65,8 @@ const ClaimReviewModal = ({
                                   )}
                                </div>
                                <div className="flex items-center gap-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                  <span><i className="fa-solid fa-location-dot text-uni-500 mr-2"></i> {selectedClaim.found_item_location || 'Zone Not Specified'}</span>
-                                  <span><i className="fa-solid fa-calendar text-uni-400 mr-2"></i> {selectedClaim.found_item_time ? new Date(selectedClaim.found_item_time).toLocaleDateString() : 'Date Unknown'}</span>
+                                  <span><i className="fa-solid fa-location-dot text-uni-500 mr-2"></i> {selectedClaim.found_items?.location || 'Zone Not Specified'}</span>
+                                  <span><i className="fa-solid fa-calendar text-uni-400 mr-2"></i> {selectedClaim.found_items?.date_found ? new Date(selectedClaim.found_items.date_found).toLocaleDateString() : 'Date Unknown'}</span>
                                 </div>
                                <p className="text-sm text-slate-500 font-bold leading-relaxed">{selectedClaim.found_item_description || 'No detailed description provided.'}</p>
                           </div>
@@ -301,7 +301,7 @@ const ClaimReviewModal = ({
                       <div className="p-6 bg-white/5 rounded-3xl border border-white/5 inline-flex items-center gap-6 mx-auto">
                           <div className="text-left border-r border-white/10 pr-6">
                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Target Item</p>
-                               <p className="text-[10px] text-white font-black uppercase tracking-tight italic">{selectedClaim.found_item_name}</p>
+                               <p className="text-[10px] text-white font-black uppercase tracking-tight italic">{selectedClaim.found_items?.title}</p>
                           </div>
                           <div className="text-left">
                                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-1">Claimant</p>

@@ -18,12 +18,12 @@ import ReportSummary from '../../components/ReportFlow/ReportSummary';
 
 const ReportFoundItem = () => {
   const [formData, setFormData] = useState({
-    item_name: '',
+    title: '',
     description: '',
-    location_zone: '',
+    location: '',
     zone_id: null,
-    found_time: new Date().toISOString().slice(0, 16),
-    safe_photo_url: '',
+    date_found: new Date().toISOString().slice(0, 16),
+    photo_url: '',
     identified_student_id: '',
     identified_name: '',
     category: '',
@@ -120,23 +120,26 @@ const ReportFoundItem = () => {
     try {
       const finalData = { ...formData };
       if (formData.category === 'Other') {
-        finalData.item_name = otherItemName;
+        finalData.title = otherItemName;
       } else {
-        finalData.item_name = formData.category;
+        finalData.title = formData.category;
       }
 
       const reportPayload = {
-        ...finalData,
-        user_id: user.id || null, // Link to the student's account
+        title: formData.title || formData.category,
+        description: formData.description || `Student Found ${formData.category}`,
+        category: formData.category,
+        location: formData.location,
+        date_found: formData.date_found,
+        finder_id: user?.id || null,
         status: 'reported',
-        reporter_type: 'student',
-        is_verified: true, // Auto-verified for logged-in students
-        created_at: new Date().toISOString()
+        is_verified: true,
+        registry_signal: { ...formData, reporter_type: 'student' }
       };
 
-      const { error } = await supabase
-        .from('found_items')
-        .insert([reportPayload]);
+      const { error } = await supabase.rpc('submit_found_item_v2', { 
+        registry_signal: reportPayload 
+      });
 
       if (error) throw error;
 
@@ -180,9 +183,9 @@ const ReportFoundItem = () => {
                 stepLabel="Step 1: Upload Photo"
                 title="First, upload a photo of the item."
                 description="Please upload an actual photo of the item you found."
-                value={formData.safe_photo_url}
+                value={formData.photo_url}
                 onUpload={(url) => {
-                  setFormData({...formData, safe_photo_url: url});
+                  setFormData({...formData, photo_url: url});
                   setTimeout(() => goToStep(2), 800);
                 }}
                 onNext={() => goToStep(2)}
@@ -220,8 +223,8 @@ const ReportFoundItem = () => {
                 stepLabel="Step 4: Date & Time"
                 title="When was it found?"
                 description="Select the approximate date and time."
-                value={formData.found_time}
-                onChange={(val) => setFormData({...formData, found_time: val})}
+                value={formData.date_found}
+                onChange={(val) => setFormData({...formData, date_found: val})}
                 onNext={() => goToStep(5)}
               />
             )}
@@ -272,7 +275,7 @@ const ReportFoundItem = () => {
                     <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-2xl">🔍</div>
                     <div className="text-left">
                       <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1">Direct Match Reporting</p>
-                      <p className="text-sm font-bold text-white">You are reporting a find for <span className="text-uni-400">"{matchedReport.item_name}"</span></p>
+                      <p className="text-sm font-bold text-white">You are reporting a find for <span className="text-uni-400">"{matchedReport.title}"</span></p>
                     </div>
                   </div>
                 )}

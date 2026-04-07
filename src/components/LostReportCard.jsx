@@ -10,13 +10,13 @@ const LostReportCard = ({ report, onWitness }) => {
   const { user } = useAuth();
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
-  const formattedDate = new Date(report.last_seen_time).toLocaleDateString('en-US', {
+  const formattedDate = new Date(report.date_lost).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
   }).toUpperCase();
 
-  const formattedTime = new Date(report.last_seen_time).toLocaleTimeString('en-US', {
+  const formattedTime = new Date(report.date_lost).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
@@ -28,12 +28,12 @@ const LostReportCard = ({ report, onWitness }) => {
     >
       {/* 1. Image/Header Section */}
       <div className={`relative overflow-hidden bg-bg-elevated/20 transition-all duration-700 ${
-        report.safe_photo_url ? 'aspect-[16/10]' : 'h-32'
+        report.photo_url ? 'aspect-[16/10]' : 'h-32'
       }`}>
-        {report.safe_photo_url ? (
+        {report.photo_url ? (
           <img 
-            src={report.safe_photo_url} 
-            alt={report.item_name} 
+            src={report.photo_url} 
+            alt={report.title} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
           />
         ) : (
@@ -82,7 +82,7 @@ const LostReportCard = ({ report, onWitness }) => {
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
                 <h3 className="text-xl font-bold text-white leading-tight group-hover:text-accent-default transition-colors line-clamp-1 mb-2">
-                    {report.location_zone}
+                    {report.location}
                 </h3>
                 
                 {report.potential_zone_names && report.potential_zone_names.length > 0 && (

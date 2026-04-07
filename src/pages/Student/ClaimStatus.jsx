@@ -23,7 +23,7 @@ const ClaimStatus = () => {
             id,
             category,
             description,
-            location_zone
+            location
           )
         `)
         .eq('tracking_id', trackingId)

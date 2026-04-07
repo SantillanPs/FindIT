@@ -46,17 +46,17 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
     }`}>
       {/* 1. Visual Header */}
       <div className={`relative overflow-hidden bg-slate-950/20 transition-all duration-700 ${
-        report.safe_photo_url ? 'aspect-[21/9]' : 'h-32'
+        report.photo_url ? 'aspect-[21/9]' : 'h-32'
       }`}>
-        {report.safe_photo_url ? (
+        {report.photo_url ? (
           <div className="relative w-full h-full">
             <img 
-              src={report.safe_photo_url} 
-              alt={report.item_name} 
+              src={report.photo_url} 
+              alt={report.title} 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" 
             />
             <button 
-                onClick={() => onPreview(report.safe_photo_url)}
+                onClick={() => onPreview(report.photo_url)}
                 className="absolute inset-0 bg-slate-950/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
             >
                 <div className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
@@ -108,7 +108,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div className="text-left">
                  <h3 className="text-2xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors">
-                     {report.location_zone}
+                     {report.location}
                  </h3>
                  <p className="text-[12px] font-medium text-slate-400 uppercase tracking-wider mt-1">Case Registry Record & Intelligence</p>
             </div>
@@ -156,7 +156,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
                      <div>
                          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Temporal Marker</p>
                          <p className="text-[13px] font-bold text-white tracking-wider mt-0.5">
-                             {new Date(report.last_seen_time).toLocaleDateString()} <span className="text-slate-500 mx-2">•</span> {new Date(report.last_seen_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                             {new Date(report.date_lost).toLocaleDateString()} <span className="text-slate-500 mx-2">•</span> {new Date(report.date_lost).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                          </p>
                      </div>
                 </div>

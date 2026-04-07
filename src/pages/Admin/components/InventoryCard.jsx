@@ -72,15 +72,15 @@ const InventoryCard = ({
 
              <div className="space-y-1.5 text-left">
                 <h4 className="text-sm font-bold text-white leading-tight group-hover:text-uni-400 transition-colors flex items-center gap-2">
-                   {item.location_zone}
+                   {item.location}
                 </h4>
                  <div className="flex items-center gap-3">
                     <Badge className="bg-uni-500/10 text-uni-400 hover:bg-uni-500/20 border-uni-500/20 text-[13px] font-bold px-2.5 py-1">
-                        {item.item_name}
+                        {item.title}
                     </Badge>
                     <span className="text-[13px] font-medium text-slate-400 flex items-center gap-1.5">
                        <Calendar size={14} className="text-slate-500" />
-                       {new Date(item.found_time).toLocaleDateString()}
+                       {new Date(item.date_found).toLocaleDateString()}
                     </span>
                  </div>
              </div>

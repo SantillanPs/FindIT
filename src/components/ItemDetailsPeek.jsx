@@ -10,7 +10,7 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
 
   if (!item) return null;
 
-  const formattedDate = new Date(item.found_time).toLocaleDateString('en-US', {
+  const formattedDate = new Date(item.date_found).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -44,11 +44,11 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
 
         {/* Media Side */}
         <div className="w-full md:w-1/2 aspect-square md:h-auto relative bg-bg-elevated/20 overflow-hidden">
-          {item.safe_photo_url ? (
+          {item.photo_url ? (
             <img 
-              src={item.safe_photo_url} 
+              src={item.photo_url} 
               className="w-full h-full object-cover" 
-              alt={item.item_name}
+              alt={item.title}
             />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center space-y-6">
@@ -79,7 +79,7 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
                 <div className="h-px flex-grow bg-white/10"></div>
                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest leading-none bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Ref: #{item.id.toString().padStart(4, '0')}</span>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-[0.9]">{item.item_name}</h1>
+              <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter italic leading-[0.9]">{item.title}</h1>
             </div>
 
             <div className="glass-panel p-8 rounded-3xl border border-white/5 space-y-6">
@@ -93,7 +93,7 @@ const ItemDetailsPeek = ({ item, isOpen, onClose, onShare }) => {
                   <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Recovery Spot</p>
                   <div className="flex items-center gap-3 text-white">
                     <i className="fa-solid fa-map-pin text-uni-400"></i>
-                    <span className="text-sm font-black uppercase tracking-tight">{item.location_zone}</span>
+                    <span className="text-sm font-black uppercase tracking-tight">{item.location}</span>
                   </div>
                 </div>
                 <div className="space-y-2">

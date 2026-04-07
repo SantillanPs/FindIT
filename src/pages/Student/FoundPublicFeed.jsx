@@ -27,8 +27,8 @@ const FoundPublicFeed = () => {
     try {
       const { data, error } = await supabase
         .from('found_items')
-        .select('id, item_name, category, description, safe_photo_url, found_time, location_zone')
-        .order('found_time', { ascending: false });
+        .select('id, title, category, description, photo_url, date_found, location')
+        .order('date_found', { ascending: false });
       
       if (error) throw error;
       setItems(data || []);
@@ -78,9 +78,9 @@ const FoundPublicFeed = () => {
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.item_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.location_zone.toLowerCase().includes(searchQuery.toLowerCase());
+                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });

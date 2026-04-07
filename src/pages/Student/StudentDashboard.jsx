@@ -38,8 +38,8 @@ const StudentDashboard = () => {
       const [pLostRes, pFoundRes, pubFoundRes, pubLostRes, deptsRes, assetsRes, notifsRes] = await Promise.all([
         supabase.from('lost_items').select('*').eq('guest_email', user.email),
         supabase.from('found_items').select('*').eq('guest_email', user.email),
-        supabase.from('found_items').select('*').order('found_time', { ascending: false }).limit(3),
-        supabase.from('lost_items').select('*').order('last_seen_time', { ascending: false }).limit(3),
+        supabase.from('found_items').select('*').order('date_found', { ascending: false }).limit(3),
+        supabase.from('lost_items').select('*').order('date_lost', { ascending: false }).limit(3),
         supabase.from('department_leaderboard').select('*'),
         supabase.from('assets').select('*'),
         supabase.from('notifications').select('*').eq('user_id', user.id).eq('is_read', false)
@@ -185,14 +185,14 @@ const StudentDashboard = () => {
                                 className="glass-panel p-4 border border-white/5 hover:border-uni-500/30 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"
                             >
                                 <div className="h-28 w-full bg-slate-900 rounded-2xl mb-3 overflow-hidden">
-                                    {item.safe_photo_url ? (
-                                        <img src={item.safe_photo_url} alt={item.item_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    {item.photo_url ? (
+                                        <img src={item.photo_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-3xl opacity-20">📦</div>
                                     )}
                                 </div>
-                                <h4 className="text-[10px] font-black text-white uppercase tracking-wider mb-1 line-clamp-1">{item.item_name}</h4>
-                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-auto">{item.location_zone}</p>
+                                <h4 className="text-[10px] font-black text-white uppercase tracking-wider mb-1 line-clamp-1">{item.title}</h4>
+                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-auto">{item.location}</p>
                                 <div className="absolute top-2 right-2 px-2 py-0.5 rounded bg-uni-500 text-white text-[7px] font-black uppercase tracking-tighter">NEW</div>
                             </motion.div>
                         ))
@@ -226,9 +226,9 @@ const StudentDashboard = () => {
                                 <div className="flex items-center gap-4 min-w-0">
                                     <div className="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center text-lg border border-white/5 group-hover:border-amber-500/30 transition-colors">🔍</div>
                                     <div className="text-left min-w-0">
-                                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest truncate">{report.item_name}</h4>
+                                        <h4 className="text-[10px] font-black text-white uppercase tracking-widest truncate">{report.title}</h4>
                                         <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                            {report.location_zone} <span className="text-slate-800">•</span> {report.guest_first_name ? `${report.guest_first_name[0]}***` : 'Student'}
+                                            {report.location} <span className="text-slate-800">•</span> {report.guest_first_name ? `${report.guest_first_name[0]}***` : 'Student'}
                                         </p>
                                     </div>
                                 </div>
@@ -286,7 +286,7 @@ const StudentDashboard = () => {
                         [...personalLost, ...personalFound].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map((case_item, i) => (
                             <div key={i} className="flex items-center justify-between group p-2 hover:bg-white/[0.02] rounded-xl transition-all cursor-default">
                                 <div className="text-left">
-                                    <p className="text-[9px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{case_item.item_name}</p>
+                                    <p className="text-[9px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{case_item.title}</p>
                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{case_item.status.replace('_', ' ')}</p>
                                 </div>
                                 <div className={`w-1.5 h-1.5 rounded-full ${['matched', 'pending_owner'].includes(case_item.status) ? 'bg-blue-500' : 'bg-slate-700'}`}></div>

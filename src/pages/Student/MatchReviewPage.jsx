@@ -82,12 +82,12 @@ const MatchReviewPage = () => {
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">Your Original Report</p>
                     <div className="glass-panel p-8 rounded-[2rem] border border-white/5 space-y-6">
                         <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden">
-                            {matchData.lost.safe_photo_url && (
-                                <img src={matchData.lost.safe_photo_url} className="w-full h-full object-cover" alt="Lost" />
+                            {matchData.lost.photo_url && (
+                                <img src={matchData.lost.photo_url} className="w-full h-full object-cover" alt="Lost" />
                             )}
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-black text-white uppercase">{matchData.lost.item_name}</h2>
+                            <h2 className="text-2xl font-black text-white uppercase">{matchData.lost.title}</h2>
                             <p className="text-slate-400 text-sm leading-relaxed">{matchData.lost.description}</p>
                         </div>
                     </div>
@@ -98,8 +98,8 @@ const MatchReviewPage = () => {
                     <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Potential Match Found</p>
                     <div className="glass-panel p-8 rounded-[2rem] border border-uni-400/20 bg-uni-600/5 space-y-6">
                         <div className="aspect-video bg-white/5 rounded-2xl overflow-hidden border border-white/10">
-                            {matchData.found.safe_photo_url && (
-                                <img src={matchData.found.safe_photo_url} className="w-full h-full object-cover" alt="Found" />
+                            {matchData.found.photo_url && (
+                                <img src={matchData.found.photo_url} className="w-full h-full object-cover" alt="Found" />
                             )}
                         </div>
                         <div className="space-y-2">

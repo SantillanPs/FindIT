@@ -116,9 +116,9 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
 
               {/* Attributes Rows */}
               {[
-                { label: 'Item Type', icon: Tag, val1: foundItem.item_name, val2: match.item.item_name, highlight: true },
-                { label: 'Location', icon: MapPin, val1: foundItem.location_zone, val2: match.item.location_zone, color1: 'text-uni-400', color2: 'text-amber-500' },
-                { label: 'Timestamp', icon: Calendar, val1: new Date(foundItem.found_time).toLocaleDateString(), val2: new Date(match.item.last_seen_time).toLocaleDateString() }
+                { label: 'Item Type', icon: Tag, val1: foundItem.title, val2: match.item.title, highlight: true },
+                { label: 'Location', icon: MapPin, val1: foundItem.location, val2: match.item.location, color1: 'text-uni-400', color2: 'text-amber-500' },
+                { label: 'Timestamp', icon: Calendar, val1: new Date(foundItem.date_found).toLocaleDateString(), val2: new Date(match.item.date_lost).toLocaleDateString() }
               ].map((row, i) => (
                 <div key={i} className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-2xl transition-all items-center border-t border-white/5">
                   <div className="col-span-2 flex items-center gap-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">
@@ -151,8 +151,8 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                 <div className="flex flex-col sm:flex-row items-center gap-10">
                   <div className="flex items-center gap-4">
                     <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-600 overflow-hidden shadow-inner">
-                      {match.item.safe_photo_url ? (
-                        <img src={match.item.safe_photo_url} className="w-full h-full object-cover" alt="" />
+                      {match.item.photo_url ? (
+                        <img src={match.item.photo_url} className="w-full h-full object-cover" alt="" />
                       ) : (
                         <Lock className="opacity-20" size={24} />
                       )}
@@ -174,11 +174,11 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                   </div>
                 </div>
                 
-                {match.item.safe_photo_url && (
+                {match.item.photo_url && (
                   <Button 
                     variant="ghost" 
                     size="sm"
-                    onClick={() => setPreviewImage(match.item.safe_photo_url)}
+                    onClick={() => setPreviewImage(match.item.photo_url)}
                     className="h-12 w-full md:w-auto px-8 rounded-xl hover:bg-uni-500/10 text-uni-400 font-bold text-[12px] uppercase tracking-wider flex items-center gap-2 group/btn"
                   >
                     <ExternalLink size={14} className="group-hover/btn:scale-110 transition-transform" />

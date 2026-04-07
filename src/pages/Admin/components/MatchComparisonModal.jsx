@@ -43,7 +43,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
                  <div className="space-y-8 bg-white/5 rounded-3xl p-8 border border-white/5 text-left">
                     <div>
                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2">Item Name</p>
-                       <h3 className="text-xl font-black text-white uppercase">{selectedMatchPair.found.item_name}</h3>
+                       <h3 className="text-xl font-black text-white uppercase">{selectedMatchPair.found.title}</h3>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-6">
@@ -53,7 +53,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
                        </div>
                        <div>
                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Stored Location</p>
-                          <p className="text-[11px] font-black text-uni-400 uppercase tracking-wide">{selectedMatchPair.found.location_zone}</p>
+                          <p className="text-[11px] font-black text-uni-400 uppercase tracking-wide">{selectedMatchPair.found.location}</p>
                        </div>
                     </div>
 
@@ -80,8 +80,8 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
                  <div className="space-y-8 bg-amber-500/5 rounded-3xl p-8 border-amber-500/10 text-left">
                     <div>
                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Reported Item</p>
-                       <h3 className="text-xl font-black text-white uppercase">{selectedMatchPair.lost.item_name}</h3>
-                       <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">{selectedMatchPair.lost.location_zone} • {new Date(selectedMatchPair.lost.last_seen_time).toLocaleDateString()}</p>
+                       <h3 className="text-xl font-black text-white uppercase">{selectedMatchPair.lost.title}</h3>
+                       <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">{selectedMatchPair.lost.location} • {new Date(selectedMatchPair.lost.date_lost).toLocaleDateString()}</p>
                     </div>
                     
                      <div className="grid grid-cols-2 gap-6">

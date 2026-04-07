@@ -55,10 +55,10 @@ const ReportSummary = ({
                             {type === 'found' ? 'Found Location' : 'Last Seen Journey'}
                         </p>
                         {type === 'found' ? (
-                            <p className="text-lg font-black text-white uppercase tracking-tight leading-snug">{formData.location_zone}</p>
+                            <p className="text-lg font-black text-white uppercase tracking-tight leading-snug">{formData.location}</p>
                         ) : (
                             <div className="flex flex-wrap gap-2 pt-1">
-                                {formData.location_zone.split(', ').map((loc, i) => (
+                                {formData.location.split(', ').map((loc, i) => (
                                     <span key={i} className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-400 uppercase tracking-tight">
                                         {loc} 
                                     </span>
@@ -95,8 +95,8 @@ const ReportSummary = ({
             </div>
 
             <div className="relative group rounded-[3rem] overflow-hidden border-2 border-white/5 aspect-video lg:aspect-auto">
-                {formData.safe_photo_url ? (
-                    <img src={formData.safe_photo_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Item Preview" />
+                {formData.photo_url ? (
+                    <img src={formData.photo_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Item Preview" />
                 ) : (
                     <div className="w-full h-full bg-white/5 flex flex-col items-center justify-center space-y-4 opacity-50 italic text-center p-10">
                         <span className="text-5xl">📷</span>

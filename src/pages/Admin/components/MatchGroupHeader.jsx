@@ -22,7 +22,7 @@ const MatchGroupHeader = ({ foundItem, setPreviewImage }) => {
           <p className="text-[13px] font-bold text-uni-400 uppercase tracking-wider">Investigation Anchor</p>
           <div className="flex flex-wrap items-center gap-4">
             <h3 className="text-2xl font-bold text-white tracking-tight">
-              {foundItem.item_name}
+              {foundItem.title}
             </h3>
             <Badge className="bg-uni-500 text-white px-3.5 py-1.5 rounded-xl font-bold text-[13px] shadow-lg shadow-uni-500/20">
               ID: #F-{foundItem.id}
@@ -32,7 +32,7 @@ const MatchGroupHeader = ({ foundItem, setPreviewImage }) => {
       </div>
 
       <Button 
-        onClick={() => setPreviewImage(foundItem.found_photo_url || foundItem.safe_photo_url)}
+        onClick={() => setPreviewImage(foundItem.found_photo_url || foundItem.photo_url)}
         className="relative z-10 px-8 h-14 bg-uni-600 hover:bg-uni-700 text-white rounded-xl text-[13px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-3 shadow-xl shadow-uni-600/10 active:scale-[0.98] group-hover:shadow-uni-600/20"
       >
         <Camera size={18} />

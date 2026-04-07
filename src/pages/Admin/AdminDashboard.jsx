@@ -399,31 +399,31 @@ const AdminDashboard = () => {
     // Time-based magic filters from Analytics
     if (searchTerm === 'today') {
       const today = new Date().toLocaleDateString();
-      return new Date(item.found_time).toLocaleDateString() === today;
+      return new Date(item.date_found).toLocaleDateString() === today;
     }
     if (searchTerm === 'weekly') {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return new Date(item.found_time) >= weekAgo;
+      return new Date(item.date_found) >= weekAgo;
     }
 
     return (
-      item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.location_zone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.id.toString().includes(searchTerm)
     );
   });
 
   const historyFiltered = historyItems.filter(item => 
-    item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.released_to_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.id.toString().includes(searchTerm)
   );
 
   const filteredClaims = pendingClaims.filter(claim => 
     claim.guest_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    claim.found_item_category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    claim.found_items?.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     claim.proof_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     claim.contact_info?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     claim.course_department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -431,10 +431,10 @@ const AdminDashboard = () => {
   );
 
   const filteredMatches = matches.filter(group => 
-    group.found_item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    group.found_item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.found_item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     group.top_matches.some(m => 
-        m.item.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.item.guest_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.item.description?.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -444,16 +444,16 @@ const AdminDashboard = () => {
     // Time-based magic filters from Analytics
     if (searchTerm === 'today') {
       const today = new Date().toLocaleDateString();
-      return new Date(report.last_seen_time).toLocaleDateString() === today;
+      return new Date(report.date_lost).toLocaleDateString() === today;
     }
     if (searchTerm === 'weekly') {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return new Date(report.last_seen_time) >= weekAgo;
+      return new Date(report.date_lost) >= weekAgo;
     }
 
     return (
-      report.item_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      report.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.guest_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

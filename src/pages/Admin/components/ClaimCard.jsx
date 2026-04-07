@@ -36,7 +36,7 @@ const ClaimCard = ({ claim, onReview }) => {
                  <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     <p className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                        <ShieldCheck size={12} className="text-uni-400" />
-                       Item Category: <span className="text-slate-200 ml-0.5">{claim.found_item_category}</span>
+                       Item Category: <span className="text-slate-200 ml-0.5">{claim.found_items?.category || 'General'}</span>
                     </p>
                     {claim.owner_email && (
                       <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-800"></div>

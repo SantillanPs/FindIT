@@ -27,7 +27,7 @@ const LostReportsRegistry = () => {
         .from('lost_items')
         .select('*')
         .eq('is_public', true)
-        .order('last_seen_time', { ascending: false });
+        .order('date_lost', { ascending: false });
 
       if (error) throw error;
       setLostReports(data || []);
@@ -46,14 +46,14 @@ const LostReportsRegistry = () => {
   const filteredReports = lostReports
     .filter(report => {
       const matchesSearch = (report.description?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            report.item_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            report.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             report.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            report.location_zone?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            report.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                             report.owner_name?.toLowerCase().includes(searchQuery.toLowerCase()));
       const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
-    .sort((a, b) => new Date(b.last_seen_time) - new Date(a.last_seen_time));
+    .sort((a, b) => new Date(b.date_lost) - new Date(a.date_lost));
 
   return (
     <motion.div 

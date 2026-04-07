@@ -47,12 +47,12 @@ const MatchResults = () => {
       const formattedMatches = (matchedData || []).map(m => ({
         item: {
           id: m.id,
-          item_name: m.item_name,
+          title: m.title,
           category: m.category,
           description: m.description,
-          location_zone: m.location_zone,
-          found_time: m.found_time,
-          safe_photo_url: m.safe_photo_url
+          location: m.location,
+          date_found: m.date_found,
+          photo_url: m.photo_url
         },
         similarity_score: m.similarity
       }));
@@ -117,14 +117,14 @@ const MatchResults = () => {
                 >
                   <div className="flex flex-col md:flex-row min-h-[320px]">
                     <div className="w-full md:w-80 h-64 md:h-auto bg-muted shrink-0 relative overflow-hidden">
-                      {item.safe_photo_url ? (
-                        <img src={item.safe_photo_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                      {item.photo_url ? (
+                        <img src={item.photo_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-6xl opacity-10">📦</div>
                       )}
                       <div className="absolute top-4 left-4">
                          <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-[9px] py-1 px-3">
-                            {item.location_zone}
+                            {item.location}
                          </Badge>
                       </div>
                     </div>
@@ -134,7 +134,7 @@ const MatchResults = () => {
                         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
                           <div className="space-y-1">
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.category} recovered</p>
-                            <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter uppercase leading-none">{item.item_name}</h3>
+                            <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter uppercase leading-none">{item.title}</h3>
                           </div>
                           <Badge variant={tier.variant} className="py-2 px-5 text-[10px] font-black uppercase tracking-widest gap-2 shadow-sm shrink-0 w-fit">
                             <i className={`fa-solid ${tier.icon}`}></i>
@@ -153,7 +153,7 @@ const MatchResults = () => {
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-10 mt-auto border-t border-border/40">
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <i className="fa-solid fa-calendar-check text-xs"></i>
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Logged: {new Date(item.found_time).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Logged: {new Date(item.date_found).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                         </div>
      
                         <Button 

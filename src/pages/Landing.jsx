@@ -77,8 +77,8 @@ const Landing = () => {
           const query = supabase
             .from('found_items')
             .select('*')
-            .ilike('item_name', `%${searchQuery}%`)
-            .order('found_time', { ascending: false })
+            .ilike('title', `%${searchQuery}%`)
+            .order('date_found', { ascending: false })
             .limit(12);
           
           const fallbackRes = await query;
@@ -99,8 +99,8 @@ const Landing = () => {
         // REGULAR FETCH (Latest items)
         let query = supabase
           .from('found_items')
-          .select('id, item_name, category, description, safe_photo_url, found_time, location_zone')
-          .order('found_time', { ascending: false })
+          .select('id, title, category, description, photo_url, date_found, location')
+          .order('date_found', { ascending: false })
           .limit(12);
 
         if (selectedCategory && selectedCategory !== 'all') {
@@ -134,8 +134,8 @@ const Landing = () => {
       const { data, error } = await Promise.race([
         supabase
           .from('lost_items')
-          .select('id, item_name, category, description, safe_photo_url, last_seen_time, location_zone')
-          .order('last_seen_time', { ascending: false })
+          .select('id, title, category, description, photo_url, date_lost, location')
+          .order('date_lost', { ascending: false })
           .limit(12),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 20000))
       ]);
@@ -158,7 +158,7 @@ const Landing = () => {
   };
 
   const handleShare = (item) => {
-    const text = `I found a ${item.item_name} on FindIT! If this is yours, you can claim it here.`;
+    const text = `I found a ${item.title} on FindIT! If this is yours, you can claim it here.`;
     const url = window.location.origin + `/submit-claim/${item.id}`;
     
     if (navigator.share) {
@@ -240,9 +240,9 @@ const Landing = () => {
                 </div>
                 
                  <div className="aspect-[16/9] md:h-60 bg-slate-950/50 flex items-center justify-center relative overflow-hidden">
-                    {item.safe_photo_url ? (
+                    {item.photo_url ? (
                       <img 
-                        src={item.safe_photo_thumbnail_url || item.safe_photo_url} 
+                        src={item.photo_thumbnail_url || item.photo_url} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
                         alt="" 
                         loading="lazy"
@@ -261,7 +261,7 @@ const Landing = () => {
                     </div>
   
                     <p className="text-slate-400 text-xs md:text-sm leading-relaxed line-clamp-2 font-medium italic">
-                      A <span className="text-white font-bold">{item.item_name}</span> recovered at <span className="text-sky-400 font-bold">{item.location_zone}</span>.
+                      A <span className="text-white font-bold">{item.title}</span> recovered at <span className="text-sky-400 font-bold">{item.location}</span>.
                     </p>
 
                    <div className="pt-8 border-t border-white/5 flex gap-4">

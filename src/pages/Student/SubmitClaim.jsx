@@ -256,7 +256,7 @@ const SubmitClaim = () => {
               <div className="space-y-2 flex items-center gap-6">
                   {item && (
                     <div className="w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-3xl overflow-hidden shrink-0">
-                      {item.safe_photo_url ? <img src={item.safe_photo_url} className="w-full h-full object-cover opacity-50" /> : '📦'}
+                      {item.photo_url ? <img src={item.photo_url} className="w-full h-full object-cover opacity-50" /> : '📦'}
                     </div>
                   )}
                   <div className="space-y-1">

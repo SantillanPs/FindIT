@@ -17,13 +17,13 @@ import ReportSummary from '../../components/ReportFlow/ReportSummary';
 
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
-    item_name: '',
+    title: '',
     description: '',
-    location_zone: '',
+    location: '',
     zone_id: null,
-    last_seen_time: new Date().toISOString().slice(0, 16),
+    date_lost: new Date().toISOString().slice(0, 16),
     category: '',
-    safe_photo_url: '',
+    photo_url: '',
     guest_first_name: '',
     guest_last_name: '',
     guest_email: '',
@@ -90,23 +90,26 @@ const ReportLostItem = () => {
     try {
       const finalData = { ...formData };
       if (formData.category === 'Other') {
-        finalData.item_name = otherItemName;
+        finalData.title = otherItemName;
       } else {
-        finalData.item_name = formData.category;
+        finalData.title = formData.category;
       }
 
       const reportPayload = {
-        ...finalData,
-        user_id: user.id || null, // Link to the student's account
+        title: formData.title || formData.category,
+        description: formData.description || `Student Reported ${formData.category}`,
+        category: formData.category,
+        location: formData.location,
+        date_lost: formData.date_lost,
+        owner_id: user?.id || null,
         status: 'reported',
-        reporter_type: 'student',
-        is_verified: true, // Auto-verified for logged-in students
-        created_at: new Date().toISOString()
+        is_verified: true,
+        registry_signal: { ...formData, reporter_type: 'student' }
       };
 
-      const { error } = await supabase
-        .from('lost_items')
-        .insert([reportPayload]);
+      const { error } = await supabase.rpc('submit_lost_item_v2', { 
+        registry_signal: reportPayload 
+      });
 
       if (error) throw error;
 
@@ -150,8 +153,8 @@ const ReportLostItem = () => {
                 stepLabel="Step 1: Visual Reference"
                 title="Do you have a photo of the item?"
                 description="A photo helps us identify your item faster. You can use a real photo or a reference image."
-                value={formData.safe_photo_url}
-                onUpload={(url) => setFormData({...formData, safe_photo_url: url})}
+                value={formData.photo_url}
+                onUpload={(url) => setFormData({...formData, photo_url: url})}
                 onNext={() => goToStep(2)}
               />
             )}
@@ -184,8 +187,8 @@ const ReportLostItem = () => {
                 stepLabel="Step 4: Approximate Time"
                 title="When did it go missing?"
                 description="Select the date and time you last saw your item."
-                value={formData.last_seen_time}
-                onChange={(val) => setFormData({...formData, last_seen_time: val})}
+                value={formData.date_lost}
+                onChange={(val) => setFormData({...formData, date_lost: val})}
                 onNext={() => goToStep(5)}
               />
             )}

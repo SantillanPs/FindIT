@@ -75,8 +75,8 @@ const ZoneSelectorStep = ({
     fetchData();
 
     // Initialize selectedZones from formData if they exist
-    if (formData.potential_zone_ids?.length > 0 && formData.location_zone) {
-        const names = formData.location_zone.split(', ');
+    if (formData.potential_zone_ids?.length > 0 && formData.location) {
+        const names = formData.location.split(', ');
         const initial = formData.potential_zone_ids.map((id, i) => ({
             id,
             name: names[i] || 'Unknown Location'
@@ -180,7 +180,7 @@ const ZoneSelectorStep = ({
         const fullName = [...navigationPath.map(p => p.name), zone.name].join(' - ');
         setFormData({
             ...formData,
-            location_zone: fullName,
+            location: fullName,
             zone_id: zone.id,
             potential_zone_ids: [zone.id] // Keep array for backend consistency
         });
@@ -196,7 +196,7 @@ const ZoneSelectorStep = ({
             setFormData({
                 ...formData,
                 potential_zone_ids: newSelected.map(z => z.id),
-                location_zone: newSelected.map(z => z.name).join(', '),
+                location: newSelected.map(z => z.name).join(', '),
                 zone_id: newSelected[0]?.id || null
             });
         }
@@ -211,7 +211,7 @@ const ZoneSelectorStep = ({
     setFormData({
         ...formData,
         potential_zone_ids: newSelected.map(z => z.id),
-        location_zone: newSelected.map(z => z.name).join(', '),
+        location: newSelected.map(z => z.name).join(', '),
         zone_id: newSelected[0]?.id || null
     });
   };
@@ -230,7 +230,7 @@ const ZoneSelectorStep = ({
     setSelectedZones(newSelected);
     setFormData({
       ...formData,
-      location_zone: newSelected.map(z => z.name).join(', '),
+      location: newSelected.map(z => z.name).join(', '),
       potential_zone_ids: newSelected.map(z => z.id).filter(id => id !== null)
     });
     setOtherLocation('');
