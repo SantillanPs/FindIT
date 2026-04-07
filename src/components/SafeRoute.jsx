@@ -22,7 +22,7 @@ export const ProtectedRoute = ({ children }) => {
 };
 
 export const GuestRoute = () => {
-  const { session, loading } = useAuth();
+  const { session, user, loading } = useAuth();
   // Bypass redirect if in the middle of a registration success flow
   const isRegistering = sessionStorage.getItem('registration_in_progress') === 'true';
 
@@ -34,5 +34,9 @@ export const GuestRoute = () => {
     );
   }
 
-  return (session && !isRegistering) ? <Navigate to="/" replace /> : <Outlet />;
+  // WAIT FOR TOTAL IDENTITY SIGNAL: Only redirect if session AND user are present
+  // If session exists but user is null, stay on the page (profile sync is happening)
+  const shouldRedirect = session && user && !isRegistering;
+
+  return shouldRedirect ? <Navigate to={user.role === 'admin' ? '/admin' : '/student'} replace /> : <Outlet />;
 };

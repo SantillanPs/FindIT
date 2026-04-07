@@ -26,7 +26,7 @@ const Login = () => {
   const [resetSuccess, setResetSuccess] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login, session, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -48,8 +48,8 @@ const Login = () => {
 
       if (error) throw error;
       
-      // AuthContext listener will handle the user state
-      navigate(redirectPath);
+      // AuthContext listener will handle the user state and SafeRoute will redirect 
+      // automatically once the profile is confirmed.
     } catch (err) {
       setError(err.message || 'Invalid email or password.');
     } finally {
@@ -162,13 +162,13 @@ const Login = () => {
 
               <Button 
                 type="submit" 
-                disabled={loading} 
-                className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group mt-4"
+                disabled={loading || (session && !user)} 
+                className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group mt-4 overflow-hidden relative"
               >
-                {loading ? (
-                  <div className="flex items-center gap-2">
+                {(loading || (session && !user)) ? (
+                  <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                    Signing In...
+                    {(session && !user) ? "Syncing Identity..." : "Signing In..."}
                   </div>
                 ) : (
                   <>

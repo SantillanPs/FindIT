@@ -83,31 +83,34 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // 2. Immediate Session Check
     const initialize = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      setSession(initialSession);
-      
-      // UNLOCK INSTANTLY: Don't wait for profile to show the UI
-      setLoading(false);
-
-      if (initialSession) {
-        fetchUserProfile(initialSession);
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        
+        if (initialSession) {
+          // BLOCK UNTIL IDENTITY IS SYNCED
+          await fetchUserProfile(initialSession);
+        }
+      } finally {
+        // ALWAYS UNLOCK: Avoid terminal hang if Supabase is down
+        setLoading(false);
       }
     };
 
     initialize();
 
     // 3. Reactive Auth Listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       
-      // UNLOCK INSTANTLY: Don't wait for profile sync to release the UI
-      setLoading(false);
-
-      if (currentSession) {
-        fetchUserProfile(currentSession);
-      } else {
+      if (currentSession && event === 'SIGNED_IN') {
+        // DO NOT UNLOCK UNTIL PROFILE IS SYNCED FOR NEW LOGINS
+        await fetchUserProfile(currentSession);
+      } else if (!currentSession) {
         setUser(null);
       }
+      
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
