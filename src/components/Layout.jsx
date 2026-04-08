@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
@@ -144,22 +145,29 @@ const LayoutContents = ({ children }) => {
 
   const fetchAdminStats = async () => {
     try {
-      const [claimsRes, matchesRes, lostRes] = await Promise.all([
+      // Use Promise.allSettled to ensure failure in one doesn't kill the batch
+      const results = await Promise.allSettled([
         supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }), // Re-using matches logic
+        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }),
         supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported')
       ]);
 
+      const [claimsRes, matchesRes, lostRes] = results.map(r => r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason });
+
       let feedbacksCount = 0;
       if (user?.role === 'super_admin') {
-        const { count } = await supabase.from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-        feedbacksCount = count || 0;
+        try {
+          const { count } = await supabase.from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+          feedbacksCount = count || 0;
+        } catch (fErr) {
+          console.error('[STATS] Feedback fetch failed:', fErr);
+        }
       }
 
       setAdminStats({
-        claims: claimsRes.count || 0,
-        matches: matchesRes.data?.length || 0,
-        lost: lostRes.count || 0,
+        claims: claimsRes?.count || 0,
+        matches: matchesRes?.data?.length || 0,
+        lost: lostRes?.count || 0,
         feedbacks: feedbacksCount
       });
     } catch (error) {

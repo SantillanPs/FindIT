@@ -101,16 +101,20 @@ export const AuthProvider = ({ children }) => {
 
     // 3. Reactive Auth Listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      setSession(currentSession);
-      
-      if (currentSession && event === 'SIGNED_IN') {
-        // DO NOT UNLOCK UNTIL PROFILE IS SYNCED FOR NEW LOGINS
-        await fetchUserProfile(currentSession);
-      } else if (!currentSession) {
-        setUser(null);
+      try {
+        setSession(currentSession);
+        
+        if (currentSession && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+          // DO NOT UNLOCK UNTIL PROFILE IS SYNCED FOR NEW LOGINS
+          await fetchUserProfile(currentSession);
+        } else if (!currentSession) {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error('[AUTH] Critical failure in auth state listener:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
