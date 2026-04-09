@@ -20,9 +20,9 @@ const HallOfIntegrity = () => {
         .from('department_leaderboard')
         .select('*');
 
-      // Fetch student leaderboard from users table
+      // Fetch student leaderboard from user_profiles_v1 table
       const { data: students, error: studError } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .select('id, full_name, email, department, integrity_points')
         .eq('role', 'student')
         .gt('integrity_points', 0)

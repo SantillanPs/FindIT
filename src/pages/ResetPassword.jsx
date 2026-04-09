@@ -66,7 +66,7 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 md:py-20 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.24))] px-4 py-10 md:py-20 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-900/20 via-transparent to-transparent"></div>
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] bg-sky-500/10 rounded-full pointer-events-none"></div>

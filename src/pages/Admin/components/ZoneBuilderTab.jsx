@@ -4,7 +4,14 @@ import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../context/AuthContext';
 import ZoneCatalog from './zone-builder/ZoneCatalog';
 import ZoneCanvas from './zone-builder/ZoneCanvas';
+import { Layout, Map, Settings2, ShieldCheck, Activity, ChevronRight, RefreshCw, PenTool } from "lucide-react";
 
+/**
+ * ZoneBuilderTab - Premium Professional (Pro Max)
+ * - Refined workbench layout.
+ * - Human-centric labels (No "Blueprint Workbench").
+ * - Clean typography (No aggressive italics).
+ */
 const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   const [zones, setZones] = useState([]);
   const [adjacencies, setAdjacencies] = useState([]);
@@ -32,15 +39,12 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-        // Ignore if typing in an input
         const tag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
         if (tag === 'input' || tag === 'select' || tag === 'textarea') return;
         
         if (e.code === 'Space') {
-            e.preventDefault(); // Prevent page scroll
-            if (canvasMode !== 'pan') {
-                setCanvasMode('pan');
-            }
+            e.preventDefault();
+            if (canvasMode !== 'pan') setCanvasMode('pan');
             return;
         }
 
@@ -94,7 +98,7 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
       setZones(zonesRes.data || []);
       setAdjacencies(edgesRes.data || []);
     } catch (err) {
-      console.error('Failed to load map graph data from Supabase', err);
+      console.error('Failed to load map data', err);
     } finally {
       setLoading(false);
       setActionLoading(false);
@@ -105,18 +109,13 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     try {
       const { error } = await supabase
         .from('zones')
-        .update({ 
-          pos_x: Math.round(x), 
-          pos_y: Math.round(y) 
-        })
+        .update({ pos_x: Math.round(x), pos_y: Math.round(y) })
         .eq('id', zoneId);
 
       if (error) throw error;
-      
-      // Update local state for immediate feedback
       setZones(prev => prev.map(z => z.id === zoneId ? { ...z, pos_x: x, pos_y: y } : z));
     } catch (err) {
-      console.error('Failed to update zone position in Supabase', err);
+      console.error('Failed to update zone position', err);
     }
   };
 
@@ -126,44 +125,32 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     
     setActionLoading(true);
     try {
-      const payload = { 
-        ...newZone,
-        // Default new zones to (0,0) so they stay in catalog
-        pos_x: 0,
-        pos_y: 0
-      };
+      const payload = { ...newZone, pos_x: 0, pos_y: 0 };
       if (!payload.parent_zone_id) payload.parent_zone_id = null;
       else payload.parent_zone_id = parseInt(payload.parent_zone_id);
 
-      const { error } = await supabase
-        .from('zones')
-        .insert([payload]);
-
+      const { error } = await supabase.from('zones').insert([payload]);
       if (error) throw error;
 
       setNewZone(prev => ({ ...prev, name: '' }));
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to create zone in Supabase', err);
+      console.error('Failed to create zone', err);
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteZone = async (id) => {
-    if (!window.confirm("Are you sure? This will delete the zone and all its connections.")) return;
+    if (!window.confirm("Delete this zone and all its path connections?")) return;
     
     setActionLoading(true);
     try {
-      const { error } = await supabase
-        .from('zones')
-        .delete()
-        .eq('id', id);
-
+      const { error } = await supabase.from('zones').delete().eq('id', id);
       if (error) throw error;
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to delete zone from Supabase', err);
+      console.error('Failed to delete zone', err);
     } finally {
       setActionLoading(false);
     }
@@ -172,7 +159,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   const handleCreateEdge = async (e, forceIds = null) => {
     if (e && e.preventDefault) e.preventDefault();
     
-    // Use forced IDs (from direct interaction) or state IDs (from form)
     const zoneAId = forceIds ? forceIds.zone_a_id : newEdge.zone_a_id;
     const zoneBId = forceIds ? forceIds.zone_b_id : newEdge.zone_b_id;
 
@@ -181,7 +167,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     
     setActionLoading(true);
     try {
-      // Auto-calculate weight based on distance
       let weight = parseInt(newEdge.distance_weight);
       const zA = zones.find(z => z.id === parseInt(zoneAId));
       const zB = zones.find(z => z.id === parseInt(zoneBId));
@@ -193,22 +178,17 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
         weight = Math.max(1, Math.min(10, Math.round(dist / 50)));
       }
 
-      const { error } = await supabase
-        .from('adjacencies')
-        .insert([
-          {
-            zone_a_id: parseInt(zoneAId),
-            zone_b_id: parseInt(zoneBId),
-            distance_weight: weight
-          }
-        ]);
+      const { error } = await supabase.from('adjacencies').insert([{
+        zone_a_id: parseInt(zoneAId),
+        zone_b_id: parseInt(zoneBId),
+        distance_weight: weight
+      }]);
 
       if (error) throw error;
-
       setNewEdge({ zone_a_id: '', zone_b_id: '', distance_weight: 1 });
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to create pathway in Supabase', err);
+      console.error('Failed to create path', err);
     } finally {
       setActionLoading(false);
     }
@@ -217,17 +197,12 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   const handleDeleteEdge = async (edgeId) => {
     setActionLoading(true);
     try {
-      const { error } = await supabase
-        .from('adjacencies')
-        .delete()
-        .eq('id', edgeId);
-
+      const { error } = await supabase.from('adjacencies').delete().eq('id', edgeId);
       if (error) throw error;
-      
       setSelectedEdge(null);
       fetchGraphData();
     } catch (err) {
-      console.error('Failed to delete pathway from Supabase', err);
+      console.error('Failed to delete path', err);
     } finally {
       setActionLoading(false);
     }
@@ -235,10 +210,12 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
 
   if (user?.role !== 'super_admin') {
     return (
-      <div className="p-8 text-center text-slate-400">
-        <i className="fa-solid fa-lock text-4xl mb-4"></i>
-        <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
-        <p>Only Super Admins can manage the campus map.</p>
+      <div className="p-8 text-center space-y-4">
+        <div className="w-16 h-16 bg-slate-900 rounded-2xl border border-white/5 flex items-center justify-center mx-auto text-slate-700">
+           <ShieldCheck size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-white">Access Denied</h2>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Only administrators can manage the campus map.</p>
       </div>
     );
   }
@@ -249,7 +226,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     </div>
   );
 
-  // DRAG AND DROP HELPERS
   const handleCatalogDragStart = (e, zoneId) => {
     e.dataTransfer.setData("zoneId", zoneId);
     e.dataTransfer.effectAllowed = "move";
@@ -260,14 +236,10 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     const zoneId = parseInt(e.dataTransfer.getData("zoneId"));
     if (!zoneId) return;
 
-    // Calculate position relative to the transformed canvas
     const rect = e.currentTarget.getBoundingClientRect();
-    
-    // Client coordinates relative to the rect
     const clientX = e.clientX - rect.left;
     const clientY = e.clientY - rect.top;
 
-    // Inverse transform the coordinates: (client - transform) / scale
     const x = (clientX - transform.x) / transform.scale;
     const y = (clientY - transform.y) / transform.scale;
     
@@ -275,8 +247,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   };
 
   const handleCanvasWheel = (e) => {
-    // Only zoom if ctrl key is pressed, or if user is in 'select' or 'pan' mode
-    // Using a smaller delta for smoother wheel zooming
     const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
     const newScale = Math.max(0.2, Math.min(3, transform.scale * zoomFactor));
     setTransform(prev => ({ ...prev, scale: newScale }));
@@ -287,12 +257,9 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     setTransform(prev => ({ ...prev, scale: newScale }));
   };
 
-  const resetTransform = () => {
-    setTransform({ x: 0, y: 0, scale: 1 });
-  };
+  const resetTransform = () => setTransform({ x: 0, y: 0, scale: 1 });
 
   const handleCanvasMouseDown = (e) => {
-    // Left click to pan if in pan mode
     if (canvasMode === 'pan' && e.button === 0) {
         setIsPanning(true);
         e.preventDefault();
@@ -309,9 +276,7 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
     }
   };
 
-  const handleCanvasMouseUp = () => {
-    setIsPanning(false);
-  };
+  const handleCanvasMouseUp = () => setIsPanning(false);
 
   const handleCanvasDragOver = (e) => {
     e.preventDefault();
@@ -327,66 +292,62 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
   const canvasZones = zones.filter(z => z.pos_x !== 0 || z.pos_y !== 0);
 
   return (
-    <div className="bg-[#0a0f1d] min-h-[700px] rounded-[2rem] border border-white/5 flex flex-col overflow-hidden animate-slide-up relative">
-      <div className="absolute inset-0 bg-grid-slate-900/[0.02] pointer-events-none"></div>
+    <div className="bg-slate-950 min-h-[700px] rounded-[1.5rem] md:rounded-[2rem] border border-white/5 flex flex-col overflow-hidden relative shadow-2xl">
+      <div className="absolute inset-0 bg-slate-900/[0.02] pointer-events-none"></div>
       
-      {/* BALANCED WORKBENCH HEADER */}
-      <header className="px-10 py-6 bg-slate-900/50 border-b border-white/5 flex items-center justify-between shrink-0 relative z-10 backdrop-blur-md">
+      {/* Workbench Header */}
+      <header className="px-8 md:px-10 py-6 bg-slate-900/60 border-b border-white/5 flex items-center justify-between shrink-0 relative z-10 backdrop-blur-3xl">
         <div className="flex items-center gap-10">
             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-uni-600 flex items-center justify-center text-white text-base">
-                    <i className="fa-solid fa-drafting-compass"></i>
+                <div className="w-10 h-10 rounded-xl bg-uni-600 flex items-center justify-center text-white shadow-lg shadow-uni-600/20">
+                    <PenTool size={18} />
                 </div>
                 <div>
-                    <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                        Blueprint Workbench
-                        {actionLoading && (
-                            <motion.span 
-                                initial={{ opacity: 0 }} 
-                                animate={{ opacity: 1 }} 
-                                className="text-[8px] text-uni-400 normal-case tracking-normal font-bold"
-                            >
-                                <i className="fa-solid fa-circle-notch animate-spin mr-1"></i>
-                                Syncing...
-                            </motion.span>
-                        )}
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-widest leading-none">
+                      Campus Map Builder
                     </h2>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Interactive Infrastructure</p>
+                    {actionLoading && (
+                        <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 text-[10px] text-uni-400 font-bold uppercase tracking-widest">
+                            <RefreshCw size={10} className="animate-spin" />
+                            Syncing
+                        </motion.span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5">Map Zones & Path Connections</p>
                 </div>
             </div>
             
-            <div className="h-6 w-px bg-white/10 hidden xl:block"></div>
+            <div className="h-8 w-px bg-white/5 hidden xl:block"></div>
 
-            <nav className="hidden xl:flex items-center gap-10 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
+            <nav className="hidden xl:flex items-center gap-10 text-[9px] font-bold uppercase tracking-widest text-slate-600">
                 <div className="flex items-center gap-3 text-uni-400">
-                    <span className="w-5 h-5 rounded-full border border-uni-500/50 flex items-center justify-center text-[9px]">1</span>
-                    <span>Arrange Blueprint</span>
+                    <span className="w-5 h-5 rounded-lg border border-uni-500/30 flex items-center justify-center">1</span>
+                    <span>Place Zones</span>
                 </div>
-                <i className="fa-solid fa-chevron-right text-[10px] opacity-10"></i>
+                <ChevronRight size={14} className="opacity-20" />
                 <div className="flex items-center gap-3">
-                    <span className="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-[9px]">2</span>
-                    <span>Validate Paths</span>
+                    <span className="w-5 h-5 rounded-lg border border-slate-800 flex items-center justify-center">2</span>
+                    <span>Link Connections</span>
                 </div>
             </nav>
         </div>
 
         <div className="flex gap-8">
             <div className="flex flex-col items-end">
-                <span className="text-xs font-black text-white leading-none">{zones.length}</span>
-                <span className="text-[8px] text-slate-600 font-black uppercase tracking-widest mt-1.5 font-mono">Zones</span>
+                <span className="text-lg font-bold text-white leading-none">{zones.length}</span>
+                <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-1">Total Zones</span>
             </div>
             <div className="h-8 w-px bg-white/5"></div>
             <div className="flex flex-col items-end">
-                <span className="text-xs font-black text-white leading-none">{adjacencies.length}</span>
-                <span className="text-[8px] text-slate-600 font-black uppercase tracking-widest mt-1.5 font-mono">Links</span>
+                <span className="text-lg font-bold text-white leading-none">{adjacencies.length}</span>
+                <span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest mt-1">Active Paths</span>
             </div>
         </div>
       </header>
 
-      {/* SIDE-BY-SIDE SPLIT PANE */}
+      {/* Main Workspace */}
       <div className="flex flex-1 overflow-hidden relative z-10">
-        
-        {/* LEFT PANE: PLACES (25%) */}
         <ZoneCatalog 
             actionLoading={actionLoading}
             newZone={newZone}
@@ -397,8 +358,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
             handleCatalogDragStart={handleCatalogDragStart}
             handleDeleteZone={handleDeleteZone}
         />
-
-        {/* MAIN WORKSPACE: BLUEPRINT CANVAS (75%) */}
         <ZoneCanvas 
             zones={zones}
             canvasZones={canvasZones}
@@ -429,15 +388,6 @@ const ZoneBuilderTab = ({ refreshTrigger, setIsSyncing }) => {
             handleDeleteZone={handleDeleteZone}
         />
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .bg-grid-slate-900\/\\[0\.02\\] {
-            background-size: 60px 60px;
-            background-image: 
-                linear-gradient(to right, rgba(15, 23, 42, 0.2) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(15, 23, 42, 0.2) 1px, transparent 1px);
-        }
-      `}} />
     </div>
   );
 };

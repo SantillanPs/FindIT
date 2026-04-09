@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
+  AreaChart, Area, PieChart, Pie, Cell
 } from 'recharts';
 import { 
-  Download, Filter, TrendingUp, AlertTriangle, CheckCircle, 
-  Clock, Package, FileText, ChevronDown 
+  Download, TrendingUp, AlertTriangle, CheckCircle, 
+  Clock, Package, FileText, ChevronDown, BarChart3, PieChart as PieIcon, LineChart as LineIcon, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 
+/**
+ * Analytics - Premium Professional (Pro Max)
+ * - Clean, actionable data visualization.
+ * - Human-centric labeling (No "System Intelligence").
+ * - Sleek, breathable chart layouts.
+ */
 const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSyncing }) => {
   const [period, setPeriod] = useState('today');
   const [reportData, setReportData] = useState({ found: [], lost: [] });
@@ -36,7 +42,7 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
       setClaimData(data.claims || []);
       setInsights(data.insights || null);
     } catch (error) {
-      console.error('Failed to fetch analytics from Supabase', error);
+      console.error('Failed to fetch analytics', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -74,13 +80,12 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
       link.click();
       link.remove();
     } catch (error) {
-      console.error('Export from Supabase failed', error);
+      console.error('Export failed', error);
     } finally {
       setExporting(false);
     }
   };
 
-  // Helper to transform raw periodic stats into recharts-ready data
   const processChartData = (rawList) => {
     const grouped = {};
     rawList.forEach(item => {
@@ -113,23 +118,23 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
   return (
     <div className="space-y-12 pb-20">
       {/* Header & Filters */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">System Intelligence</h2>
-          <p className="text-[13px] text-slate-400 font-medium mt-1">Advanced reporting and data analysis</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold text-white tracking-tight">System Analytics</h2>
+          <p className="text-[13px] text-slate-400 font-medium">Daily traffic and recovery performance analysis</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex bg-slate-900 border border-white/5 p-1 rounded-xl">
-            {['today', 'weekly', 'monthly', '6months', 'yearly', 'all_time'].map((p) => (
+          <div className="flex bg-slate-900/60 backdrop-blur-3xl border border-white/10 p-1.5 rounded-2xl shadow-xl">
+            {['today', 'weekly', 'monthly', 'all_time'].map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                  period === p ? 'bg-uni-500 text-white' : 'text-slate-500 hover:text-white'
+                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  period === p ? 'bg-uni-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'
                 }`}
               >
-                {p.replace('today', 'Today').replace('6months', '6 Months').replace('all_time', 'All Time')}
+                {p.replace('today', 'Today').replace('all_time', 'Lifecycle')}
               </button>
             ))}
           </div>
@@ -137,95 +142,64 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
           <button 
             onClick={() => handleExport()}
             disabled={exporting}
-            className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-xl border border-white/5 text-[9px] font-black uppercase tracking-widest transition-all"
+            className="flex items-center gap-3 bg-white/5 hover:bg-white/10 text-white h-14 px-8 rounded-2xl border border-white/5 text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98]"
           >
             {exporting ? (
-                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
             ) : (
-                <Download size={14} />
+                <Download size={16} />
             )}
-            Export CSV
+            Batch Export
           </button>
         </div>
       </div>
       
-      {/* Activity Snapshot */}
+      {/* Activity Highlights */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-        <ActivityCard 
-          label="Today's Found" 
-          value={insights?.today?.found} 
-          color="text-uni-400" 
-          onClick={() => {
-            onNavigateToTab('found');
-            onSetSearchTerm('today');
-          }}
-        />
-        <ActivityCard 
-          label="Today's Lost" 
-          value={insights?.today?.lost} 
-          color="text-amber-500" 
-          onClick={() => {
-            onNavigateToTab('lost');
-            onSetSearchTerm('today');
-          }}
-        />
-        <ActivityCard 
-          label="Weekly Found" 
-          value={insights?.weekly?.found} 
-          color="text-uni-400" 
-          onClick={() => {
-            onNavigateToTab('found');
-            onSetSearchTerm('weekly');
-          }}
-        />
-        <ActivityCard 
-          label="Weekly Lost" 
-          value={insights?.weekly?.lost} 
-          color="text-amber-500" 
-          onClick={() => {
-            onNavigateToTab('lost');
-            onSetSearchTerm('weekly');
-          }}
-        />
+        <ActivityCard label="Today Found" value={insights?.today?.found} color="text-uni-400" onClick={() => { onNavigateToTab('found'); onSetSearchTerm('today'); }} />
+        <ActivityCard label="Today Lost" value={insights?.today?.lost} color="text-amber-500" onClick={() => { onNavigateToTab('lost'); onSetSearchTerm('today'); }} />
+        <ActivityCard label="Weekly Volume" value={insights?.weekly?.found} color="text-uni-400" onClick={() => { onNavigateToTab('found'); onSetSearchTerm('weekly'); }} />
+        <ActivityCard label="Pending Claims" value={insights?.today?.claims || 0} color="text-emerald-400" onClick={() => onNavigateToTab('claims')} />
       </div>
 
-      {/* Insight Cards */}
+      {/* Insight Tiles */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <InsightCard 
-          icon={<TrendingUp className="text-amber-500" />}
-          label="Most Lost Type"
+          icon={<TrendingUp size={20} className="text-amber-500" />}
+          label="Top Lost Category"
           value={insights?.most_lost?.category || 'N/A'}
-          subValue={`${insights?.most_lost?.count || 0} total reports`}
-          color="gold"
+          subValue={`${insights?.most_lost?.count || 0} recent reports`}
+          accent="amber"
         />
         <InsightCard 
-          icon={<AlertTriangle className="text-red-500" />}
-          label="Hardest to Claim"
+          icon={<AlertTriangle size={20} className="text-red-500" />}
+          label="Highest Friction"
           value={insights?.hardest_to_claim?.category || 'None'}
-          subValue={insights?.hardest_to_claim ? `${(insights.hardest_to_claim.rate * 100).toFixed(0)}% Rejection Rate` : 'Insufficient data'}
-          color="red"
+          subValue={insights?.hardest_to_claim ? `${(insights.hardest_to_claim.rate * 100).toFixed(0)}% rejection rate` : 'Stability optimal'}
+          accent="red"
         />
         <InsightCard 
-          icon={<CheckCircle className="text-green-500" />}
-          label="Best Recovery Type"
+          icon={<CheckCircle size={20} className="text-emerald-500" />}
+          label="Best Recovery Rate"
           value={insights?.best_recovery?.category || 'None'}
-          subValue={insights?.best_recovery ? `${(insights.best_recovery.rate * 100).toFixed(0)}% Success Rate` : 'Insufficient data'}
-          color="green"
+          subValue={insights?.best_recovery ? `${(insights.best_recovery.rate * 100).toFixed(0)}% success rate` : 'Pending data'}
+          accent="emerald"
         />
       </div>
 
-      {/* Charts Grid */}
+      {/* Primary Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Reports Comparison */}
-        <section className="glass-panel p-8 rounded-[2.5rem] border border-white/5 space-y-8">
+        <section className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 space-y-10 shadow-inner">
           <div className="flex justify-between items-center">
-            <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Found vs Lost Reports</h3>
-            <div className="flex gap-4">
-                <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                    <div className="w-2 h-2 rounded-full bg-uni-500"></div> Found
+            <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-3">
+              <LineIcon size={14} className="text-uni-400" /> Report Volume Over Time
+            </h3>
+            <div className="flex gap-5">
+                <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    <div className="w-2.5 h-2.5 rounded-full bg-uni-500"></div> Found
                 </div>
-                <div className="flex items-center gap-2 text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                    <div className="w-2 h-2 rounded-full bg-amber-500"></div> Lost
+                <div className="flex items-center gap-2 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500"></div> Lost
                 </div>
             </div>
           </div>
@@ -234,23 +208,17 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
               <AreaChart data={combineFoundLost(chartFoundData, chartLostData)}>
                 <defs>
                     <linearGradient id="colorFound" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorLost" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis 
-                    dataKey="period" 
-                    stroke="#475569" 
-                    fontSize={10} 
-                    fontWeight="900" 
-                    tickFormatter={(v) => v.split('-').pop()}
-                />
-                <YAxis stroke="#475569" fontSize={10} fontWeight="900" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <XAxis dataKey="period" stroke="#475569" fontSize={10} fontWeight="600" axisLine={false} tickLine={false} dy={10} />
+                <YAxis stroke="#475569" fontSize={10} fontWeight="600" axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="foundTotal" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorFound)" />
                 <Area type="monotone" dataKey="lostTotal" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorLost)" />
@@ -259,25 +227,20 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
           </div>
         </section>
 
-        {/* Claim Activity */}
-        <section className="glass-panel p-8 rounded-[2.5rem] border border-white/5 space-y-8">
-          <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Claim Activity by Category</h3>
+        <section className="bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 space-y-10 shadow-inner">
+          <h3 className="text-[11px] font-bold text-white uppercase tracking-[0.2em] flex items-center gap-3">
+            <BarChart3 size={14} className="text-emerald-400" /> Claims by Category
+          </h3>
           <div className="h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartClaimData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis dataKey="period" stroke="#475569" fontSize={10} fontWeight="900" />
-                <YAxis stroke="#475569" fontSize={10} fontWeight="900" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <XAxis dataKey="period" stroke="#475569" fontSize={10} fontWeight="600" axisLine={false} tickLine={false} dy={10} />
+                <YAxis stroke="#475569" fontSize={10} fontWeight="600" axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }} />
+                <Legend iconType="circle" wrapperStyle={{ paddingTop: '30px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }} />
                 {categories.map((cat, i) => (
-                  <Bar 
-                    key={cat} 
-                    dataKey={cat} 
-                    stackId="a" 
-                    fill={COLORS[i % COLORS.length]} 
-                    radius={i === categories.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} 
-                  />
+                  <Bar key={cat} dataKey={cat} stackId="a" fill={COLORS[i % COLORS.length]} radius={4} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
@@ -285,46 +248,53 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
         </section>
       </div>
 
-      {/* Category Distribution (Bottom) */}
-      <section className="glass-panel p-8 md:p-12 rounded-[3.5rem] border border-white/5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-                <div>
-                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Recovery Funnel</h3>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-2 leading-relaxed">
-                        Analyzing the distribution of reported found items across various institutional categories. 
-                        Use this and match with claim data to identify bottlenecks.
+      {/* Distribution Overview */}
+      <section className="bg-slate-950/40 p-12 rounded-[3.5rem] border border-white/5 shadow-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+            <div className="space-y-10">
+                <div className="space-y-4">
+                    <h3 className="text-2xl font-bold text-white tracking-tight">Recovery Performance</h3>
+                    <p className="text-[13px] text-slate-500 font-medium leading-relaxed">
+                        Distribution of recovered items across key university categories. 
+                        Optimize workflows based on the most active inventory sectors.
                     </p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                     {calculateCategoryDistribution(reportData.found).slice(0, 4).map((item, i) => (
-                        <div key={i} className="space-y-2">
-                           <div className="flex justify-between text-[9px] font-black uppercase tracking-widest">
+                        <div key={i} className="space-y-3">
+                           <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
                                <span className="text-slate-400">{item.name}</span>
                                <span className="text-white">{item.value}%</span>
                            </div>
-                           <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                               <div className="h-full bg-uni-500" style={{ width: `${item.value}%` }}></div>
+                           <div className="h-2 w-full bg-white/[0.03] rounded-full overflow-hidden shadow-inner">
+                               <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }} transition={{ duration: 1, ease: "easeOut" }} className="h-full bg-uni-500 shadow-[0_0_15px_rgba(var(--uni-500-rgb),0.3)]" />
                            </div>
                         </div>
                     ))}
                 </div>
             </div>
 
-            <div className="h-[300px] w-full flex items-center justify-center">
+            <div className="h-[350px] w-full flex items-center justify-center relative">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center group">
+                    <PieIcon size={40} className="text-white/10 group-hover:text-uni-400 transition-colors mx-auto mb-2" />
+                    <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest">Sector Analysis</p>
+                  </div>
+                </div>
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
                             data={calculateCategoryDistribution(reportData.found)}
                             cx="50%"
                             cy="50%"
-                            innerRadius={80}
-                            outerRadius={120}
-                            paddingAngle={5}
+                            innerRadius={90}
+                            outerRadius={130}
+                            paddingAngle={8}
                             dataKey="value"
+                            stroke="none"
                         >
                             {calculateCategoryDistribution(reportData.found).map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="hover:opacity-80 transition-opacity cursor-pointer outline-none" />
                             ))}
                         </Pie>
                         <Tooltip content={<PieTooltip />} />
@@ -337,8 +307,76 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
   );
 };
 
-// --- Helper Components & Functions ---
+// --- Sub-components ---
 
+const ActivityCard = ({ label, value, color, onClick }) => (
+    <button onClick={onClick} className="bg-slate-900/30 p-8 rounded-[2rem] border border-white/5 flex flex-col items-center text-center space-y-3 hover:bg-slate-900/50 hover:border-white/10 transition-all active:scale-[0.98] group">
+        <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">{label}</p>
+        <h4 className={`text-3xl font-bold ${color} tracking-tight`}>{value || 0}</h4>
+        <div className="text-[8px] font-bold text-slate-700 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 pt-2">
+          View <ArrowRight size={10} />
+        </div>
+    </button>
+);
+
+const InsightCard = ({ icon, label, value, subValue, accent }) => {
+    const accents = {
+        amber: 'border-amber-500/10 group-hover:border-amber-500/30 shadow-amber-500/5',
+        red: 'border-red-500/10 group-hover:border-red-500/30 shadow-red-500/5',
+        emerald: 'border-emerald-500/10 group-hover:border-emerald-500/30 shadow-emerald-500/5'
+    };
+    return (
+        <div className={`bg-slate-900/40 p-8 rounded-[2.5rem] border border-white/5 relative group ${accents[accent]} transition-all overflow-hidden shadow-xl hover:shadow-2xl`}>
+            <div className="flex justify-between items-start mb-8">
+                <div className="w-12 h-12 bg-slate-950 border border-white/10 rounded-2xl flex items-center justify-center shadow-2xl">
+                    {icon}
+                </div>
+                <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:animate-pulse" />
+            </div>
+            <div className="space-y-2">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+                <h4 className="text-xl font-bold text-white tracking-tight truncate">{value}</h4>
+                <p className="text-[10px] font-bold text-slate-700 uppercase tracking-widest mt-2">{subValue}</p>
+            </div>
+        </div>
+    );
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-slate-950/90 backdrop-blur-3xl border border-white/20 p-5 rounded-2xl shadow-3xl">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 border-b border-white/10 pb-2">{label}</p>
+                {payload.map((p, i) => (
+                    <div key={i} className="flex justify-between items-center gap-10 mb-2 last:mb-0">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">{p.name}</span>
+                        </div>
+                        <span className="text-xl font-bold text-white">{p.value}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
+
+const PieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-slate-950/90 backdrop-blur-3xl border border-white/20 px-5 py-3 rounded-2xl shadow-3xl">
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].payload.fill }} />
+                  {payload[0].name}: {payload[0].value}%
+                </span>
+            </div>
+        );
+    }
+    return null;
+};
+
+// --- Utilities ---
 const combineFoundLost = (found, lost) => {
     const combined = {};
     found.forEach(item => {
@@ -367,68 +405,6 @@ const calculateCategoryDistribution = (data) => {
         name,
         value: total > 0 ? Math.round((counts[name] / total) * 100) : 0
     })).sort((a,b) => b.value - a.value);
-};
-
-const ActivityCard = ({ label, value, color, onClick }) => (
-    <button 
-        onClick={onClick}
-        className="glass-panel p-6 rounded-2xl border border-white/5 bg-white/[0.02] flex flex-col justify-center items-center text-center space-y-2 hover:bg-white/5 hover:border-white/10 transition-all active:scale-95 group"
-    >
-        <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] group-hover:text-slate-400">{label}</p>
-        <h4 className={`text-2xl font-black ${color} tracking-tight`}>{value || 0}</h4>
-        <div className="text-[7px] font-black text-slate-700 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">View Details →</div>
-    </button>
-);
-
-const InsightCard = ({ icon, label, value, subValue, color }) => {
-    const borders = {
-        gold: 'border-amber-500/20 group-hover:border-amber-500/40',
-        red: 'border-red-500/20 group-hover:border-red-500/40',
-        green: 'border-green-500/20 group-hover:border-green-500/40'
-    };
-    return (
-        <div className={`glass-panel p-8 rounded-3xl border border-white/5 relative group ${borders[color]} transition-all overflow-hidden`}>
-            <div className="flex justify-between items-start mb-6">
-                <div className="p-3 bg-slate-950 border border-white/5 rounded-2xl">
-                    {icon}
-                </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-white/40"></div>
-            </div>
-            <div className="space-y-1">
-                <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
-                <h4 className="text-xl font-black text-white uppercase tracking-tight truncate">{value}</h4>
-                <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">{subValue}</p>
-            </div>
-        </div>
-    );
-};
-
-const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-slate-950 border border-white/10 p-4 rounded-2xl">
-                <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest mb-3 border-b border-white/5 pb-2">{label}</p>
-                {payload.map((p, i) => (
-                    <div key={i} className="flex justify-between gap-8 mb-1">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{p.name}:</span>
-                        <span className="text-2xl font-black text-white">{p.value}</span>
-                    </div>
-                ))}
-            </div>
-        );
-    }
-    return null;
-};
-
-const PieTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-slate-950 border border-white/10 px-4 py-2 rounded-xl">
-                <span className="text-[9px] font-black text-white uppercase tracking-widest">{payload[0].name}: {payload[0].value}%</span>
-            </div>
-        );
-    }
-    return null;
 };
 
 export default Analytics;

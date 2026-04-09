@@ -162,6 +162,29 @@
     filter: contrast(120%) brightness(120%);
   }
 
+  .bg-scanline {
+    background: linear-gradient(to bottom, transparent 50%, rgba(14, 165, 233, 0.05) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+  }
+
+  .holographic-overlay {
+    background: linear-gradient(
+      135deg,
+      rgba(14, 165, 233, 0.1) 0%,
+      rgba(245, 158, 11, 0.1) 50%,
+      rgba(14, 165, 233, 0.1) 100%
+    );
+    background-size: 200% 200%;
+    animation: holographic 6s ease-in-out infinite;
+  }
+
+  @keyframes holographic {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
   /* Deprecated: legacy decorative glass utilities replaced by shadcn Card */
 
   .item-card {

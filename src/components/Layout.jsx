@@ -57,7 +57,7 @@ import {
 
 // Refined Logo Component
 const Logo = ({ className = "" }) => (
-  <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-black text-3xl italic shadow-2xl shadow-sky-500/10 active:scale-95 transition-all duration-500 border border-white/10 ${className}`}>
+  <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-black text-3xl italic shadow-2xl shadow-sky-500/10 border border-white/10 ${className}`}>
     <span className="translate-x-[-4px]">f</span>
   </div>
 );
@@ -79,7 +79,7 @@ const BackgroundEffects = () => (
 const SideNavItem = ({ to, icon: Icon, label, count }) => {
   const location = useLocation();
   const { setOpenMobile } = useSidebar();
-  const isActive = (to === '/admin' || to === '/super')
+  const isActive = (to === '/admin' || to === '/super' || to === '/')
     ? location.pathname === to 
     : location.pathname.startsWith(to);
 
@@ -129,6 +129,13 @@ const LayoutContents = ({ children }) => {
   useEffect(() => {
     setOpenMobile(false);
   }, [location.pathname, setOpenMobile]);
+
+  const handleLogoClick = (e) => {
+    const mainArea = document.querySelector('main');
+    if (mainArea) {
+      mainArea.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const handleOpenFeedback = () => setIsFeedbackOpen(true);
@@ -190,8 +197,8 @@ const LayoutContents = ({ children }) => {
           <Sidebar className="bg-slate-900/40 backdrop-blur-xl border-r border-white/5 shadow-[20px_0_50px_rgba(0,0,0,0.3)] transition-all">
             <SidebarHeader className="p-6 pb-2">
               <div className="flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-4 group no-underline">
-                  <Logo className="group-hover:rotate-12 group-hover:scale-105" />
+                <Link to="/" onClick={handleLogoClick} className="flex items-center gap-4 group no-underline">
+                  <Logo />
                   <div className="text-left">
                     <h1 className="text-xl font-black text-white italic tracking-tighter leading-none uppercase">FindIT</h1>
                     <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1.5 pl-0.5">Asset Registry</p>
@@ -225,6 +232,7 @@ const LayoutContents = ({ children }) => {
                  <SidebarGroup>
                    <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6">Command Center</SidebarGroupLabel>
                    <SidebarMenu>
+                     <SideNavItem to="/" icon={Globe} label="Landing Page" />
                      <SideNavItem to="/admin" icon={Warehouse} label="Inventory" />
                      <SideNavItem to="/admin/lost" icon={HelpCircle} label="Lost Reports" count={adminStats.lost} />
                      <SideNavItem to="/admin/claims" icon={Stamp} label="Verify Claims" count={adminStats.claims} />
@@ -364,8 +372,8 @@ const LayoutContents = ({ children }) => {
           <header className="sticky top-0 z-[60] h-24 flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
               <div className="flex justify-between h-full items-center">
-                <Link to="/" className="flex items-center gap-4 group no-underline">
-                  <Logo className="w-10 h-10 text-2xl rounded-xl group-hover:rotate-12 group-hover:scale-105" />
+                <Link to="/" onClick={handleLogoClick} className="flex items-center gap-4 group no-underline">
+                  <Logo className="w-10 h-10 text-2xl rounded-xl" />
                   <div className="hidden sm:block text-left">
                     <h1 className="font-display font-black text-xl tracking-tighter text-white leading-none uppercase italic">FindIT</h1>
                     <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1 pl-0.5">Asset Registry</p>
@@ -380,11 +388,13 @@ const LayoutContents = ({ children }) => {
             </div>
           </header>
           <main className="flex-grow w-full relative z-10"><div key={location.pathname}>{children}</div></main>
-          <footer className="py-20 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
-              <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] italic opacity-60">
-                FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
-              </p>
-          </footer>
+          {location.pathname === '/' && (
+            <footer className="py-20 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
+                <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] italic opacity-60">
+                  FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
+                </p>
+            </footer>
+          )}
         </div>
       )}
 

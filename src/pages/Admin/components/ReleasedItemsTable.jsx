@@ -1,68 +1,100 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Badge } from "@/components/ui/badge";
+import { User, Calendar, ShieldCheck, ExternalLink } from "lucide-react";
 
+/**
+ * ReleasedItemsTable - Premium Professional (Pro Max)
+ * - Clean, breathable table layout.
+ * - High-end typography (no aggressive font-black).
+ * - Premium glassmorphism integration.
+ */
 const ReleasedItemsTable = ({ releasedItems }) => {
   return (
-    <div className="overflow-x-auto p-8">
-      <table className="w-full text-left border-collapse">
+    <div className="overflow-x-auto p-4 md:p-8">
+      <table className="w-full text-left border-separate border-spacing-y-4">
         <thead>
-          <tr className="bg-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
-            <th className="px-8 py-5">Item & Ref</th>
-            <th className="px-8 py-5">Handed Over To</th>
-            <th className="px-8 py-5">Release Details</th>
-            <th className="px-8 py-5 text-right">Audit Status</th>
+          <tr className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <th className="px-6 py-4">Item Details</th>
+            <th className="px-6 py-4">Receiver Info</th>
+            <th className="px-6 py-4">Fulfillment Info</th>
+            <th className="px-6 py-4 text-right">Audit</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5">
+        <tbody>
           {releasedItems.map(item => (
-            <tr key={item.id} className="hover:bg-white/[0.02] transition-colors">
-              <td className="px-8 py-6">
-                <div className="font-black text-white text-[11px] uppercase tracking-widest mb-1">{item.title}</div>
-                <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest">#{item.id.toString().padStart(4, '0')} • {item.category}</div>
+            <tr key={item.id} className="group bg-slate-900/40 backdrop-blur-xl hover:bg-slate-900/60 transition-all duration-300">
+              {/* 1. Item Ref */}
+              <td className="px-6 py-6 border-y border-l border-white/5 rounded-l-[1.5rem]">
+                <div className="flex flex-col gap-1.5">
+                  <div className="font-bold text-white text-[13px] tracking-tight group-hover:text-uni-400 transition-colors">
+                    {item.title}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">#{item.id.toString().slice(-4)}</span>
+                    <span className="w-1 h-1 rounded-full bg-slate-800"></span>
+                    <span className="text-[9px] font-bold text-uni-400 uppercase tracking-widest">{item.category}</span>
+                  </div>
+                </div>
               </td>
-                <td className="px-8 py-6">
-                 <div className="flex items-center gap-3">
-                    {(item.released_to_photo_url || item.photo_url) && (
-                        <div className="w-10 h-10 rounded-lg border border-white/10 overflow-hidden shrink-0">
-                            <img src={item.released_to_photo_url || item.photo_url} className="w-full h-full object-cover" />
-                        </div>
-                    )}
-                    <div>
-                       <div className="text-[11px] text-uni-400 font-black uppercase tracking-widest leading-none mb-1">
+
+              {/* 2. Receiver */}
+              <td className="px-6 py-6 border-y border-white/5">
+                 <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-black border border-white/5 overflow-hidden shrink-0 shadow-lg relative">
+                        {item.released_to_photo_url || item.photo_url ? (
+                            <img src={item.released_to_photo_url || item.photo_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                        ) : (
+                            <User size={16} className="text-slate-800 absolute inset-0 m-auto" />
+                        )}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                       <div className="text-xs font-bold text-slate-200">
                           {item.released_to_id ? (
-                            <Link to={`/admin/profile/${item.released_to_id}`} className="hover:underline decoration-uni-400/50">
+                            <Link to={`/admin/profile/${item.released_to_id}`} className="hover:text-uni-400 border-b border-transparent hover:border-uni-400/30 transition-all">
                               {item.released_to_name || item.identified_name}
                             </Link>
                           ) : (
-                            item.released_to_name || item.identified_name || 'Guest Claimant'
+                            item.released_to_name || item.identified_name || 'Registry Claimant'
                           )}
                        </div>
-                       <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
-                         {item.released_to_id_number || item.identified_student_id || 'Walk-in Claim'}
+                       <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
+                         {item.released_to_id_number || item.identified_student_id || 'Public Release'}
                        </div>
-                       {item.status === 'claimed' && (
-                         <div className="text-[7px] text-amber-500 font-black uppercase tracking-widest mt-1 italic">Awaiting Pickup</div>
-                       )}
                     </div>
                  </div>
                </td>
-              <td className="px-8 py-6">
-                <div className="text-[10px] text-slate-300 font-black uppercase tracking-widest mb-1">
-                  {item.released_at ? `Released ${new Date(item.released_at).toLocaleDateString()}` : 'Awaiting Release'}
-                </div>
-                <div className="text-[9px] text-slate-600 font-black uppercase tracking-widest">
-                  {item.released_by_name ? `Authorized By ${item.released_by_name}` : 'Not Yet Authorized'}
+
+              {/* 3. Fulfillment */}
+              <td className="px-6 py-6 border-y border-white/5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                    <Calendar size={12} className="text-uni-500" />
+                    {item.released_at ? new Date(item.released_at).toLocaleDateString() : 'Awaiting Date'}
+                  </div>
+                  <div className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">
+                    {item.released_by_name ? `Verified By ${item.released_by_name}` : 'Awaiting Admin Audit'}
+                  </div>
                 </div>
               </td>
-              <td className="px-8 py-6 text-right">
-                 <span className="px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border bg-green-500/10 text-green-400 border-green-500/20">Archived Record</span>
+
+              {/* 4. Audit Status */}
+              <td className="px-6 py-6 border-y border-r border-white/5 rounded-r-[1.5rem] text-right">
+                 <Badge className="bg-green-500/10 text-green-400 border-green-500/20 text-[8px] font-bold uppercase tracking-widest px-2.5 py-1">
+                   Audit Complete
+                 </Badge>
               </td>
             </tr>
           ))}
           {releasedItems.length === 0 && (
             <tr>
-              <td colSpan="4" className="px-8 py-20 text-center opacity-50">
-                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No released items found</p>
+              <td colSpan="4" className="px-6 py-24 text-center">
+                 <div className="space-y-2">
+                    <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto text-slate-800">
+                      <ShieldCheck size={24} />
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">No fulfillment history recorded</p>
+                 </div>
               </td>
             </tr>
           )}

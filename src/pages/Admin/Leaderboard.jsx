@@ -1,11 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Trophy, Shield, AlertTriangle, UserX, UserCheck, 
-  ArrowUpCircle, ArrowDownCircle, Search, Filter 
+  Trophy, 
+  Shield, 
+  AlertTriangle, 
+  UserX, 
+  UserCheck, 
+  ArrowUpCircle, 
+  ArrowDownCircle, 
+  Search, 
+  BadgeCheck,
+  Award,
+  Users,
+  ArrowRight
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { Badge } from "@/components/ui/badge";
 
+/**
+ * Leaderboard - Premium Professional (Pro Max)
+ * - Professional monitoring of member integrity.
+ * - Clean typography (no aggressive font-black).
+ * - High-end, breathable institutional layout.
+ */
 const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,14 +37,14 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     if (isSync) setIsSyncing(true);
     try {
       const { data, error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .select('*')
         .order('integrity_points', { ascending: false });
         
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
-      console.error('Failed to fetch leaderboard from Supabase', error);
+      console.error('Failed to fetch leaderboard', error);
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -46,7 +63,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
       if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to adjust reputation in Supabase', err);
+      console.error('Failed to adjust reputation', err);
     } finally {
       setActionLoading(null);
     }
@@ -56,14 +73,14 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     setActionLoading(`verify-${userId}`);
     try {
       const { error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .update({ is_verified: !currentStatus })
         .eq('id', userId);
         
       if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to update verification status in Supabase');
+      console.error('Failed to update verification status');
     } finally {
       setActionLoading(null);
     }
@@ -73,40 +90,30 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     setActionLoading(`cert-${userId}`);
     try {
       const { error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .update({ is_certificate_eligible: !currentStatus })
         .eq('id', userId);
         
       if (error) throw error;
       await fetchLeaderboard();
     } catch (err) {
-      console.error('Failed to toggle certificate eligibility in Supabase');
+      console.error('Failed to toggle certificate eligibility');
     } finally {
       setActionLoading(null);
     }
   };
 
   const filteredUsers = users.filter(user => 
-    `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.student_id_number?.includes(searchTerm) ||
     user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getRankStyle = (index) => {
-    if (index === 0) return "bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 border-amber-400/50";
-    if (index === 1) return "bg-gradient-to-br from-slate-200 via-slate-400 to-slate-500 border-slate-300/50";
-    if (index === 2) return "bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 border-orange-400/50";
-    return "bg-slate-900 border-white/5";
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { type: 'spring', damping: 25, stiffness: 100 } }
+    if (index === 0) return "bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
+    if (index === 1) return "bg-slate-300/10 border-slate-300/30 text-slate-300";
+    if (index === 2) return "bg-orange-500/10 border-orange-500/30 text-orange-500";
+    return "bg-slate-900 border-white/5 text-slate-500";
   };
 
   if (loading) return (
@@ -116,197 +123,204 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
   );
 
   return (
-    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="space-y-10">
-      <motion.header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6" variants={itemVariants}>
-        <div className="space-y-2">
+    <div className="space-y-10">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 px-2">
+        <div className="space-y-1">
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-4">
                 <Trophy className="text-amber-500" size={28} />
-                Integrity Leaderboard
+                Community Trust Registry
             </h1>
-            <p className="text-[13px] text-slate-400 font-medium mt-1">
-               Monitoring community contribution and institutional trustworthiness
+            <p className="text-[13px] text-slate-500 font-medium">
+               Monitoring member contributions and institutional reliability scores.
             </p>
         </div>
 
-        <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+        <div className="relative w-full md:w-96 group">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-uni-400 transition-colors" size={18} />
             <input 
                 type="text"
-                placeholder="SEARCH MEMBERS..."
+                placeholder="Search by name, ID, or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-slate-900 border border-white/5 rounded-2xl py-3 pl-12 pr-4 text-[10px] font-black text-white uppercase tracking-widest focus:outline-none focus:border-uni-500 transition-all placeholder:text-slate-700"
+                className="w-full h-14 bg-slate-900/60 border border-white/10 rounded-2xl pl-14 pr-6 text-sm font-semibold text-white focus:outline-none focus:border-uni-500/50 transition-all placeholder:text-slate-700 shadow-xl"
             />
         </div>
-      </motion.header>
+      </header>
 
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard 
-            icon={<Shield className="text-uni-400" />} 
+            icon={<Shield size={24} className="text-uni-400" />} 
             label="Verified Members" 
             value={users.filter(u => u.is_verified).length} 
             sub="Active institutional profiles"
           />
           <StatCard 
-            icon={<Trophy className="text-amber-500" />} 
-            label="Total Integrity" 
+            icon={<Award size={24} className="text-amber-500" />} 
+            label="System Integrity" 
             value={users.reduce((acc, u) => acc + (u.integrity_points || 0), 0)} 
-            sub="System-wide trust score"
+            sub="Global community trust score"
           />
           <StatCard 
-            icon={<AlertTriangle className="text-red-500" />} 
-            label="Flagged Users" 
+            icon={<AlertTriangle size={24} className="text-red-500" />} 
+            label="Flagged Activity" 
             value={users.filter(u => u.fraud_strikes > 0).length} 
             sub="Members with active strikes"
           />
-      </motion.div>
+      </div>
 
-      <motion.div variants={itemVariants} className="glass-panel rounded-3xl overflow-hidden border border-white/5 bg-white/[0.01]">
-        <div className="overflow-x-auto">
+      <div className="bg-slate-900/30 rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden backdrop-blur-3xl">
+        <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-white/5 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                <th className="px-8 py-6">Rank / Identity</th>
-                <th className="px-8 py-6 text-center">Milestone Progress</th>
-                <th className="px-8 py-6 text-center w-32">Score</th>
-                <th className="px-8 py-6 text-right">Reputation Management</th>
+              <tr className="bg-white/[0.02] text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
+                <th className="px-10 py-6">Member Identity</th>
+                <th className="px-10 py-6 text-center">Milestones</th>
+                <th className="px-10 py-6 text-center w-40">Integrity Pts</th>
+                <th className="px-10 py-6 text-right">Administrative Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-white/[0.02]">
               {filteredUsers.map((user, index) => {
                 const progress = Math.min((user.integrity_points / 1000) * 100, 100);
                 const isTopThree = index < 3;
                 
                 return (
-                  <tr key={user.id} className={`hover:bg-white/[0.02] transition-colors group ${isTopThree ? 'relative' : ''}`}>
-                    <td className="px-8 py-8">
-                      <div className="flex items-center gap-6">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${getRankStyle(index)}`}>
-                             {isTopThree ? <Trophy size={16} className="text-white" /> : <span className="text-[11px] font-black text-slate-500">{index + 1}</span>}
+                  <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                    <td className="px-10 py-10">
+                      <div className="flex items-center gap-7">
+                          <div className={`w-12 h-12 rounded-[1.25rem] flex items-center justify-center border font-bold text-sm shadow-inner transition-all ${getRankStyle(index)}`}>
+                             {isTopThree ? <Trophy size={20} /> : index + 1}
                           </div>
-                          <div>
-                              <div className="font-black text-white text-[12px] uppercase tracking-widest group-hover:text-uni-400 transition-colors flex items-center gap-2">
+                          <div className="space-y-1.5">
+                              <div className="font-bold text-white text-[14px] tracking-tight flex items-center gap-2">
                                   {user.first_name} {user.last_name}
-                                  {user.is_verified && <UserCheck size={12} className="text-green-500" />}
+                                  {user.is_verified && <BadgeCheck size={16} className="text-emerald-400" />}
                                   {user.is_certificate_eligible && (
-                                      <span className="flex items-center gap-1 bg-gradient-to-r from-amber-500 to-yellow-300 text-black px-2 py-0.5 rounded text-[8px] font-black">
-                                          <Shield size={8} /> CERTIFIED
-                                      </span>
+                                      <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[8px] font-bold tracking-widest px-2 py-0.5 ml-2">
+                                          CERTIFIED
+                                      </Badge>
                                   )}
                               </div>
-                              <div className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-1.5 flex items-center gap-2">
-                                  <span className="text-slate-400">{user.student_id_number || 'STU-000'}</span>
-                                  <span className="w-1 h-1 rounded-full bg-slate-800"></span>
-                                  {user.email}
+                              <div className="text-[10px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-3">
+                                  <span>{user.student_id_number || 'OFF-MEMBER'}</span>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
+                                  <span className="lowercase font-medium text-slate-700">{user.email}</span>
                               </div>
                           </div>
                       </div>
                     </td>
-                    <td className="px-8 py-8">
-                        <div className="max-w-[200px] mx-auto space-y-2">
-                            <div className="flex justify-between items-end mb-1">
-                                <span className={`text-[8px] font-black uppercase tracking-widest ${progress === 100 ? 'text-amber-500' : 'text-slate-600'}`}>
-                                    {progress === 100 ? 'Goal Reached' : 'To Milestone'}
+                    <td className="px-10 py-10">
+                        <div className="max-w-[200px] mx-auto space-y-3">
+                            <div className="flex justify-between items-center px-1">
+                                <span className={`text-[9px] font-bold uppercase tracking-widest ${progress === 100 ? 'text-amber-500' : 'text-slate-600'}`}>
+                                    {progress === 100 ? 'Level Master' : 'Next Milestone'}
                                 </span>
-                                <span className="text-[8px] font-black text-slate-400 tracking-widest">1,000 PTS</span>
+                                <span className="text-[9px] font-bold text-slate-400 tracking-widest">1,000</span>
                             </div>
-                            <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5">
+                            <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5 shadow-inner">
                                 <motion.div 
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
-                                    className={`h-full rounded-full ${progress === 100 ? 'bg-gradient-to-r from-amber-500 to-yellow-300' : 'bg-uni-500'}`}
+                                    transition={{ duration: 1.2, ease: "easeOut" }}
+                                    className={`h-full rounded-full ${progress === 100 ? 'bg-gradient-to-r from-amber-500 to-amber-300' : 'bg-uni-600 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.3)]'}`}
                                 />
                             </div>
                         </div>
                     </td>
-                    <td className="px-8 py-8 text-center text-center">
-                       <div className="inline-flex flex-col items-center">
-                          <span className={`text-xl font-black tracking-tighter ${isTopThree ? 'text-white' : 'text-slate-300'}`}>
-                            {user.integrity_points || 0}
+                    <td className="px-10 py-10 text-center">
+                       <div className="flex flex-col items-center">
+                          <span className={`text-2xl font-bold tracking-tight ${isTopThree ? 'text-white' : 'text-slate-400'}`}>
+                            {user.integrity_points?.toLocaleString() || 0}
                           </span>
-                          <span className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Total Pts</span>
                        </div>
                     </td>
-                    <td className="px-8 py-8">
-                      <div className="flex justify-end items-center gap-4">
-                          <div className="flex items-center gap-2 bg-slate-950 border border-white/5 rounded-2xl p-1.5">
+                    <td className="px-10 py-10">
+                      <div className="flex justify-end items-center gap-5">
+                          <div className="flex items-center gap-2 bg-slate-950/50 border border-white/5 rounded-2xl p-2 shadow-inner">
                               <button 
                                   onClick={() => toggleCertificate(user.id, user.is_certificate_eligible)}
                                   disabled={actionLoading === `cert-${user.id}`}
-                                  className={`p-2 rounded-xl transition-all ${user.is_certificate_eligible ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
-                                  title="Toggle Certificate Eligibility"
+                                  className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${user.is_certificate_eligible ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
+                                  title="Process Certification"
                               >
-                                  <Trophy size={16} />
+                                  <Award size={18} />
                               </button>
                               <button 
                                   onClick={() => toggleVerification(user.id, user.is_verified)}
                                   disabled={actionLoading === `verify-${user.id}`}
-                                  className={`p-2 rounded-xl transition-all ${user.is_verified ? 'bg-green-500/10 text-green-500 border border-green-500/30' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
-                                  title="Verify Identity"
+                                  className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${user.is_verified ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
+                                  title="Verify Profile"
                               >
-                                  <UserCheck size={16} />
+                                  <UserCheck size={18} />
                               </button>
                           </div>
 
-                          <div className="h-8 w-px bg-white/5 mx-2"></div>
+                          <div className="h-8 w-px bg-white/5"></div>
 
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                               <button 
                                   onClick={() => adjustReputation(user.id, 10, 0)}
                                   disabled={actionLoading === user.id}
-                                  className="w-8 h-8 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-green-500 hover:border-green-500/30 rounded-lg transition-all"
+                                  className="w-10 h-10 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-emerald-500 hover:border-emerald-500/20 rounded-xl transition-all shadow-lg active:scale-90"
+                                  title="Add Pts"
                               >
-                                  <ArrowUpCircle size={16} />
+                                  <ArrowUpCircle size={18} />
                               </button>
                               <button 
                                   onClick={() => adjustReputation(user.id, -10, 0)}
                                   disabled={actionLoading === user.id}
-                                  className="w-8 h-8 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-red-500 hover:border-red-500/30 rounded-lg transition-all"
+                                  className="w-10 h-10 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-red-500 hover:border-red-500/20 rounded-xl transition-all shadow-lg active:scale-90"
+                                  title="Reduce Pts"
                               >
-                                  <ArrowDownCircle size={16} />
+                                  <ArrowDownCircle size={18} />
                               </button>
                           </div>
 
                           <button 
                               onClick={() => adjustReputation(user.id, 0, 1)}
                               disabled={actionLoading === user.id}
-                              className={`ml-4 px-3 py-2 rounded-xl text-[8px] font-black uppercase tracking-[0.15em] transition-all border ${user.fraud_strikes > 0 ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-slate-900 border-white/5 text-slate-600 hover:text-red-400 hover:border-red-500/20'}`}
+                              className={`h-11 px-5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all border ${user.fraud_strikes > 0 ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-slate-900 border-white/5 text-slate-600 hover:text-red-400 hover:border-red-500/20 shadow-lg'}`}
                           >
-                              {user.fraud_strikes > 0 ? `${user.fraud_strikes} STRIKES` : 'ADD STRIKE'}
+                              {user.fraud_strikes > 0 ? `${user.fraud_strikes} Strikes` : 'Issue Strike'}
                           </button>
                       </div>
                     </td>
-                  </tr>
+                </tr>
                 );
               })}
               {filteredUsers.length === 0 && (
                   <tr>
-                      <td colSpan="4" className="py-24 text-center">
-                          <AlertTriangle className="mx-auto text-slate-800 mb-4" size={32} />
-                          <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest italic">No members found matching criteria</p>
+                      <td colSpan="4" className="py-32 text-center">
+                        <div className="max-w-xs mx-auto space-y-4">
+                            <Users size={48} className="mx-auto text-slate-800" />
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">No matching records</p>
+                              <p className="text-[10px] text-slate-700">Try adjusting your search criteria</p>
+                            </div>
+                        </div>
                       </td>
                   </tr>
               )}
             </tbody>
           </table>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
 const StatCard = ({ icon, label, value, sub }) => (
-    <div className="glass-panel p-6 rounded-3xl border border-white/5 bg-white/[0.02] space-y-4">
+    <div className="bg-slate-900/40 p-10 rounded-[2.5rem] border border-white/5 shadow-xl hover:shadow-2xl transition-all space-y-6">
         <div className="flex justify-between items-start">
-            <div className="p-3 bg-slate-950 border border-white/5 rounded-2xl">
+            <div className="w-12 h-12 bg-slate-950 border border-white/10 rounded-2xl flex items-center justify-center shadow-inner">
                 {icon}
             </div>
-            <div className="w-1 h-1 rounded-full bg-white/10"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
         </div>
         <div className="space-y-1">
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">{label}</p>
-            <h4 className="text-3xl font-black text-white tracking-tighter">{value}</h4>
-            <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">{sub}</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+            <h4 className="text-3xl font-bold text-white tracking-tight">{value?.toLocaleString() || 0}</h4>
+            <p className="text-[9px] font-bold text-slate-700 uppercase tracking-widest mt-1">{sub}</p>
         </div>
     </div>
 );

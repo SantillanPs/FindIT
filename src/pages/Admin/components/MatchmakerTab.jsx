@@ -12,21 +12,26 @@ const MatchmakerTab = ({
   setPreviewImage 
 }) => {
   return (
-    <div className="space-y-12 pb-32">
-      <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20 shadow-sm">
-            <Sparkles size={18} className="animate-pulse" />
+    <div className="space-y-8 md:space-y-12 pb-32">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1 md:px-2">
+        <div className="flex items-center gap-5">
+          <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-uni-600/10 flex items-center justify-center text-uni-400 border border-uni-500/20 shadow-2xl relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-uni-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <Sparkles size={24} className="animate-pulse relative z-10" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider">AI Matching Suite</h3>
-            <p className="text-[12px] text-slate-400 font-medium mt-1">Found items vs Lost reports cross-reference</p>
+          <div className="space-y-1">
+            <h3 className="text-lg md:text-xl font-black text-white italic tracking-tight uppercase">AI Matching Suite</h3>
+            <div className="text-[9px] md:text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
+               <div className="w-1 h-1 rounded-full bg-uni-500 animate-pulse"></div>
+               Intelligent Cross-Reference Engine Active
+            </div>
           </div>
         </div>
         
         {filteredMatches.length > 0 && (
-          <Badge className="bg-slate-900/50 text-slate-400 border-white/10 px-4 py-1.5 rounded-xl text-[11px] font-bold">
-            {filteredMatches.length} Found Groups
+          <Badge className="bg-slate-900 border-white/5 px-6 h-10 md:h-12 rounded-xl text-[10px] md:text-[11px] font-black uppercase tracking-widest shadow-2xl flex items-center gap-2.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-uni-400"></div>
+            {filteredMatches.length} Found Groups Identified
           </Badge>
         )}
       </div>

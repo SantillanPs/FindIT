@@ -39,7 +39,7 @@ const ReportSuccess = ({
       const lastName = names.slice(1).join(' ') || '';
 
       const { error: dbError } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .insert([
           {
             email: ghostEmail,

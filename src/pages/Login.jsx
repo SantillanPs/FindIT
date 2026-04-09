@@ -76,7 +76,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-10 md:py-20 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.24))] px-4 py-10 md:py-20 relative overflow-hidden">
 
       <Card className="w-full max-w-md mx-auto relative z-10 my-8 bg-slate-900/40 border-white/10 backdrop-blur-xl">
         <CardHeader className="text-center space-y-4">

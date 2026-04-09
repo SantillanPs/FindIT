@@ -22,7 +22,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const { data: userData, error: userError } = await supabase
-          .from('users_profiles')
+          .from('user_profiles_v1')
           .select('*, found_items(*), claims(*)')
           .eq('id', targetId)
           .single();
@@ -58,7 +58,7 @@ const Profile = () => {
     setPrivacyLoading(true);
     try {
       const { data, error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .update({ show_full_name: !showFullName })
         .eq('id', currentUser.id)
         .select()

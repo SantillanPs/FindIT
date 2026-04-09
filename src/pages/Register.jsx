@@ -170,7 +170,7 @@ const Register = () => {
 
   if (isSuccess) {
     return (
-      <div className="flex items-center justify-center min-h-[90vh] px-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.24))] px-4">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }} 
           animate={{ opacity: 1, scale: 1 }}
@@ -209,7 +209,7 @@ const Register = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-[90vh] px-4 py-20 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.24))] px-4 py-20 relative overflow-hidden">
       <motion.div 
         layout 
         className="w-full max-w-md"

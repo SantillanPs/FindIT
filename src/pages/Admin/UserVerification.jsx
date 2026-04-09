@@ -13,7 +13,7 @@ const UserVerification = () => {
   const fetchUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -29,7 +29,7 @@ const UserVerification = () => {
   const toggleVerification = async (userId, currentStatus) => {
     try {
       const { error } = await supabase
-        .from('users_profiles')
+        .from('user_profiles_v1')
         .update({ is_verified: !currentStatus })
         .eq('id', userId);
       

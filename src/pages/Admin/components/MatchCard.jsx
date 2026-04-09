@@ -18,179 +18,196 @@ import {
   UserCheck, 
   Lock,
   ExternalLink,
-  Bot
+  Bot,
+  Fingerprint,
+  Sparkles,
+  Info,
+  CheckCircle2,
+  AlertCircle
 } from "lucide-react";
 
+/**
+ * MatchCard - Premium Professional (Pro Max)
+ * - Clean comparison architecture.
+ * - Human-centric labeling.
+ * - Glassmorphism depth without visual clutter.
+ */
 const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLoading, setPreviewImage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const getConfidenceTier = (score) => {
     if (score >= 0.85) return { 
-      label: 'High Match', 
-      variant: 'default', 
-      icon: ShieldCheck, 
-      color: 'bg-uni-600/10 text-uni-400 border-uni-500/20' 
+      label: 'Strong Match', 
+      color: 'bg-uni-500/10 text-uni-400 border-uni-500/20', 
+      icon: CheckCircle2,
+      badge: 'bg-uni-600'
     };
     if (score >= 0.60) return { 
-      label: 'Medium Match', 
-      variant: 'secondary', 
-      icon: FileSearch, 
-      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' 
+      label: 'Likely Match', 
+      color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', 
+      icon: Search,
+      badge: 'bg-amber-500'
     };
     return { 
-      label: 'Potential Match', 
-      variant: 'outline', 
-      icon: Cpu, 
-      color: 'bg-slate-800 text-slate-400 border-white/5' 
+      label: 'Potential', 
+      color: 'bg-slate-800/80 text-slate-500 border-white/5', 
+      icon: Info,
+      badge: 'bg-slate-700'
     };
   };
 
   const tier = getConfidenceTier(match.similarity_score);
 
   return (
-    <Card className="overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-sm hover:border-uni-500/30 transition-all duration-300 shadow-xl group">
-      {/* Match Header Bar */}
-      <div 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-slate-950/20 cursor-pointer hover:bg-slate-950/40 transition-colors"
-      >
-        <div className="flex items-center gap-6">
-          <Badge className={`py-1.5 px-4 text-[13px] font-bold gap-2 shadow-sm ${tier.color}`}>
-            <tier.icon size={14} />
-            Confidence: {Math.round(match.similarity_score * 100)}%
-          </Badge>
-          
-          <div className="hidden md:flex items-center gap-2 text-[13px] font-bold text-slate-300 uppercase tracking-wider bg-slate-900/50 px-4 py-2 rounded-xl border border-white/10">
-            Case Ref: <span className="text-white ml-1">#LR-{match.item.id}</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-[13px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-uni-400 transition-colors">
-            {isExpanded ? <ChevronUp size={16} className="text-uni-400" /> : <ChevronDown size={16} className="text-uni-400" />}
-            {isExpanded ? 'Hide Data Comparison' : 'View Data Comparison'}
-          </div>
-        </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className={`overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-xl hover:bg-slate-900/60 transition-all duration-500 rounded-2xl md:rounded-[2rem] group ${
+        isExpanded ? 'ring-1 ring-uni-500/30 bg-slate-900/80 shadow-2xl' : ''
+      }`}>
         
-        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
-          <Button 
-            variant="ghost"
-            size="sm"
-            onClick={() => onDeepCompare({ found: foundItem, lost: match.item, score: match.similarity_score })}
-            className="hidden lg:flex font-bold text-[13px] uppercase tracking-wider text-slate-300 hover:text-white hover:bg-white/5 h-12 px-6 rounded-xl"
-          >
-            Deep Compare
-          </Button>
-          <Button 
-            size="sm"
-            onClick={() => onAuthorizeMatch(foundItem.id, match.item.id)}
-            disabled={actionLoading === `match-${foundItem.id}-${match.item.id}`}
-            className={`h-12 px-10 font-bold text-[13px] uppercase tracking-wider transition-all rounded-xl shadow-lg active:scale-95 ${
-              match.similarity_score >= 0.85 
-              ? 'bg-uni-600 text-white hover:bg-uni-700 shadow-uni-600/20' 
-              : 'bg-white text-slate-950 hover:bg-uni-600 hover:text-white'
-            }`}
-          >
-            <LinkIcon size={16} className="mr-2" />
-            Authorize Link
-          </Button>
+        {/* Header Row */}
+        <div 
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between p-4 md:p-6 cursor-pointer"
+        >
+          <div className="flex items-center gap-4 md:gap-5">
+            {/* Score Indicator */}
+            <div className={`shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-2xl flex flex-col items-center justify-center border border-white/10 ${tier.color}`}>
+               <span className="text-base md:text-lg font-bold">{Math.round(match.similarity_score * 100)}%</span>
+               <span className="text-[7px] font-bold uppercase tracking-widest opacity-60">Match</span>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                 <Badge className={`px-2 py-0.5 rounded-md text-[8px] font-bold uppercase tracking-wider text-white border-0 ${tier.badge}`}>
+                    {tier.label}
+                 </Badge>
+                 <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                    ID: {match.item.id.slice(0, 8)}
+                 </span>
+              </div>
+              <h4 className="text-base md:text-lg font-bold text-white group-hover:text-uni-400 transition-colors">
+                 {match.item.title}
+              </h4>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between lg:justify-end gap-3 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-white/5">
+             <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 uppercase tracking-widest px-3 py-2 rounded-lg hover:bg-white/5 transition-colors">
+                {isExpanded ? <ChevronUp size={14} className="text-uni-400" /> : <ChevronDown size={14} className="text-uni-400" />}
+                {isExpanded ? 'Hide Details' : 'Show Details'}
+             </div>
+
+             <Button 
+               size="sm"
+               onClick={(e) => { e.stopPropagation(); onAuthorizeMatch(foundItem.id, match.item.id); }}
+               disabled={actionLoading === `match-${foundItem.id}-${match.item.id}`}
+               className="h-10 md:h-11 px-6 md:px-8 rounded-xl font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-all bg-white text-slate-950 hover:bg-uni-600 hover:text-white"
+             >
+               <LinkIcon size={14} className="mr-2" />
+               Link Match
+             </Button>
+          </div>
         </div>
-      </div>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
-            <CardContent className="p-8 space-y-2 bg-slate-950/20">
-              {/* Comparison Grid Header */}
-              <div className="grid grid-cols-12 gap-8 mb-6 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                <div className="col-span-2">Attribute</div>
-                <div className="col-span-10 md:col-span-10 grid grid-cols-2 gap-8">
-                   <div className="flex items-center gap-3 text-uni-400"><Tag size={14} /> Found Item</div>
-                   <div className="flex items-center gap-3 text-amber-500"><UserCheck size={14} /> Lost Report</div>
-                </div>
-              </div>
+        {/* Expanded Content */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <CardContent className="p-4 md:p-6 pt-0 space-y-6 bg-slate-950/20 backdrop-blur-3xl">
+                
+                {/* Visual Comparison Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <div className="space-y-2">
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <Tag size={10} className="text-uni-400" /> Inventory Data
+                      </p>
+                      <div className="bg-white/5 border border-white/5 p-4 rounded-xl">
+                         <p className="text-sm font-bold text-white">{foundItem.title}</p>
+                         <p className="text-xs text-slate-400 mt-1.5 leading-relaxed line-clamp-2">{foundItem.description || 'No description.'}</p>
+                      </div>
+                   </div>
 
-              {/* Attributes Rows */}
-              {[
-                { label: 'Item Type', icon: Tag, val1: foundItem.title, val2: match.item.title, highlight: true },
-                { label: 'Location', icon: MapPin, val1: foundItem.location, val2: match.item.location, color1: 'text-uni-400', color2: 'text-amber-500' },
-                { label: 'Timestamp', icon: Calendar, val1: new Date(foundItem.date_found).toLocaleDateString(), val2: new Date(match.item.date_lost).toLocaleDateString() }
-              ].map((row, i) => (
-                <div key={i} className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-2xl transition-all items-center border-t border-white/5">
-                  <div className="col-span-2 flex items-center gap-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider">
-                    <row.icon size={16} className="opacity-40" /> {row.label}
-                  </div>
-                  <div className="col-span-10 grid grid-cols-2 gap-8">
-                     <div className={`text-sm font-bold uppercase tracking-tight ${row.highlight ? 'text-white text-base' : row.color1 || 'text-slate-200'}`}>{row.val1}</div>
-                     <div className={`text-sm font-bold uppercase tracking-tight ${row.highlight ? 'text-white text-base' : row.color2 || 'text-slate-200'}`}>{row.val2}</div>
-                  </div>
+                   <div className="space-y-2">
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <UserCheck size={10} className="text-amber-500" /> Student Report
+                      </p>
+                      <div className="bg-amber-500/5 border border-amber-500/10 p-4 rounded-xl">
+                         <p className="text-sm font-bold text-slate-200">{match.item.title}</p>
+                         <p className="text-xs text-slate-400 mt-1.5 leading-relaxed line-clamp-2">{match.item.description || 'No description.'}</p>
+                      </div>
+                   </div>
                 </div>
-              ))}
 
-              {/* Description Details */}
-              <div className="grid grid-cols-12 gap-8 hover:bg-white/5 p-4 rounded-2xl transition-all items-start border-t border-white/5">
-                <div className="col-span-2 flex items-center gap-4 text-[12px] font-bold text-slate-500 uppercase tracking-wider pt-6">
-                  <AlignLeft size={16} className="opacity-40" /> Context
+                {/* Attribute Match Matrix */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                   {[
+                     { icon: MapPin, label: 'Location Match', val1: foundItem.location, val2: match.item.location },
+                     { icon: Calendar, label: 'Timeline Match', val1: new Date(foundItem.date_found).toLocaleDateString(), val2: new Date(match.item.date_lost).toLocaleDateString() },
+                   ].map((row, i) => (
+                     <div key={i} className="flex flex-col gap-1.5 p-3.5 bg-white/[0.02] border border-white/5 rounded-xl">
+                        <div className="flex items-center gap-2 text-[8px] font-bold text-slate-600 uppercase tracking-widest">
+                           <row.icon size={12} /> {row.label}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                           <div className="text-[10px] font-bold text-uni-400 uppercase truncate">{row.val1}</div>
+                           <div className="text-[10px] font-bold text-amber-500 uppercase truncate border-l border-white/10 pl-3">{row.val2}</div>
+                        </div>
+                     </div>
+                   ))}
                 </div>
-                <div className="col-span-10 grid grid-cols-2 gap-8">
-                  <div className="bg-slate-900/50 p-5 rounded-2xl border border-white/5 min-h-[100px]">
-                    <p className="text-[13px] text-slate-300 leading-relaxed font-medium italic">"{foundItem.description || 'No additional office notes.'}"</p>
-                  </div>
-                  <div className="bg-slate-900/50 p-5 rounded-2xl border border-white/5 min-h-[100px]">
-                    <p className="text-[13px] text-slate-300 leading-relaxed font-medium italic">"{match.item.description || 'No student description.'}"</p>
-                  </div>
-                </div>
-              </div>
 
-              {/* Footer: User Identity & Evidence */}
-              <div className="mt-8 pt-6 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-6 px-4">
-                <div className="flex flex-col sm:flex-row items-center gap-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-slate-600 overflow-hidden shadow-inner">
+                {/* Footer Interaction */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center overflow-hidden">
                       {match.item.photo_url ? (
                         <img src={match.item.photo_url} className="w-full h-full object-cover" alt="" />
                       ) : (
-                        <Lock className="opacity-20" size={24} />
+                        <Lock className="text-slate-700" size={18} />
                       )}
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Authenticated Holder</p>
-                      <p className="text-[15px] font-bold text-white tracking-tight">{match.item.owner_name}</p>
+                      <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Reported By</p>
+                      <p className="text-sm font-bold text-white">{match.item.owner_name}</p>
                     </div>
                   </div>
-                  
-                  <div className="hidden sm:block h-10 w-px bg-white/10"></div>
-                  
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Verification Level</p>
-                    <p className={`text-[12px] font-bold uppercase tracking-wider flex items-center gap-2 ${match.item.owner_name?.includes('Anonymous') ? 'text-amber-500' : 'text-uni-400'}`}>
-                       {match.item.owner_name?.includes('Anonymous') ? <Bot size={14} /> : <ShieldCheck size={14} />}
-                       {match.item.owner_name?.includes('Anonymous') ? 'Non-institutional Guest' : 'Verified Institutional Member'}
-                    </p>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    {match.item.photo_url && (
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => setPreviewImage(match.item.photo_url)}
+                          className="flex-1 sm:flex-none h-11 px-5 rounded-xl border border-white/5 text-[10px] font-bold uppercase tracking-wider hover:bg-white/5"
+                        >
+                          <ExternalLink size={14} className="mr-2" />
+                          Evidence
+                        </Button>
+                    )}
+                    <Button 
+                      variant="ghost"
+                      onClick={() => onDeepCompare({ found: foundItem, lost: match.item, score: match.similarity_score })}
+                      className="flex-1 sm:flex-none h-11 px-5 rounded-xl border border-white/5 text-[10px] font-bold uppercase tracking-wider hover:bg-white/5"
+                    >
+                      Audit
+                    </Button>
                   </div>
                 </div>
-                
-                {match.item.photo_url && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => setPreviewImage(match.item.photo_url)}
-                    className="h-12 w-full md:w-auto px-8 rounded-xl hover:bg-uni-500/10 text-uni-400 font-bold text-[12px] uppercase tracking-wider flex items-center gap-2 group/btn"
-                  >
-                    <ExternalLink size={14} className="group-hover/btn:scale-110 transition-transform" />
-                    Inspect Evidence Metadata
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </Card>
+
+              </CardContent>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
   );
 };
 

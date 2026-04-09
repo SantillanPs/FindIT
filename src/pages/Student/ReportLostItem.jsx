@@ -130,7 +130,7 @@ const ReportLostItem = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[90vh] flex flex-col px-4">
+    <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100vh-theme(spacing.24))] flex flex-col px-4">
       <ReportStepHeader 
         title="Report Lost Item"
         label="Lost Item Report"

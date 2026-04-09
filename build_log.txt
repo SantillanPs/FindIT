@@ -1,0 +1,29 @@
+
+> findit@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 3583 modules transformed.
+Γ£ù Build failed in 11.73s
+error during build:
+src/pages/Admin/components/ClaimReviewModal.jsx (5:2): "ClipboardSearch" is not exported by "node_modules/lucide-react/dist/esm/lucide-react.js", imported by "src/pages/Admin/components/ClaimReviewModal.jsx".
+file: C:/Users/admin/Documents/Programming/findIT/src/pages/Admin/components/ClaimReviewModal.jsx:5:2
+
+3: import { supabase } from '../../../lib/supabase';
+4: import { 
+5:   ClipboardSearch, 
+     ^
+6:   ShieldCheck, 
+7:   AlertCircle, 
+
+    at getRollupError (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:17022:16)
+    at Module.traceVariable (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:17478:29)
+    at ModuleScope.findVariable (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:15141:39)
+    at ReturnValueScope.findVariable (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:5688:38)
+    at Identifier.bind (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:5462:40)
+    at CallExpression.bind (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:2825:28)
+    at CallExpression.bind (file:///C:/Users/admin/Documents/Programming/findIT/node_modules/rollup/dist/es/shared/node-entry.js:12172:15)
