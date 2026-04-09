@@ -21,6 +21,7 @@ const ClaimStatus = () => {
           *,
           found_items (
             id,
+            title,
             category,
             description,
             location
@@ -34,6 +35,7 @@ const ClaimStatus = () => {
       // Flatten the data for easier consumption in the existing UI
       const formattedClaim = {
         ...data,
+        found_item_title: data.found_items?.title,
         found_item_category: data.found_items?.category,
         found_item_description: data.found_items?.description
       };
@@ -142,7 +144,7 @@ const ClaimStatus = () => {
                     {claim.status === 'approved' && (
                         <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
                             <p className="text-[10px] font-bold text-green-300 leading-relaxed">
-                                Please visit the Student Affairs Office (Room 101) with your student ID to collect your <strong>{claim.found_item_category}</strong>.
+                                Please visit the Student Affairs Office (Room 101) with your student ID to collect your <strong>{claim.found_item_title || claim.found_item_category}</strong>.
                             </p>
                         </div>
                     )}
@@ -182,7 +184,7 @@ const ClaimStatus = () => {
                    {claim.found_item_description ? '📦' : '📷'}
                 </div>
                 <div>
-                    <p className="text-white font-black uppercase text-sm tracking-tight">{claim.found_item_category}</p>
+                    <p className="text-white font-black uppercase text-sm tracking-tight">{claim.found_item_title || claim.found_item_category}</p>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest line-clamp-1 italic">
                         "{claim.proof_description}"
                     </p>

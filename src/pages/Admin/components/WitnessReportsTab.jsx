@@ -71,20 +71,24 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
           <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Community reported sightings and item intelligence</p>
         </div>
         
-        <div className="flex gap-2 p-1.5 bg-slate-900/40 backdrop-blur-3xl rounded-2xl border border-white/5 shadow-2xl">
-          {['pending', 'approved', 'dismissed'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                filter === status 
-                  ? 'bg-uni-600 text-white shadow-lg shadow-uni-600/20' 
-                  : 'text-slate-500 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2 pb-4 md:pb-0 w-full md:w-auto mt-4 md:mt-0">
+           <div className="flex flex-wrap items-center gap-2 pb-2">
+              {filters.map(f => (
+                <Button 
+                  key={f.id}
+                  variant={filter === f.id ? "default" : "outline"}
+                  onClick={() => setFilter(f.id)}
+                  className={`h-10 md:h-12 rounded-xl text-[10px] md:text-[11px] font-bold tracking-tight transition-all px-4 md:px-6 shrink-0 border-white/5 shadow-xl ${
+                    filter === f.id 
+                    ? "bg-uni-600 text-white hover:bg-uni-700 shadow-uni-600/20" 
+                    : `bg-slate-900/40 text-slate-400 hover:text-white backdrop-blur-3xl`
+                  }`}
+                >
+                  <f.icon size={12} className="mr-2" />
+                  <span className="whitespace-nowrap uppercase tracking-wider">{f.label}</span>
+                </Button>
+              ))}
+           </div>
         </div>
       </div>
 
@@ -177,21 +181,22 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
 
               {/* Actions */}
               {report.status === 'pending' && (
-                <div className="flex gap-4 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     onClick={() => handleUpdateStatus(report.id, 'approved')}
                     disabled={actionLoading === report.id}
-                    className="flex-grow h-14 rounded-xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                    className="flex-grow h-14 rounded-xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 px-4"
                   >
                     {actionLoading === report.id ? <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" /> : <ShieldCheck size={16} />}
-                    Verify & Award Points
+                    <span className="truncate">Verify & Award Points</span>
                   </button>
                   <button
                     onClick={() => handleUpdateStatus(report.id, 'dismissed')}
                     disabled={actionLoading === report.id}
-                    className="w-20 h-14 rounded-xl bg-white/5 hover:bg-red-500/10 hover:text-red-400 border border-white/5 flex items-center justify-center transition-all"
+                    className="sm:w-20 h-14 rounded-xl bg-white/5 hover:bg-red-500/10 hover:text-red-400 border border-white/5 flex items-center justify-center transition-all px-6 py-3"
                   >
-                    <XCircle size={18} />
+                    <XCircle size={18} className="mr-2 sm:mr-0" />
+                    <span className="sm:hidden text-[10px] font-bold uppercase tracking-widest">Dismiss</span>
                   </button>
                 </div>
               )}

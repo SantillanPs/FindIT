@@ -84,14 +84,14 @@ const ClaimReviewModal = ({
                           </span>
                           <div className="p-8 bg-white/[0.03] rounded-[2rem] border border-white/5 space-y-5 text-left shadow-inner">
                                <div className="flex justify-between items-start">
-                                  <h4 className="text-2xl font-bold text-white tracking-tight">{selectedClaim.found_items?.title}</h4>
-                                  <Badge variant="outline" className="bg-white/5 border-white/10 text-slate-400 text-[10px] font-bold px-3 py-1">
+                                  <h4 className="text-2xl font-bold text-white tracking-tight">{selectedClaim.found_items?.item_name || selectedClaim.found_items?.title}</h4>
+                                  <div className="bg-white/5 border border-white/10 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full">
                                     FOUND ITEM
-                                  </Badge>
+                                  </div>
                                </div>
                                <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                  <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-uni-400" /> {selectedClaim.found_items?.location}</span>
-                                  <span className="flex items-center gap-2"><FileText size={14} className="text-uni-400" /> {selectedClaim.found_items?.date_found ? new Date(selectedClaim.found_items.date_found).toLocaleDateString() : 'Unknown'}</span>
+                                  <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-uni-400" /> {selectedClaim.found_items?.location_zone || selectedClaim.found_items?.location}</span>
+                                  <span className="flex items-center gap-2"><FileText size={14} className="text-uni-400" /> {(selectedClaim.found_items?.found_time || selectedClaim.found_items?.date_found) ? new Date(selectedClaim.found_items.found_time || selectedClaim.found_items.date_found).toLocaleDateString() : 'Unknown'}</span>
                                </div>
                                <p className="text-[13px] text-slate-400 font-medium leading-relaxed">{selectedClaim.found_item_description || 'No detailed description.'}</p>
                           </div>
@@ -329,7 +329,7 @@ const ClaimReviewModal = ({
                       <div className="p-8 bg-white/[0.02] rounded-[2rem] border border-white/5 flex items-center justify-center gap-10 mx-auto w-fit">
                           <div className="text-left border-r border-white/10 pr-10">
                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Selected Item</p>
-                               <p className="text-sm text-white font-bold tracking-tight">{selectedClaim.found_items?.title}</p>
+                               <p className="text-sm text-white font-bold tracking-tight">{selectedClaim.found_items?.item_name || selectedClaim.found_items?.title}</p>
                           </div>
                           <div className="text-left">
                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Release To</p>

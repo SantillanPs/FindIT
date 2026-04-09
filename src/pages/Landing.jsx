@@ -20,13 +20,18 @@ import {
   Fingerprint,
   Send,
   PlusCircle,
-  HelpCircle
+  HelpCircle,
+  ShieldAlert,
+  Settings,
+  LayoutGrid,
+  PieChart as PieChartIcon
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import ItemCard from '../components/ItemCard';
 import LostReportCard from '../components/LostReportCard';
+import { motion, AnimatePresence } from 'framer-motion';
 import WitnessReportModal from '../components/WitnessReportModal';
 
 const Landing = () => {
@@ -46,6 +51,24 @@ const Landing = () => {
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [siteConfig, setSiteConfig] = useState(null);
+
+  useEffect(() => {
+    fetchSiteConfig();
+  }, []);
+
+  const fetchSiteConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('site_configs')
+        .select('*')
+        .eq('id', 'main')
+        .single();
+      if (!error && data) setSiteConfig(data);
+    } catch (e) {
+      console.error('Failed to load site config', e);
+    }
+  };
 
   useEffect(() => {
     // Only fetch items if we are NOT in the middle of a search
@@ -174,21 +197,85 @@ const Landing = () => {
 
   return (
     <div className="space-y-10 md:space-y-24 pb-20 relative overflow-hidden min-h-screen text-white">
+      {/* Dynamic System Banner */}
+      {siteConfig?.show_announcement && siteConfig?.announcement_text && (
+        <div className="relative z-[100] bg-rose-600 border-b border-rose-500/20 py-3 px-6 overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
+            <ShieldAlert className="h-4 w-4 text-white animate-pulse" />
+            <p className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em] italic">
+              {siteConfig.announcement_text}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Dynamic Ambient Background Elements */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-900/20 via-transparent to-transparent"></div>
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-sky-500/5 rounded-full pointer-events-none"></div>
+
+      {/* Super Admin Control Center */}
+      {user?.role === 'super_admin' && (
+        <section className="max-w-7xl mx-auto px-6 relative z-50">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-6 md:p-10 rounded-[2.5rem] bg-gradient-to-br from-uni-600 to-sky-600 border border-white/20 shadow-2xl shadow-uni-600/20 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div className="space-y-4 text-center md:text-left relative z-10">
+              <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
+                <ShieldAlert className="h-4 w-4 text-white" />
+                <span className="text-[10px] font-black text-white uppercase tracking-widest italic">Super Admin Console</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase leading-none">System Oversight Active</h2>
+              <p className="text-white/80 text-xs md:text-sm font-medium italic uppercase tracking-wider max-w-xl opacity-90">
+                You have elevated privileges. Use this section to access global configurations, staff roles, and advanced audit logs.
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap justify-center gap-4 relative z-10">
+              <Button 
+                onClick={() => navigate('/super')}
+                className="h-14 px-8 rounded-xl bg-white text-uni-700 font-bold text-[10px] uppercase tracking-widest italic shadow-xl hover:bg-slate-100 transition-all active:scale-95"
+              >
+                <LayoutGrid className="mr-3 h-4 w-4" />
+                System Overview
+              </Button>
+              <Button 
+                onClick={() => navigate('/admin/analytics')}
+                className="h-14 px-8 rounded-xl bg-white/10 text-white border border-white/20 font-bold text-[10px] uppercase tracking-widest italic backdrop-blur-md hover:bg-white/20 transition-all active:scale-95"
+              >
+                <PieChartIcon className="mr-3 h-4 w-4" />
+                Live Insights
+              </Button>
+            </div>
+          </motion.div>
+        </section>
+      )}
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 md:pt-0 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-6 relative z-10">
           
           <h1 className="text-6xl md:text-9xl lg:text-[11rem] font-black text-white italic tracking-tighter leading-[0.8] uppercase mb-8 md:mb-12">
-            Lost it? <br />
-            <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">Find it.</span>
+            {siteConfig?.hero_title ? (
+              <>
+                {siteConfig.hero_title.split('?')[0]}? <br />
+                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">
+                  {siteConfig.hero_title.split('?')[1] || 'Found it.'}
+                </span>
+              </>
+            ) : (
+              <>
+                Lost it? <br />
+                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">Find it.</span>
+              </>
+            )}
           </h1>
           
           <p className="text-sm md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 md:mb-24 leading-relaxed font-medium italic opacity-80 uppercase tracking-widest">
-            The university's centralized registry for assets. Verify ownership and facilitate secure returns.
+            {siteConfig?.hero_subtitle || "The university's centralized registry for assets. Verify ownership and facilitate secure returns."}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 md:gap-10 max-w-2xl mx-auto">
@@ -214,7 +301,7 @@ const Landing = () => {
       </section>
 
       {/* Identified Items Section */}
-      {items.some(i => i.identified_name || i.identified_student_id) && !itemsLoading && (
+      {siteConfig?.show_identified !== false && items.some(i => i.identified_name || i.identified_student_id) && !itemsLoading && (
         <section className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-24">
           <div className="flex items-center gap-6 mb-16 px-4 md:px-0">
             <div className="w-16 h-16 rounded-2xl bg-sky-500/10 border border-white/5 flex items-center justify-center text-sky-400">
@@ -287,7 +374,8 @@ const Landing = () => {
       )}
 
       {/* Community Honor Roll (Leaderboard) */}
-      <section className="relative py-20 md:py-32 overflow-hidden border-t border-white/5">
+      {siteConfig?.show_leaderboard !== false && (
+        <section className="relative py-20 md:py-32 overflow-hidden border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-16 md:gap-24">
             <div className="lg:w-1/2 space-y-10 text-left">
@@ -378,6 +466,7 @@ const Landing = () => {
           </div>
         </div>
       </section>
+      )}
 
 
 
@@ -519,7 +608,7 @@ const Landing = () => {
                Our staff is trained to facilitate efficient recovery. Reach out for institutional support.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-8 md:gap-12">
-               <a href="mailto:support@findit.edu" className="h-20 px-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center gap-4 group transition-all hover:bg-white/10">
+               <a href={`mailto:${siteConfig?.support_email || 'support@findit.edu'}`} className="h-20 px-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center gap-4 group transition-all hover:bg-white/10">
                   <span className="text-sm font-black text-white italic uppercase tracking-[0.2em]">Contact Staff</span>
                   <ChevronRight className="h-4 w-4 text-slate-500 group-hover:translate-x-1 transition-all" />
                </a>

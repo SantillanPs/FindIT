@@ -161,10 +161,10 @@ const InventoryCard = ({
                      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 border border-white/5">
                         <MapPin size={16} />
                      </div>
-                     <div className="flex flex-col">
-                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Location Found</span>
-                        <span className="text-xs font-semibold text-slate-200">{item.location}</span>
-                     </div>
+                      <div className="flex flex-col">
+                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Location Found</span>
+                         <span className="text-xs font-semibold text-slate-200">{item.location_zone}</span>
+                      </div>
                   </div>
 
                   <div className="flex items-center gap-3">

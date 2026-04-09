@@ -110,7 +110,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1">
                  <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors">
-                     {report.location}
+                     {report.title}
                  </h3>
                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Lost Report History & Vetting</p>
             </div>
@@ -158,7 +158,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
                      <div>
                          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Date Reported</p>
                          <p className="text-xs font-bold text-slate-200">
-                             {new Date(report.date_lost).toLocaleDateString()}
+                             {new Date(report.date_lost || report.created_at).toLocaleDateString()}
                          </p>
                      </div>
                 </div>

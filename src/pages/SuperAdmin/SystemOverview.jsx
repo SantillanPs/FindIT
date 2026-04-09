@@ -19,7 +19,7 @@ const SystemOverview = () => {
     try {
       setLoading(true);
       const { data: users, error } = await supabase
-        .from('users')
+        .from('user_profiles_v1')
         .select('role');
       
       if (error) throw error;

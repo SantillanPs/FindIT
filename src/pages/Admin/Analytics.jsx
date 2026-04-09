@@ -124,19 +124,21 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
           <p className="text-[13px] text-slate-400 font-medium">Daily traffic and recovery performance analysis</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex bg-slate-900/60 backdrop-blur-3xl border border-white/10 p-1.5 rounded-2xl shadow-xl">
-            {['today', 'weekly', 'monthly', 'all_time'].map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-5 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  period === p ? 'bg-uni-600 text-white shadow-lg' : 'text-slate-500 hover:text-white'
-                }`}
-              >
-                {p.replace('today', 'Today').replace('all_time', 'Lifecycle')}
-              </button>
-            ))}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+          <div className="flex flex-wrap justify-center items-center gap-2 pb-4 sm:pb-0">
+            <div className="flex flex-wrap bg-slate-900/60 backdrop-blur-3xl border border-white/10 p-1.5 rounded-2xl shadow-xl">
+              {['today', 'weekly', 'monthly', 'all_time'].map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  className={`px-3 sm:px-6 py-2.5 sm:py-3 rounded-xl text-[9px] sm:text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
+                    period === p ? 'bg-uni-600 text-white shadow-lg shadow-uni-600/20' : 'text-slate-500 hover:text-white'
+                  }`}
+                >
+                  {p.replace('today', 'Today').replace('all_time', 'Lifecycle')}
+                </button>
+              ))}
+            </div>
           </div>
 
           <button 

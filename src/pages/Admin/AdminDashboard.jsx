@@ -13,7 +13,18 @@ import {
   ClipboardCheck,
   ShieldCheck,
   X,
-  PackageCheck
+  PackageCheck,
+  History,
+  Trophy,
+  PieChart,
+  Eye,
+  Sparkles,
+  Warehouse,
+  HelpCircle,
+  Stamp,
+  Package,
+  FileText,
+  LayoutGrid
 } from "lucide-react";
 
 // Modular Components
@@ -25,6 +36,7 @@ import ReleasedItemsTable from './components/ReleasedItemsTable';
 import WitnessReportsTab from './components/WitnessReportsTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
+import LandingTab from './components/LandingTab';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 
 // Modals
@@ -347,9 +359,9 @@ const AdminDashboard = () => {
   });
 
   const historyFiltered = historyItems.filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || item.released_to_name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.id.toString().includes(searchTerm));
-  const filteredClaims = pendingClaims.filter(claim => claim.guest_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.found_items?.category?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.student_id?.toString().includes(searchTerm));
+  const filteredClaims = pendingClaims.filter(claim => claim.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.found_items?.category?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.student_id?.toString().includes(searchTerm));
   const filteredMatches = matches.filter(group => group.found_item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || group.found_item.category?.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredLostReports = lostReports.filter(report => report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || report.guest_full_name?.toLowerCase().includes(searchTerm.toLowerCase()) || report.id.toString().includes(searchTerm));
+  const filteredLostReports = lostReports.filter(report => report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.guest_first_name + ' ' + report.guest_last_name).toLowerCase().includes(searchTerm.toLowerCase()) || report.id.toString().includes(searchTerm));
 
   if (loading) return (
     <div className="flex justify-center py-32">
@@ -405,14 +417,16 @@ const AdminDashboard = () => {
         <Tabs value={currentTab} onValueChange={(val) => navigate(`/admin/${val === 'found' ? '' : val}`)} className="w-full">
           <div className="bg-slate-900/30 rounded-[2.5rem] border border-white/5 backdrop-blur-3xl shadow-3xl overflow-hidden min-h-[700px] w-full">
             <div className="p-4 md:p-8 lg:p-10 w-full">
-              <TabsContent value="found" className="m-0"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm}} /></TabsContent>
-              <TabsContent value="claims" className="m-0"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
-              <TabsContent value="matches" className="m-0"><MatchmakerTab {...{filteredMatches, setSelectedMatchPair, handleConnectMatch, actionLoading, setPreviewImage}} /></TabsContent>
-              <TabsContent value="lost" className="m-0"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
-              <TabsContent value="witnesses" className="m-0"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses, setIsSyncing}} /></TabsContent>
-              <TabsContent value="released" className="m-0"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
-              <TabsContent value="analytics" className="m-0"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics, setIsSyncing}} /></TabsContent>
-              <TabsContent value="users" className="m-0"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard, setIsSyncing}} /></TabsContent>
+              <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm}} /></TabsContent>
+              <TabsContent value="claims" className="m-0 focus-visible:outline-none"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
+              <TabsContent value="matches" className="m-0 focus-visible:outline-none"><MatchmakerTab {...{filteredMatches, setSelectedMatchPair, handleConnectMatch, actionLoading, setPreviewImage}} /></TabsContent>
+              <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
+              <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses, setIsSyncing}} /></TabsContent>
+              <TabsContent value="history" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
+              <TabsContent value="released" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
+              <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics, setIsSyncing}} /></TabsContent>
+              <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard, setIsSyncing}} /></TabsContent>
+              <TabsContent value="landing" className="m-0 focus-visible:outline-none"><LandingTab /></TabsContent>
             </div>
           </div>
         </Tabs>

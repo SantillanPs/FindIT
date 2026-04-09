@@ -8,6 +8,7 @@ import SystemOverview from './SystemOverview';
 import StaffManagement from './StaffManagement';
 import AuditLogs from './AuditLogs';
 import FeedbackHub from './FeedbackHub';
+import LandingTab from '../Admin/components/LandingTab';
 import ZoneBuilderTab from '../Admin/components/ZoneBuilderTab';
 
 const SuperAdminDashboard = () => {
@@ -29,6 +30,7 @@ const SuperAdminDashboard = () => {
 
   const tabs = [
     { id: 'overview', label: 'System Overview', icon: 'fa-globe' },
+    { id: 'landing', label: 'Landing Page', icon: 'fa-desktop' },
     { id: 'feedback', label: 'Feedback Hub', icon: 'fa-comments' },
     { id: 'staff', label: 'Staff Management', icon: 'fa-users-gear' },
     { id: 'audit', label: 'Audit Logs', icon: 'fa-shield-halved' }
@@ -46,6 +48,7 @@ const SuperAdminDashboard = () => {
             transition={{ duration: 0.2 }}
           >
             {currentTab === 'overview' && <SystemOverview />}
+            {currentTab === 'landing' && <LandingTab />}
             {currentTab === 'staff' && <StaffManagement />}
             {currentTab === 'audit' && <AuditLogs />}
             {currentTab === 'feedback' && <FeedbackHub />}

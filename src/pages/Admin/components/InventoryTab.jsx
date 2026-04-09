@@ -58,7 +58,7 @@ const InventoryTab = ({
       <div className="relative z-10 flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
            {/* Navigation - Mobile Scrollable */}
-           <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar mask-fade-right pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+           <div className="flex flex-wrap items-center gap-2 pb-2">
               {filters.map(f => (
                 <Button 
                   key={f.id}
@@ -67,13 +67,13 @@ const InventoryTab = ({
                     setInventoryFilter(f.id);
                     setSelectedIds([]);
                   }}
-                  className={`h-10 md:h-12 rounded-xl text-[11px] md:text-[12px] font-bold tracking-tight transition-all px-5 md:px-6 shrink-0 border-white/5 shadow-xl ${
+                  className={`h-10 md:h-12 rounded-xl text-[10px] md:text-[11px] font-bold tracking-tight transition-all px-4 md:px-6 shrink-0 border-white/5 shadow-xl ${
                     inventoryFilter === f.id 
                     ? "bg-uni-600 text-white hover:bg-uni-700 shadow-uni-600/20" 
                     : `bg-slate-900/40 text-slate-400 hover:text-white backdrop-blur-3xl`
                   }`}
                 >
-                  <f.icon size={14} className="mr-2.5" />
+                  <f.icon size={12} className="mr-2" />
                   <span className="whitespace-nowrap uppercase tracking-wider">{f.label}</span>
                 </Button>
               ))}

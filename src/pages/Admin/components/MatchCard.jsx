@@ -151,7 +151,7 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                    {[
                      { icon: MapPin, label: 'Location Match', val1: foundItem.location, val2: match.item.location },
-                     { icon: Calendar, label: 'Timeline Match', val1: new Date(foundItem.date_found).toLocaleDateString(), val2: new Date(match.item.date_lost).toLocaleDateString() },
+                     { icon: Calendar, label: 'Timeline Match', val1: new Date(foundItem.date_found).toLocaleDateString(), val2: new Date(match.item.date_lost || match.item.created_at).toLocaleDateString() },
                    ].map((row, i) => (
                      <div key={i} className="flex flex-col gap-1.5 p-3.5 bg-white/[0.02] border border-white/5 rounded-xl">
                         <div className="flex items-center gap-2 text-[8px] font-bold text-slate-600 uppercase tracking-widest">

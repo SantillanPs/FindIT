@@ -92,6 +92,8 @@ const GuestReportItem = () => {
         guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
         guest_email: formData.guest_email,
         guest_phone: formData.contact_info,
+        photo_url: formData.photo_url,
+        photo_thumbnail_url: formData.photo_url,
         status: 'reported',
         is_verified: false,
         registry_signal: { ...formData, reporter_type: 'guest' }

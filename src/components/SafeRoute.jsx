@@ -34,9 +34,18 @@ export const GuestRoute = () => {
     );
   }
 
+  // Mapping roles to their respective dashboards
+  const getDashboardPath = (role) => {
+    switch (role) {
+      case 'super_admin': return '/super';
+      case 'admin': return '/admin';
+      default: return '/student';
+    }
+  };
+
   // WAIT FOR TOTAL IDENTITY SIGNAL: Only redirect if session AND user are present
   // If session exists but user is null, stay on the page (profile sync is happening)
   const shouldRedirect = session && user && !isRegistering;
 
-  return shouldRedirect ? <Navigate to={user.role === 'admin' ? '/admin' : '/student'} replace /> : <Outlet />;
+  return shouldRedirect ? <Navigate to={getDashboardPath(user.role)} replace /> : <Outlet />;
 };

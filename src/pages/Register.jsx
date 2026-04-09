@@ -70,7 +70,10 @@ const Register = () => {
     if (user && !isSuccess && !loading) {
       sessionStorage.removeItem('registration_in_progress');
       // Navigate to their specific role dashboard
-      const dashboardPath = userRole === 'student' ? '/student' : '/admin';
+      let dashboardPath = '/student';
+      if (userRole === 'super_admin') dashboardPath = '/super';
+      else if (userRole === 'admin') dashboardPath = '/admin';
+      
       navigate(dashboardPath);
     }
   }, [user, isSuccess, loading, navigate]);

@@ -30,9 +30,11 @@ const MyClaims = () => {
       if (error) throw error;
       
       // Flatten for UI if necessary
+      // Flatten for UI if necessary
       const formatted = (data || []).map(c => ({
           ...c,
-          found_item_category: c.found_items?.category
+          found_item_category: c.found_items?.category,
+          found_item_title: c.found_items?.title
       }));
       
       setClaims(formatted);
@@ -64,7 +66,7 @@ const MyClaims = () => {
       console.error("Failed to schedule pickup in Supabase", error);
     }
   };
- Josephson
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -141,7 +143,7 @@ const MyClaims = () => {
                     <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-4">
-                           <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">{claim.found_item_category || 'Claimed Item'}</h2>
+                           <h2 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">{claim.found_item_title || claim.found_item_category || 'Claimed Item'}</h2>
                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-900 border border-white/5 px-3 py-1 rounded-lg">
                              FILE #{claim.id.toString().padStart(4, '0')}
                            </span>

@@ -74,10 +74,13 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
-                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-accent-default transition-colors line-clamp-1 mb-2">
-                    {report.location}
+                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-accent-default transition-colors line-clamp-1 mb-1">
+                    {report.title}
                 </h3>
-                
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 italic">
+                    {report.location}
+                </p>
+            </div>    
                 {report.potential_zone_names && report.potential_zone_names.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-2">
                         {report.potential_zone_names.slice(0, 2).map((name, i) => (
@@ -146,7 +149,6 @@ const LostReportCard = ({ report, onWitness }) => {
             >
                 <Eye className="h-4 w-4" />
             </button>
-        </div>
       </div>
     </div>
   );

@@ -66,8 +66,11 @@ const ItemCard = ({ item, onClick, onShare }) => {
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
                 <h3 className="text-xl font-bold text-white leading-tight group-hover:text-uni-400 transition-colors line-clamp-1">
-                    {item.location}
+                    {item.title}
                 </h3>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                    {item.location}
+                </p>
             </div>
 
         {/* Description List (Replacing the location/time list) */}
