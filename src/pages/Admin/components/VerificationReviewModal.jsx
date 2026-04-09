@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -52,7 +53,8 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
 
   const currentStep = steps[step - 1];
 
-  return (
+  // Using Portals to escape the parent's CSS positioning context (Trapped by backdrop-blur)
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 pointer-events-none">
       <motion.div 
         initial={{ opacity: 0 }}
@@ -246,7 +248,8 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
            </footer>
         )}
       </motion.div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
