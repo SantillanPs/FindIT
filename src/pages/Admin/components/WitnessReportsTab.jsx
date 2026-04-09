@@ -3,6 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Eye, CheckCircle, XCircle, Clock, User, Mail, Camera, FileSearch, ShieldCheck, Activity } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+const filters = [
+  { id: 'pending', label: 'Pending Review', icon: Clock },
+  { id: 'approved', label: 'Verified', icon: CheckCircle },
+  { id: 'dismissed', label: 'Dismissed', icon: XCircle }
+];
 
 /**
  * WitnessReportsTab - Premium Professional (Pro Max)
