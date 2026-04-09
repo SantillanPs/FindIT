@@ -48,8 +48,8 @@ const SystemOverview = () => {
   return (
     <div className="p-8 md:p-12 pb-32">
       <div className="mb-10">
-        <h2 className="text-2xl font-display font-bold text-white mb-2">System Overview</h2>
-        <p className="text-xs font-black uppercase tracking-widest text-slate-400">High-level platform statistics and health</p>
+        <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">System Overview</h2>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">High-level platform statistics and health</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -94,22 +94,22 @@ const SystemOverview = () => {
           </div>
           <div>
             <h3 className="text-lg font-bold text-white">System Status</h3>
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">All services operational</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">All services operational</p>
           </div>
         </div>
         
         <div className="space-y-4">
           <div className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Database Connection</span>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest">Healthy</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Database Connection</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest">Healthy</span>
           </div>
           <div className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Storage Bucket (Supabase)</span>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest">Healthy</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Storage Bucket (Supabase)</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest">Healthy</span>
           </div>
           <div className="flex justify-between items-center p-4 rounded-xl bg-white/5 border border-white/5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">OpenAI Vector Search</span>
-            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase tracking-widest">Healthy</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">OpenAI Vector Search</span>
+            <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-widest">Healthy</span>
           </div>
         </div>
       </div>
@@ -126,9 +126,9 @@ const StatCard = ({ title, value, icon, color, bg, border }) => (
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${color} bg-white/5`}>
         <i className={`fa-solid ${icon}`}></i>
       </div>
-      <span className="text-3xl font-display font-bold text-white leading-none">{value}</span>
+      <span className="text-3xl font-bold text-white leading-none">{value}</span>
     </div>
-    <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-2 line-clamp-2">{title}</h3>
+    <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-2 line-clamp-2">{title}</h3>
   </motion.div>
 );
 

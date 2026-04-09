@@ -35,6 +35,7 @@ import {
   Globe, 
   MessageSquare, 
   Users, 
+  Shield,
   ShieldCheck, 
   Warehouse, 
   HelpCircle, 
@@ -57,8 +58,8 @@ import {
 
 // Refined Logo Component
 const Logo = ({ className = "" }) => (
-  <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-black text-3xl italic shadow-2xl shadow-sky-500/10 border border-white/10 ${className}`}>
-    <span className="translate-x-[-4px]">f</span>
+  <div className={`w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black font-bold text-2xl shadow-2xl shadow-sky-500/10 border border-white/10 ${className}`}>
+    <span>f</span>
   </div>
 );
 
@@ -99,9 +100,9 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${isActive ? 'bg-black/5 text-black' : 'bg-slate-950 border border-white/5 text-slate-600 group-hover:text-sky-400'}`}>
               <Icon size={16} />
             </div>
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] italic flex-grow truncate">{label}</span>
+            <span className="text-[11px] font-bold uppercase tracking-[0.2em] flex-grow truncate">{label}</span>
             {count > 0 && (
-              <span className={`px-2 py-0.5 rounded-md text-[8px] font-black ${isActive ? 'bg-black text-white' : 'bg-sky-500/20 text-sky-400'}`}>
+              <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold ${isActive ? 'bg-black text-white' : 'bg-sky-500/20 text-sky-400'}`}>
                 {count}
               </span>
             )}
@@ -200,8 +201,8 @@ const LayoutContents = ({ children }) => {
                 <Link to="/" onClick={handleLogoClick} className="flex items-center gap-4 group no-underline">
                   <Logo />
                   <div className="text-left">
-                    <h1 className="text-xl font-black text-white italic tracking-tighter leading-none uppercase">FindIT</h1>
-                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1.5 pl-0.5">Asset Registry</p>
+                    <h1 className="text-xl font-bold text-white tracking-tighter leading-none uppercase">FindIT</h1>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1.5 pl-0.5">Asset Registry</p>
                   </div>
                 </Link>
                 <button 
@@ -221,6 +222,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/super" icon={Globe} label="System Overview" />
                      <SideNavItem to="/super/feedback" icon={MessageSquare} label="Feedback Hub" count={adminStats.feedbacks} />
                      <SideNavItem to="/super/staff" icon={Users} label="Staff Management" />
+                     <SideNavItem to="/super/registry" icon={Shield} label="Identity Verification" />
                      <SideNavItem to="/super/audit" icon={ShieldCheck} label="Security Audit Logs" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
@@ -239,6 +241,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/admin/witnesses" icon={Eye} label="Witness Intel" />
                      <SideNavItem to="/admin/matches" icon={Sparkles} label="Matchmaker" count={adminStats.matches} />
                      <SideNavItem to="/admin/users" icon={Trophy} label="Leaderboard" />
+                     <SideNavItem to="/admin/registry" icon={Shield} label="Identity Verification" />
                      <SideNavItem to="/admin/analytics" icon={PieChart} label="System Insights" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
@@ -259,13 +262,13 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/student" icon={Home} label="Mission Control" />
                      <SideNavItem to="/my-claims" icon={ClipboardCheck} label="My Claims" />
                    </SidebarMenu>
-                   <SidebarGroupLabel className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 mt-6">Registry</SidebarGroupLabel>
+                   <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Registry</SidebarGroupLabel>
                    <SidebarMenu>
                      <SideNavItem to="/public-feed" icon={Search} label="Found Inventory" />
                      <SideNavItem to="/lost-reports" icon={HelpCircle} label="Lost Reports" />
                      <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" />
                    </SidebarMenu>
-                   <SidebarGroupLabel className="px-2 text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2 mt-6">Personal</SidebarGroupLabel>
+                   <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Personal</SidebarGroupLabel>
                    <SidebarMenu>
                      <SideNavItem to="/report/lost" icon={AlertTriangle} label="Report Lost" />
                      <SideNavItem to="/report/found" icon={HeartHandshake} label="Report Found" />
@@ -287,7 +290,7 @@ const LayoutContents = ({ children }) => {
                         >
                            <Avatar className="h-8 w-8 rounded-lg border border-white/10 ring-2 ring-uni-500/10 transition-all">
                              <AvatarImage src={user.photo_url} />
-                             <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-black uppercase">
+                             <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-bold uppercase">
                                {user.email.substring(0, 2).toUpperCase()}
                              </AvatarFallback>
                            </Avatar>
@@ -310,7 +313,7 @@ const LayoutContents = ({ children }) => {
                         className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white hover:text-black border border-white/5 rounded-xl cursor-pointer transition-all duration-300 group no-underline outline-none focus:bg-white focus:text-black shadow-2xl"
                       >
                         <LogOut size={18} className="transition-transform group-hover:scale-110" />
-                        <span className="text-[10px] font-black tracking-[0.2em] uppercase italic">Sign Out Protocol</span>
+                        <span className="text-[10px] font-bold tracking-[0.2em] uppercase">Sign Out Protocol</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -331,12 +334,12 @@ const LayoutContents = ({ children }) => {
                     </button>
                   )}
                   <div className="text-left space-y-1">
-                      <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] italic">
+                      <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em]">
                         {location.pathname === '/student' ? 'Mission Control' : location.pathname.split('/').pop()?.replace('-', ' ') || 'Overview'}
                       </h2>
                       <div className="flex items-center gap-3">
                         <div className={`w-1.5 h-1.5 rounded-full ${user?.is_verified ? 'bg-sky-500' : 'bg-amber-500'} animate-pulse`}></div>
-                        <span className="text-xs font-black text-white italic uppercase tracking-widest">{user?.is_verified ? 'Verified Identity' : 'Queue Pending'}</span>
+                        <span className="text-xs font-bold text-white uppercase tracking-widest">{user?.is_verified ? 'Verified Identity' : 'Queue Pending'}</span>
                       </div>
                   </div>
                 </div>
@@ -372,17 +375,16 @@ const LayoutContents = ({ children }) => {
           <header className="sticky top-0 z-[60] h-24 flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
               <div className="flex justify-between h-full items-center">
-                <Link to="/" onClick={handleLogoClick} className="flex items-center gap-4 group no-underline">
-                  <Logo className="w-10 h-10 text-2xl rounded-xl" />
+                <Link to="/" onClick={handleLogoClick} className="flex items-center gap-3 md:gap-4 group no-underline">
+                  <Logo className="w-8 h-8 md:w-10 md:h-10 text-xl md:text-2xl rounded-lg md:rounded-xl" />
                   <div className="hidden sm:block text-left">
-                    <h1 className="font-display font-black text-xl tracking-tighter text-white leading-none uppercase italic">FindIT</h1>
-                    <p className="text-[8px] text-slate-500 font-black uppercase tracking-[0.3em] italic mt-1 pl-0.5">Asset Registry</p>
+                    <h1 className="font-display font-bold text-xl tracking-tighter text-white leading-none uppercase">FindIT</h1>
+                    <p className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.3em] mt-1 pl-0.5">Asset Registry</p>
                   </div>
                 </Link>
-                <div className="flex items-center gap-3 md:gap-6">
+                <div className="flex items-center gap-2 md:gap-6">
                   <ThemeToggle />
-                  <Link to="/login" className="text-slate-500 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] italic transition-colors">Sign In</Link>
-                  <Link to="/register" className="bg-white hover:bg-slate-200 text-black px-8 h-12 rounded-xl flex items-center justify-center font-black text-[10px] uppercase tracking-[0.2em] italic transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Register</Link>
+                  <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
                 </div>
               </div>
             </div>
@@ -390,7 +392,7 @@ const LayoutContents = ({ children }) => {
           <main className="flex-grow w-full relative z-10"><div key={location.pathname}>{children}</div></main>
           {location.pathname === '/' && (
             <footer className="py-20 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
-                <p className="text-slate-600 text-[9px] font-black uppercase tracking-[0.4em] italic opacity-60">
+                <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.4em] opacity-60">
                   FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
                 </p>
             </footer>
@@ -422,7 +424,7 @@ const LayoutContents = ({ children }) => {
                   initial={{ opacity: 0, width: 0, marginLeft: 0 }}
                   animate={{ opacity: 1, width: "auto", marginLeft: "12px" }}
                   exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                  className="text-sm font-black text-white uppercase tracking-[0.2em] italic whitespace-nowrap overflow-hidden"
+                  className="text-sm font-bold text-white uppercase tracking-[0.2em] whitespace-nowrap overflow-hidden"
                 >
                   Feedback
                 </motion.span>

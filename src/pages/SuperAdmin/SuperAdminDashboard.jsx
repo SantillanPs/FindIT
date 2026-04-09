@@ -10,11 +10,13 @@ import AuditLogs from './AuditLogs';
 import FeedbackHub from './FeedbackHub';
 import LandingTab from '../Admin/components/LandingTab';
 import ZoneBuilderTab from '../Admin/components/ZoneBuilderTab';
+import MemberRegistry from '../Admin/MemberRegistry';
 
 const SuperAdminDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isSyncing, setIsSyncing] = useState(false);
   
   // Determine current tab from URL
   const pathParts = location.pathname.split('/');
@@ -33,6 +35,7 @@ const SuperAdminDashboard = () => {
     { id: 'landing', label: 'Landing Page', icon: 'fa-desktop' },
     { id: 'feedback', label: 'Feedback Hub', icon: 'fa-comments' },
     { id: 'staff', label: 'Staff Management', icon: 'fa-users-gear' },
+    { id: 'registry', label: 'Identity Verification', icon: 'fa-shield' },
     { id: 'audit', label: 'Audit Logs', icon: 'fa-shield-halved' }
   ];
 
@@ -52,6 +55,7 @@ const SuperAdminDashboard = () => {
             {currentTab === 'staff' && <StaffManagement />}
             {currentTab === 'audit' && <AuditLogs />}
             {currentTab === 'feedback' && <FeedbackHub />}
+            {currentTab === 'registry' && <MemberRegistry setIsSyncing={(val) => {}} refreshTrigger={0} />}
           </motion.div>
         </AnimatePresence>
       </div>

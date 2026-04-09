@@ -36,6 +36,7 @@ import ReleasedItemsTable from './components/ReleasedItemsTable';
 import WitnessReportsTab from './components/WitnessReportsTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
+import MemberRegistry from './MemberRegistry';
 import LandingTab from './components/LandingTab';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 
@@ -60,7 +61,7 @@ const AdminDashboard = () => {
   const [historyItems, setHistoryItems] = useState([]);
   const [loading, setLoading] = useState(false); 
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncTriggers, setSyncTriggers] = useState({ analytics: 0, leaderboard: 0, witnesses: 0 });
+  const [syncTriggers, setSyncTriggers] = useState({ analytics: 0, leaderboard: 0, witnesses: 0, registry: 0 });
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -107,6 +108,9 @@ const AdminDashboard = () => {
         break;
       case 'users':
         if (force) setSyncTriggers(prev => ({ ...prev, leaderboard: prev.leaderboard + 1 }));
+        break;
+      case 'registry':
+        if (force) setSyncTriggers(prev => ({ ...prev, registry: prev.registry + 1 }));
         break;
       case 'witnesses':
         if (force) setSyncTriggers(prev => ({ ...prev, witnesses: prev.witnesses + 1 }));
@@ -426,6 +430,7 @@ const AdminDashboard = () => {
               <TabsContent value="released" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics, setIsSyncing}} /></TabsContent>
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard, setIsSyncing}} /></TabsContent>
+              <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry, setIsSyncing}} /></TabsContent>
               <TabsContent value="landing" className="m-0 focus-visible:outline-none"><LandingTab /></TabsContent>
             </div>
           </div>
@@ -456,7 +461,7 @@ const AdminDashboard = () => {
                    <div className="bg-black/40 p-8 rounded-[2rem] border border-white/5 space-y-6">
                       <div className="flex items-center gap-3">
                         <ClipboardCheck size={16} className="text-uni-400" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verify Item Details</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verification Details</p>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
                         {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => (

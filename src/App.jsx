@@ -101,7 +101,7 @@ const AppContent = () => {
 
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<Navigate to="/login" replace />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
@@ -132,6 +132,7 @@ const AppContent = () => {
               <Route path="/admin/witnesses" element={<AdminDashboard />} />
               <Route path="/admin/matches" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminDashboard />} />
+              <Route path="/admin/registry" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminDashboard />} />
               <Route path="/admin/released" element={<AdminDashboard />} />
               <Route path="/admin/profile/:userId" element={<Profile />} />
@@ -141,6 +142,7 @@ const AppContent = () => {
             <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
               <Route path="/super" element={<SuperAdminDashboard />} />
               <Route path="/super/staff" element={<SuperAdminDashboard />} />
+              <Route path="/super/registry" element={<SuperAdminDashboard />} />
               <Route path="/super/audit" element={<SuperAdminDashboard />} />
               <Route path="/super/feedback" element={<SuperAdminDashboard />} />
             </Route>

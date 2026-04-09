@@ -175,8 +175,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
               <tr className="bg-white/[0.02] text-[10px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
                 <th className="px-10 py-6">Member Identity</th>
                 <th className="px-10 py-6 text-center">Milestones</th>
-                <th className="px-10 py-6 text-center w-40">Integrity Pts</th>
-                <th className="px-10 py-6 text-right">Administrative Actions</th>
+                <th className="px-10 py-6 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/[0.02]">
@@ -186,7 +185,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                 
                 return (
                   <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
-                    <td className="px-10 py-10">
+                    <td className="px-10 py-10 text-left">
                       <div className="flex items-center gap-7">
                           <div className={`w-12 h-12 rounded-[1.25rem] flex items-center justify-center border font-bold text-sm shadow-inner transition-all ${getRankStyle(index)}`}>
                              {isTopThree ? <Trophy size={20} /> : index + 1}
@@ -234,55 +233,11 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
                           </span>
                        </div>
                     </td>
-                    <td className="px-10 py-10">
-                      <div className="flex justify-end items-center gap-5">
-                          <div className="flex items-center gap-2 bg-slate-950/50 border border-white/5 rounded-2xl p-2 shadow-inner">
-                              <button 
-                                  onClick={() => toggleCertificate(user.id, user.is_certificate_eligible)}
-                                  disabled={actionLoading === `cert-${user.id}`}
-                                  className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${user.is_certificate_eligible ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
-                                  title="Process Certification"
-                              >
-                                  <Award size={18} />
-                              </button>
-                              <button 
-                                  onClick={() => toggleVerification(user.id, user.is_verified)}
-                                  disabled={actionLoading === `verify-${user.id}`}
-                                  className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${user.is_verified ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'text-slate-700 hover:text-slate-400 hover:bg-white/5'}`}
-                                  title="Verify Profile"
-                              >
-                                  <UserCheck size={18} />
-                              </button>
-                          </div>
-
-                          <div className="h-8 w-px bg-white/5"></div>
-
-                          <div className="flex items-center gap-2">
-                              <button 
-                                  onClick={() => adjustReputation(user.id, 10, 0)}
-                                  disabled={actionLoading === user.id}
-                                  className="w-10 h-10 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-emerald-500 hover:border-emerald-500/20 rounded-xl transition-all shadow-lg active:scale-90"
-                                  title="Add Pts"
-                              >
-                                  <ArrowUpCircle size={18} />
-                              </button>
-                              <button 
-                                  onClick={() => adjustReputation(user.id, -10, 0)}
-                                  disabled={actionLoading === user.id}
-                                  className="w-10 h-10 flex items-center justify-center bg-slate-900 border border-white/5 text-slate-500 hover:text-red-500 hover:border-red-500/20 rounded-xl transition-all shadow-lg active:scale-90"
-                                  title="Reduce Pts"
-                              >
-                                  <ArrowDownCircle size={18} />
-                              </button>
-                          </div>
-
-                          <button 
-                              onClick={() => adjustReputation(user.id, 0, 1)}
-                              disabled={actionLoading === user.id}
-                              className={`h-11 px-5 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all border ${user.fraud_strikes > 0 ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-slate-900 border-white/5 text-slate-600 hover:text-red-400 hover:border-red-500/20 shadow-lg'}`}
-                          >
-                              {user.fraud_strikes > 0 ? `${user.fraud_strikes} Strikes` : 'Issue Strike'}
-                          </button>
+                    <td className="px-10 py-10 text-left">
+                      <div className="flex justify-end items-center">
+                          <Badge variant="outline" className="bg-slate-900 border-white/10 text-slate-500 text-[8px] font-bold tracking-[0.2em] px-3 py-1 uppercase italic">
+                              Member Profile
+                          </Badge>
                       </div>
                     </td>
                 </tr>

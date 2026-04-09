@@ -22,6 +22,7 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
   const [claimData, setClaimData] = useState([]);
   const [insights, setInsights] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorStatus, setErrorStatus] = useState(null);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -31,18 +32,26 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
   const fetchAnalyticsData = async (isSync = false) => {
     if (isSync) setIsSyncing(true);
     else setLoading(true);
+    setErrorStatus(null);
+
     try {
-      const { data, error } = await supabase.rpc('get_analytics_stats', {
-        time_period: period
-      });
+      const { data, error } = await Promise.race([
+        supabase.rpc('get_analytics_stats', {
+          time_period: period
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Fetch Timeout')), 30000)
+        )
+      ]);
 
       if (error) throw error;
 
       setReportData(data.reports || { found: [], lost: [] });
       setClaimData(data.claims || []);
       setInsights(data.insights || null);
-    } catch (error) {
-      console.error('Failed to fetch analytics', error);
+    } catch (err) {
+      console.error('Failed to fetch analytics', err);
+      setErrorStatus(err.message === 'Fetch Timeout' ? 'System response delayed. Please try again.' : 'Unable to synchronize analytics data.');
     } finally {
       setLoading(false);
       setIsSyncing(false);
@@ -109,8 +118,29 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
 
   if (loading && !insights) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center py-32 space-y-6">
+        <div className="w-12 h-12 border-4 border-white/5 border-t-uni-500 rounded-full animate-spin shadow-[0_0_20px_rgba(var(--uni-500-rgb),0.3)]"></div>
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] animate-pulse">Analyzing System Performance...</p>
+      </div>
+    );
+  }
+
+  if (errorStatus && !insights) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="w-20 h-20 bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] flex items-center justify-center text-rose-500 shadow-2xl">
+          <AlertTriangle size={36} />
+        </div>
+        <div className="text-center space-y-2">
+            <h3 className="text-xl font-bold text-white tracking-tight">Synchronization Interrupted</h3>
+            <p className="text-[13px] text-slate-400 font-medium max-w-sm">{errorStatus}</p>
+        </div>
+        <button 
+          onClick={() => fetchAnalyticsData()}
+          className="h-14 px-10 bg-white text-slate-950 hover:bg-uni-500 hover:text-white rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-xl active:scale-[0.98]"
+        >
+          Retry Synchronization
+        </button>
       </div>
     );
   }
