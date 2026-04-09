@@ -14,13 +14,14 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Mail, Key, ChevronRight, AlertCircle, Lock, CheckCircle } from 'lucide-react';
+import { Mail, Key, ChevronRight, AlertCircle, Lock, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState('login'); // 'login' or 'forgot'
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
@@ -151,12 +152,19 @@ const Login = () => {
                   <Input 
                     id="password"
                     placeholder="••••••••"
-                    type="password" 
-                    className="pl-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
+                    type={showPassword ? "text" : "password"} 
+                    className="pl-10 pr-10 bg-slate-950/50 border-white/5 focus:border-sky-500 transition-all text-sm h-12"
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)} 
                     required 
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
               </div>
 
