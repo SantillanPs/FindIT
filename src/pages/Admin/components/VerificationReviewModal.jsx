@@ -78,14 +78,14 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
            ))}
         </div>
 
-        <header className="px-8 pt-8 pb-6 flex justify-between items-start">
-            <div className="flex items-center gap-5">
-               <div className="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-uni-400">
-                  <currentStep.icon size={22} />
+        <header className="px-6 md:px-8 pt-6 md:pt-8 pb-4 md:pb-6 flex justify-between items-start">
+            <div className="flex items-center gap-4 md:gap-5">
+               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-uni-400">
+                  <currentStep.icon size={20} className="md:w-[22px] md:h-[22px]" />
                </div>
                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Review Phase {step}</p>
-                  <h2 className="text-xl font-bold text-white tracking-tight">{currentStep.title}</h2>
+                  <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Review Phase {step}</p>
+                  <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">{currentStep.title}</h2>
                </div>
             </div>
             <button 
@@ -96,7 +96,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
             </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-8 pb-10">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-8 pb-10">
            <AnimatePresence mode="wait">
              {step === 1 && (
                 <motion.div 
@@ -106,19 +106,19 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                   exit={{ opacity: 0, x: -10 }}
                   className="space-y-6"
                 >
-                   <div className="bg-slate-950/40 border border-white/5 rounded-3xl p-7 space-y-7">
+                   <div className="bg-slate-950/40 border border-white/5 rounded-3xl p-5 md:p-7 space-y-6 md:space-y-7">
                       <div className="grid grid-cols-1 gap-6">
                          <div className="space-y-1.5">
                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Student Information</span>
                             <div className="space-y-1">
-                               <p className="text-lg font-bold text-white tracking-tight">{student.full_name || `${student.first_name} ${student.last_name}`}</p>
-                               <p className="text-sm font-medium text-slate-400">{student.email}</p>
+                               <p className="text-[17px] md:text-lg font-bold text-white tracking-tight">{student.full_name || `${student.first_name} ${student.last_name}`}</p>
+                               <p className="text-[12px] md:text-sm font-medium text-slate-400">{student.email}</p>
                             </div>
                          </div>
                          <div className="h-px bg-white/5" />
                          <div className="space-y-1.5">
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">ID Reference</span>
-                            <p className="text-lg font-bold text-uni-500 tracking-wider">
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Institutional ID</span>
+                            <p className="text-[17px] md:text-lg font-bold text-uni-500 tracking-wider">
                                 {student.student_id_number || 'No ID Provided'}
                             </p>
                          </div>
@@ -183,12 +183,12 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="py-12 flex flex-col items-center text-center space-y-8"
                 >
-                   <div className="w-24 h-24 bg-uni-500/10 border border-uni-500/20 rounded-full flex items-center justify-center">
-                      <ShieldCheck size={48} className="text-uni-400" />
+                   <div className="w-20 h-20 md:w-24 md:h-24 bg-uni-500/10 border border-uni-500/20 rounded-full flex items-center justify-center">
+                      <ShieldCheck size={40} className="text-uni-400 md:w-12 md:h-12" />
                    </div>
-                   <div className="space-y-2 max-w-sm">
-                      <h3 className="text-2xl font-bold text-white tracking-tight italic uppercase">Access Attested</h3>
-                      <p className="text-sm text-slate-500 font-medium">By confirming, you acknowledge that this account represents a verified member of the institution.</p>
+                   <div className="space-y-2 max-w-sm px-4">
+                      <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight italic uppercase">Access Attested</h3>
+                      <p className="text-[13px] md:text-sm text-slate-500 font-medium">By confirming, you acknowledge that this account represents a verified member of the institution.</p>
                    </div>
                    
                    {error && (
@@ -198,7 +198,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       </div>
                    )}
 
-                   <div className="w-full grid grid-cols-1 gap-4">
+                   <div className="w-full grid grid-cols-1 gap-4 px-2">
                       <Button 
                         onClick={handleVerify}
                         disabled={loading}
@@ -226,11 +226,11 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
         </div>
 
         {step < 3 && (
-           <footer className="px-8 py-8 bg-slate-950/40 border-t border-white/5 flex justify-between items-center">
+           <footer className="px-6 md:px-8 py-6 md:py-8 bg-slate-950/40 border-t border-white/5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
               <Button 
                  variant="ghost"
                  onClick={() => step > 1 ? setStep(step - 1) : onClose()}
-                 className="h-12 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white"
+                 className="h-12 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white order-2 sm:order-1"
               >
                  {step === 1 ? 'Cancel Audit' : 'Previous'}
               </Button>
@@ -238,7 +238,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
               <Button 
                  onClick={() => setStep(step + 1)}
                  disabled={step === 2 && !student.verification_proof_url}
-                 className="h-14 px-10 bg-uni-600 text-white hover:bg-uni-700 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl group disabled:opacity-30 disabled:grayscale transition-all"
+                 className="h-14 md:h-14 px-10 bg-uni-600 text-white hover:bg-uni-700 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl group disabled:opacity-30 disabled:grayscale transition-all order-1 sm:order-2"
               >
                  {step === 1 ? 'Proof Inspection' : 'Attestation Stage'}
                  <ArrowRight size={16} className="ml-3 group-hover:translate-x-1 transition-transform" />

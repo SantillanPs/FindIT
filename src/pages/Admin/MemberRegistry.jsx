@@ -121,12 +121,12 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
       </header>
 
       {/* Internal Navigation Paging */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
-          <div className="flex p-1.5 bg-slate-950/40 border border-white/5 rounded-2xl backdrop-blur-2xl shadow-inner scrollbar-hide overflow-x-auto">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-1">
+          <div className="flex p-1.5 bg-slate-950/40 border border-white/5 rounded-2xl backdrop-blur-2xl shadow-inner scrollbar-hide overflow-x-auto w-full lg:w-auto">
               <TabButton 
                 active={activeTab === 'unverified'} 
                 onClick={() => setActiveTab('unverified')}
-                label="Pending Verification"
+                label="Pending"
                 count={unverifiedCount}
                 icon={Clock}
                 color="text-amber-500"
@@ -135,7 +135,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
               <TabButton 
                 active={activeTab === 'verified'} 
                 onClick={() => setActiveTab('verified')}
-                label="Verified Registry"
+                label="Verified"
                 count={verifiedCount}
                 icon={CheckCircle2}
                 color="text-emerald-500"
@@ -143,7 +143,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
               />
           </div>
 
-          <div className="flex items-center gap-3 px-5 py-2.5 bg-slate-900/40 border border-white/5 rounded-xl backdrop-blur-xl">
+          <div className="flex items-center gap-3 px-5 py-3 bg-slate-900/40 border border-white/5 rounded-xl backdrop-blur-xl w-full lg:w-auto justify-center lg:justify-start">
              <Filter size={14} className="text-slate-500" />
              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
                 Context: {activeTab === 'unverified' ? 'Identity Pending' : 'Identity Confirmed'}
@@ -151,10 +151,10 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
           </div>
       </div>
 
-      <div className="bg-slate-900/40 rounded-[2.5rem] border border-white/5 shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] overflow-hidden backdrop-blur-xl">
-        <div className="overflow-x-auto no-scrollbar">
+      <div className="lg:bg-slate-900/40 lg:rounded-[2.5rem] lg:border lg:border-white/5 lg:shadow-[0_32px_128px_-16px_rgba(0,0,0,0.5)] lg:backdrop-blur-xl overflow-visible lg:overflow-hidden">
+        <div className="overflow-x-visible lg:overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
-            <thead>
+            <thead className="hidden lg:table-header-group">
               <tr className="bg-white/[0.02] text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] border-b border-white/5">
                 <th className="px-10 py-6">Student Identity</th>
                 <th className="px-10 py-6">ID Reference</th>
@@ -162,13 +162,13 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                 <th className="px-10 py-6 text-right">Administrative Command</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.02]">
+            <tbody className="block lg:table-row-group lg:divide-y lg:divide-white/[0.02] space-y-6 lg:space-y-0">
               {filteredUsers.map((user) => {
                 const hasIDProof = !!user.verification_proof_url;
                 
                 return (
-                  <tr key={user.id} className="hover:bg-white/[0.01] transition-colors group">
-                    <td className="px-10 py-8 text-left">
+                  <tr key={user.id} className="transition-all group block lg:table-row p-6 lg:p-0 bg-slate-900/40 lg:bg-transparent rounded-3xl lg:rounded-none border border-white/5 lg:border-none shadow-2xl lg:shadow-none backdrop-blur-xl lg:backdrop-blur-none hover:bg-white/[0.02] lg:hover:bg-white/[0.01]">
+                    <td className="px-4 lg:px-10 py-4 lg:py-8 text-left block lg:table-cell">
                         <div className="space-y-1.5 text-left">
                             <div className="font-bold text-white text-[15px] tracking-tight flex items-center gap-2">
                                 {user.full_name || `${user.first_name || ''} ${user.last_name || ''}`}
@@ -179,12 +179,14 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                             </div>
                         </div>
                     </td>
-                    <td className="px-10 py-8">
+                    <td className="px-4 lg:px-10 py-4 lg:py-8 block lg:table-cell">
+                        <div className="lg:hidden text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-1.5 ml-0.5">Student ID</div>
                         <span className={user.student_id_number ? "text-uni-400 font-bold tracking-widest text-[13px]" : "text-rose-500/30 font-medium text-[11px] uppercase"}>
                             {user.student_id_number || 'PENDING RECORD'}
                         </span>
                     </td>
-                    <td className="px-10 py-8 text-center">
+                    <td className="px-4 lg:px-10 py-4 lg:py-8 text-left lg:text-center block lg:table-cell">
+                        <div className="lg:hidden text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2 ml-0.5">Evidence Status</div>
                         {hasIDProof ? (
                              <Badge variant="outline" className="bg-uni-500/10 text-uni-400 border-uni-500/20 px-3.5 py-1.5 text-[9px] font-bold uppercase tracking-widest rounded-lg">
                                 Documentary Evidence Uploaded
@@ -196,13 +198,13 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                             </div>
                         )}
                     </td>
-                    <td className="px-10 py-8 text-left">
-                      <div className="flex justify-end items-center gap-4">
+                    <td className="px-4 lg:px-10 py-6 lg:py-8 text-left block lg:table-cell">
+                      <div className="flex flex-col lg:flex-row lg:justify-end items-stretch lg:items-center gap-4">
                           {activeTab === 'unverified' ? (
                               <Button 
                                 onClick={() => handleStartVerification(user)}
                                 disabled={!hasIDProof}
-                                className="h-12 px-7 bg-uni-600 text-white hover:bg-uni-700 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lg disabled:opacity-20 disabled:grayscale transition-all group"
+                                className="h-14 lg:h-12 px-7 bg-uni-600 text-white hover:bg-uni-700 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] shadow-lg disabled:opacity-20 disabled:grayscale transition-all group w-full lg:w-auto"
                               >
                                 {hasIDProof ? (
                                    <>
@@ -212,18 +214,18 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                                 ) : 'Waiting for ID'}
                               </Button>
                           ) : (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2">
                                 <Button 
                                   onClick={() => handleStartVerification(user)}
                                   variant="ghost"
-                                  className="h-11 px-5 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 hover:text-white hover:bg-white/5 transition-all"
+                                  className="h-12 lg:h-11 px-5 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 lg:text-slate-500 hover:text-white hover:bg-white/5 transition-all w-full lg:w-auto bg-white/5 lg:bg-transparent"
                                 >
                                   Review Record
                                 </Button>
                                 <Button 
                                   onClick={() => revokeVerification(user.id)}
                                   variant="ghost"
-                                  className="h-11 px-6 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] text-slate-600 hover:text-rose-400 hover:bg-rose-500/5 hover:border-rose-500/20 border border-transparent transition-all"
+                                  className="h-12 lg:h-11 px-6 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 lg:text-slate-600 hover:text-rose-400 hover:bg-rose-500/5 hover:border-rose-500/20 border border-white/5 lg:border-transparent transition-all w-full lg:w-auto"
                                 >
                                   Revoke Attestation
                                 </Button>
@@ -265,10 +267,11 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
 const TabButton = ({ active, onClick, label, count, icon: Icon, color, activeBg }) => (
     <button 
       onClick={onClick}
-      className={`relative px-8 py-4 rounded-xl font-bold text-[11px] uppercase tracking-[0.15em] flex items-center gap-4 transition-all min-w-[210px] group ${active ? `${activeBg} text-white shadow-2xl` : 'text-slate-500 hover:text-slate-300'}`}
+      className={`relative px-6 lg:px-8 py-4 rounded-xl font-bold text-[11px] uppercase tracking-[0.15em] flex items-center gap-4 transition-all flex-1 lg:min-w-[210px] group ${active ? `${activeBg} text-white shadow-2xl` : 'text-slate-500 hover:text-slate-300'}`}
     >
         <Icon size={16} className={active ? color : 'text-slate-600 group-hover:text-slate-400 transition-colors'} />
-        <span className="flex-1 text-left">{label}</span>
+        <span className="flex-1 text-left hidden sm:inline">{label}</span>
+        <span className="flex-1 text-left sm:hidden">{label.split(' ')[0]}</span>
         <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black ${active ? 'bg-white/10 text-white' : 'bg-slate-900 text-slate-600 group-hover:bg-slate-800'}`}>
           {count}
         </span>
