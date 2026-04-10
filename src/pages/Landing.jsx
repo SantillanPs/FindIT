@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { logSupabaseError } from '../context/AuthContext';
@@ -39,11 +40,6 @@ const Landing = () => {
   const { categories: CATEGORIES_FROM_MASTER, leaderboard: LEADERBOARD_FROM_MASTER, loading: masterLoading } = useMasterData();
   const navigate = useNavigate();
   
-  const [items, setItems] = useState([]);
-  const [lostReports, setLostReports] = useState([]);
-  const [itemsLoading, setItemsLoading] = useState(true);
-  const [reportsLoading, setReportsLoading] = useState(true);
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   
@@ -51,52 +47,35 @@ const Landing = () => {
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
-  const [siteConfig, setSiteConfig] = useState(null);
 
-  useEffect(() => {
-    fetchSiteConfig();
-  }, []);
-
-  const fetchSiteConfig = async () => {
-    try {
+  // 1. Site Config Query
+  const { data: siteConfig } = useQuery({
+    queryKey: ['site_config'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('site_configs')
         .select('*')
         .eq('id', 'main')
         .single();
-      if (!error && data) setSiteConfig(data);
-    } catch (e) {
-      console.error('Failed to load site config', e);
-    }
-  };
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 30, // 30 mins
+  });
 
-  useEffect(() => {
-    // Only fetch items if we are NOT in the middle of a search
-    if (!searchQuery || searchQuery.trim().length <= 2) {
-      fetchItems();
-    }
-  }, [selectedCategory]);
-
-  useEffect(() => {
-    fetchLostReports();
-  }, []);
-
-  const fetchItems = async () => {
-    try {
-      setItemsLoading(true);
-      
+  // 2. Found Items Query (Includes AI Search)
+  const { data: items = [], isLoading: itemsLoading } = useQuery({
+    queryKey: ['found_items', selectedCategory, searchQuery],
+    queryFn: async () => {
       let data, error;
 
       if (searchQuery && searchQuery.trim().length > 2) {
         // AI-POWERED VECTOR SEARCH
-        // 1. Generate embedding using Edge Function
         const { data: embedData, error: embedError } = await supabase.functions.invoke('embed', {
           body: { text: searchQuery }
         });
 
         if (embedError) {
-          console.error('Embedding error, falling back to text search:', embedError);
-          // Fallback to text search
           const query = supabase
             .from('found_items')
             .select('*')
@@ -108,13 +87,11 @@ const Landing = () => {
           data = fallbackRes.data;
           error = fallbackRes.error;
         } else {
-          // 2. Call Postgres function for similarity search
           const { data: searchData, error: searchError } = await supabase.rpc('match_found_items', {
             query_embedding: embedData.embedding,
-            match_threshold: 0.2, // Adjust threshold as needed
+            match_threshold: 0.2,
             match_count: 12
           });
-
           data = searchData;
           error = searchError;
         }
@@ -130,50 +107,33 @@ const Landing = () => {
           query = query.eq('category', selectedCategory);
         }
 
-        const res = await Promise.race([
-          query,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Fetch Timeout')), 20000))
-        ]);
+        const res = await query;
         data = res.data;
         error = res.error;
       }
       
       if (error) throw error;
-      
-      console.info(`Supabase Fetch [Found Items]:`, data?.length || 0, 'records');
-      setItems(data || []);
-      setItemsLoading(false);
-    } catch (error) {
-      console.error('Error fetching items from Supabase:', error);
-      setItems([]);
-      setItemsLoading(false);
-    }
-  };
+      console.info(`[Query] Found Items:`, data?.length || 0, 'records');
+      return data || [];
+    },
+  });
 
-  const fetchLostReports = async () => {
-    try {
-      setReportsLoading(true);
-      
-      const { data, error } = await Promise.race([
-        supabase
-          .from('lost_items')
-          .select('id, title, category, description, photo_url, date_lost, location')
-          .order('date_lost', { ascending: false })
-          .limit(12),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Lost Reports Timeout')), 20000))
-      ]);
+  // 3. Lost Reports Query
+  const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
+    queryKey: ['lost_reports'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('id, title, category, description, photo_url, date_lost, location')
+        .order('date_lost', { ascending: false })
+        .limit(12);
 
       if (error) throw error;
+      console.info(`[Query] Lost Reports:`, data?.length || 0, 'records');
+      return data || [];
+    },
+  });
 
-      console.info(`Supabase Fetch [Lost Reports]:`, data?.length || 0, 'records');
-      setLostReports(data || []);
-      setReportsLoading(false);
-    } catch (error) {
-      logSupabaseError('Landing Page [Lost Reports]', error);
-      setLostReports([]);
-      setReportsLoading(false);
-    }
-  };
 
   const showToast = (message) => {
     setToast({ show: true, message });
