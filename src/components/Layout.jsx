@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -118,8 +119,31 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
 
 const LayoutContents = ({ children }) => {
   const { user, signOut } = useAuth();
-  const [isAdminStatsFetched, setIsAdminStatsFetched] = useState(false);
-  const [adminStats, setAdminStats] = useState({ claims: 0, matches: 0, lost: 0, feedbacks: 0 });
+  const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
+    queryKey: ['admin', 'sidebar_stats', user?.id],
+    queryFn: async () => {
+      console.info('[STATS] Synchronizing Sidebar Counters...');
+      const results = await Promise.allSettled([
+        supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }),
+        supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported'),
+        user?.role === 'super_admin' ? supabase.from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending') : Promise.resolve({ count: 0 })
+      ]);
+
+      const [claimsRes, matchesRes, lostRes, feedbackRes] = results.map(r => r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason });
+
+      return {
+        claims: claimsRes?.count || 0,
+        matches: matchesRes?.data?.length || 0,
+        lost: lostRes?.count || 0,
+        feedbacks: feedbackRes?.count || 0
+      };
+    },
+    enabled: !!user && (user.role === 'admin' || user.role === 'super_admin'),
+    refetchInterval: 30000, // Sync every 30s
+    staleTime: 1000 * 10,
+  });
+
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -143,45 +167,6 @@ const LayoutContents = ({ children }) => {
     window.addEventListener('open-feedback', handleOpenFeedback);
     return () => window.removeEventListener('open-feedback', handleOpenFeedback);
   }, []);
-
-  useEffect(() => {
-    if ((user?.role === 'admin' || user?.role === 'super_admin') && !isAdminStatsFetched) {
-      setIsAdminStatsFetched(true);
-      fetchAdminStats();
-    }
-  }, [user, isAdminStatsFetched]);
-
-  const fetchAdminStats = async () => {
-    try {
-      // Use Promise.allSettled to ensure failure in one doesn't kill the batch
-      const results = await Promise.allSettled([
-        supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }),
-        supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported')
-      ]);
-
-      const [claimsRes, matchesRes, lostRes] = results.map(r => r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason });
-
-      let feedbacksCount = 0;
-      if (user?.role === 'super_admin') {
-        try {
-          const { count } = await supabase.from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-          feedbacksCount = count || 0;
-        } catch (fErr) {
-          console.error('[STATS] Feedback fetch failed:', fErr);
-        }
-      }
-
-      setAdminStats({
-        claims: claimsRes?.count || 0,
-        matches: matchesRes?.data?.length || 0,
-        lost: lostRes?.count || 0,
-        feedbacks: feedbacksCount
-      });
-    } catch (error) {
-      console.error('Failed to fetch admin sidebar stats from Supabase', error);
-    }
-  };
 
   const handleLogout = () => {
     signOut();

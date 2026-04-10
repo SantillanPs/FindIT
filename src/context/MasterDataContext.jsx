@@ -1,18 +1,44 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { logSupabaseError } from './AuthContext';
 
 const MasterDataContext = createContext();
 
 const MasterDataProvider = ({ children }) => {
-    const [categories, setCategories] = useState([]);
-    const [colleges, setColleges] = useState([]);
-    const [leaderboard, setLeaderboard] = useState({ students: [], departments: [] });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // 1. Categories Query
+    const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useQuery({
+        queryKey: ['categories'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('master_categories')
+                .select('*')
+                .eq('is_active', true)
+                .order('label');
+            if (error) throw error;
+            return data || [];
+        },
+        staleTime: 1000 * 60 * 60, // 1 hour
+    });
 
-    const fetchLeaderboard = async () => {
-        try {
+    // 2. Colleges Query
+    const { data: colleges = [], isLoading: collegesLoading, error: collegesError } = useQuery({
+        queryKey: ['colleges'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('master_colleges')
+                .select('*')
+                .eq('is_active', true)
+                .order('label');
+            if (error) throw error;
+            return data || [];
+        },
+        staleTime: 1000 * 60 * 60, // 1 hour
+    });
+
+    // 3. Leaderboard Query
+    const { data: leaderboard = { students: [], departments: [] }, isLoading: leaderboardLoading } = useQuery({
+        queryKey: ['leaderboard'],
+        queryFn: async () => {
             const [studentsRes, deptsRes] = await Promise.all([
                 supabase
                     .from('user_profiles_v1')
@@ -45,44 +71,16 @@ const MasterDataProvider = ({ children }) => {
                 };
             });
 
-            setLeaderboard({
+            return {
                 students: maskedStudents,
                 departments: deptsRes.data || []
-            });
-        } catch (err) {
-            logSupabaseError('Leaderboard Sync', err);
-            // Fail gracefully - the app still works without the leaderboard
-        }
-    };
+            };
+        },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
 
-    const initializeSystem = async () => {
-        try {
-            // NO WATCHDOGS. NO TIMERS. Just pure, fast parallel fetching.
-            const [categoriesRes, collegesRes] = await Promise.all([
-                supabase.from('master_categories').select('*').eq('is_active', true).order('label'),
-                supabase.from('master_colleges').select('*').eq('is_active', true).order('label')
-            ]);
-
-            if (categoriesRes.error) throw categoriesRes.error;
-            if (collegesRes.error) throw collegesRes.error;
-
-            setCategories(categoriesRes.data || []);
-            setColleges(collegesRes.data || []);
-            
-            setLoading(false);
-            
-            // Fetch Leaderboards separately so they don't block initialization
-            fetchLeaderboard();
-        } catch (err) {
-            logSupabaseError('Master Data Registry', err);
-            setError(err.message || 'Registry access failed.');
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        initializeSystem();
-    }, []);
+    const loading = categoriesLoading || collegesLoading;
+    const error = categoriesError || collegesError;
 
     return (
         <MasterDataContext.Provider value={{ categories, colleges, leaderboard, loading, error }}>
