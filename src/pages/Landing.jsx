@@ -18,7 +18,7 @@ import {
   Building2,
   GraduationCap,
   IdCard,
-  Fingerprint,
+  User,
   Send,
   PlusCircle,
   HelpCircle,
@@ -235,7 +235,7 @@ const Landing = () => {
           </h1>
           
           <p className="text-sm md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 md:mb-24 leading-relaxed font-medium italic opacity-80 uppercase tracking-widest">
-            {siteConfig?.hero_subtitle || "The university's centralized registry for assets. Verify ownership and facilitate secure returns."}
+            {siteConfig?.hero_subtitle || "The university's centralized registry for assets. Authorize access and facilitate secure returns."}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 md:gap-10 max-w-2xl mx-auto">
@@ -269,7 +269,7 @@ const Landing = () => {
             </div>
             <div className="text-left">
               <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">Identified Items</h2>
-              <p className="text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] italic mt-3">Ownership verification pending</p>
+              <p className="text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] italic mt-3">Account authorization pending</p>
             </div>
           </div>
 
@@ -295,7 +295,7 @@ const Landing = () => {
                         loading="lazy"
                       />
                     ) : (
-                      <Fingerprint className="h-16 w-16 text-slate-500/20" />
+                      <User className="h-16 w-16 text-slate-500/20" />
                     )}
                  </div>
 

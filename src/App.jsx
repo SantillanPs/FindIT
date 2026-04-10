@@ -72,7 +72,7 @@ const AppContent = () => {
   
   if (loading) {
     // Determine status message safely
-    const statusMsg = showRescueLink ? "Connection Interrupted" : (session ? "Synchronizing Identity" : "Initializing FindIT");
+    const statusMsg = showRescueLink ? "Connection Interrupted" : (session ? "Authorizing Membership" : "Initializing FindIT");
 
     return (
       <div className="h-screen w-full bg-[#0f172a] flex items-center justify-center">
@@ -85,7 +85,7 @@ const AppContent = () => {
            {showRescueLink && (
              <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                <p className="max-w-[200px] text-center text-[10px] text-slate-600 font-medium leading-relaxed">
-                 Identity synchronization is taking longer than usual. This usually occurs during server cold-starts.
+                 Account authorization is taking longer than usual. This usually occurs during server cold-starts.
                </p>
                <button 
                  onClick={handleRescue}
@@ -114,7 +114,7 @@ const AppContent = () => {
 
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Navigate to="/login" replace />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 

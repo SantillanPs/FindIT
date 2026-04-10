@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
@@ -21,50 +21,31 @@ import {
 import { supabase } from '../../lib/supabase';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import VerificationReviewModal from './components/VerificationReviewModal';
+import AccountReviewModal from './components/AccountReviewModal';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('unverified'); // 'unverified' | 're-audit' | 'verified' | 'rejected'
-  
-  // Verification Modal State
+  const [activeTab, setActiveTab] = useState('unverified'); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
 
-  useEffect(() => {
-    fetchUsers(refreshTrigger > 0);
-  }, [refreshTrigger, activeTab]);
-
-  const fetchUsers = async (isSync = false) => {
-    if (isSync) setIsSyncing(true);
-    try {
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['registry-users'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles_v1')
         .select('*')
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      setUsers(data || []);
-    } catch (error) {
-      console.error('[REGISTRY] Failed to fetch users', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
+      return data || [];
     }
-  };
+  });
 
-  const handleStartVerification = (student) => {
-    setSelectedStudent(student);
-    setIsModalOpen(true);
-  };
-
-  const revokeVerification = async (userId) => {
-    const confirmRevoke = window.confirm("Are you sure you want to revoke this student's verified status?");
-    if (!confirmRevoke) return;
-
-    try {
+  const revokeMutation = useMutation({
+    mutationFn: async (userId) => {
       const { error } = await supabase
         .from('user_profiles_v1')
         .update({ 
@@ -75,10 +56,21 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
         .eq('id', userId);
         
       if (error) throw error;
-      await fetchUsers();
-    } catch (err) {
-      console.error('[REGISTRY] Revoke failed', err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['registry-users'] });
     }
+  });
+
+  const handleStartVerification = (student) => {
+    setSelectedStudent(student);
+    setIsModalOpen(true);
+  };
+
+  const revokeVerification = (userId) => {
+    const confirmRevoke = window.confirm("Are you sure you want to suspend this member’s approved status?");
+    if (!confirmRevoke) return;
+    revokeMutation.mutate(userId);
   };
 
   const filteredUsers = users.filter(user => {
@@ -89,7 +81,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
     
     // Tab filtering
     if (activeTab === 'unverified') return matchesSearch && user.verification_status === 'pending';
-    if (activeTab === 're-audit') return matchesSearch && user.verification_status === 're_audit';
+    if (activeTab === 'correction') return matchesSearch && user.verification_status === 're_audit';
     if (activeTab === 'rejected') return matchesSearch && user.verification_status === 'rejected';
     if (activeTab === 'verified') return matchesSearch && user.is_verified && user.verification_status === 'approved';
     
@@ -97,11 +89,11 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
   });
 
   const pendingCount = users.filter(u => u.verification_status === 'pending').length;
-  const reAuditCount = users.filter(u => u.verification_status === 're_audit').length;
+  const correctionCount = users.filter(u => u.verification_status === 're_audit').length;
   const rejectedCount = users.filter(u => u.verification_status === 'rejected').length;
   const verifiedCount = users.filter(u => u.is_verified && u.verification_status === 'approved').length;
 
-  if (loading) return (
+  if (isLoading) return (
     <div className="flex justify-center py-32">
       <div className="w-10 h-10 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>
@@ -113,10 +105,10 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
         <div className="space-y-1.5">
             <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
                 <Shield className="text-uni-400" size={24} />
-                Student Verification Hub
+                Member Approval Console
             </h1>
             <p className="text-[12px] text-slate-400 font-medium uppercase tracking-widest leading-relaxed">
-               Administrative terminal for identity vetting and institutional auditing.
+               Administrative terminal for membership verification and account management.
             </p>
         </div>
 
@@ -138,17 +130,17 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
               <TabButton 
                 active={activeTab === 'unverified'} 
                 onClick={() => setActiveTab('unverified')}
-                label="Initial"
+                label="Pending"
                 count={pendingCount}
                 icon={Clock}
                 color="text-amber-500"
                 activeBg="bg-amber-500/10 border-amber-500/20 shadow-amber-500/10"
               />
               <TabButton 
-                active={activeTab === 're-audit'} 
-                onClick={() => setActiveTab('re-audit')}
-                label="Re-Audit"
-                count={reAuditCount}
+                active={activeTab === 'correction'} 
+                onClick={() => setActiveTab('correction')}
+                label="Correction"
+                count={correctionCount}
                 icon={RefreshCw}
                 color="text-sky-500"
                 activeBg="bg-sky-500/10 border-sky-500/20 shadow-sky-500/10"
@@ -156,7 +148,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
               <TabButton 
                 active={activeTab === 'verified'} 
                 onClick={() => setActiveTab('verified')}
-                label="Verified"
+                label="Approved"
                 count={verifiedCount}
                 icon={CheckCircle2}
                 color="text-emerald-500"
@@ -179,7 +171,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                 Context: {
                   activeTab === 'unverified' ? 'First-Time Applicants' : 
                   activeTab === 're-audit' ? 'Corrected Re-submissions' : 
-                  activeTab === 'rejected' ? 'Validation Denials' : 'Identity Confirmed'
+                  activeTab === 'rejected' ? 'Validation Denials' : 'Account Authorized'
                 }
              </span>
           </div>
@@ -190,10 +182,10 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
           <table className="w-full text-left border-collapse">
             <thead className="hidden lg:table-header-group">
               <tr className="bg-white/[0.02] text-[11px] font-bold text-slate-400 uppercase tracking-widest border-b border-white/5">
-                <th className="px-8 py-5">Student Identity</th>
-                <th className="px-8 py-5">ID Reference</th>
-                <th className="px-8 py-5 text-center">Identity Proof Status</th>
-                <th className="px-8 py-5 text-right">Administrative Command</th>
+                <th className="px-8 py-5">Account Details</th>
+                <th className="px-8 py-5">Record Reference</th>
+                <th className="px-8 py-5 text-center">Approval Status</th>
+                <th className="px-8 py-5 text-right">Approval Actions</th>
               </tr>
             </thead>
             <tbody className="block lg:table-row-group lg:divide-y lg:divide-white/[0.02] space-y-6 lg:space-y-0">
@@ -260,8 +252,8 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                                    <>
                                       {
                                         user.verification_status === 'rejected' ? 'Review Rejection' : 
-                                        user.verification_status === 're_audit' ? 'Audit Correction' : 
-                                        'Auditing Stage'
+                                        user.verification_status === 're_audit' ? 'Review Correction' : 
+                                        'Review Stage'
                                       }
                                       <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
                                    </>
@@ -281,7 +273,7 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
                                   variant="ghost"
                                   className="h-9 px-4 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 border border-white/10 lg:border-transparent transition-all w-full lg:w-auto"
                                 >
-                                  Revoke Attestation
+                                  Suspend Approval
                                 </Button>
                               </div>
                           )}
@@ -308,11 +300,11 @@ const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
         </div>
       </div>
 
-      <VerificationReviewModal 
+      <AccountReviewModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         student={selectedStudent}
-        onComplete={fetchUsers}
+        onComplete={() => queryClient.invalidateQueries({ queryKey: ['registry-users'] })}
       />
     </div>
   );

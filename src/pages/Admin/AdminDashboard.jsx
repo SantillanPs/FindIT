@@ -444,61 +444,64 @@ const AdminDashboard = () => {
           {previewImage && <ImagePreviewOverlay {...{previewImage, setPreviewImage}} />}
 
           {showIntakeModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl" />
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 relative z-10 shadow-3xl space-y-10">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-uni-500/10 rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400">
-                    <ShieldCheck size={32} />
+              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative z-10 shadow-3xl space-y-7 md:space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-uni-500/10 rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400 shrink-0 shadow-lg shadow-uni-500/5">
+                    <ShieldCheck size={24} />
                   </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white tracking-tight">Process Item Intake</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1.5">Item #{showIntakeModal.item.id} • Securing Foundation</p>
+                  <div className="min-w-0 flex-grow">
+                     <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-bold text-white tracking-tight truncate">Process Intake</h3>
+                        <span className="text-[10px] font-black text-white/30 tracking-widest bg-white/5 px-2 py-1 rounded-md">#{showIntakeModal.item.id.slice(-4).toUpperCase()}</span>
+                     </div>
+                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Foundation Security Layer</p>
                   </div>
                 </div>
 
-                <div className="space-y-8">
-                   <div className="bg-black/40 p-8 rounded-[2rem] border border-white/5 space-y-6">
-                      <div className="flex items-center gap-3">
-                        <ClipboardCheck size={16} className="text-uni-400" />
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verification Details</p>
+                <div className="space-y-6">
+                   <div className="bg-white/[0.02] p-5 rounded-[1.5rem] border border-white/5 space-y-4 shadow-inner">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-1 h-3 rounded-full bg-uni-500"></div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Verification Grid</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => (
-                          <div key={field} className="space-y-2">
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">{field}</label>
+                          <div key={field} className="space-y-1.5">
+                            <label className="block text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-0.5">{field}</label>
                             {field.includes('Color') ? (
-                              <select className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold text-white focus:border-uni-500 outline-none appearance-none" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                              <select className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
                                 <option value="">Select</option>{COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             ) : field === 'Condition' ? (
-                              <select className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold text-white focus:border-uni-500 outline-none appearance-none" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                              <select className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
                                 <option value="">Select</option>{CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             ) : (
-                              <input type="text" className="w-full bg-slate-950 border border-white/5 rounded-xl px-4 py-3 text-xs font-bold text-white focus:border-uni-500 outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Enter ${field}`} />
+                              <input type="text" className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
                             )}
                           </div>
                         ))}
                       </div>
                    </div>
 
-                   <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">Internal Staff Note</label>
-                      <textarea className="w-full bg-slate-950 border border-white/10 rounded-2xl p-6 text-xs font-medium text-white focus:border-uni-500 outline-none min-h-[100px] transition-all" placeholder="Add specific details only staff can see..." value={showIntakeModal.verification_note} onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})} />
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1">Internal Notes</label>
+                      <textarea className="w-full bg-white/[0.03] border border-white/5 rounded-2xl p-5 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none min-h-[100px] transition-all resize-none shadow-inner" placeholder="Staff-only specific details..." value={showIntakeModal.verification_note} onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})} />
                    </div>
 
-                   <div className="space-y-4">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2 text-left">Challenge Question (For Students)</label>
-                      <input type="text" className="w-full h-16 bg-slate-950 border border-white/10 rounded-2xl px-6 text-xs font-medium text-white focus:border-uni-500 outline-none transition-all" placeholder="Ask something unique about the item..." value={showIntakeModal.challenge_question} onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})} />
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1 text-left">Challenge Question</label>
+                      <input type="text" className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl px-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner" placeholder="Ask student something unique..." value={showIntakeModal.challenge_question} onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})} />
                    </div>
                 </div>
 
-                <div className="flex items-center gap-4 pt-4">
-                   <button onClick={() => setShowIntakeModal(null)} className="px-8 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all">Cancel</button>
-                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-3">
-                     <PackageCheck size={18} />
-                     {actionLoading === showIntakeModal.item.id ? 'Processing' : 'Confirm Intake'}
+                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 pt-4 border-t border-white/5">
+                   <button onClick={() => setShowIntakeModal(null)} className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all">Discard</button>
+                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-3 active:scale-[0.98]">
+                     {actionLoading === showIntakeModal.item.id ? <RefreshCw size={18} className="animate-spin" /> : <PackageCheck size={18} />}
+                     {actionLoading === showIntakeModal.item.id ? 'Securing...' : 'Verify & Secure'}
                    </button>
                 </div>
               </motion.div>

@@ -1,46 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 
 const SystemOverview = () => {
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalAdmins: 0,
-    totalSuperAdmins: 0,
-    students: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchOverviewData();
-  }, []);
-
-  const fetchOverviewData = async () => {
-    try {
-      setLoading(true);
+  const { data: stats, isLoading, error } = useQuery({
+    queryKey: ['system-overview-stats'],
+    queryFn: async () => {
       const { data: users, error } = await supabase
         .from('user_profiles_v1')
         .select('role');
       
       if (error) throw error;
       
-      setStats({
+      return {
         totalUsers: users.length,
         totalAdmins: users.filter(u => u.role === 'admin').length,
         totalSuperAdmins: users.filter(u => u.role === 'super_admin').length,
         students: users.filter(u => u.role === 'student').length
-      });
-    } catch (err) {
-      console.error('Failed to fetch system overview from Supabase', err);
-    } finally {
-      setLoading(false);
+      };
     }
-  };
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center p-20">
         <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-rose-500 bg-rose-500/5 rounded-2xl border border-rose-500/10">
+        <p className="text-sm font-bold uppercase tracking-widest">Failed to load system metrics</p>
+        <p className="text-xs opacity-60 mt-2">{error.message}</p>
       </div>
     );
   }

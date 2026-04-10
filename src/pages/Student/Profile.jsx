@@ -142,8 +142,8 @@ const Profile = () => {
                
                <div className="flex-1 space-y-4 text-center lg:text-left">
                   <div className="space-y-1">
-                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Identity Verification Issue</p>
-                     <h2 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tight">Access Attestation Denied</h2>
+                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Account Approval Issue</p>
+                     <h2 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tight">Access Authorization Denied</h2>
                   </div>
                   
                   <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-2">
@@ -161,7 +161,7 @@ const Profile = () => {
                   <div className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
                      <div className="p-6">
                         <ImageUpload 
-                          label="Retry Verification" 
+                          label="Resubmit Proof" 
                           value={profileUser.verification_proof_url} 
                           onUploadSuccess={handleRetryVerification} 
                         />
@@ -187,9 +187,9 @@ const Profile = () => {
                  <Clock size={32} />
               </div>
               <div className="space-y-1 relative z-10">
-                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">Verification in Progress</p>
-                 <h2 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tight">Awaiting Institutional Vetting</h2>
-                 <p className="text-[11px] text-slate-500 font-medium">Your identity proof is currently in the auditing queue. Please check back later.</p>
+                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">Authorization in Progress</p>
+                 <h2 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tight">Awaiting Account Approval</h2>
+                 <p className="text-[11px] text-slate-500 font-medium">Your membership proof is currently in the approval queue. Please check back later.</p>
               </div>
            </motion.div>
         )}

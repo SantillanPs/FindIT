@@ -94,7 +94,7 @@ const Login = () => {
               <div className="flex flex-col gap-0.5 ml-2">
                 <AlertTitle className="text-[10px] font-black uppercase tracking-widest italic leading-none text-emerald-400">Success</AlertTitle>
                 <AlertDescription className="text-xs font-medium italic leading-tight">
-                  Your account has been created and verified! You can now sign in.
+                  Your account has been created and authorized! You can now sign in.
                 </AlertDescription>
               </div>
             </Alert>
@@ -173,7 +173,7 @@ const Login = () => {
                 {(loading || (session && !user)) ? (
                   <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-300">
                     <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-                    {(session && !user) ? "Syncing Identity..." : "Signing In..."}
+                    {(session && !user) ? "Syncing Profile..." : "Signing In..."}
                   </div>
                 ) : (
                   <>
@@ -257,7 +257,7 @@ const Login = () => {
           {view === 'forgot' && !resetSuccess && (
             <div className="p-4 bg-sky-500/5 border border-sky-500/10 rounded-2xl">
                <p className="text-[9px] leading-relaxed text-slate-500 italic text-center">
-                 "In case of immediate access needs, you may still visit the <span className="text-slate-300">USG Office</span> for manual identity verification."
+                 "In case of immediate access needs, you may still visit the <span className="text-slate-300">USG Office</span> for manual account authorization."
                </p>
             </div>
           )}

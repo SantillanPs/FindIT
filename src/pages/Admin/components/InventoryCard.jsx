@@ -3,74 +3,43 @@ import { useMasterData } from '../../../context/MasterDataContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
-  Package, 
   MapPin, 
-  Calendar, 
   User as UserIcon, 
-  Search, 
-  CheckCircle2, 
   BadgeCheck, 
-  ArrowRight,
-  ClipboardCheck,
   Vault,
   Clock,
   RefreshCw,
-  Box,
-  Fingerprint,
-  Info,
-  ShieldCheck,
-  Activity,
-  ChevronRight,
-  Zap,
-  Tag
+  Zap
 } from "lucide-react";
 
 /**
  * InventoryCard - Premium Professional (Pro Max)
  * - Refined glassmorphism.
- * - Clean, human-centered labeling.
- * - High-end typography (no aggressive italics).
+ * - Human-centric labeling.
+ * - High-end typography.
  */
 const InventoryCard = ({ 
   item, 
-  matches = [], 
-  pendingClaims = [], 
   navigate, 
-  setSearchTerm, 
   handleStatusUpdate, 
   setShowReleaseModal, 
   setReleaseForm, 
-  actionLoading, 
-  isSelected, 
-  onToggleSelect 
+  actionLoading 
 }) => {
   const { categories: CATEGORIES } = useMasterData();
-  const itemMatches = matches.find(m => m.found_item.id === item.id)?.top_matches || [];
-  const itemClaims = pendingClaims.filter(c => c.found_item_id === item.id);
-
-  const getStatusConfig = (status) => {
-    switch (status) {
-      case 'reported':
-        return { label: 'Newly Reported', color: 'bg-amber-500/10 text-amber-500 border-amber-500/20', icon: Activity };
-      case 'in_custody':
-        return { label: 'Secured in Vault', color: 'bg-uni-500/10 text-sky-400 border-sky-500/20', icon: ShieldCheck };
-      case 'claimed':
-        return { label: 'Returned', color: 'bg-green-500/10 text-green-400 border-green-500/20', icon: BadgeCheck };
-      default:
-        return { label: status, color: 'bg-slate-500/10 text-slate-400 border-slate-500/20', icon: Package };
-    }
-  };
-
-  const statusCfg = getStatusConfig(item.status);
   const categoryData = CATEGORIES.find(c => c.id === item.category);
 
-  // Simple date display instead of "Persistence"
   const formattedDate = new Date(item.created_at || item.date_found).toLocaleDateString('en-US', {
     month: 'short',
-    day: 'numeric'
-  });
+    day: 'numeric',
+    year: 'numeric'
+  }).toUpperCase();
+
+  // Construct reporter name
+  const reporterFullName = item.guest_name || [item.guest_first_name, item.guest_last_name].filter(Boolean).join(' ');
+  const displayReporter = reporterFullName || item.owner_name || 'Anonymous Finder';
 
   return (
     <motion.div
@@ -79,159 +48,120 @@ const InventoryCard = ({
       viewport={{ once: true }}
       transition={{ duration: 0.4 }}
     >
-      <Card className={`group relative border-white/5 bg-slate-950/40 backdrop-blur-3xl hover:bg-slate-900/60 transition-all duration-500 overflow-hidden rounded-[1.5rem] md:rounded-[2rem] ${
-         isSelected ? 'ring-1 ring-uni-500/50 bg-uni-500/5' : ''
-      }`}>
+      <Card className="group relative border-white/5 bg-slate-900/40 backdrop-blur-3xl hover:bg-slate-900/60 transition-all duration-500 overflow-hidden rounded-[2rem] shadow-2xl p-0 flex flex-col">
          
-         <CardContent className="p-0 flex flex-col lg:flex-row items-stretch lg:items-center">
+         {/* 1. Cinematic Header (Visual Intelligence) */}
+         <div className={`relative overflow-hidden bg-slate-950 transition-all duration-700 rounded-t-[2rem] ${
+           item.photo_url ? 'aspect-[21/9]' : 'h-16 sm:h-20'
+         }`}>
+            {item.photo_url ? (
+               <>
+                  <img 
+                    src={item.photo_url} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out opacity-90 group-hover:opacity-100"
+                  />
+                  {/* Cinematic Vignette Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/20 z-10"></div>
+               </>
+            ) : (
+               <div className="w-full h-full bg-gradient-to-br from-slate-900 to-slate-950 flex items-center justify-between px-6 opacity-60 group-hover:opacity-80 transition-opacity">
+                  <div className="text-2xl drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">{categoryData?.emoji || '📦'}</div>
+                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em]">Resource Preview</div>
+               </div>
+            )}
+
+            {/* Top Left Category Anchor */}
+            <div className="absolute top-4 left-4 z-20">
+               <Badge className="bg-black/70 backdrop-blur-2xl text-white border-white/20 px-4 py-2 text-[11px] font-black uppercase tracking-[0.1em] rounded-xl flex items-center gap-2 shadow-2xl transition-all group-hover:bg-black/90 group-hover:scale-105 duration-300">
+                  <span className="text-sm group-hover:scale-110 transition-transform">{categoryData?.emoji || '📦'}</span>
+                  {categoryData?.name || item.category || 'Asset'}
+               </Badge>
+            </div>
+         </div>
+
+         <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
             
-            {/* 1. Visual & Selection Section */}
-            <div className="flex items-center gap-4 md:gap-6 p-4 md:p-6 shrink-0 relative">
-               {/* Selection Interaction */}
-               <div 
-                 onClick={onToggleSelect}
-                 className={`w-10 h-10 rounded-xl border flex items-center justify-center cursor-pointer transition-all duration-300 z-20 ${
-                   isSelected 
-                   ? 'bg-uni-500 border-uni-400 shadow-lg scale-105' 
-                   : 'border-white/10 hover:border-uni-500/50 hover:bg-white/5'
-                 }`}
-               >
-                  {isSelected && <Zap size={16} className="text-white fill-white" />}
-               </div>
-
-               {/* Thumbnail */}
-               <div className="w-20 h-20 md:w-28 md:h-28 rounded-2xl bg-black border border-white/5 flex items-center justify-center relative flex-shrink-0 shadow-2xl overflow-hidden">
-                  {item.photo_url ? (
-                    <img 
-                      src={item.photo_url} 
-                      alt={item.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="text-3xl md:text-4xl grayscale group-hover:grayscale-0 transition-all duration-500">
-                      {categoryData?.emoji || '📦'}
-                    </div>
-                  )}
-                  
-                  {/* Subtle ID Badge */}
-                  <div className="absolute bottom-1 right-1 px-1.5 py-0.5 bg-black/60 backdrop-blur-md rounded-md border border-white/10">
-                     <span className="text-[7px] font-bold text-slate-400 uppercase tracking-widest">
-                        #{item.id.slice(0, 4)}
-                     </span>
-                  </div>
-               </div>
-
-               {/* Mobile Title View */}
-               <div className="flex flex-col gap-1 lg:hidden">
-                  <div className="flex items-center gap-2">
-                     <Badge className="bg-uni-500/20 text-uni-400 font-bold uppercase text-[8px] tracking-wider border-0 px-2">
-                        {categoryData?.name || 'Item'}
-                     </Badge>
-                     <span className="text-[10px] font-medium text-slate-500">
-                        {formattedDate}
-                     </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white leading-tight">
-                     {item.title}
-                  </h3>
-               </div>
-            </div>
-
             {/* 2. Primary Information */}
-            <div className="flex-grow p-4 md:p-6 lg:p-8 flex flex-col gap-5 border-t lg:border-t-0 lg:border-l border-white/5 relative z-10">
-               {/* Desktop Header */}
-               <div className="hidden lg:block space-y-1">
-                  <div className="flex items-center gap-3">
-                     <span className="text-[9px] font-bold text-uni-400 uppercase tracking-widest">
-                        {categoryData?.name || 'General'}
-                     </span>
-                     <span className="w-1 h-1 rounded-full bg-slate-700"></span>
-                     <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                        Reported: {formattedDate}
-                     </span>
+            <div className="space-y-4 text-left min-w-0">
+               <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                     <div className="flex items-center gap-2 flex-wrap text-white">
+                        <span className="text-[10px] font-black text-slate-500 tracking-[0.15em] px-2 py-0.5 border border-white/5 rounded">
+                           #{item.id.toString().slice(-4).toUpperCase()}
+                        </span>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2 border-l border-white/10">
+                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                           {formattedDate}
+                        </div>
+                     </div>
+                     <Badge className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shrink-0 transition-all duration-500 ${
+                        item.status === 'released' 
+                        ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                        : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
+                     }`}>
+                        {item.status === 'in_custody' ? 'REPOSITORY' : item.status === 'reported' ? 'INTAKE' : 'RELEASED'}
+                     </Badge>
                   </div>
-                  <h3 className="text-2xl font-bold text-white group-hover:text-uni-400 transition-colors duration-300">
-                     {item.title}
-                  </h3>
+
+                  <div className="space-y-0.5">
+                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-0.5">Asset: {item.title}</p>
+                     <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors duration-500 truncate drop-shadow-sm">
+                        {item.location || 'Not Specified'}
+                     </h3>
+                  </div>
                </div>
 
-               {/* Meta Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                     <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 border border-white/5">
-                        <MapPin size={16} />
-                     </div>
-                      <div className="flex flex-col">
-                         <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Location Found</span>
-                         <span className="text-xs font-semibold text-slate-200">{item.location_zone}</span>
-                      </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                     <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-slate-400 border border-white/5">
-                        <UserIcon size={16} />
-                     </div>
-                     <div className="flex flex-col">
-                        <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider">Reported By</span>
-                        <span className="text-xs font-semibold text-slate-200">
-                           {item.owner_name || 'Anonymous Finder'}
-                        </span>
+               <div className="grid grid-cols-1 pt-4 border-t border-white/5">
+                  <div className="space-y-1">
+                     <p className="text-[10px] font-normal text-slate-500 uppercase tracking-widest">Reporter</p>
+                     <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-uni-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]"></div>
+                        <p className="text-sm font-bold text-white truncate capitalize">{displayReporter}</p>
                      </div>
                   </div>
                </div>
             </div>
 
-            {/* 3. Status & Actions */}
-            <div className="p-4 md:p-6 lg:p-8 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-6 min-w-[200px]">
-               <div className="flex flex-col items-start lg:items-center gap-1.5">
-                  <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">Item Status</span>
-                  <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-[11px] font-bold ${statusCfg.color}`}>
-                    <statusCfg.icon size={14} />
-                    {statusCfg.label}
-                  </div>
-               </div>
-
-               <div className="flex items-center gap-2">
+            {/* 3. Actions Area */}
+            <div className="p-4 sm:p-5 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col items-stretch justify-center gap-3 min-w-[200px] bg-white/[0.01]">
+               <div className="flex items-center gap-3 w-full">
                  {item.status === 'reported' ? (
                       <Button 
                         onClick={() => handleStatusUpdate(item, 'in_custody')}
                         disabled={actionLoading === item.id}
-                        className="h-12 px-6 rounded-xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-all"
+                        className="w-full h-14 rounded-2xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-bold text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95"
                       >
                          {actionLoading === item.id ? (
-                           <RefreshCw size={16} className="animate-spin" />
+                           <RefreshCw size={18} className="animate-spin" />
                          ) : (
-                           <div className="flex items-center gap-2">
-                             <Vault size={16} />
-                             Secure
+                           <div className="flex items-center gap-3">
+                             <Vault size={18} />
+                             Secure Item
                            </div>
                          )}
                       </Button>
                  ) : (
                       <Button 
-                        variant="ghost"
+                        disabled={item.status === 'claimed'}
                         onClick={() => {
                            setShowReleaseModal(item);
                             setReleaseForm({ 
-                               name: item.identified_name || '', 
-                               id_number: item.identified_student_id || '',
-                               photo_url: '' 
+                                name: item.identified_name || '', 
+                                id_number: item.identified_student_id || '',
+                                photo_url: '' 
                             });
                         }}
-                        className="h-12 px-6 rounded-xl border border-green-500/20 bg-green-500/5 text-green-500 hover:bg-green-600 hover:text-white font-bold text-[10px] uppercase tracking-widest transition-all"
+                        className={`w-full h-14 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${
+                           item.status === 'claimed'
+                           ? 'bg-slate-800 text-slate-500 border-white/5 cursor-not-allowed'
+                           : 'border border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-600 hover:text-white'
+                        }`}
                       >
-                         <BadgeCheck size={16} className="mr-2" />
-                         Release
+                         <BadgeCheck size={18} className="mr-3" />
+                         {item.status === 'claimed' ? 'Released' : 'Release Item'}
                       </Button>
                  )}
-                 
-                 <Button 
-                   variant="ghost"
-                   onClick={() => navigate(`/admin/matches/${item.id}`)}
-                   className="w-10 h-12 p-0 rounded-xl hover:bg-white/5 border border-white/5 text-slate-400 hover:text-white"
-                 >
-                    <ChevronRight size={18} />
-                 </Button>
                </div>
             </div>
 

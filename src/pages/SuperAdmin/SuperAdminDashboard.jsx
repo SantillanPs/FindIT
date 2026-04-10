@@ -35,7 +35,7 @@ const SuperAdminDashboard = () => {
     { id: 'landing', label: 'Landing Page', icon: 'fa-desktop' },
     { id: 'feedback', label: 'Feedback Hub', icon: 'fa-comments' },
     { id: 'staff', label: 'Staff Management', icon: 'fa-users-gear' },
-    { id: 'registry', label: 'Identity Verification', icon: 'fa-shield' },
+    { id: 'registry', label: 'Account Approval', icon: 'fa-shield' },
     { id: 'audit', label: 'Audit Logs', icon: 'fa-shield-halved' }
   ];
 

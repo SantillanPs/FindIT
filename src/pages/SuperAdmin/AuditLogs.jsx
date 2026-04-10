@@ -1,35 +1,24 @@
-import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
 
 const AuditLogs = () => {
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
-
-  const fetchLogs = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: logs = [], isLoading, error: queryError } = useQuery({
+    queryKey: ['audit-logs'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('audit_logs')
         .select('*')
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
-      setLogs(data || []);
-    } catch (err) {
-      console.error('Failed to fetch audit logs from Supabase', err);
-      setError('Could not load system logs. Please check your permissions.');
-    } finally {
-      setLoading(false);
+      return data || [];
     }
-  };
+  });
+
+  const error = queryError ? 'Could not load system logs. Please check your permissions.' : null;
 
   const filteredLogs = logs.filter(log => 
     log.admin_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +49,7 @@ const AuditLogs = () => {
     return <span className="bg-slate-500/20 text-slate-400 border border-slate-500/30 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest flex items-center gap-1 w-fit"><i className="fa-solid fa-terminal text-[8px]"></i> System</span>;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center p-20">
         <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>

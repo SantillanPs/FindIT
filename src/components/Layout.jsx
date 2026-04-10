@@ -207,7 +207,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/super" icon={Globe} label="System Overview" />
                      <SideNavItem to="/super/feedback" icon={MessageSquare} label="Feedback Hub" count={adminStats.feedbacks} />
                      <SideNavItem to="/super/staff" icon={Users} label="Staff Management" />
-                     <SideNavItem to="/super/registry" icon={Shield} label="Identity Verification" />
+                     <SideNavItem to="/super/registry" icon={Shield} label="Account Approval" />
                      <SideNavItem to="/super/audit" icon={ShieldCheck} label="Security Audit Logs" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
@@ -226,7 +226,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/admin/witnesses" icon={Eye} label="Witness Intel" />
                      <SideNavItem to="/admin/matches" icon={Sparkles} label="Matchmaker" count={adminStats.matches} />
                      <SideNavItem to="/admin/users" icon={Trophy} label="Leaderboard" />
-                     <SideNavItem to="/admin/registry" icon={Shield} label="Identity Verification" />
+                     <SideNavItem to="/admin/registry" icon={Shield} label="Account Approval" />
                      <SideNavItem to="/admin/analytics" icon={PieChart} label="System Insights" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
@@ -324,7 +324,7 @@ const LayoutContents = ({ children }) => {
                       </h2>
                       <div className="flex items-center gap-3">
                         <div className={`w-1.5 h-1.5 rounded-full ${user?.is_verified ? 'bg-sky-500' : 'bg-amber-500'} animate-pulse`}></div>
-                        <span className="text-xs font-bold text-white uppercase tracking-widest">{user?.is_verified ? 'Verified Identity' : 'Queue Pending'}</span>
+                        <span className="text-xs font-bold text-white uppercase tracking-widest">{user?.is_verified ? 'Member Authorized' : 'Queue Pending'}</span>
                       </div>
                   </div>
                 </div>
@@ -341,8 +341,8 @@ const LayoutContents = ({ children }) => {
                         <div className="flex items-start sm:items-center gap-3 text-left">
                             <span className="text-xl">🏛️</span>
                             <div>
-                                <p className="font-bold text-[12px] text-brand-gold uppercase tracking-wider mb-0.5">Verification Pending</p>
-                                <p className="text-[13px] text-slate-300 font-medium leading-relaxed">Identity queue active. USG administration will verify your status shortly.</p>
+                                <p className="font-bold text-[12px] text-brand-gold uppercase tracking-wider mb-0.5">Authorization Pending</p>
+                                <p className="text-[13px] text-slate-300 font-medium leading-relaxed">Registration queue active. USG administration will authorize your account shortly.</p>
                             </div>
                         </div>
                         <div className="px-6 py-2 rounded-lg bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-[11px] font-bold uppercase tracking-wider flex-shrink-0 w-full sm:w-auto text-center">Awaiting Approval</div>
@@ -369,6 +369,7 @@ const LayoutContents = ({ children }) => {
                 </Link>
                 <div className="flex items-center gap-2 md:gap-6">
                   <ThemeToggle />
+                  <Link to="/register" className="hidden md:flex text-slate-400 hover:text-white px-4 h-12 items-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all">Register</Link>
                   <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
                 </div>
               </div>

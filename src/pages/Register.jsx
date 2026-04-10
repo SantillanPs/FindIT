@@ -87,7 +87,7 @@ const Register = () => {
     }
 
     if (step === 2) {
-      if (!firstName || !lastName || !studentId) return setError("All identity fields are required.");
+      if (!firstName || !lastName || !studentId) return setError("All profile fields are required.");
     }
 
     if (step === 3 && !department) return setError("Please select your college.");
@@ -189,14 +189,14 @@ const Register = () => {
               </div>
               <CardTitle className="text-3xl font-black text-white uppercase italic tracking-tighter">Registration Complete</CardTitle>
               <CardDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-                Your university identity has been archived successfully.
+                Your member account has been created successfully.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-left">
                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 italic leading-none">Security Note</p>
                 <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                  You are now automatically logged in. Your registration is pending administrative verification, but you can start using the dashboard immediately.
+                  You are now automatically logged in. Your registration is pending account approval, but you can start using the dashboard immediately.
                 </p>
               </div>
               <Button 
@@ -322,7 +322,7 @@ const Register = () => {
 
               {step === 4 && (
                 <div className="space-y-4 text-center">
-                  <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-2 italic leading-none">Verification Required</p>
+                  <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-2 italic leading-none">Member Authorization</p>
                   <div className="relative z-20">
                     <ImageUpload label="Upload your COR or ID" value={proofUrl} onUploadSuccess={setProofUrl} />
                   </div>
@@ -356,7 +356,7 @@ const Register = () => {
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={loading} className="w-full bg-sky-500 text-white font-black uppercase tracking-[0.2em] italic h-12 rounded-xl">
-              {loading ? "Activating..." : "Complete Registry"}
+              {loading ? "Activating..." : "Complete Registration"}
             </Button>
           )}
           {step > 1 && (

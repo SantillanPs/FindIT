@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 
-const UserVerification = () => {
+const MemberVerification = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,15 +72,15 @@ const UserVerification = () => {
       className="space-y-10"
     >
       <motion.header className="space-y-4 text-left" variants={itemVariants}>
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Identity Validation Console</h1>
+        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Account Approval Console</h1>
         <p className="text-slate-500 text-sm font-bold uppercase tracking-widest leading-relaxed max-w-2xl">
-           Manually review student ID uploads to authorize system permissions. Validated students can officially claim found property.
+           Review membership requests to authorize system permissions. Approved members can officially claim found property.
         </p>
       </motion.header>
 
       <motion.div variants={itemVariants} className="glass-panel rounded-3xl overflow-hidden border border-white/5">
         <div className="p-8 border-b border-white/5 flex flex-col sm:flex-row justify-between items-center gap-6 bg-white/5">
-           <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Institutional Member Registry</h2>
+           <h2 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">Member Approval Registry</h2>
            <span className="text-[9px] font-black text-slate-500 bg-slate-900 px-4 py-1.5 rounded-full border border-white/5 uppercase tracking-widest">
               {users.length} Active Records
            </span>
@@ -90,7 +90,7 @@ const UserVerification = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-white/[0.02] text-[9px] font-black text-slate-500 uppercase tracking-widest">
-                <th className="px-4 md:px-8 py-5">Student Identity</th>
+                <th className="px-4 md:px-8 py-5">Account Profile</th>
                 <th className="px-4 md:px-8 py-5 hidden sm:table-cell text-center">ID Proof</th>
                 <th className="px-4 md:px-8 py-5 text-right whitespace-nowrap">Status / Action</th>
               </tr>
@@ -132,7 +132,7 @@ const UserVerification = () => {
                            ? 'bg-green-500/10 text-green-400 border-green-500/20' 
                            : 'bg-white/5 text-slate-600 border-white/10'
                        }`}>
-                         {user.is_verified ? 'Verified' : 'Unverified'}
+                         {user.is_verified ? 'Approved' : 'Pending Approval'}
                        </span>
                        <button 
                          onClick={() => toggleVerification(user.id, user.is_verified)} 
@@ -142,7 +142,7 @@ const UserVerification = () => {
                            : 'bg-uni-600 text-white hover:bg-uni-500'
                          }`}
                        >
-                         {user.is_verified ? 'Revoke Access' : 'Validate ID'}
+                         {user.is_verified ? 'Revoke Approval' : 'Approve Account'}
                        </button>
                     </div>
                   </td>
@@ -156,4 +156,4 @@ const UserVerification = () => {
   );
 };
 
-export default UserVerification;
+export default MemberVerification;

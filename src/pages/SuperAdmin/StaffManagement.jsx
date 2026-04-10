@@ -1,74 +1,48 @@
-import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const StaffManagement = () => {
   const { user } = useAuth();
-  const [staff, setStaff] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionLoading, setActionLoading] = useState(null);
-  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  const { data: staff = [], isLoading, error: queryError } = useQuery({
+    queryKey: ['staff-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('role', { ascending: false });
 
-    const fetchStaff = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .order('role', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
-        if (error) throw error;
-        setStaff(data || []);
-      } catch (err) {
-        console.error('Failed to fetch staff list from Supabase', err);
-        setError('Could not load staff members. Please ensure you have Super Admin permissions.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, newRole }) => {
+      const { error } = await supabase
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', userId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff-list'] });
+    }
+  });
 
-    const handlePromote = async (userId, name) => {
-      setActionLoading(userId);
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ role: 'admin' })
-          .eq('id', userId);
-        
-        if (error) throw error;
-        await fetchStaff();
-      } catch (err) {
-        console.error('Promotion failed', err);
-        setError(err.message || 'Failed to promote user.');
-      } finally {
-        setActionLoading(null);
-      }
-    };
+  const error = queryError ? 'Could not load staff members. Please ensure you have Super Admin permissions.' : null;
 
-    const handleDemote = async (userId, name) => {
-      setActionLoading(userId);
-      try {
-        const { error } = await supabase
-          .from('users')
-          .update({ role: 'student' })
-          .eq('id', userId);
-        
-        if (error) throw error;
-        await fetchStaff();
-      } catch (err) {
-        console.error('Demotion failed', err);
-        setError(err.message || 'Failed to demote user.');
-      } finally {
-        setActionLoading(null);
-      }
-    };
+  const handlePromote = (userId) => {
+    updateRoleMutation.mutate({ userId, newRole: 'admin' });
+  };
+
+  const handleDemote = (userId) => {
+    updateRoleMutation.mutate({ userId, newRole: 'student' });
+  };
 
   const filteredStaff = staff.filter(s => 
     s.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -87,7 +61,7 @@ const StaffManagement = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center p-20">
         <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
@@ -155,20 +129,20 @@ const StaffManagement = () => {
                 </div>
               ) : user_row.role === 'admin' ? (
                 <button 
-                  onClick={() => handleDemote(user_row.id, user_row.full_name || user_row.email)}
-                  disabled={actionLoading === user_row.id}
+                  onClick={() => handleDemote(user_row.id)}
+                  disabled={updateRoleMutation.isPending && updateRoleMutation.variables?.userId === user_row.id}
                   className="w-full py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {actionLoading === user_row.id ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-user-minus"></i>}
+                  {updateRoleMutation.isPending && updateRoleMutation.variables?.userId === user_row.id ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-user-minus"></i>}
                   Revoke Admin
                 </button>
               ) : (
                 <button 
-                  onClick={() => handlePromote(user_row.id, user_row.full_name || user_row.email)}
-                  disabled={actionLoading === user_row.id}
+                  onClick={() => handlePromote(user_row.id)}
+                  disabled={updateRoleMutation.isPending && updateRoleMutation.variables?.userId === user_row.id}
                   className="w-full py-2.5 rounded-xl bg-uni-500/10 hover:bg-uni-500/20 border border-uni-500/20 text-uni-400 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {actionLoading === user_row.id ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-crown"></i>}
+                  {updateRoleMutation.isPending && updateRoleMutation.variables?.userId === user_row.id ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-crown"></i>}
                   Promote to Admin
                 </button>
               )}

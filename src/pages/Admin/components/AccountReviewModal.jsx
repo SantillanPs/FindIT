@@ -28,12 +28,22 @@ const QUICK_REASONS = [
   "Document is expired"
 ];
 
-const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
+const AccountReviewModal = ({ isOpen, onClose, student, onComplete }) => {
   const [step, setStep] = useState(1);
   const [showRejectionForm, setShowRejectionForm] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  
+  // Reset state when opening or switching students
+  React.useEffect(() => {
+    if (isOpen) {
+      setStep(1);
+      setShowRejectionForm(false);
+      setRejectionReason('');
+      setError(null);
+    }
+  }, [isOpen, student?.id]);
 
   if (!isOpen || !student) return null;
 
@@ -45,7 +55,6 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
         .from('user_profiles_v1')
         .update({ 
           is_verified: true, 
-          verified_at: new Date().toISOString(),
           verification_status: 'approved',
           verification_feedback: null 
         })
@@ -53,8 +62,8 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
 
       if (updateError) throw updateError;
       
-      setStep(3);
       if (onComplete) onComplete();
+      onClose();
     } catch (err) {
       console.error('Verification failed', err);
       setError('System failure while finalizing verification. Please retry.');
@@ -94,9 +103,9 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
   }
 
   const steps = [
-    { title: 'Information Audit', icon: User },
-    { title: 'Document Evidence', icon: Eye },
-    { title: 'Final Attestation', icon: ShieldCheck }
+    { title: 'Account Details', icon: User },
+    { title: 'Membership Proof', icon: Eye },
+    { title: 'Final Approval', icon: ShieldCheck }
   ];
 
   const currentStep = steps[step - 1];
@@ -134,7 +143,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                   <currentStep.icon size={20} className="md:w-[22px] md:h-[22px]" />
                </div>
                <div className="space-y-1">
-                  <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Review Phase {step}</p>
+                  <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Approval Stage {step}</p>
                   <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">{showRejectionForm ? 'Denial Feedback' : currentStep.title}</h2>
                </div>
             </div>
@@ -204,7 +213,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                    <div className="bg-slate-950/40 border border-white/5 rounded-3xl p-5 md:p-7 space-y-6 md:space-y-7">
                       <div className="grid grid-cols-1 gap-6">
                          <div className="space-y-1.5">
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Student Information</span>
+                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Profile Information</span>
                             <div className="space-y-1">
                                <p className="text-[17px] md:text-lg font-bold text-white tracking-tight">{student.full_name || `${student.first_name} ${student.last_name}`}</p>
                                <p className="text-[12px] md:text-sm font-medium text-slate-400">{student.email}</p>
@@ -222,7 +231,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                    <div className="flex items-center gap-3 p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl">
                       <AlertCircle size={14} className="text-amber-500 shrink-0" />
                       <p className="text-[11px] text-amber-500/80 font-medium leading-relaxed">
-                        Verify that these details are official before inspecting documents.
+                        Verify that these details are official before approving membership.
                       </p>
                    </div>
                 </motion.div>
@@ -282,8 +291,8 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       <ShieldCheck size={40} className="text-uni-400 md:w-12 md:h-12" />
                    </div>
                    <div className="space-y-2 max-w-sm px-4">
-                      <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight italic uppercase">Access Attested</h3>
-                      <p className="text-[13px] md:text-sm text-slate-500 font-medium">By confirming, you acknowledge that this account represents a verified member of the institution.</p>
+                      <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight italic uppercase">Account Approved</h3>
+                      <p className="text-[13px] md:text-sm text-slate-500 font-medium">By confirming, you authorize this account as a registered member of the platform.</p>
                    </div>
                    
                    {error && (
@@ -301,7 +310,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       >
                          {loading ? <Loader2 className="animate-spin" /> : (
                             <>
-                               Finalize verification
+                               Finalize Approval
                                <Check size={18} className="ml-3 group-hover:scale-125 transition-transform" />
                             </>
                          )}
@@ -314,7 +323,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                            disabled={loading}
                            className="h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-widest bg-white/5 sm:bg-transparent rounded-xl"
                          >
-                            Re-Audit Document
+                            Re-Review Proof
                          </Button>
                          <Button 
                            variant="ghost"
@@ -340,7 +349,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                  onClick={() => step > 1 ? setStep(step - 1) : onClose()}
                  className="h-12 px-6 rounded-xl text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white order-2 sm:order-1"
               >
-                 {step === 1 ? 'Cancel Audit' : 'Previous'}
+                 {step === 1 ? 'Cancel Approval' : 'Previous'}
               </Button>
 
               <Button 
@@ -348,7 +357,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                  disabled={step === 2 && !student.verification_proof_url}
                  className="h-14 md:h-14 px-10 bg-uni-600 text-white hover:bg-uni-700 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] shadow-xl group disabled:opacity-30 disabled:grayscale transition-all order-1 sm:order-2"
               >
-                 {step === 1 ? 'Proof Inspection' : 'Attestation Stage'}
+                 {step === 1 ? 'Review Proof' : 'Approval Stage'}
                  <ArrowRight size={16} className="ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
            </footer>
@@ -359,4 +368,4 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
   );
 };
 
-export default VerificationReviewModal;
+export default AccountReviewModal;

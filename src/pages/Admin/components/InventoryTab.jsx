@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import InventoryCard from './InventoryCard';
-import { Filter, Search, CheckSquare, Square, XCircle, PlusCircle, Vault, Clock, HandHelping, ListFilter, Activity, Loader2, Zap, ChevronRight, PackageSearch } from "lucide-react";
+import { Filter, Search, XCircle, PlusCircle, Vault, Clock, HandHelping, ListFilter, Activity, ChevronRight, PackageSearch } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const InventoryTab = ({ 
   inventoryFilter, 
@@ -22,28 +22,8 @@ const InventoryTab = ({
   handleStatusUpdate,
   setShowReleaseModal, 
   setReleaseForm, 
-  actionLoading,
-  handleBulkStatusUpdate
+  actionLoading
 }) => {
-  const [selectedIds, setSelectedIds] = useState([]);
-
-  const toggleSelect = (id) => {
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const selectAll = () => {
-    if (selectedIds.length === filteredItems.length && filteredItems.length > 0) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(filteredItems.map(i => i.id));
-    }
-  };
-
-  const pendingIntakeIds = useMemo(() => 
-    selectedIds.filter(id => filteredItems.find(i => i.id === id)?.status === 'reported'),
-    [selectedIds, filteredItems]
-  );
-
   const filters = [
     { id: 'all', label: 'All Items', icon: ListFilter, color: 'hover:bg-white/5 border-white/5' },
     { id: 'pending', label: 'Pending Secure', icon: Clock, color: 'hover:bg-amber-500/10 border-amber-500/10 text-amber-500' },
@@ -52,10 +32,10 @@ const InventoryTab = ({
   ];
 
   return (
-    <div className="space-y-8 pb-32 relative">
+    <div className="space-y-6 relative">
       
       {/* Inventory Header & Navigation */}
-      <div className="relative z-10 flex flex-col gap-6">
+      <div className="relative z-10 flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-1">
            {/* Navigation - Mobile Scrollable */}
            <div className="flex flex-wrap items-center gap-2 pb-2">
@@ -65,7 +45,6 @@ const InventoryTab = ({
                   variant={inventoryFilter === f.id ? "default" : "outline"}
                   onClick={() => {
                     setInventoryFilter(f.id);
-                    setSelectedIds([]);
                   }}
                   className={`h-10 md:h-12 rounded-xl text-[10px] md:text-[11px] font-bold tracking-tight transition-all px-4 md:px-6 shrink-0 border-white/5 shadow-xl ${
                     inventoryFilter === f.id 
@@ -78,24 +57,8 @@ const InventoryTab = ({
                 </Button>
               ))}
            </div>
-           
-           <div className="hidden md:flex items-center gap-3">
-              <Button 
-                variant="ghost"
-                onClick={selectAll}
-                className="h-12 rounded-xl text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-white hover:bg-white/5 px-6 border border-white/5"
-              >
-                {selectedIds.length === filteredItems.length && filteredItems.length > 0 ? (
-                  <CheckSquare size={16} className="mr-2.5 text-uni-400" />
-                ) : (
-                  <Square size={16} className="mr-2.5" />
-                )}
-                {selectedIds.length === filteredItems.length && filteredItems.length > 0 ? 'Clear Selection' : 'Select Page'}
-              </Button>
-           </div>
         </div>
 
-        {/* Status Context Summary */}
         <div className="flex items-center justify-between px-2">
            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-uni-500"></div>
@@ -103,14 +66,6 @@ const InventoryTab = ({
                  {filteredItems.length} Total Items in View
               </p>
            </div>
-           {selectedIds.length > 0 && (
-             <button 
-               onClick={() => setSelectedIds([])}
-               className="text-[10px] font-bold text-uni-400 uppercase tracking-widest hover:bg-uni-500/10 px-3 py-1 rounded-lg transition-all"
-             >
-                Reset Selection
-             </button>
-           )}
         </div>
       </div>
 
@@ -142,7 +97,7 @@ const InventoryTab = ({
             </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 gap-4">
           {filteredItems.map((item) => (
             <InventoryCard 
               key={item.id}
@@ -155,64 +110,11 @@ const InventoryTab = ({
               setShowReleaseModal={setShowReleaseModal}
               setReleaseForm={setReleaseForm}
               actionLoading={actionLoading}
-              isSelected={selectedIds.includes(item.id)}
-              onToggleSelect={() => toggleSelect(item.id)}
             />
           ))}
         </div>
       )}
       </div>
-
-      {/* Bulk Management Bar - Premium Sleek */}
-      <AnimatePresence>
-        {selectedIds.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-full max-w-2xl px-6"
-          >
-            <div className="bg-slate-950 border border-white/10 p-4 md:p-5 rounded-2xl flex items-center justify-between gap-4 backdrop-blur-3xl shadow-2xl">
-               <div className="flex items-center gap-4 pl-2">
-                  <div className="w-12 h-12 rounded-xl bg-uni-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                    {selectedIds.length}
-                  </div>
-                  <div className="text-left">
-                     <p className="text-xs font-bold text-white uppercase tracking-wider">Bulk Actions</p>
-                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Selected Items</p>
-                  </div>
-               </div>
-
-               <div className="flex items-center gap-2 pr-1">
-                  {pendingIntakeIds.length > 0 && (
-                    <Button 
-                      onClick={() => {
-                        handleBulkStatusUpdate(pendingIntakeIds, 'in_custody');
-                        setSelectedIds([]);
-                      }}
-                      disabled={actionLoading === 'bulk'}
-                      className="bg-white text-slate-950 hover:bg-uni-600 hover:text-white px-6 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all shadow-xl"
-                    >
-                      {actionLoading === 'bulk' ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        `Secure ${pendingIntakeIds.length}`
-                      )}
-                    </Button>
-                  )}
-                  
-                  <Button 
-                    variant="ghost"
-                    onClick={() => setSelectedIds([])}
-                    className="hover:bg-red-500/10 hover:text-red-400 text-slate-500 px-4 h-12 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-colors"
-                  >
-                    Cancel
-                  </Button>
-               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

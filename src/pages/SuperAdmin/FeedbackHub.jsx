@@ -1,56 +1,51 @@
-import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const FeedbackHub = () => {
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
-  const [filter, setFilter] = useState('all'); // all, pending, under_review, resolved
+  const queryClient = useQueryClient();
+  const [selectedFeedbackId, setSelectedFeedbackId] = useState(null);
+  const [filter, setFilter] = useState('all'); 
   const [notes, setNotes] = useState('');
 
-  useEffect(() => {
-    fetchFeedbacks();
-  }, []);
-
-  const fetchFeedbacks = async () => {
-    try {
-      setLoading(true);
+  const { data: feedbacks = [], isLoading } = useQuery({
+    queryKey: ['feedbacks'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('feedbacks')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      setFeedbacks(data || []);
-    } catch (error) {
-      console.error('Failed to fetch feedbacks from Supabase', error);
-    } finally {
-      setLoading(false);
+      return data || [];
     }
-  };
+  });
 
-  const handleStatusUpdate = async (id, status) => {
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, status, admin_notes }) => {
       const { data, error } = await supabase
         .from('feedbacks')
-        .update({ 
-          status,
-          admin_notes: notes 
-        })
+        .update({ status, admin_notes })
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
-      
-      setFeedbacks(feedbacks.map(f => f.id === id ? data : f));
-      setSelectedFeedback(data);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['feedbacks'], (old) => 
+        old.map(f => f.id === data.id ? data : f)
+      );
       setNotes('');
-    } catch (error) {
-      console.error('Failed to update status in Supabase', error);
     }
+  });
+
+  const selectedFeedback = feedbacks.find(f => f.id === selectedFeedbackId);
+
+  const handleStatusUpdate = (id, status) => {
+    updateMutation.mutate({ id, status, admin_notes: notes });
   };
 
   const filteredFeedbacks = feedbacks.filter(f => {
@@ -91,7 +86,7 @@ const FeedbackHub = () => {
         </div>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="h-64 flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-uni-500/20 border-t-uni-500 rounded-full animate-spin"></div>
         </div>
@@ -107,9 +102,9 @@ const FeedbackHub = () => {
               <motion.div
                 key={f.id}
                 layoutId={`card-${f.id}`}
-                onClick={() => { setSelectedFeedback(f); setNotes(f.admin_notes || ''); }}
+                onClick={() => { setSelectedFeedbackId(f.id); setNotes(f.admin_notes || ''); }}
                 className={`app-card p-5 cursor-pointer transition-all border ${
-                  selectedFeedback?.id === f.id ? 'border-uni-500/50 bg-uni-500/5 ring-1 ring-uni-500/20' : 'hover:border-white/10'
+                  selectedFeedbackId === f.id ? 'border-uni-500/50 bg-uni-500/5 ring-1 ring-uni-500/20' : 'hover:border-white/10'
                 }`}
               >
                 <div className="flex justify-between items-start mb-3">
@@ -231,9 +226,10 @@ const FeedbackHub = () => {
                          </button>
                          <button
                            onClick={() => handleStatusUpdate(selectedFeedback.id, 'resolved')}
-                           className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-uni-500 hover:bg-uni-400 text-white text-[9px] font-black uppercase tracking-widest transition-all"
+                           disabled={updateMutation.isPending}
+                           className="flex-grow sm:flex-grow-0 px-8 py-3 rounded-xl bg-uni-500 hover:bg-uni-400 text-white text-[9px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
                          >
-                           Mark as Resolved
+                           {updateMutation.isPending ? 'Updating...' : 'Mark as Resolved'}
                          </button>
                          <button
                            onClick={() => handleStatusUpdate(selectedFeedback.id, 'dismissed')}
