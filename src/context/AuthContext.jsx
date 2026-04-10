@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useRef } from "react";
 import { supabase } from "../lib/supabase";
 
 const AuthContext = createContext();
@@ -18,13 +18,22 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isFetching = useRef(false);
 
   // 1. Central Profile Sync Logic
   const fetchUserProfile = async (currentSession, retry = 0) => {
     if (!currentSession?.user) {
       setUser(null);
+      setLoading(false);
       return;
     }
+
+    if (isFetching.current && retry === 0) {
+      console.info('[AUTH] Profile fetch already in progress, skipping duplicate call.');
+      return;
+    }
+    
+    isFetching.current = true;
     
     try {
       // Use the newly deployed RPC function (Fixes "integer" type-casting ghosts)
@@ -36,9 +45,7 @@ export const AuthProvider = ({ children }) => {
         // PGRST116 means "0 rows found" - wait for DB catchup
         if (error.code === 'PGRST116' && retry < 5) {
           console.groupCollapsed(`[AUTH] Profile sync retry ${retry + 1}/5...`);
-          console.info('Context: User signed up but public.users record isn\'t visible yet.');
           
-          // CRITICAL: TRIGER THE SELF-REPAIR (Handles orphaned items and missing user profiles)
           if (retry === 0) {
              console.info('[AUTH] Triggering self-repair / profile claiming...');
              await supabase.rpc('sync_missing_profile');
@@ -50,18 +57,12 @@ export const AuthProvider = ({ children }) => {
           return fetchUserProfile(currentSession, retry + 1);
         }
         
-        // CRITICAL FAIL-SAFE: If session exists but profile cannot be loaded (due to schema error), 
-        // we MUST force a logout to prevent the user from being trapped in a loading loop.
+        // FAIL-SAFE: If session exists but profile cannot be loaded, 
+        // log it clearly for technical troubleshooting but avoid reload loops.
         if (error.code !== 'PGRST116') {
           logSupabaseError('Profile Sync Failure', error);
-          if (retry >= 2) {
-             console.warn('[AUTH] Hard-resetting broken session state...');
-             localStorage.clear();
-             sessionStorage.clear();
-             await supabase.auth.signOut();
-             window.location.reload();
-             return;
-          }
+          setLoading(false);
+          return;
         }
         throw error;
       }
@@ -72,6 +73,9 @@ export const AuthProvider = ({ children }) => {
       if (retry >= 5 || err.code !== 'PGRST116') {
         setUser(null);
       }
+    } finally {
+      isFetching.current = false;
+      setLoading(false);
     }
   };
 
@@ -81,43 +85,49 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // 2. Immediate Session Check
-    const initialize = async () => {
+    let mounted = true;
+
+    // SINGLE SOURCE OF TRUTH: Coordinate the startup sequence
+    const initializeAuth = async () => {
       try {
+        // 1. Get current session
         const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         setSession(initialSession);
         
+        // 2. If session exists, hydrate the profile immediately
         if (initialSession) {
-          // BLOCK UNTIL IDENTITY IS SYNCED
           await fetchUserProfile(initialSession);
+        } else {
+          setLoading(false);
         }
-      } finally {
-        // ALWAYS UNLOCK: Avoid terminal hang if Supabase is down
+      } catch (err) {
+        console.error('[AUTH] Initialization error:', err);
         setLoading(false);
       }
     };
 
-    initialize();
+    initializeAuth();
 
-    // 3. Reactive Auth Listener
+    // 3. Reactive Auth Listener (Handles subsequent logins/logouts)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      try {
-        setSession(currentSession);
-        
-        if (currentSession && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
-          // DO NOT UNLOCK UNTIL PROFILE IS SYNCED FOR NEW LOGINS
-          await fetchUserProfile(currentSession);
-        } else if (!currentSession) {
-          setUser(null);
-        }
-      } catch (err) {
-        console.error('[AUTH] Critical failure in auth state listener:', err);
-      } finally {
+      if (!mounted) return;
+      
+      setSession(currentSession);
+      
+      if (currentSession && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        await fetchUserProfile(currentSession);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email, password) => {

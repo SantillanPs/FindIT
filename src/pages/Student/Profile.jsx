@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { BadgeCheck, ShieldAlert, Clock, RefreshCw, XCircle, AlertCircle, FileUp } from 'lucide-react';
+import ImageUpload from '../../components/ImageUpload';
 
 const Profile = () => {
   const { userId } = useParams();
@@ -73,6 +75,32 @@ const Profile = () => {
     }
   };
 
+  const handleRetryVerification = async (newProofUrl) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles_v1')
+        .update({ 
+          verification_proof_url: newProofUrl,
+          verification_status: 're_audit',
+          verification_feedback: null,
+          is_verified: false 
+        })
+        .eq('id', currentUser.id);
+        
+      if (error) throw error;
+      
+      // Refresh local profile state
+      setProfileUser(prev => ({
+        ...prev,
+        verification_proof_url: newProofUrl,
+        verification_status: 're_audit',
+        verification_feedback: null
+      }));
+    } catch (err) {
+      console.error('Failed to update verification proof', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-slate-950">
@@ -99,6 +127,73 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-slate-950 pt-32 pb-20 px-4 md:px-8">
       <div className="max-w-6xl mx-auto space-y-12">
+        {/* Rejection / Action Banner */}
+        {isOwnProfile && profileUser.verification_status === 'rejected' && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden group"
+          >
+            <div className="absolute inset-0 bg-rose-500/5 backdrop-blur-3xl rounded-[2.5rem] border border-rose-500/20" />
+            <div className="relative p-8 md:p-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+               <div className="w-16 h-16 md:w-20 md:h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 shrink-0 border border-rose-500/20 shadow-2xl shadow-rose-500/10">
+                  <ShieldAlert size={32} md:size={40} />
+               </div>
+               
+               <div className="flex-1 space-y-4 text-center lg:text-left">
+                  <div className="space-y-1">
+                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Identity Verification Issue</p>
+                     <h2 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tight">Access Attestation Denied</h2>
+                  </div>
+                  
+                  <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-2">
+                     <div className="flex items-center gap-2 text-rose-400">
+                        <XCircle size={14} />
+                        <span className="text-[9px] font-black uppercase tracking-widest leading-none">Admin Feedback</span>
+                     </div>
+                     <p className="text-sm text-slate-300 font-medium italic leading-relaxed">
+                        "{profileUser.verification_feedback || "Your documentation was reviewed but requires adjustment. Please see the notes above and resubmit."}"
+                     </p>
+                  </div>
+               </div>
+
+               <div className="w-full lg:w-80 shrink-0 space-y-4">
+                  <div className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+                     <div className="p-6">
+                        <ImageUpload 
+                          label="Retry Verification" 
+                          value={profileUser.verification_proof_url} 
+                          onUploadSuccess={handleRetryVerification} 
+                        />
+                     </div>
+                  </div>
+                  <p className="text-[9px] text-center text-slate-500 font-bold uppercase tracking-widest px-4 leading-relaxed">
+                     Updating your ID proof will automatically reset your application to <span className="text-amber-500">Pending</span>.
+                  </p>
+               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Pending Banner */}
+        {isOwnProfile && profileUser.verification_status === 'pending' && profileUser.verification_proof_url && (
+           <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-amber-500/5 border border-amber-500/20 rounded-[2.5rem] p-8 md:p-10 flex items-center gap-8 overflow-hidden relative"
+           >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
+              <div className="w-16 h-16 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 shrink-0 border border-amber-500/20">
+                 <Clock size={32} />
+              </div>
+              <div className="space-y-1 relative z-10">
+                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">Verification in Progress</p>
+                 <h2 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tight">Awaiting Institutional Vetting</h2>
+                 <p className="text-[11px] text-slate-500 font-medium">Your identity proof is currently in the auditing queue. Please check back later.</p>
+              </div>
+           </motion.div>
+        )}
+
         {/* Profile Header */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -114,8 +209,18 @@ const Profile = () => {
               <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-slate-900 border-2 border-white/10 flex items-center justify-center text-6xl relative">
                 {profileUser.first_name?.charAt(0) || 'U'}
                 {profileUser.is_verified && (
-                  <div className="absolute -bottom-2 -right-2 bg-uni-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950">
-                    <i className="fa-solid fa-check-double"></i>
+                  <div className="absolute -bottom-2 -right-2 bg-uni-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg">
+                    <BadgeCheck size={24} />
+                  </div>
+                )}
+                {!profileUser.is_verified && profileUser.verification_status === 'rejected' && (
+                  <div className="absolute -bottom-2 -right-2 bg-rose-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg shadow-rose-500/20">
+                    <XCircle size={24} />
+                  </div>
+                )}
+                {!profileUser.is_verified && profileUser.verification_status === 'pending' && profileUser.verification_proof_url && (
+                  <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg shadow-amber-500/20">
+                    <Clock size={24} />
                   </div>
                 )}
               </div>

@@ -16,6 +16,10 @@ FindIT is a **High-End Campus Utility**. It should feel premium, trustworthy, an
 - **Weights**: Use `font-medium` for body, `font-bold` for titles.
 - **Styling**: ABSOLUTELY NO aggressive italics or black-weight (italic font-black) for labels.
 - **Casing**: Use `uppercase` for small meta-tags (e.g., "CATEGORY"), but keep primary content `capitalize` or `normal-case`.
+- **Contrast & Sizing (Accessibility)**:
+  - **Minimum Size**: Secondary text must be at least `text-[11px]` (0.6875rem). Primary body must be at least `text-[13px]` or `text-sm`.
+  - **High Contrast**: Avoid `slate-500` for text on dark backgrounds. Use `slate-400` as the absolute minimum for visibility, preferring `slate-300` for readable metadata.
+  - **Hierarchy**: Use weight and color contrast (e.g., White vs Slate-300) rather than just size to distinguish information layers.
 - **Density**: High information density but with generous whitespace (no overcrowding).
 
 ## 3. Visual Language (Sleek Pro)

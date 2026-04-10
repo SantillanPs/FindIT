@@ -47,14 +47,17 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
-  const { user, token, loading } = useAuth();
+  const auth = useAuth() || {};
+  const { user, session, loading } = auth;
+  
   const location = useLocation();
   const [showRescueLink, setShowRescueLink] = useState(false);
 
   useEffect(() => {
     let timeout;
     if (loading) {
-      timeout = setTimeout(() => setShowRescueLink(true), 3000);
+      // Give standard cold-start time (10s) before offering rescue
+      timeout = setTimeout(() => setShowRescueLink(true), 10000);
     } else {
       setShowRescueLink(false);
     }
@@ -68,19 +71,29 @@ const AppContent = () => {
   };
   
   if (loading) {
+    // Determine status message safely
+    const statusMsg = showRescueLink ? "Connection Interrupted" : (session ? "Synchronizing Identity" : "Initializing FindIT");
+
     return (
       <div className="h-screen w-full bg-[#0f172a] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 text-center">
            <div className="w-12 h-12 border-4 border-uni-500/20 border-t-uni-500 rounded-full animate-spin"></div>
-           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Initializing FindIT</p>
+           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">
+             {statusMsg}
+           </p>
            
            {showRescueLink && (
-             <button 
-               onClick={handleRescue}
-               className="mt-6 text-[9px] font-bold text-sky-500/40 hover:text-sky-500 uppercase tracking-widest transition-all animate-in fade-in slide-in-from-bottom-2 duration-700"
-             >
-               Stuck? Clear Session & Retry
-             </button>
+             <div className="flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+               <p className="max-w-[200px] text-center text-[10px] text-slate-600 font-medium leading-relaxed">
+                 Identity synchronization is taking longer than usual. This usually occurs during server cold-starts.
+               </p>
+               <button 
+                 onClick={handleRescue}
+                 className="mt-2 px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full text-[9px] font-bold text-sky-400 uppercase tracking-widest transition-all"
+               >
+                 Clear Session & Retry
+               </button>
+             </div>
            )}
         </div>
       </div>

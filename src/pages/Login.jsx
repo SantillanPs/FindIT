@@ -100,9 +100,6 @@ const Login = () => {
             </Alert>
           )}
 
-          <p className="text-slate-400 text-xs font-medium italic">
-            Enter your credentials to manage your reports and items.
-          </p>
 
           {error && (
             <Alert variant="destructive" className="bg-red-500/10 border-red-500/20 text-red-500 text-left py-3">

@@ -12,14 +12,26 @@ import {
   Loader2,
   AlertCircle,
   FileSearch,
-  Check
+  Check,
+  XCircle,
+  MessageSquare,
+  History
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from '../../../lib/supabase';
 
+const QUICK_REASONS = [
+  "Blurry or unreadable document",
+  "Institutional ID mismatch",
+  "Wrong document type submitted",
+  "Document is expired"
+];
+
 const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
   const [step, setStep] = useState(1);
+  const [showRejectionForm, setShowRejectionForm] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -31,15 +43,51 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
     try {
       const { error: updateError } = await supabase
         .from('user_profiles_v1')
-        .update({ is_verified: true, verified_at: new Date().toISOString() })
+        .update({ 
+          is_verified: true, 
+          verified_at: new Date().toISOString(),
+          verification_status: 'approved',
+          verification_feedback: null 
+        })
         .eq('id', student.id);
 
       if (updateError) throw updateError;
       
       setStep(3);
+      if (onComplete) onComplete();
     } catch (err) {
       console.error('Verification failed', err);
       setError('System failure while finalizing verification. Please retry.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleReject = async () => {
+    if (!rejectionReason.trim()) {
+      setError("Please provide a reason for denial.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from('user_profiles_v1')
+        .update({ 
+          is_verified: false, 
+          verification_status: 'rejected',
+          verification_feedback: rejectionReason.trim()
+        })
+        .eq('id', student.id);
+
+      if (updateError) throw updateError;
+      
+      onComplete();
+      onClose();
+    } catch (err) {
+      console.error('Rejection failed', err);
+      setError('Failed to log rejection. Please retry.');
     } finally {
       setLoading(false);
     }
@@ -87,7 +135,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                </div>
                <div className="space-y-1">
                   <p className="text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] leading-none">Review Phase {step}</p>
-                  <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">{currentStep.title}</h2>
+                  <h2 className="text-lg md:text-xl font-bold text-white tracking-tight">{showRejectionForm ? 'Denial Feedback' : currentStep.title}</h2>
                </div>
             </div>
             <button 
@@ -100,6 +148,51 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-8 pb-10">
            <AnimatePresence mode="wait">
+             {showRejectionForm ? (
+                <motion.div 
+                  key="rejection"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-8"
+                >
+                   <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Administrative Notes</label>
+                         <span className="text-[9px] font-medium text-slate-600">Visible to student</span>
+                      </div>
+                      <textarea
+                        value={rejectionReason}
+                        onChange={(e) => setRejectionReason(e.target.value)}
+                        placeholder="Provide detailed feedback on why verification was denied..."
+                        className="w-full h-32 bg-slate-950/50 border border-white/5 rounded-2xl p-5 text-sm text-white placeholder:text-slate-700 focus:outline-none focus:border-rose-500/30 transition-all resize-none"
+                      />
+                   </div>
+
+                   <div className="flex flex-col gap-3">
+                      <Button 
+                        onClick={handleReject}
+                        disabled={loading || !rejectionReason.trim()}
+                        className="h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest shadow-xl flex items-center gap-3 disabled:opacity-20"
+                      >
+                         {loading ? <Loader2 className="animate-spin" /> : (
+                            <>
+                               Confirm Denial
+                               <XCircle size={14} />
+                            </>
+                         )}
+                      </Button>
+                      <Button 
+                        variant="ghost"
+                        onClick={() => setShowRejectionForm(false)}
+                        className="h-12 text-slate-500 hover:text-white"
+                      >
+                         Back to Review
+                      </Button>
+                   </div>
+                </motion.div>
+             ) : (
+             <>
              {step === 1 && (
                 <motion.div 
                   key="step1"
@@ -200,7 +293,7 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       </div>
                    )}
 
-                   <div className="w-full grid grid-cols-1 gap-4 px-2">
+                   <div className="w-full flex flex-col gap-4 px-2">
                       <Button 
                         onClick={handleVerify}
                         disabled={loading}
@@ -208,26 +301,39 @@ const VerificationReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       >
                          {loading ? <Loader2 className="animate-spin" /> : (
                             <>
-                               {student.is_verified ? 'Re-Confirm Verification' : 'Finalize Verification'}
+                               Finalize verification
                                <Check size={18} className="ml-3 group-hover:scale-125 transition-transform" />
                             </>
                          )}
                       </Button>
-                      <Button 
-                        variant="ghost"
-                        onClick={() => setStep(2)}
-                        disabled={loading}
-                        className="h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-widest"
-                      >
-                         Re-Audit Document
-                      </Button>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                         <Button 
+                           variant="ghost"
+                           onClick={() => setStep(2)}
+                           disabled={loading}
+                           className="h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-widest bg-white/5 sm:bg-transparent rounded-xl"
+                         >
+                            Re-Audit Document
+                         </Button>
+                         <Button 
+                           variant="ghost"
+                           onClick={() => setShowRejectionForm(true)}
+                           disabled={loading}
+                           className="h-12 text-rose-500 hover:bg-rose-500/5 font-bold text-[10px] uppercase tracking-widest rounded-xl"
+                         >
+                            Deny Access
+                         </Button>
+                      </div>
                    </div>
                 </motion.div>
+             )}
+             </>
              )}
            </AnimatePresence>
         </div>
 
-        {step < 3 && (
+        {step < 3 && !showRejectionForm && (
            <footer className="px-6 md:px-8 py-6 md:py-8 bg-slate-950/40 border-t border-white/5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
               <Button 
                  variant="ghost"
