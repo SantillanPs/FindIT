@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { logSupabaseError, useAuth } from '../context/AuthContext';
 import ImageUpload from '../components/ImageUpload';
@@ -45,7 +46,6 @@ const Register = () => {
   // UI State
   const [error, setError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 5;
@@ -101,13 +101,10 @@ const Register = () => {
     setStep(s => Math.max(s - 1, 1));
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
-    setError('');
-    // Lock the redirect so we can show the success screen
-    sessionStorage.setItem('registration_in_progress', 'true');
-
-    try {
+  const { mutate: handleRegister, isPending: loading } = useMutation({
+    mutationFn: async () => {
+      sessionStorage.setItem('registration_in_progress', 'true');
+      
       // 1. Auth Sign Up
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -122,10 +119,7 @@ const Register = () => {
         }
       });
 
-      if (authError) {
-        sessionStorage.removeItem('registration_in_progress');
-        throw authError;
-      }
+      if (authError) throw authError;
 
       // 2. Profile Creation (Final shift to stable profiles table v1)
       const { error: dbError } = await supabase
@@ -144,26 +138,30 @@ const Register = () => {
           show_full_name: false
         }]);
 
-      if (dbError) {
-        sessionStorage.removeItem('registration_in_progress');
-        throw dbError;
-      }
+      if (dbError) throw dbError;
       
       // 2.5 Force sync the AuthContext session now that DB record exists
       await refreshUser();
-
+      return authData;
+    },
+    onSuccess: () => {
       // 3. Set local storage flag for Dashboard Success Banner
       sessionStorage.setItem('just_registered', 'true');
       setIsSuccess(true);
-    } catch (err) {
+    },
+    onError: (err) => {
+      sessionStorage.removeItem('registration_in_progress');
       logSupabaseError('Registration Submission', err);
       setError({
         message: err.message || 'Registration failed.',
         hint: err.hint || err.details || ''
       });
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const handleSubmit = () => {
+    setError('');
+    handleRegister();
   };
 
   const handleAccessDashboard = () => {

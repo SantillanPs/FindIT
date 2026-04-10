@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -20,12 +21,10 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [view, setView] = useState('login'); // 'login' or 'forgot'
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
   
   const { login, session, user } = useAuth();
   const navigate = useNavigate();
@@ -33,47 +32,45 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const isRegistered = searchParams.get('registered') === 'true';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    
-    const queryParams = new URLSearchParams(location.search);
-    const redirectPath = queryParams.get('redirect') || '/';
-    
-    try {
+  const { mutate: handleLogin, isPending: loading } = useMutation({
+    mutationFn: async ({ email, password }) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
       if (error) throw error;
-      
-      // AuthContext listener will handle the user state and SafeRoute will redirect 
-      // automatically once the profile is confirmed.
-    } catch (err) {
+      return data;
+    },
+    onError: (err) => {
       setError(err.message || 'Invalid email or password.');
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    handleLogin({ email, password });
   };
 
-  const handleForgotPassword = async (e) => {
-    e.preventDefault();
-    setResetLoading(true);
-    setError('');
-    
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+  const { mutate: handleForgotPassword, isPending: resetLoading } = useMutation({
+    mutationFn: async (email) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/reset-password',
       });
       if (error) throw error;
+    },
+    onSuccess: () => {
       setResetSuccess(true);
-    } catch (err) {
+    },
+    onError: (err) => {
       setError(err.message || 'Failed to send reset link.');
-    } finally {
-      setResetLoading(false);
     }
+  });
+
+  const onResetSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    handleForgotPassword(resetEmail);
   };
 
   return (
@@ -186,7 +183,7 @@ const Login = () => {
           ) : (
             <div className="space-y-6">
               {!resetSuccess ? (
-                <form onSubmit={handleForgotPassword} className="space-y-6">
+                <form onSubmit={onResetSubmit} className="space-y-6">
                   <div className="space-y-2 text-center pb-2">
                     <h3 className="text-sm font-black text-white uppercase italic">Account Recovery</h3>
                     <p className="text-[10px] text-slate-400 italic">Enter your email to receive a secure reset link.</p>
