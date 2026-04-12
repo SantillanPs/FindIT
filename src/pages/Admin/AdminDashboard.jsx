@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ import Leaderboard from './Leaderboard';
 import MemberRegistry from './MemberRegistry';
 import LandingTab from './components/LandingTab';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
+import { imageCache } from '../../lib/imageCache';
 
 // Modals
 import ReleaseItemModal from './components/ReleaseItemModal';
@@ -54,17 +56,11 @@ import ImagePreviewOverlay from './components/ImagePreviewOverlay';
  */
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [recentFound, setRecentFound] = useState([]);
-  const [matches, setMatches] = useState([]);
-  const [pendingClaims, setPendingClaims] = useState([]);
-  const [lostReports, setLostReports] = useState([]);
-  const [historyItems, setHistoryItems] = useState([]);
-  const [loading, setLoading] = useState(false); 
-  const [isSyncing, setIsSyncing] = useState(false);
   const [syncTriggers, setSyncTriggers] = useState({ analytics: 0, leaderboard: 0, witnesses: 0, registry: 0 });
   
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const lastSegment = location.pathname.split('/').filter(Boolean).pop();
   const currentTab = (!lastSegment || lastSegment === 'admin') ? 'found' : lastSegment;
@@ -81,137 +77,88 @@ const AdminDashboard = () => {
   const [showIntakeModal, setShowIntakeModal] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
-  useEffect(() => {
-    loadTabData();
-  }, [currentTab]);
-
-  const loadTabData = async (force = false) => {
-    switch (currentTab) {
-      case 'found':
-        if (force || recentFound.length === 0) fetchInventory(force);
-        break;
-      case 'claims':
-        if (force || pendingClaims.length === 0) fetchClaims(force);
-        break;
-      case 'matches':
-        if (force || matches.length === 0) fetchMatches(force);
-        break;
-      case 'lost':
-        if (force || lostReports.length === 0) fetchLostReports(force);
-        break;
-      case 'history':
-      case 'released':
-        if (force || historyItems.length === 0) fetchHistory(force);
-        break;
-      case 'analytics':
-        if (force) setSyncTriggers(prev => ({ ...prev, analytics: prev.analytics + 1 }));
-        break;
-      case 'users':
-        if (force) setSyncTriggers(prev => ({ ...prev, leaderboard: prev.leaderboard + 1 }));
-        break;
-      case 'registry':
-        if (force) setSyncTriggers(prev => ({ ...prev, registry: prev.registry + 1 }));
-        break;
-      case 'witnesses':
-        if (force) setSyncTriggers(prev => ({ ...prev, witnesses: prev.witnesses + 1 }));
-        break;
-      default:
-        break;
-    }
-  };
-
-  const fetchInventory = async (isSync = false) => {
-    if (!isSync) setLoading(true);
-    else setIsSyncing(true);
-    try {
-      const [foundRes, claimsRes, lostRes] = await Promise.all([
-        supabase.from('found_items').select('*').neq('status', 'released'),
-        supabase.from('claims').select('*, found_items(*)').eq('status', 'pending'),
-        supabase.from('lost_items').select('*')
-      ]);
-      
-      if (foundRes.error) throw foundRes.error;
-      if (claimsRes.error) throw claimsRes.error;
-      if (lostRes.error) throw lostRes.error;
-
-      setRecentFound(foundRes.data || []);
-      setPendingClaims(claimsRes.data || []);
-      setLostReports(lostRes.data || []);
-    } catch (error) {
-      console.error('Failed to fetch inventory', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
-
-  const fetchClaims = async (isSync = false) => {
-    if (!isSync) setLoading(true);
-    else setIsSyncing(true);
-    try {
-      const { data, error } = await supabase
-        .from('claims')
-        .select('*, found_items(*)')
-        .eq('status', 'pending');
+  // Queries
+  const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
+    queryKey: ['admin_inventory'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('found_items').select('*').neq('status', 'released');
       if (error) throw error;
-      setPendingClaims(data || []);
-    } catch (error) {
-      console.error('Failed to fetch claims', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
-  const fetchMatches = async (isSync = false) => {
-    if (!isSync) setLoading(true);
-    else setIsSyncing(true);
-    try {
+  const { data: pendingClaims = [], isLoading: claimsLoading } = useQuery({
+    queryKey: ['admin_claims'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('claims').select('*, found_items(*)').eq('status', 'pending');
+      if (error) throw error;
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
+
+  const { data: matches = [], isLoading: matchesLoading } = useQuery({
+    queryKey: ['admin_matches'],
+    queryFn: async () => {
       const { data, error } = await supabase.rpc('get_admin_matches', {
         match_threshold: 0.3,
         match_count: 5
       });
       if (error) throw error;
-      setMatches(data || []);
-    } catch (error) {
-      console.error('Failed to fetch matches', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
-  const fetchLostReports = async (isSync = false) => {
-    if (!isSync) setLoading(true);
-    else setIsSyncing(true);
-    try {
+  const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
+    queryKey: ['admin_lost'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('lost_items').select('*');
       if (error) throw error;
-      setLostReports(data || []);
-    } catch (error) {
-      console.error('Failed to fetch lost reports', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
-  const fetchHistory = async (isSync = false) => {
-    if (!isSync) setLoading(true);
-    else setIsSyncing(true);
-    try {
+  const { data: historyItems = [], isLoading: historyLoading } = useQuery({
+    queryKey: ['admin_history'],
+    queryFn: async () => {
       const { data, error } = await supabase.from('found_items').select('*').eq('status', 'released');
       if (error) throw error;
-      setHistoryItems(data || []);
-    } catch (error) {
-      console.error('Failed to fetch history', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
-  const refreshActiveTab = () => loadTabData(true);
+  // Proactive visual preloading for instant tab switching
+  useEffect(() => {
+    if (recentFound?.length > 0) {
+      recentFound.forEach(item => {
+        if (item.photo_url) imageCache.preload(item.photo_url);
+      });
+    }
+  }, [recentFound]);
+
+  const isSyncing = inventoryFetching;
+  const loading = (currentTab === 'found' && inventoryLoading) || 
+                  (currentTab === 'claims' && claimsLoading) || 
+                  (currentTab === 'matches' && matchesLoading) || 
+                  (currentTab === 'lost' && reportsLoading) || 
+                  (currentTab === 'history' && historyLoading);
+
+  // Mutations
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }) => {
+      const { error } = await supabase.from('found_items').update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_inventory'] })
+  });
+
+  const refreshActiveTab = () => {
+    queryClient.invalidateQueries({ queryKey: [`admin_${currentTab === 'history' || currentTab === 'released' ? 'history' : currentTab === 'found' ? 'inventory' : currentTab}`] });
+  };
 
   const handleStatusUpdate = async (item, status) => {
     if (status === 'in_custody') {
@@ -228,8 +175,7 @@ const AdminDashboard = () => {
     try {
       const { error } = await supabase.from('found_items').update({ status }).eq('id', item.id);
       if (error) throw error;
-      setRecentFound(prev => prev.map(i => i.id === item.id ? { ...i, status } : i));
-      await refreshActiveTab();
+      refreshActiveTab();
     } catch (err) {
       console.error('Update failed', err);
     } finally {
@@ -259,18 +205,15 @@ const AdminDashboard = () => {
   };
 
   const handleBulkStatusUpdate = async (itemIds, status) => {
-    const prevItems = [...recentFound];
-    setRecentFound(prev => prev.map(i => itemIds.includes(i.id) ? { ...i, status } : i));
     setActionLoading('bulk');
     try {
       const { error } = await supabase.from('found_items').update({ status }).in('id', itemIds);
       if (error) throw error;
+      refreshActiveTab();
     } catch (err) {
       console.error('Bulk update failed', err);
-      setRecentFound(prevItems);
     } finally {
       setActionLoading(null);
-      await refreshActiveTab();
     }
   };
 
@@ -425,12 +368,12 @@ const AdminDashboard = () => {
               <TabsContent value="claims" className="m-0 focus-visible:outline-none"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
               <TabsContent value="matches" className="m-0 focus-visible:outline-none"><MatchmakerTab {...{filteredMatches, setSelectedMatchPair, handleConnectMatch, actionLoading, setPreviewImage}} /></TabsContent>
               <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
-              <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses, setIsSyncing}} /></TabsContent>
+              <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
               <TabsContent value="released" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
-              <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics, setIsSyncing}} /></TabsContent>
-              <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard, setIsSyncing}} /></TabsContent>
-              <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry, setIsSyncing}} /></TabsContent>
+              <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
+              <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
+              <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry}} /></TabsContent>
               <TabsContent value="landing" className="m-0 focus-visible:outline-none"><LandingTab /></TabsContent>
             </div>
           </div>

@@ -1,62 +1,37 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area, PieChart, Pie, Cell
 } from 'recharts';
 import { 
   Download, TrendingUp, AlertTriangle, CheckCircle, 
-  Clock, Package, FileText, ChevronDown, BarChart3, PieChart as PieIcon, LineChart as LineIcon, ArrowRight
+  Clock, Package, BarChart3, PieChart as PieIcon, LineChart as LineIcon, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
-/**
- * Analytics - Premium Professional (Pro Max)
- * - Clean, actionable data visualization.
- * - Human-centric labeling (No "System Intelligence").
- * - Sleek, breathable chart layouts.
- */
-const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSyncing }) => {
+const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger }) => {
   const [period, setPeriod] = useState('today');
-  const [reportData, setReportData] = useState({ found: [], lost: [] });
-  const [claimData, setClaimData] = useState([]);
-  const [insights, setInsights] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [errorStatus, setErrorStatus] = useState(null);
   const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    fetchAnalyticsData(refreshTrigger > 0);
-  }, [period, refreshTrigger]);
+  const { data: analyticsData, isLoading, isError, error } = useQuery({
+    queryKey: ['admin_analytics', period],
+    queryFn: async () => {
+      const { data, error: fetchError } = await supabase.rpc('get_analytics_stats', {
+        time_period: period
+      });
+      if (fetchError) throw fetchError;
+      return data;
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 60000, // 1 minute
+  });
 
-  const fetchAnalyticsData = async (isSync = false) => {
-    if (isSync) setIsSyncing(true);
-    else setLoading(true);
-    setErrorStatus(null);
-
-    try {
-      const { data, error } = await Promise.race([
-        supabase.rpc('get_analytics_stats', {
-          time_period: period
-        }),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Fetch Timeout')), 30000)
-        )
-      ]);
-
-      if (error) throw error;
-
-      setReportData(data.reports || { found: [], lost: [] });
-      setClaimData(data.claims || []);
-      setInsights(data.insights || null);
-    } catch (err) {
-      console.error('Failed to fetch analytics', err);
-      setErrorStatus(err.message === 'Fetch Timeout' ? 'System response delayed. Please try again.' : 'Unable to synchronize analytics data.');
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+  const reportData = analyticsData?.reports || { found: [], lost: [] };
+  const claimData = analyticsData?.claims || [];
+  const insights = analyticsData?.insights || null;
+  const errorStatus = isError ? (error.message === 'Fetch Timeout' ? 'System response delayed.' : 'Synchronization failed.') : null;
 
   const handleExport = async (type = 'all') => {
     setExporting(true);
@@ -116,7 +91,7 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger, setIsSync
 
   const COLORS = ['#6366f1', '#eab308', '#a855f7', '#ec4899', '#22c55e', '#f97316'];
 
-  if (loading && !insights) {
+  if (isLoading && !insights) {
     return (
       <div className="flex flex-col items-center justify-center py-32 space-y-6">
         <div className="w-12 h-12 border-4 border-white/5 border-t-uni-500 rounded-full animate-spin shadow-[0_0_20px_rgba(var(--uni-500-rgb),0.3)]"></div>

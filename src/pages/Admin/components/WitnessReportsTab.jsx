@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Eye, CheckCircle, XCircle, Clock, User, Mail, Camera, FileSearch, ShieldCheck, Activity } from 'lucide-react';
+import { Shield, Eye, CheckCircle, XCircle, Clock, User, Mail, Camera, ShieldCheck } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
 const filters = [
   { id: 'pending', label: 'Pending Review', icon: Clock },
@@ -11,39 +12,23 @@ const filters = [
   { id: 'dismissed', label: 'Dismissed', icon: XCircle }
 ];
 
-/**
- * WitnessReportsTab - Premium Professional (Pro Max)
- * - Refined glassmorphism.
- * - Human-centric labeling.
- * - Clean, professional typography.
- */
-const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) => {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+const WitnessReportsTab = ({ setPreviewImage, refreshTrigger }) => {
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    fetchWitnessReports(refreshTrigger > 0);
-  }, [refreshTrigger, filter]);
-
-  const fetchWitnessReports = async (isSync = false) => {
-    if (isSync) setIsSyncing(true);
-    try {
+  const { data: reports = [], isLoading, isFetching } = useQuery({
+    queryKey: ['admin_witness_reports'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('witness_reports')
         .select('*')
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-      setReports(data || []);
-    } catch (error) {
-      console.error('Failed to fetch witness reports', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
   const handleUpdateStatus = async (reportId, status) => {
     setActionLoading(reportId);
@@ -54,7 +39,7 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
         .eq('id', reportId);
 
       if (error) throw error;
-      await fetchWitnessReports();
+      queryClient.invalidateQueries({ queryKey: ['admin_witness_reports'] });
     } catch (error) {
       console.error('Failed to update status', error);
     } finally {
@@ -64,7 +49,7 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger, setIsSyncing }) =>
 
   const filteredReports = reports.filter(r => r.status === filter);
 
-  if (loading) return (
+  if (isLoading && reports.length === 0) return (
     <div className="flex justify-center py-20">
       <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>

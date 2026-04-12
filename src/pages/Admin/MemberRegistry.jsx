@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import AccountReviewModal from './components/AccountReviewModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-const MemberRegistry = ({ refreshTrigger, setIsSyncing }) => {
+const MemberRegistry = ({ refreshTrigger }) => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('unverified'); 

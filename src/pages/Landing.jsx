@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { logSupabaseError } from '../context/AuthContext';
@@ -122,6 +122,7 @@ const Landing = () => {
       console.info(`[Query] Found Items:`, data?.length || 0, 'records');
       return data || [];
     },
+    placeholderData: keepPreviousData,
   });
 
   // 3. Lost Reports Query
@@ -138,6 +139,7 @@ const Landing = () => {
       console.info(`[Query] Lost Reports:`, data?.length || 0, 'records');
       return data || [];
     },
+    placeholderData: keepPreviousData,
   });
 
 
@@ -542,7 +544,7 @@ const Landing = () => {
                  : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
                }`}
              >
-               Every Item
+               All Items
              </Button>
              
              {(CATEGORIES_FROM_MASTER || []).map(cat => (
@@ -561,7 +563,7 @@ const Landing = () => {
              ))}
           </div>
 
-          {itemsLoading ? (
+          {itemsLoading && items.length === 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-16">
                   {[1,2,3].map(i => <div key={i} className="h-80 bg-white/5 animate-pulse rounded-[2rem] border border-white/5"></div>)}
               </div>
@@ -603,7 +605,7 @@ const Landing = () => {
             </div>
           </div>
 
-          {reportsLoading ? (
+          {reportsLoading && lostReports.length === 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
               {[1,2,3,4].map(i => <div key={i} className="h-64 bg-white/5 animate-pulse rounded-2xl border border-white/5"></div>)}
             </div>

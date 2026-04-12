@@ -1,23 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { BadgeCheck, ShieldAlert, Clock, RefreshCw, XCircle, AlertCircle, FileUp } from 'lucide-react';
+import { useMasterData } from '../../context/MasterDataContext';
+import { 
+  ArrowLeft,
+  Smartphone,
+  Mail,
+  User,
+  Hash,
+  Building2,
+  Calendar,
+  MapPin,
+  ChevronRight,
+  ShieldCheck,
+  Trophy,
+  AlertCircle,
+  Clock,
+  Edit3,
+  CheckCircle2,
+  Lock,
+  Camera,
+  Save,
+  X,
+  RefreshCw
+} from 'lucide-react';
 import ImageUpload from '../../components/ImageUpload';
 
 const Profile = () => {
   const { userId } = useParams();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, refreshUser } = useAuth();
+  const { colleges } = useMasterData();
   const navigate = useNavigate();
+  
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('reports');
-  const [privacyLoading, setPrivacyLoading] = useState(false);
-  const [showFullName, setShowFullName] = useState(false);
-  const [myFeedbacks, setMyFeedbacks] = useState([]);
+  const [activeTab, setActiveTab] = useState('personal');
+  const [isEditing, setIsEditing] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    student_id_number: '',
+    department: ''
+  });
 
-  const isOwnProfile = !userId || parseInt(userId) === currentUser?.id;
+  const isOwnProfile = !userId || userId === currentUser?.id;
   const targetId = userId || currentUser?.id;
 
   useEffect(() => {
@@ -25,361 +55,360 @@ const Profile = () => {
       try {
         const { data: userData, error: userError } = await supabase
           .from('user_profiles_v1')
-          .select('*, found_items(*), claims(*)')
+          .select('*')
           .eq('id', targetId)
           .single();
           
         if (userError) throw userError;
         setProfileUser(userData);
         
-        if (isOwnProfile) {
-          const { data: feedbackData, error: feedbackError } = await supabase
-            .from('feedbacks')
-            .select('*')
-            .eq('user_id', targetId);
-            
-          if (feedbackError) throw feedbackError;
-          setMyFeedbacks(feedbackData || []);
-        }
+        setEditForm({
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          student_id_number: userData.student_id_number || '',
+          department: userData.department || ''
+        });
+
       } catch (err) {
-        console.error('Failed to fetch profile from Supabase', err);
+        console.error('Failed to fetch profile', err);
       } finally {
         setLoading(false);
       }
     };
     if (targetId) fetchProfile();
-  }, [targetId, isOwnProfile]);
+  }, [targetId]);
 
-  useEffect(() => {
-    if (profileUser) {
-      setShowFullName(profileUser.show_full_name);
-    }
-  }, [profileUser]);
-
-  const handleTogglePrivacy = async () => {
-    setPrivacyLoading(true);
+  const handleSaveProfile = async () => {
+    setSaveLoading(true);
     try {
       const { data, error } = await supabase
         .from('user_profiles_v1')
-        .update({ show_full_name: !showFullName })
+        .update({
+          first_name: editForm.first_name,
+          last_name: editForm.last_name,
+          student_id_number: editForm.student_id_number,
+          department: editForm.department
+        })
         .eq('id', currentUser.id)
         .select()
         .single();
-        
+
       if (error) throw error;
-      setShowFullName(data.show_full_name);
+      setProfileUser(data);
+      setIsEditing(false);
+      refreshUser();
     } catch (err) {
-      console.error('Failed to update privacy preference in Supabase', err);
+      console.error('Save failed', err);
     } finally {
-      setPrivacyLoading(false);
+      setSaveLoading(false);
     }
   };
 
-  const handleRetryVerification = async (newProofUrl) => {
-    try {
-      const { error } = await supabase
-        .from('user_profiles_v1')
-        .update({ 
-          verification_proof_url: newProofUrl,
-          verification_status: 're_audit',
-          verification_feedback: null,
-          is_verified: false 
-        })
-        .eq('id', currentUser.id);
-        
-      if (error) throw error;
-      
-      // Refresh local profile state
-      setProfileUser(prev => ({
-        ...prev,
-        verification_proof_url: newProofUrl,
-        verification_status: 're_audit',
-        verification_feedback: null
-      }));
-    } catch (err) {
-      console.error('Failed to update verification proof', err);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-slate-950">
-        <div className="w-12 h-12 border-4 border-uni-500/20 border-t-uni-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!profileUser) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-slate-950 text-white">
-        <p className="text-xl font-black uppercase tracking-widest opacity-50">Profile not found</p>
-      </div>
-    );
-  }
-
-  const stats = [
-    { label: 'Integrity Points', value: profileUser.integrity_points, icon: 'fa-shield-halved', color: 'uni' },
-    { label: 'Fraud Strikes', value: profileUser.fraud_strikes, icon: 'fa-triangle-exclamation', color: 'rose' },
-    { label: 'Items Found', value: profileUser.found_items.length, icon: 'fa-box-open', color: 'sky' },
-    { label: 'Active Claims', value: profileUser.claims.length, icon: 'fa-hand-holding-heart', color: 'green' }
-  ];
+  if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-32 pb-20 px-4 md:px-8">
-      <div className="max-w-6xl mx-auto space-y-12">
-        {/* Rejection / Action Banner */}
-        {isOwnProfile && profileUser.verification_status === 'rejected' && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden group"
-          >
-            <div className="absolute inset-0 bg-rose-500/5 backdrop-blur-3xl rounded-[2.5rem] border border-rose-500/20" />
-            <div className="relative p-8 md:p-10 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
-               <div className="w-16 h-16 md:w-20 md:h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 shrink-0 border border-rose-500/20 shadow-2xl shadow-rose-500/10">
-                  <ShieldAlert size={32} md:size={40} />
-               </div>
-               
-               <div className="flex-1 space-y-4 text-center lg:text-left">
-                  <div className="space-y-1">
-                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] italic">Account Approval Issue</p>
-                     <h2 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tight">Access Authorization Denied</h2>
-                  </div>
-                  
-                  <div className="bg-slate-950/40 border border-white/5 rounded-2xl p-5 space-y-2">
-                     <div className="flex items-center gap-2 text-rose-400">
-                        <XCircle size={14} />
-                        <span className="text-[9px] font-black uppercase tracking-widest leading-none">Admin Feedback</span>
-                     </div>
-                     <p className="text-sm text-slate-300 font-medium italic leading-relaxed">
-                        "{profileUser.verification_feedback || "Your documentation was reviewed but requires adjustment. Please see the notes above and resubmit."}"
-                     </p>
-                  </div>
-               </div>
-
-               <div className="w-full lg:w-80 shrink-0 space-y-4">
-                  <div className="bg-slate-900 border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
-                     <div className="p-6">
-                        <ImageUpload 
-                          label="Resubmit Proof" 
-                          value={profileUser.verification_proof_url} 
-                          onUploadSuccess={handleRetryVerification} 
-                        />
-                     </div>
-                  </div>
-                  <p className="text-[9px] text-center text-slate-500 font-bold uppercase tracking-widest px-4 leading-relaxed">
-                     Updating your ID proof will automatically reset your application to <span className="text-amber-500">Pending</span>.
-                  </p>
-               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Pending Banner */}
-        {isOwnProfile && profileUser.verification_status === 'pending' && profileUser.verification_proof_url && (
-           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-amber-500/5 border border-amber-500/20 rounded-[2.5rem] p-8 md:p-10 flex items-center gap-8 overflow-hidden relative"
-           >
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-50" />
-              <div className="w-16 h-16 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 shrink-0 border border-amber-500/20">
-                 <Clock size={32} />
-              </div>
-              <div className="space-y-1 relative z-10">
-                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] italic">Authorization in Progress</p>
-                 <h2 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tight">Awaiting Account Approval</h2>
-                 <p className="text-[11px] text-slate-500 font-medium">Your membership proof is currently in the approval queue. Please check back later.</p>
-              </div>
-           </motion.div>
-        )}
-
-        {/* Profile Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-panel rounded-[3rem] p-10 md:p-16 border border-white/5 relative overflow-hidden"
-        >
-          {/* Ambient Glow */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-uni-500/10 rounded-full -mr-48 -mt-48"></div>
-          
-          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 relative z-10">
-            {/* Avatar Section */}
-            <div className="relative">
-              <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-slate-900 border-2 border-white/10 flex items-center justify-center text-6xl relative">
-                {profileUser.first_name?.charAt(0) || 'U'}
-                {profileUser.is_verified && (
-                  <div className="absolute -bottom-2 -right-2 bg-uni-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg">
-                    <BadgeCheck size={24} />
-                  </div>
-                )}
-                {!profileUser.is_verified && profileUser.verification_status === 'rejected' && (
-                  <div className="absolute -bottom-2 -right-2 bg-rose-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg shadow-rose-500/20">
-                    <XCircle size={24} />
-                  </div>
-                )}
-                {!profileUser.is_verified && profileUser.verification_status === 'pending' && profileUser.verification_proof_url && (
-                  <div className="absolute -bottom-2 -right-2 bg-amber-500 text-white text-xl w-10 h-10 rounded-2xl flex items-center justify-center border-4 border-slate-950 shadow-lg shadow-amber-500/20">
-                    <Clock size={24} />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Identity Section */}
-            <div className="text-center md:text-left space-y-4">
-              <div className="space-y-1">
-                <h1 className="text-4xl md:text-6xl font-black text-white uppercase italic tracking-tighter leading-none">
-                  {profileUser.first_name} {profileUser.last_name}
-                </h1>
-                <p className="text-[12px] md:text-[14px] font-black text-uni-400 uppercase tracking-[0.4em]">
-                  {profileUser.department || 'Student Affiliate'}
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
-                <div className="bg-white/5 border border-white/5 px-4 py-2 rounded-xl flex items-center gap-3">
-                  <i className="fa-solid fa-id-badge text-slate-500"></i>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{profileUser.student_id_number || 'Guest Account'}</span>
-                </div>
-                {profileUser.is_certificate_eligible && (
-                    <div className="bg-amber-500/10 border border-amber-500/20 px-4 py-2 rounded-xl flex items-center gap-3">
-                        <i className="fa-solid fa-medal text-amber-500"></i>
-                        <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Certificate Eligible</span>
-                    </div>
-                )}
-                {isOwnProfile && (
-                    <motion.button 
-                      onClick={handleTogglePrivacy}
-                      disabled={privacyLoading}
-                      className={`px-4 py-2 rounded-xl flex items-center gap-3 border transition-all ${
-                        showFullName 
-                        ? 'bg-uni-500/10 border-uni-500/30 text-uni-400' 
-                        : 'bg-white/5 border-white/10 text-slate-500'
-                      }`}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <i className={`fa-solid ${showFullName ? 'fa-eye' : 'fa-eye-slash'}`}></i>
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        {showFullName ? 'Name Public' : 'Name Masked'}
-                      </span>
-                    </motion.button>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Actions (Admin only) */}
-            {currentUser?.role !== 'student' && !isOwnProfile && (
-                <div className="md:ml-auto flex items-center gap-3">
-                    <button className="bg-white text-black px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all">
-                        Issue Strike
-                    </button>
-                    <button className="bg-rose-500/10 text-rose-500 border border-rose-500/20 px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all">
-                        Blacklist
-                    </button>
-                </div>
+    <div className="max-w-2xl mx-auto pt-8 pb-12 relative z-10">
+      {/* Header Section: Professional Split/Compact Layout */}
+      <div className="px-6 pb-6 flex flex-col md:flex-row items-center md:items-end gap-6 md:gap-8 border-b border-white/5 mb-8">
+        
+        <div className="relative group">
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-slate-900/40 backdrop-blur-3xl flex items-center justify-center text-4xl font-bold text-white overflow-hidden border border-white/10 shadow-xl relative z-10 transition-transform active:scale-95">
+            {profileUser.photo_url ? (
+              <img src={profileUser.photo_url} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="font-bold tracking-tight text-white/40">{profileUser.first_name?.charAt(0) || 'U'}</span>
             )}
           </div>
-        </motion.div>
+          {isOwnProfile && (
+            <button className="absolute -bottom-2 -right-2 p-2 bg-white text-slate-900 rounded-xl shadow-lg border border-white/50 z-20 hover:scale-110 active:scale-90 transition-transform">
+              <Camera size={16} strokeWidth={2.5} />
+            </button>
+          )}
+        </div>
+        
+        <div className="flex-1 text-center md:text-left">
+            <span className="px-2 py-0.5 bg-sky-500/10 text-sky-400 text-[11px] font-medium uppercase tracking-widest rounded-md border border-sky-500/20">
+              {profileUser.role.replace('_', ' ')}
+            </span>
+            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="px-2 py-0.5 bg-violet-500/10 text-violet-400 text-[11px] font-medium uppercase tracking-widest rounded-md border border-violet-500/20">
+              {profileUser.department || 'General'}
+            </span>
 
-        {/* Reputation Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((s, idx) => (
-            <motion.div 
-              key={s.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className="glass-panel p-8 rounded-[2rem] border border-white/5 space-y-4"
+          <div className="relative">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight uppercase leading-none">
+              {profileUser.first_name} <br className="hidden md:block" /> {profileUser.last_name}
+            </h2>
+            
+            {/* Status Badge: Top-Right (Rule #55) */}
+            <div className="absolute -top-12 md:top-0 right-0 md:-right-4">
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border ${profileUser.is_verified ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'} shadow-lg backdrop-blur-md`}>
+                <ShieldCheck size={12} strokeWidth={3} />
+                <span className="text-[9px] font-black uppercase tracking-widest">
+                  {profileUser.is_verified ? 'Verified' : 'Provisionary'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {isOwnProfile && (
+            <div className="mt-6 flex justify-center md:justify-start gap-2">
+              <button 
+                onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
+                disabled={saveLoading}
+                className="h-10 px-6 bg-white text-black rounded-lg text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg active:scale-95 transition-all hover:bg-slate-100"
+              >
+                {saveLoading ? <RefreshCw className="animate-spin" size={14} /> : isEditing ? <Save size={14} /> : <Edit3 size={14} />}
+                {isEditing ? 'Save Changes' : 'Edit Profile'}
+              </button>
+              {isEditing && (
+                <button onClick={() => setIsEditing(false)} className="px-3 h-10 flex items-center justify-center bg-white/5 rounded-lg border border-white/10 text-slate-400 hover:text-white transition-colors">
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation Tabs - Pro Max Pill Selector */}
+      <div className="px-6 mb-8">
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-1.5 border border-white/10 flex gap-1 relative overflow-hidden shadow-2xl">
+          {['personal', 'registry', 'verification'].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-3 px-4 rounded-xl text-[11px] font-medium uppercase tracking-widest transition-all relative z-10 ${
+                activeTab === tab ? 'text-black font-bold' : 'text-slate-500 hover:text-white'
+              }`}
             >
-              <div className={`w-12 h-12 rounded-xl bg-${s.color}-500/10 flex items-center justify-center text-${s.color}-500 border border-${s.color}-500/20`}>
-                <i className={`fa-solid ${s.icon} text-lg`}></i>
-              </div>
-              <div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{s.label}</p>
-                <p className="text-3xl font-black text-white italic tracking-tighter mt-1">{s.value}</p>
-              </div>
-            </motion.div>
+              {tab === 'personal' ? 'Personal Info' : tab === 'registry' ? 'Standing' : 'Verification'}
+              {activeTab === tab && (
+                <motion.div 
+                  layoutId="tabSelector" 
+                  className="absolute inset-0 bg-white rounded-xl -z-10 shadow-[0_0_20px_rgba(255,255,255,0.3)]" 
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </button>
           ))}
         </div>
+      </div>
 
-        {/* Detailed History */}
-        <div className="space-y-8">
-            <div className="flex items-center gap-8 border-b border-white/5 pb-4">
-                {['reports', 'claims', ...(isOwnProfile ? ['feedback'] : [])].map(tab => (
-                    <button 
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`text-[12px] font-black uppercase tracking-[0.3em] pb-4 transition-all relative ${
-                            activeTab === tab ? 'text-white' : 'text-slate-600 hover:text-slate-400'
-                        }`}
-                    >
-                        {tab}
-                        {activeTab === tab && (
-                            <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-uni-500 rounded-full" />
-                        )}
-                    </button>
-                ))}
-            </div>
+      {/* Tab Content */}
+      <div className="px-6 space-y-8">
+          {activeTab === 'personal' && (
+            <div key="personal" className="space-y-8">
+              <div>
+                <SectionTitle title="Identity Foundations" />
+                <div className="mt-6 space-y-2">
+                  <InfoRow icon={Mail} label="Official Email" value={profileUser.email} type="badge" accent="sky" />
+                  <InfoRow 
+                    icon={User} 
+                    label="Legal Identity" 
+                    value={`${profileUser.first_name || ''} ${profileUser.last_name || ''}`}
+                    isEditing={isEditing}
+                    editContent={
+                      <div className="flex gap-2">
+                        <input 
+                          value={editForm.first_name} 
+                          onChange={e => setEditForm({...editForm, first_name: e.target.value})}
+                          className="w-1/2 h-10 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white focus:border-white/30 transition-colors"
+                          placeholder="First"
+                        />
+                        <input 
+                          value={editForm.last_name} 
+                          onChange={e => setEditForm({...editForm, last_name: e.target.value})}
+                          className="w-1/2 h-10 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white focus:border-white/30 transition-colors"
+                          placeholder="Last"
+                        />
+                      </div>
+                    }
+                  />
+                  <InfoRow 
+                    icon={Hash} 
+                    label="Institutional ID" 
+                    value={profileUser.student_id_number || 'Not Provided'} 
+                    type="badge"
+                    accent="violet"
+                    isEditing={isEditing}
+                    editContent={
+                      <input 
+                        value={editForm.student_id_number} 
+                        onChange={e => setEditForm({...editForm, student_id_number: e.target.value})}
+                        className="w-full h-10 px-4 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-white focus:border-white/30 transition-colors"
+                        placeholder="ID Number"
+                      />
+                    }
+                  />
+                  <InfoRow 
+                    icon={Building2} 
+                    label="Designated Dept" 
+                    value={profileUser.department || 'General'} 
+                    isEditing={isEditing}
+                    editContent={
+                      <select
+                        value={editForm.department}
+                        onChange={e => setEditForm({...editForm, department: e.target.value})}
+                        className="w-full h-10 px-4 bg-slate-900 border border-white/10 rounded-xl text-xs font-bold text-white focus:border-white/30 transition-colors"
+                      >
+                        <option value="">Select Dept</option>
+                        {colleges.map(c => <option key={c.label} value={c.label}>{c.label}</option>)}
+                      </select>
+                    }
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {(activeTab === 'reports' ? profileUser.found_items : activeTab === 'claims' ? profileUser.claims : myFeedbacks).length === 0 ? (
-                    <div className="col-span-2 py-20 text-center glass-panel border border-white/5 rounded-[2.5rem]">
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">No persistent record found</p>
+              <div>
+                <SectionTitle title="Security Status" />
+                <div className="mt-6">
+                  <div className="p-6 bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 relative overflow-hidden group shadow-xl">
+                    <div className="absolute top-0 right-0 p-6 opacity-5 blur-xl group-hover:opacity-10 transition-opacity">
+                      <ShieldCheck size={100} className={profileUser.is_verified ? 'text-emerald-400' : 'text-slate-400'} />
                     </div>
-                ) : (
-                    (activeTab === 'reports' ? profileUser.found_items : activeTab === 'claims' ? profileUser.claims : myFeedbacks).map((item, id) => (
-                        <motion.div 
-                            key={id}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="glass-panel p-6 rounded-[2rem] border border-white/5 flex items-center justify-between hover:bg-white/5 transition-all group"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-white/10 flex items-center justify-center text-xl">
-                                    {activeTab === 'feedback' ? (
-                                      <i className={`fa-solid ${
-                                        item.type === 'bug' ? 'fa-bug text-red-400' : 
-                                        item.type === 'feature' ? 'fa-lightbulb text-yellow-400' :
-                                        item.type === 'ux' ? 'fa-wand-magic-sparkles text-blue-400' : 'fa-message text-green-400'
-                                      } text-sm`}></i>
-                                    ) : (
-                                      item.found_item_category || item.category || '📦'
-                                    )}
-                                </div>
-                                <div className="text-left">
-                                    <p className="text-[11px] font-black text-white uppercase tracking-widest">
-                                        {item.subject || item.title || item.found_item_description || 'Surrendered Item'}
-                                    </p>
-                                    <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1">
-                                        {new Date(item.created_at || item.date_found).toLocaleDateString()}
-                                    </p>
-                                    {activeTab === 'feedback' && item.admin_notes && (
-                                        <p className="text-[9px] text-uni-400 font-bold mt-2 border-l-2 border-uni-500/30 pl-3 py-1 bg-uni-500/5 rounded-r-lg max-w-xs italic whitespace-pre-wrap">
-                                            Admin: {item.admin_notes}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                              <div className={`px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border ${
-                                  item.status === 'released' || item.status === 'approved' || item.status === 'resolved' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                                  item.status === 'reported' || item.status === 'pending' || item.status === 'under_review' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                  'bg-sky-500/10 text-sky-400 border-sky-500/20'
-                              }`}>
-                                  {item.status.replace('_', ' ')}
-                              </div>
-                              {activeTab === 'feedback' && item.screenshot_url && (
-                                <a href={item.screenshot_url} target="_blank" rel="noreferrer" className="text-[7px] font-black text-slate-500 hover:text-white uppercase tracking-widest underline decoration-uni-500/30">
-                                  View Screenshot
-                                </a>
-                              )}
-                            </div>
-                        </motion.div>
-                    ))
-                )}
+                    
+                    <div className="relative z-10 flex items-start gap-5">
+                      <div className={`mt-1 p-2.5 rounded-xl ${profileUser.is_verified ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-500/20 text-slate-400'} border border-white/10`}>
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div className="text-left">
+                        <h4 className="text-xl font-bold text-white uppercase tracking-tight">
+                          {profileUser.is_verified ? 'Authorized Member' : 'Guest Identity'}
+                        </h4>
+                        <p className="mt-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-widest leading-relaxed">
+                          Status: <span className={profileUser.is_verified ? 'text-emerald-400' : 'text-sky-400'}>
+                            {profileUser.verification_status?.replace('_', ' ') || 'Provisionary'}
+                          </span>
+                        </p>
+                        <p className="mt-3 text-[11px] text-slate-400 font-medium max-w-sm leading-relaxed">
+                          Your profile has been synchronized with the institutional core. Verified members enjoy priority handling for lost assets.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          )}
+
+          {activeTab === 'registry' && (
+            <div key="registry" className="space-y-8">
+              <div>
+                <SectionTitle title="Engagement Analytics" />
+                <div className="mt-6 space-y-2">
+                  <InfoRow icon={Trophy} label="Integrity Score" value={`${profileUser.integrity_points || 0} Units`} accent="emerald" />
+                  <InfoRow icon={AlertCircle} label="Risk Index" value={`${profileUser.fraud_strikes || 0} Strikes`} accent="rose" />
+                  <InfoRow 
+                    icon={CheckCircle2} 
+                    label="Honor Standing" 
+                    value={profileUser.is_certificate_eligible ? 'QUALIFIED' : 'PENALIZED'} 
+                    accent={profileUser.is_certificate_eligible ? 'emerald' : 'rose'}
+                  />
+                </div>
+              </div>
+
+              <div className="p-6 bg-sky-500/5 backdrop-blur-2xl rounded-3xl border border-sky-500/20 shadow-xl">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="p-2 bg-sky-500/20 rounded-lg border border-sky-500/30">
+                    <Trophy size={18} className="text-sky-400" />
+                  </div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-widest">Institutional Registry Note</h4>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium leading-relaxed text-left">
+                  Your integrity metrics are recalculated every 168 hours based on verified returns and claim resolutions. 
+                  Maintaining high standing grants access to the Community Honor Roll and premium claim features.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'verification' && (
+            <div key="verification" className="space-y-8">
+              <div>
+                <SectionTitle title="Credential Evidence" />
+                <div className="mt-6 space-y-2">
+                  <InfoRow icon={ShieldCheck} label="Account Clearance" value={profileUser.verification_status?.toUpperCase() || 'UNKNOWN'} accent="sky" />
+                  <InfoRow icon={Clock} label="Last Modification" value={new Date(profileUser.updated_at).toLocaleDateString()} accent="violet" />
+                </div>
+              </div>
+
+              <div className="space-y-6 text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] italic text-slate-500 px-2">Document Proof Archetype</p>
+                <div className="aspect-video bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden flex items-center justify-center relative group shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 opacity-60" />
+                  {profileUser.verification_proof_url ? (
+                    <img src={profileUser.verification_proof_url} alt="Proof" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  ) : (
+                    <div className="text-center p-8 relative z-20">
+                      <div className="w-16 h-16 rounded-full bg-white/5 mx-auto flex items-center justify-center mb-6">
+                        <Smartphone size={32} className="text-slate-500 opacity-50" />
+                      </div>
+                      <p className="text-xs text-slate-500 font-black uppercase tracking-widest">Digital duplicate unavailable</p>
+                    </div>
+                  )}
+                </div>
+                
+                {isOwnProfile && (profileUser.verification_status === 'rejected' || !profileUser.verification_proof_url) && (
+                  <div className="mt-8">
+                    <ImageUpload 
+                      label="Provision Digital Evidence"
+                      onUploadSuccess={async (url) => {
+                        const { error } = await supabase
+                          .from('user_profiles_v1')
+                          .update({ verification_proof_url: url, verification_status: 'pending' })
+                          .eq('id', currentUser.id);
+                        if (!error) refreshUser();
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+      </div>
+    );
+  };
+
+const SectionTitle = ({ title }) => (
+  <div className="flex items-center gap-4 px-2 mt-4">
+    <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{title}</h3>
+    <div className="h-[1px] bg-white/5 w-full" />
+  </div>
+);
+
+const InfoRow = ({ icon: Icon, label, value, type, isEditing, editContent, accent = 'sky' }) => {
+  const accentColors = {
+    sky: 'sky-500',
+    violet: 'violet-500',
+    emerald: 'emerald-500',
+    rose: 'rose-500'
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-4 px-5 rounded-xl hover:bg-white/[0.02] transition-all group relative border border-transparent hover:border-white/5 gap-3 sm:gap-6">
+      <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-${accentColors[accent]}/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hidden sm:block`} />
+      
+      <div className="flex items-center gap-4">
+        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-slate-500 group-hover:text-white transition-colors">
+          <Icon size={14} strokeWidth={2.5} />
+        </div>
+        <span className="text-[11px] font-medium uppercase tracking-widest text-slate-500">{label}</span>
+      </div>
+      
+      <div className="w-full sm:flex-1 sm:max-w-[400px] flex justify-start sm:justify-end sm:pl-0 pl-12">
+        {isEditing && editContent ? (
+          <div className="w-full">{editContent}</div>
+        ) : type === 'badge' ? (
+          <span className={`px-3 py-1 bg-${accentColors[accent].split('-')[0]}-500/10 text-${accentColors[accent].split('-')[0]}-400 text-[9px] font-bold rounded-full border border-${accentColors[accent].split('-')[0]}-500/20 tracking-wider truncate`}>
+            {value}
+          </span>
+        ) : (
+          <span className="text-sm font-semibold text-white tracking-tight break-all">
+            {value || <span className="text-slate-600 font-normal">Unspecified</span>}
+          </span>
+        )}
       </div>
     </div>
   );

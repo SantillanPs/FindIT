@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import FeedbackModal from './FeedbackModal';
+import { useTheme } from '../context/ThemeContext';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -29,14 +30,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
+  User,
   LogOut, 
   Globe, 
   MessageSquare, 
   Users, 
   Shield,
+  Moon,
+  Sun,
+  ChevronDown,
+  LayoutGrid,
   ShieldCheck, 
   Warehouse, 
   HelpCircle, 
@@ -53,8 +60,7 @@ import {
   HeartHandshake,
   Archive,
   Menu,
-  X,
-  ChevronDown
+  X
 } from "lucide-react";
 
 // Refined Logo Component
@@ -119,6 +125,8 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
 
 const LayoutContents = ({ children }) => {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
     queryKey: ['admin', 'sidebar_stats', user?.id],
     queryFn: async () => {
@@ -148,7 +156,6 @@ const LayoutContents = ({ children }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const { toggleSidebar, setOpenMobile } = useSidebar();
-  const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
@@ -264,34 +271,7 @@ const LayoutContents = ({ children }) => {
             </SidebarContent>
 
             <SidebarFooter className="p-4 border-t border-white/5 bg-slate-950/20">
-               <div className="flex items-center justify-between gap-3 w-full">
-                  <div className="flex items-center gap-3 min-w-0">
-                     <Avatar className="h-9 w-9 rounded-full border border-white/10 ring-2 ring-uni-500/10 shadow-2xl">
-                       <AvatarImage src={user.photo_url} />
-                       <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-bold uppercase">
-                         {user.email.substring(0, 2).toUpperCase()}
-                       </AvatarFallback>
-                     </Avatar>
-                     <div className="flex flex-col min-w-0 text-left">
-                        <span className="text-sm font-bold text-white truncate tracking-tight">{user.email.split('@')[0]}</span>
-                        <span className="text-[10px] font-black text-slate-500 capitalize tracking-[0.15em]">{user.role.replace('_', ' ')}</span>
-                     </div>
-                  </div>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button 
-                        onClick={handleLogout}
-                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-slate-500 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/20 transition-all group shadow-xl active:scale-90"
-                      >
-                        <LogOut size={16} className="transition-transform group-hover:translate-x-0.5" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="bg-slate-950 border-white/10 text-[10px] font-bold uppercase tracking-widest text-white">
-                      Terminate Session
-                    </TooltipContent>
-                  </Tooltip>
-               </div>
+               {/* Profile and Logout relocated to Header Top Right */}
             </SidebarFooter>
           </Sidebar>
 
@@ -316,9 +296,59 @@ const LayoutContents = ({ children }) => {
                       </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <ThemeToggle />
+                <div className="flex items-center gap-3">
                   {user.role === 'student' && <NotificationCenter />}
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={
+                      <button className="flex items-center gap-2 pl-1 pr-1 py-1 rounded-full hover:bg-white/5 transition-all group outline-none border border-transparent hover:border-white/5">
+                        <Avatar className="h-8 w-8 rounded-full shadow-xl transition-transform group-hover:scale-105 after:border-sky-400">
+                          <AvatarImage src={user.photo_url} />
+                          <AvatarFallback className="bg-transparent text-sky-400 text-[10px] font-bold uppercase">
+                            {user.email.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col items-start hidden md:flex mr-1">
+                          <span className="text-[11px] font-bold text-white uppercase tracking-wider leading-none">{user.first_name || user.email.split('@')[0]}</span>
+                          <span className="text-[9px] font-medium text-slate-500 uppercase tracking-widest mt-1">{user.role.replace('_', ' ')}</span>
+                        </div>
+                      </button>
+                    } />
+                    
+                    <DropdownMenuContent align="end" className="w-max bg-glass-bg backdrop-blur-xl border-glass-border shadow-2xl p-1.5">
+                      <div className="px-2 py-1.5 mb-1">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Account Identity</p>
+                      </div>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => navigate(user.role === 'student' ? '/profile' : `/admin/profile/${user.id}`)}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-white/10 text-slate-300 focus:text-white transition-colors cursor-pointer"
+                      >
+                        <User size={14} />
+                        <span className="text-xs font-bold uppercase tracking-widest">My Profile</span>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={toggleTheme}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-white/10 text-slate-300 focus:text-white transition-colors cursor-pointer"
+                      >
+                        {theme === 'dark' ? <Sun size={14} className="text-amber-500" /> : <Moon size={14} />}
+                        <span className="text-xs font-bold uppercase tracking-widest">
+                          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                        </span>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator className="bg-white/5 my-1.5" />
+                      
+                      <DropdownMenuItem 
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-rose-500/10 text-slate-400 focus:text-rose-400 transition-colors cursor-pointer"
+                      >
+                        <LogOut size={14} />
+                        <span className="text-xs font-bold uppercase tracking-widest">Sign Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
             </header>
 

@@ -4,7 +4,7 @@ import { Filter, Search, XCircle, PlusCircle, Vault, Clock, HandHelping, ListFil
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const InventoryTab = ({ 
   inventoryFilter, 
@@ -98,20 +98,22 @@ const InventoryTab = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredItems.map((item) => (
-            <InventoryCard 
-              key={item.id}
-              item={item}
-              matches={matches}
-              pendingClaims={pendingClaims}
-              navigate={navigate}
-              setSearchTerm={setSearchTerm}
-              handleStatusUpdate={handleStatusUpdate}
-              setShowReleaseModal={setShowReleaseModal}
-              setReleaseForm={setReleaseForm}
-              actionLoading={actionLoading}
-            />
-          ))}
+          <AnimatePresence mode="popLayout">
+            {filteredItems.map((item) => (
+              <InventoryCard 
+                key={item.id}
+                item={item}
+                matches={matches}
+                pendingClaims={pendingClaims}
+                navigate={navigate}
+                setSearchTerm={setSearchTerm}
+                handleStatusUpdate={handleStatusUpdate}
+                setShowReleaseModal={setShowReleaseModal}
+                setReleaseForm={setReleaseForm}
+                actionLoading={actionLoading}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       )}
       </div>

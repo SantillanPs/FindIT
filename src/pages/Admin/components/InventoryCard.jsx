@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useMasterData } from '../../../context/MasterDataContext';
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,22 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { 
-  MapPin, 
-  User as UserIcon, 
-  BadgeCheck, 
-  Vault,
-  Clock,
-  RefreshCw,
-  Zap
+  MapPin, User as UserIcon, BadgeCheck, Vault,
+  Clock, RefreshCw, Zap
 } from "lucide-react";
+import { imageCache } from '../../../lib/imageCache';
 
-/**
- * InventoryCard - Premium Professional (Pro Max)
- * - Refined glassmorphism.
- * - Human-centric labeling.
- * - High-end typography.
- */
-const InventoryCard = ({ 
+const InventoryCard = React.memo(({ 
   item, 
   navigate, 
   handleStatusUpdate, 
@@ -29,6 +20,7 @@ const InventoryCard = ({
   actionLoading 
 }) => {
   const { categories: CATEGORIES } = useMasterData();
+  const [imgLoaded, setImgLoaded] = useState(imageCache.isLoaded(item.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === item.category);
 
   const formattedDate = new Date(item.created_at || item.date_found).toLocaleDateString('en-US', {
@@ -43,10 +35,11 @@ const InventoryCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4 }}
+      layout
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.3 }}
     >
       <Card className="group relative border-white/5 bg-slate-900/40 backdrop-blur-3xl hover:bg-slate-900/60 transition-all duration-500 overflow-hidden rounded-[2rem] shadow-2xl p-0 flex flex-col">
          
@@ -56,10 +49,16 @@ const InventoryCard = ({
          }`}>
             {item.photo_url ? (
                <>
-                  <img 
+                  <motion.img 
+                    initial={imgLoaded ? { opacity: 1 } : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     src={item.photo_url} 
                     alt={item.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out opacity-90 group-hover:opacity-100"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
+                    onLoad={() => {
+                        imageCache.markLoaded(item.photo_url);
+                        setImgLoaded(true);
+                    }}
                   />
                   {/* Cinematic Vignette Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/20 z-10"></div>
@@ -169,6 +168,23 @@ const InventoryCard = ({
       </Card>
     </motion.div>
   );
-};
+});
+
+// Helper component for stat cards in analytics/leaderboard (if moved here)
+const StatCard = ({ icon, label, value, sub }) => (
+    <div className="bg-slate-900/40 p-10 rounded-[2.5rem] border border-white/5 shadow-xl hover:shadow-2xl transition-all space-y-6">
+        <div className="flex justify-between items-start">
+            <div className="w-12 h-12 bg-slate-950 border border-white/10 rounded-2xl flex items-center justify-center shadow-inner">
+                {icon}
+            </div>
+            <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+        </div>
+        <div className="space-y-1">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+            <h4 className="text-3xl font-bold text-white tracking-tight">{value?.toLocaleString() || 0}</h4>
+            <p className="text-[9px] font-bold text-slate-700 uppercase tracking-widest mt-1">{sub}</p>
+        </div>
+    </div>
+);
 
 export default InventoryCard;

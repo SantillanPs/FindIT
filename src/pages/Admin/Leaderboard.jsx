@@ -1,55 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Trophy, 
-  Shield, 
-  AlertTriangle, 
-  UserX, 
-  UserCheck, 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  Search, 
-  BadgeCheck,
-  Award,
-  Users,
-  ArrowRight
+  Trophy, Shield, AlertTriangle, UserX, UserCheck, 
+  ArrowUpCircle, ArrowDownCircle, Search, BadgeCheck,
+  Award, Users, ArrowRight
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Badge } from "@/components/ui/badge";
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 
-/**
- * Leaderboard - Premium Professional (Pro Max)
- * - Professional monitoring of member integrity.
- * - Clean typography (no aggressive font-black).
- * - High-end, breathable institutional layout.
- */
-const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const Leaderboard = ({ refreshTrigger }) => {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
 
-  useEffect(() => {
-    fetchLeaderboard(refreshTrigger > 0);
-  }, [refreshTrigger]);
-
-  const fetchLeaderboard = async (isSync = false) => {
-    if (isSync) setIsSyncing(true);
-    try {
+  const { data: users = [], isLoading, isFetching } = useQuery({
+    queryKey: ['admin_leaderboard'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('user_profiles_v1')
         .select('*')
         .order('integrity_points', { ascending: false });
         
       if (error) throw error;
-      setUsers(data || []);
-    } catch (error) {
-      console.error('Failed to fetch leaderboard', error);
-    } finally {
-      setLoading(false);
-      setIsSyncing(false);
-    }
-  };
+      return data || [];
+    },
+    placeholderData: keepPreviousData
+  });
 
   const adjustReputation = async (userId, points, strikes) => {
     setActionLoading(userId);
@@ -61,7 +38,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
       });
       
       if (error) throw error;
-      await fetchLeaderboard();
+      queryClient.invalidateQueries({ queryKey: ['admin_leaderboard'] });
     } catch (err) {
       console.error('Failed to adjust reputation', err);
     } finally {
@@ -78,7 +55,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
         .eq('id', userId);
         
       if (error) throw error;
-      await fetchLeaderboard();
+      queryClient.invalidateQueries({ queryKey: ['admin_leaderboard'] });
     } catch (err) {
       console.error('Failed to update verification status');
     } finally {
@@ -95,7 +72,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
         .eq('id', userId);
         
       if (error) throw error;
-      await fetchLeaderboard();
+      queryClient.invalidateQueries({ queryKey: ['admin_leaderboard'] });
     } catch (err) {
       console.error('Failed to toggle certificate eligibility');
     } finally {
@@ -116,7 +93,7 @@ const Leaderboard = ({ refreshTrigger, setIsSyncing }) => {
     return "bg-slate-900 border-white/5 text-slate-500";
   };
 
-  if (loading) return (
+  if (isLoading && users.length === 0) return (
     <div className="flex justify-center py-32">
       <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>
