@@ -377,7 +377,7 @@ const LayoutContents = ({ children }) => {
           </header>
           <main className="flex-grow w-full relative z-10"><div key={location.pathname}>{children}</div></main>
           {location.pathname === '/' && (
-            <footer className="py-20 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
+            <footer className="py-6 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
                 <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.4em] opacity-60">
                   FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
                 </p>

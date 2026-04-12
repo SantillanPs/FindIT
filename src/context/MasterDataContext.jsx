@@ -45,7 +45,7 @@ const MasterDataProvider = ({ children }) => {
                     .select('id, first_name, last_name, show_full_name, department, integrity_points')
                     .eq('role', 'student')
                     .order('integrity_points', { ascending: false })
-                    .limit(5),
+                    .limit(10),
                 supabase
                     .from('department_leaderboard')
                     .select('*')

@@ -343,6 +343,11 @@
     scrollbar-width: none;
   }
 
+  .mask-horizontal-fade {
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  }
+
   .mask-fade-right {
     mask-image: linear-gradient(to right, black 80%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);

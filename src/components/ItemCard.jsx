@@ -42,8 +42,8 @@ const ItemCard = ({ item, onClick, onShare }) => {
 
         {/* Category Overlay (Top Left) */}
         <div className="absolute top-4 left-4 z-20">
-            <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+            <div className="bg-violet-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-violet-500/20 flex items-center gap-2">
+                <span className="text-[10px] font-bold text-violet-400 uppercase tracking-wider">
                     {categoryData?.label || 'General'}
                 </span>
             </div>
@@ -65,33 +65,34 @@ const ItemCard = ({ item, onClick, onShare }) => {
 
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
-                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-uni-400 transition-colors line-clamp-1">
+                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-amber-400 transition-colors line-clamp-1">
                     {item.title}
                 </h3>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
-                    {item.location}
-                </p>
+                <div className="flex items-center gap-2 mt-1.5">
+                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Found At</p>
+                   <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{item.location}</p>
+                </div>
             </div>
 
         {/* Description List (Replacing the location/time list) */}
         <div className="space-y-3 mb-6 flex-grow">
             <div className="flex items-start gap-3">
-                <div className="mt-1 w-5 h-5 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0 border border-white/5">
-                    <AlignLeft className="h-3 w-3 text-sky-400" />
+                <div className="mt-1 w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 border border-violet-500/5">
+                    <AlignLeft className="h-3 w-3 text-violet-400" />
                 </div>
-                <p className="text-sm text-text-muted leading-relaxed line-clamp-3 italic">
+                <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">
                     {item.description}
                 </p>
             </div>
             
             <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0 border border-white/5">
-                    <Clock className="h-3 w-3 text-sky-400" />
+                <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/5">
+                    <Clock className="h-3 w-3 text-emerald-400" />
                 </div>
                 <div className="flex gap-2 items-center">
-                    <span className="text-xs font-bold text-text-main">{formattedDate}</span>
-                    <span className="text-xs text-text-muted opacity-60">•</span>
-                    <span className="text-xs text-text-muted">{formattedTime}</span>
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">{formattedDate}</span>
+                    <span className="text-xs text-white/20">•</span>
+                    <span className="text-xs font-medium text-slate-400">{formattedTime}</span>
                 </div>
             </div>
         </div>
@@ -103,10 +104,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
                     e.stopPropagation();
                     onClick();
                 }}
-                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
             >
                 <ShieldCheck className="h-4 w-4" />
-                <span>Process Item</span>
+                <span>Secure Item</span>
             </button>
             <button 
                 onClick={(e) => {

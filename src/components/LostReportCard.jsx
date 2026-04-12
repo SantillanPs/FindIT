@@ -47,8 +47,8 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Category Overlay (Top Left) */}
         <div className="absolute top-4 left-4 z-20">
-            <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2">
-                <span className="text-[11px] font-bold text-white uppercase tracking-wider">
+            <div className="bg-violet-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-violet-500/20 flex items-center gap-2">
+                <span className="text-[11px] font-bold text-violet-400 uppercase tracking-wider">
                     {categoryData?.label || 'General'}
                 </span>
             </div>
@@ -70,19 +70,20 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Header Row */}
         <div className="flex-grow">
-            <h3 className="text-xl font-bold text-white leading-tight group-hover:text-accent-default transition-colors line-clamp-1 mb-1">
+            <h3 className="text-xl font-bold text-white leading-tight group-hover:text-rose-400 transition-colors line-clamp-1 mb-1">
                 {report.title}
             </h3>
-            <p className="text-[11px] font-semibold text-slate-300 uppercase tracking-widest mb-2">
-                {report.location}
-            </p>
+            <div className="flex items-center gap-2 mb-2">
+               <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest uppercase">Last Seen</p>
+               <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{report.location}</p>
+            </div>
             
             {report.potential_zone_names && report.potential_zone_names.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-2">
                     {report.potential_zone_names.slice(0, 2).map((name, i) => (
                         <span 
                             key={i}
-                            className="text-[11px] font-bold text-rose-400 uppercase tracking-widest bg-rose-500/5 px-2 py-0.5 rounded-full border border-white/5 whitespace-nowrap"
+                            className="text-[11px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/5 px-2 py-0.5 rounded-full border border-amber-500/10 whitespace-nowrap"
                         >
                             {name}
                         </span>
@@ -99,22 +100,22 @@ const LostReportCard = ({ report, onWitness }) => {
         {/* Description List */}
         <div className="px-5 space-y-3 mb-6 flex-grow mt-4">
             <div className="flex items-start gap-4">
-                <div className="mt-1 w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 border border-white/5">
-                    <AlignLeft className="h-3 w-3 text-rose-400" />
+                <div className="mt-1 w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 border border-violet-500/5">
+                    <AlignLeft className="h-3 w-3 text-violet-400" />
                 </div>
-                <p className="text-[13px] text-slate-300 font-medium leading-relaxed line-clamp-3">
+                <p className="text-[13px] text-slate-400 font-medium leading-relaxed line-clamp-3">
                     {report.description}
                 </p>
             </div>
             
             <div className="flex items-center gap-4">
-                <div className="w-5 h-5 rounded-full bg-rose-500/10 flex items-center justify-center shrink-0 border border-white/5">
-                    <Calendar className="h-3 w-3 text-rose-400" />
+                <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/5">
+                    <Calendar className="h-3 w-3 text-emerald-400" />
                 </div>
                 <div className="flex gap-2 items-center">
-                    <span className="text-[12px] font-bold text-white uppercase tracking-wider">{formattedDate}</span>
-                    <span className="text-[12px] text-white/40">•</span>
-                    <span className="text-[12px] font-medium text-slate-300">{formattedTime}</span>
+                    <span className="text-[12px] font-bold text-emerald-400 uppercase tracking-wider">{formattedDate}</span>
+                    <span className="text-[12px] text-white/20">•</span>
+                    <span className="text-[12px] font-medium text-slate-400">{formattedTime}</span>
                 </div>
             </div>
         </div>

@@ -319,19 +319,19 @@ const AccountReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                          <Button 
                            variant="ghost"
-                           onClick={() => setStep(2)}
-                           disabled={loading}
-                           className="h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-widest bg-white/5 sm:bg-transparent rounded-xl"
-                         >
-                            Re-Review Proof
-                         </Button>
-                         <Button 
-                           variant="ghost"
                            onClick={() => setShowRejectionForm(true)}
                            disabled={loading}
                            className="h-12 text-rose-500 hover:bg-rose-500/5 font-bold text-[10px] uppercase tracking-widest rounded-xl"
                          >
                             Deny Access
+                         </Button>
+                         <Button 
+                           variant="ghost"
+                           onClick={() => setStep(2)}
+                           disabled={loading}
+                           className="h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-widest bg-white/5 sm:bg-transparent rounded-xl"
+                         >
+                            Re-Review Proof
                          </Button>
                       </div>
                    </div>

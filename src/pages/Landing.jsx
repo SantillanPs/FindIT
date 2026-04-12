@@ -11,6 +11,8 @@ import {
   Search, 
   Users, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
   MapPin, 
   Clock, 
   Share2, 
@@ -25,7 +27,8 @@ import {
   ShieldAlert,
   Settings,
   LayoutGrid,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  X
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -44,9 +47,12 @@ const Landing = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   
   const [leaderboardType, setLeaderboardType] = useState('students');
+  const [showFullLeaderboard, setShowFullLeaderboard] = useState(false);
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '' });
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const searchInputRef = React.useRef(null);
 
   // 1. Site Config Query
   const { data: siteConfig } = useQuery({
@@ -163,7 +169,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
           <div className="max-w-7xl mx-auto flex items-center justify-center gap-4">
             <ShieldAlert className="h-4 w-4 text-white animate-pulse" />
-            <p className="text-[10px] md:text-xs font-black text-white uppercase tracking-[0.2em] italic">
+            <p className="text-[10px] md:text-xs font-bold text-white uppercase tracking-[0.2em]">
               {siteConfig.announcement_text}
             </p>
           </div>
@@ -186,9 +192,9 @@ const Landing = () => {
             <div className="space-y-4 text-center md:text-left relative z-10">
               <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
                 <ShieldAlert className="h-4 w-4 text-white" />
-                <span className="text-[10px] font-black text-white uppercase tracking-widest italic">Super Admin Console</span>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Super Admin Console</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-black text-white italic tracking-tighter uppercase leading-none">System Oversight Active</h2>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tighter uppercase leading-none">System Oversight Active</h2>
               <p className="text-white/80 text-xs md:text-sm font-medium italic uppercase tracking-wider max-w-xl opacity-90">
                 You have elevated privileges. Use this section to access global configurations, staff roles, and advanced audit logs.
               </p>
@@ -218,23 +224,23 @@ const Landing = () => {
       <section className="relative pt-20 pb-16 md:pt-0 md:pb-32 overflow-hidden">
         <div className="max-w-7xl mx-auto text-center px-6 relative z-10">
           
-          <h1 className="text-6xl md:text-9xl lg:text-[11rem] font-black text-white italic tracking-tighter leading-[0.8] uppercase mb-8 md:mb-12">
+          <h1 className="text-6xl md:text-9xl lg:text-[11rem] font-extrabold text-white tracking-tighter leading-[0.8] uppercase mb-8 md:mb-12">
             {siteConfig?.hero_title ? (
               <>
                 {siteConfig.hero_title.split('?')[0]}? <br />
-                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">
+                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent">
                   {siteConfig.hero_title.split('?')[1] || 'Found it.'}
                 </span>
               </>
             ) : (
               <>
                 Lost it? <br />
-                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">Find it.</span>
+                <span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent">Find it.</span>
               </>
             )}
           </h1>
           
-          <p className="text-sm md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 md:mb-24 leading-relaxed font-medium italic opacity-80 uppercase tracking-widest">
+          <p className="text-sm md:text-lg text-slate-400 max-w-2xl mx-auto mb-12 md:mb-24 leading-relaxed font-medium uppercase tracking-widest opacity-80">
             {siteConfig?.hero_subtitle || "The university's centralized registry for assets. Authorize access and facilitate secure returns."}
           </p>
 
@@ -242,19 +248,19 @@ const Landing = () => {
             <Button 
                 size="lg"
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
-                className="h-16 md:h-24 px-10 md:px-20 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] italic bg-white hover:bg-slate-200 text-black shadow-2xl shadow-sky-500/10 transition-all group"
+                className="h-14 md:h-16 px-8 md:px-14 rounded-2xl font-bold text-xs md:text-sm uppercase tracking-[0.2em] bg-white hover:bg-slate-200 text-black shadow-2xl shadow-sky-500/10 transition-all group"
             >
                 Report Missing
-                <PlusCircle className="ml-3 h-5 w-5 group-hover:scale-110 transition-transform" />
+                <PlusCircle className="ml-3 h-4 w-4 md:h-5 md:w-5 group-hover:scale-110 transition-transform" />
             </Button>
             <Button 
                 size="lg"
                 variant="outline"
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
-                className="h-16 md:h-24 px-10 md:px-20 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] italic border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white transition-all group"
+                className="h-14 md:h-16 px-8 md:px-14 rounded-2xl font-bold text-xs md:text-sm uppercase tracking-[0.2em] border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white transition-all group"
             >
                 Found Something
-                <ChevronRight className="ml-3 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="ml-3 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
         </div>
@@ -268,12 +274,12 @@ const Landing = () => {
               <Bell className="h-8 w-8" />
             </div>
             <div className="text-left">
-              <h2 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">Identified Items</h2>
-              <p className="text-slate-500 text-[10px] md:text-xs font-black uppercase tracking-[0.3em] italic mt-3">Account authorization pending</p>
+              <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tighter uppercase leading-none">Identified Items</h2>
+              <p className="text-slate-500 text-[10px] md:text-xs font-bold uppercase tracking-[0.3em] mt-3">Account authorization pending</p>
             </div>
           </div>
 
-          <div className="flex overflow-x-auto gap-8 pb-10 no-scrollbar snap-x px-6 md:px-0">
+          <div className="flex overflow-x-auto gap-8 pb-10 no-scrollbar snap-x px-6 md:px-0 mask-horizontal-fade">
             {items.filter(i => i.identified_name || i.identified_student_id).map(item => (
               <Card 
                 key={item.id}
@@ -335,7 +341,7 @@ const Landing = () => {
 
       {/* Community Honor Roll (Leaderboard) */}
       {siteConfig?.show_leaderboard !== false && (
-        <section className="relative py-20 md:py-32 overflow-hidden border-t border-white/5">
+        <section className="relative py-12 md:py-16 overflow-hidden border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-16 md:gap-24">
             <div className="lg:w-1/2 space-y-10 text-left">
@@ -343,8 +349,8 @@ const Landing = () => {
                 <Trophy className="h-3 w-3 text-sky-400" />
                 <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest italic">Honor System Active</span>
               </div>
-              <h2 className="text-5xl md:text-8xl font-black text-white italic tracking-tighter leading-[0.85] uppercase">
-                 Community <br/><span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent not-italic">Honor Roll</span>
+              <h2 className="text-5xl md:text-8xl font-extrabold text-white tracking-tighter leading-[0.85] uppercase">
+                 Community <br/><span className="bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent">Honor Roll</span>
               </h2>
               <p className="text-slate-400 text-sm md:text-lg font-medium leading-relaxed max-w-lg italic opacity-80 uppercase tracking-wider">
                   Returning lost items is a signal of character. Our community thrives through individual integrity.
@@ -354,7 +360,7 @@ const Landing = () => {
                   <Button 
                       variant={leaderboardType === 'students' ? 'default' : 'ghost'}
                       onClick={() => setLeaderboardType('students')}
-                      className={`rounded-xl px-8 font-black text-[10px] uppercase tracking-widest h-11 italic ${leaderboardType === 'students' ? 'bg-white text-black shadow-xl' : 'text-slate-500 hover:text-white'}`}
+                      className={`rounded-xl px-5 font-bold text-[10px] uppercase tracking-widest h-11 ${leaderboardType === 'students' ? 'bg-white text-black shadow-xl' : 'text-slate-500 hover:text-white'}`}
                   >
                       <GraduationCap className="h-4 w-4 mr-2" />
                       Contributors
@@ -362,7 +368,7 @@ const Landing = () => {
                   <Button 
                       variant={leaderboardType === 'colleges' ? 'default' : 'ghost'}
                       onClick={() => setLeaderboardType('colleges')}
-                      className={`rounded-xl px-8 font-black text-[10px] uppercase tracking-widest h-11 italic ${leaderboardType === 'colleges' ? 'bg-white text-black shadow-xl' : 'text-slate-500 hover:text-white'}`}
+                      className={`rounded-xl px-5 font-bold text-[10px] uppercase tracking-widest h-11 ${leaderboardType === 'colleges' ? 'bg-white text-black shadow-xl' : 'text-slate-500 hover:text-white'}`}
                   >
                       <Building2 className="h-4 w-4 mr-2" />
                       Colleges
@@ -371,56 +377,82 @@ const Landing = () => {
             </div>
 
             <div className="lg:w-1/2 w-full relative">
-              <Card className="p-3 md:p-8 border border-white/10 bg-slate-900/40 backdrop-blur-xl shadow-2xl">
+              <Card className="p-2 md:p-6 border border-white/10 bg-slate-900/40 backdrop-blur-xl shadow-2xl">
                   <div className="space-y-2">
                       {!masterLoading && leaderboardType === 'students' ? (
-                          LEADERBOARD_FROM_MASTER?.students?.slice(0, 5).map((student, i) => (
-                              <div key={i} className="flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group">
-                                  <div className="flex items-center gap-5">
-                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black transition-all ${
-                                          i === 0 ? 'bg-amber-400 text-black border border-amber-500' : 
-                                          i === 1 ? 'bg-slate-300 text-black border border-slate-400' :
-                                          i === 2 ? 'bg-orange-600 text-white border border-orange-700' :
-                                          'bg-white/5 text-slate-400 border border-white/5'
+                          LEADERBOARD_FROM_MASTER?.students?.slice(0, showFullLeaderboard ? 10 : 3).map((student, i) => (
+                              <div key={i} className="flex items-center justify-between p-3.5 md:p-4 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 transition-all duration-300 group">
+                                  <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0">
+                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-bold transition-all ${
+                                          i === 0 ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30' : 
+                                          i === 1 ? 'bg-slate-400/10 text-slate-300 border border-slate-400/30' :
+                                          i === 2 ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30' :
+                                          'bg-white/5 text-slate-500 border border-white/5'
                                       }`}>
-                                          {i + 1}
+                                          <span>{i + 1}</span>
                                       </div>
-                                      <div className="text-left">
-                                          <p className="text-[12px] font-black text-white tracking-[0.2em] uppercase italic group-hover:text-sky-400 transition-colors">
+                                      <div className="text-left min-w-0 flex-1">
+                                          <p className="text-[12px] md:text-[13px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 transition-colors truncate">
                                               {student.full_name_masked}
                                           </p>
-                                          <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic mt-1">
+                                          <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mt-1 truncate">
                                               {student.department || 'General Education'}
                                           </p>
                                       </div>
                                   </div>
-                                  <div className="flex items-center gap-6">
-                                      <p className="text-[11px] font-black text-white tracking-[0.3em] uppercase italic">{student.integrity_points} IP</p>
-                                      <span className="text-xl group-hover:scale-125 transition-transform duration-500">
+                                  <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-4">
+                                      <p className="text-[11px] md:text-[12px] font-bold text-white tracking-[0.2em] uppercase">{student.integrity_points} <span className="text-slate-500 font-medium">IP</span></p>
+                                      <span className="text-xl group-hover:scale-110 transition-transform duration-300 flex items-center justify-center w-6">
                                           {i === 0 ? '👑' : i === 1 ? '💎' : i === 2 ? '⚡' : i === 3 ? '🛡️' : '✨'}
                                       </span>
                                   </div>
                               </div>
                           ))
                       ) : (
-                          LEADERBOARD_FROM_MASTER?.departments?.slice(0, 5).map((col, i) => (
-                              <div key={i} className="flex items-center justify-between p-5 rounded-2xl hover:bg-white/5 transition-all group">
-                                  <div className="flex items-center gap-5">
-                                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-black bg-white/5 text-slate-400 border border-white/5 italic">
-                                          {i + 1}
+                          LEADERBOARD_FROM_MASTER?.departments?.slice(0, showFullLeaderboard ? 10 : 3).map((col, i) => (
+                              <div key={i} className="flex items-center justify-between p-3.5 md:p-4 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 transition-all duration-300 group">
+                                  <div className="flex items-center gap-4 md:gap-5 flex-1 min-w-0">
+                                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-bold transition-all ${
+                                          i === 0 ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30' : 
+                                          i === 1 ? 'bg-slate-400/10 text-slate-300 border border-slate-400/30' :
+                                          i === 2 ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30' :
+                                          'bg-white/5 text-slate-500 border border-white/5'
+                                      }`}>
+                                          <span>{i + 1}</span>
                                       </div>
-                                      <div className="text-left">
-                                          <p className="text-[12px] font-black text-white tracking-[0.2em] uppercase italic group-hover:text-sky-400">{col.department}</p>
+                                      <div className="text-left min-w-0 flex-1">
+                                          <p className="text-[12px] md:text-[13px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 transition-colors line-clamp-2 leading-tight">
+                                              {col.department}
+                                          </p>
                                       </div>
                                   </div>
-                                  <div className="flex items-center gap-6">
-                                      <p className="text-[11px] font-black text-sky-400 tracking-[0.3em] uppercase italic">{col.total_points} IP</p>
-                                      <Building2 className="h-5 w-5 text-slate-600" />
+                                  <div className="flex items-center gap-4 md:gap-6 shrink-0 ml-4">
+                                      <p className="text-[11px] md:text-[12px] font-bold text-sky-400 tracking-[0.2em] uppercase">{col.total_points} <span className="text-slate-500 font-medium">IP</span></p>
+                                      <Building2 className="h-5 w-5 text-slate-700 group-hover:text-slate-500 transition-colors" />
                                   </div>
                               </div>
                           ))
                       )}
                   </div>
+                  {(leaderboardType === 'students' ? LEADERBOARD_FROM_MASTER?.students : LEADERBOARD_FROM_MASTER?.departments)?.length > 3 && (
+                      <div className="border-t border-white/5">
+                          <Button 
+                              variant="ghost" 
+                              onClick={() => setShowFullLeaderboard(!showFullLeaderboard)}
+                              className="w-full h-12 text-slate-500 hover:text-white font-bold text-[10px] uppercase tracking-[0.2em] transition-all group"
+                          >
+                              {showFullLeaderboard ? (
+                                  <>
+                                      Show Only Top 3 <ChevronUp className="ml-2 h-4 w-4 group-hover:-translate-y-1 transition-transform" />
+                                  </>
+                              ) : (
+                                  <>
+                                      Show All Rankings <ChevronDown className="ml-2 h-4 w-4 group-hover:translate-y-1 transition-transform" />
+                                  </>
+                              )}
+                          </Button>
+                      </div>
+                  )}
               </Card>
             </div>
           </div>
@@ -431,12 +463,12 @@ const Landing = () => {
 
 
       {/* Public Registry Section */}
-      <section id="browse" className="py-12 md:py-24 border-t border-white/5 relative">
+      <section id="browse" className="py-12 md:py-20 border-t border-white/5 relative">
         <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-12 md:space-y-24">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 md:gap-24 border-b border-white/5 pb-16 md:pb-24">
              <div className="text-left space-y-6">
                 <div className="flex items-center gap-6">
-                  <h2 className="text-5xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-none">Public Registry</h2>
+                  <h2 className="text-5xl md:text-8xl font-extrabold text-white tracking-tighter uppercase leading-none">Public Registry</h2>
                   <div className="py-2 px-6 rounded-full border border-sky-500/30 bg-sky-500/5 backdrop-blur-md hidden md:flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></div>
                     <span className="text-[10px] font-black text-sky-400 uppercase tracking-widest italic">Live Records</span>
@@ -445,19 +477,62 @@ const Landing = () => {
                 <p className="text-slate-500 text-sm md:text-lg font-medium italic uppercase tracking-wider opacity-80">A catalog of all items recovered across campus</p>
              </div>
              
-             <div className="w-full md:w-auto relative group">
-                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors z-20" />
-                <Input 
-                  type="text" 
-                  placeholder="Search inventory..." 
-                  className="h-20 md:h-24 pl-16 pr-10 md:w-[460px] rounded-2xl border-white/10 bg-slate-900/40 backdrop-blur-xl text-lg font-black italic uppercase tracking-tight focus-visible:ring-sky-500/30 placeholder:text-slate-600 shadow-2xl"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+             <div className="w-full md:w-auto flex justify-start md:justify-end">
+                <AnimatePresence mode="wait">
+                  {!isSearchExpanded && searchQuery === '' ? (
+                    <motion.div
+                      key="search-button"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
+                      <Button
+                        onClick={() => {
+                          setIsSearchExpanded(true);
+                          setTimeout(() => searchInputRef.current?.focus(), 100);
+                        }}
+                        className="h-12 md:h-14 px-6 md:px-8 rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl text-slate-400 font-bold text-[11px] uppercase tracking-widest hover:bg-white/5 transition-all shadow-2xl flex items-center gap-4 group"
+                      >
+                        <Search className="h-4 w-4 text-slate-500 group-hover:text-sky-400 transition-colors" />
+                        <span>Search Inventory</span>
+                      </Button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="search-input"
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: typeof window !== 'undefined' && window.innerWidth < 768 ? '100%' : '460px', opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      className="relative group"
+                    >
+                      <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-sky-400 transition-colors z-20" />
+                      <Input 
+                        ref={searchInputRef}
+                        type="text" 
+                        placeholder="Search inventory..." 
+                        className="h-12 md:h-14 pl-12 pr-10 rounded-2xl border-white/10 bg-slate-900/40 backdrop-blur-xl text-sm font-bold uppercase tracking-tight focus-visible:ring-sky-500/30 placeholder:text-slate-600 shadow-2xl w-full"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onBlur={() => {
+                          if (searchQuery === '') setIsSearchExpanded(false);
+                        }}
+                      />
+                      <button 
+                        onClick={() => {
+                          setSearchQuery('');
+                          setIsSearchExpanded(false);
+                        }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-full transition-colors z-20"
+                      >
+                        <X className="h-4 w-4 text-slate-500 hover:text-white" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
              </div>
           </div>
 
-          <div className="flex items-center gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-6">
+          <div className="flex items-center gap-4 md:gap-6 overflow-x-auto no-scrollbar pb-6 mask-horizontal-fade">
              <Button 
                variant={selectedCategory === 'all' ? 'default' : 'outline'}
                onClick={() => setSelectedCategory('all')}
@@ -475,7 +550,7 @@ const Landing = () => {
                   key={cat.id}
                   variant={selectedCategory === cat.id ? 'default' : 'outline'}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`h-11 md:h-14 px-8 md:px-12 rounded-2xl text-[10px] md:text-xs font-black uppercase tracking-[0.2em] italic transition-all shrink-0 border ${
+                  className={`h-11 md:h-14 px-8 md:px-12 rounded-2xl text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all shrink-0 border ${
                     selectedCategory === cat.id 
                     ? 'bg-white text-black border-transparent shadow-xl' 
                     : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/20 hover:text-white'
@@ -514,14 +589,14 @@ const Landing = () => {
       </section>
 
       {/* Public Lost Reports Section */}
-      <section id="lost-reports" className="py-12 md:py-24 border-t border-white/5 relative">
+      <section id="lost-reports" className="py-12 md:py-20 border-t border-white/5 relative">
         <div className="max-w-7xl mx-auto px-6 md:px-12 space-y-12 md:space-y-24">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-12 md:gap-24">
             <div className="text-left space-y-6">
               <div className="flex items-center gap-6">
-                <h2 className="text-5xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-none">Lost Reports</h2>
+                <h2 className="text-5xl md:text-8xl font-extrabold text-white tracking-tighter uppercase leading-none">Lost Reports</h2>
                 <div className="py-2 px-6 rounded-full border border-rose-500/30 bg-rose-500/5 backdrop-blur-md hidden md:flex items-center gap-3">
-                  <span className="text-[10px] font-black text-rose-400 uppercase tracking-widest italic">Missing Assets</span>
+                  <span className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Missing Assets</span>
                 </div>
               </div>
               <p className="text-slate-500 text-sm md:text-lg font-medium italic uppercase tracking-wider opacity-80">Community records of items currently missing</p>
@@ -557,19 +632,19 @@ const Landing = () => {
       </section>
 
       {/* Help Section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-40 text-center border-t border-white/5">
+      <section className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20 text-center border-t border-white/5">
          <div className="max-w-4xl mx-auto space-y-16">
             <div className="inline-flex items-center gap-4 py-2 px-6 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
                <HelpCircle className="h-4 w-4 text-slate-500" />
-               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Expert Support</span>
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expert Support</span>
             </div>
-            <h2 className="text-5xl md:text-8xl font-black text-white italic tracking-tighter uppercase leading-none">Need Assistance?</h2>
+            <h2 className="text-5xl md:text-8xl font-extrabold text-white tracking-tighter uppercase leading-none">Need Assistance?</h2>
             <p className="text-slate-400 text-sm md:text-xl font-medium italic uppercase tracking-widest opacity-80 leading-relaxed max-w-2xl mx-auto">
                Our staff is trained to facilitate efficient recovery. Reach out for institutional support.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-8 md:gap-12">
-               <a href={`mailto:${siteConfig?.support_email || 'support@findit.edu'}`} className="h-20 px-12 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center gap-4 group transition-all hover:bg-white/10">
-                  <span className="text-sm font-black text-white italic uppercase tracking-[0.2em]">Contact Staff</span>
+               <a href={`mailto:${siteConfig?.support_email || 'support@findit.edu'}`} className="h-14 px-10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center gap-4 group transition-all hover:bg-white/10">
+                  <span className="text-xs font-bold text-white uppercase tracking-[0.2em]">Contact Staff</span>
                   <ChevronRight className="h-4 w-4 text-slate-500 group-hover:translate-x-1 transition-all" />
                </a>
             </div>
@@ -581,7 +656,7 @@ const Landing = () => {
         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-5 duration-500">
           <div className="border border-white/10 bg-slate-900/90 backdrop-blur-xl text-white px-8 py-4 rounded-full flex items-center space-x-4 shadow-2xl">
             <CheckCircle2 className="h-5 w-5 text-sky-400" />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] italic">{toast.message}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{toast.message}</p>
           </div>
         </div>
       )}
