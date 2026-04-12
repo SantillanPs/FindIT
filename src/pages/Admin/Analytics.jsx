@@ -26,6 +26,7 @@ const Analytics = ({ onNavigateToTab, onSetSearchTerm, refreshTrigger }) => {
     },
     placeholderData: keepPreviousData,
     staleTime: 60000, // 1 minute
+    refetchInterval: 60000,
   });
 
   const reportData = analyticsData?.reports || { found: [], lost: [] };

@@ -11,7 +11,8 @@ import {
   Search,
   LayoutDashboard,
   ShieldCheck,
-  PackageCheck} from "lucide-react";
+  PackageCheck,
+  X} from "lucide-react";
 
 // Modular Components
 import InventoryTab from './components/InventoryTab';
@@ -62,6 +63,16 @@ const AdminDashboard = () => {
   const [showIntakeModal, setShowIntakeModal] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
+  // Sync modal state with body class for global layout response (z-index lifting)
+  useEffect(() => {
+    if (showIntakeModal) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [showIntakeModal]);
+
   // Queries
   const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
     queryKey: ['admin_inventory'],
@@ -70,7 +81,8 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    refetchInterval: 60000,
   });
 
   const { data: pendingClaims = [], isLoading: claimsLoading } = useQuery({
@@ -80,7 +92,8 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    refetchInterval: 60000,
   });
 
   const { data: matches = [], isLoading: matchesLoading } = useQuery({
@@ -93,7 +106,8 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    refetchInterval: 60000,
   });
 
   const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
@@ -103,7 +117,8 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    refetchInterval: 60000,
   });
 
   const { data: historyItems = [], isLoading: historyLoading } = useQuery({
@@ -113,7 +128,8 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
-    placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    refetchInterval: 60000,
   });
 
   // Proactive visual preloading for instant tab switching
@@ -372,63 +388,78 @@ const AdminDashboard = () => {
           {previewImage && <ImagePreviewOverlay {...{previewImage, setPreviewImage}} />}
 
           {showIntakeModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/80 backdrop-blur-2xl" />
-              <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative z-10 shadow-3xl space-y-7 md:space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-uni-500/10 rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400 shrink-0 shadow-lg shadow-uni-500/5">
-                    <ShieldCheck size={24} />
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 isolate">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/20 backdrop-blur-sm" />
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0, y: 20 }} 
+                animate={{ scale: 1, opacity: 1, y: 0 }} 
+                exit={{ scale: 0.95, opacity: 0, y: 20 }} 
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] relative z-10 shadow-3xl max-h-[90vh] flex flex-col overflow-hidden"
+              >
+                {/* Header — compact and centered text mobile-first */}
+                <div className="flex items-center gap-3 px-5 pt-5 pb-4 md:px-8 md:pt-8 md:pb-6 border-b border-white/5 shrink-0">
+                  <div className="w-9 h-9 md:w-12 md:h-12 bg-uni-500/10 rounded-xl md:rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400 shrink-0">
+                    <ShieldCheck className="w-[18px] h-[18px] md:w-6 md:h-6" />
                   </div>
                   <div className="min-w-0 flex-grow">
-                     <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-white tracking-tight truncate">Process Intake</h3>
-                        <span className="text-[10px] font-black text-white/30 tracking-widest bg-white/5 px-2 py-1 rounded-md">#{showIntakeModal.item.id.slice(-4).toUpperCase()}</span>
-                     </div>
-                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Foundation Security Layer</p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base md:text-xl font-bold text-white tracking-tight truncate">Process Intake</h3>
+                      <span className="text-[8px] md:text-[10px] font-black text-white/30 tracking-widest bg-white/5 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md shrink-0">#{showIntakeModal.item.id.slice(-4).toUpperCase()}</span>
+                    </div>
+                    <p className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Security Protocol</p>
                   </div>
+                  <button 
+                    onClick={() => setShowIntakeModal(null)}
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/5 hover:bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all shrink-0"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
 
-                <div className="space-y-6">
-                   <div className="bg-white/[0.02] p-5 rounded-[1.5rem] border border-white/5 space-y-4 shadow-inner">
-                      <div className="flex items-center gap-2.5">
+                {/* Scrollable content */}
+                <div className="flex-grow overflow-y-auto custom-scrollbar px-5 py-5 md:px-8 md:py-6 space-y-5 md:space-y-6">
+                   <div className="bg-white/[0.02] p-4 md:p-5 rounded-xl md:rounded-[1.5rem] border border-white/5 space-y-4 md:space-y-5">
+                      <div className="flex items-center gap-2">
                         <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Verification Grid</p>
+                        <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] md:tracking-[0.2em]">Verification Grid</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => (
                           <div key={field} className="space-y-1.5">
-                            <label className="block text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-0.5">{field}</label>
+                            <label className="block text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-0.5">{field}</label>
                             {field.includes('Color') ? (
-                              <select className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                              <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
                                 <option value="">Select</option>{COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             ) : field === 'Condition' ? (
-                              <select className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                              <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
                                 <option value="">Select</option>{CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                               </select>
                             ) : (
-                              <input type="text" className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
+                              <input type="text" className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
                             )}
                           </div>
                         ))}
                       </div>
                    </div>
 
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1">Internal Notes</label>
-                      <textarea className="w-full bg-white/[0.03] border border-white/5 rounded-2xl p-5 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none min-h-[100px] transition-all resize-none shadow-inner" placeholder="Staff-only specific details..." value={showIntakeModal.verification_note} onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})} />
+                   <div className="space-y-2 md:space-y-3">
+                      <label className="text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1">Internal Notes</label>
+                      <textarea className="w-full bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl p-4 md:p-5 text-[13px] md:text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none min-h-[80px] md:min-h-[100px] transition-all resize-none shadow-inner" placeholder="Staff-only specific details..." value={showIntakeModal.verification_note} onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})} />
                    </div>
 
-                   <div className="space-y-3">
-                      <label className="text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1 text-left">Challenge Question</label>
-                      <input type="text" className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl px-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner" placeholder="Ask student something unique..." value={showIntakeModal.challenge_question} onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})} />
+                   <div className="space-y-2 md:space-y-3">
+                      <label className="text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1 text-left">Challenge Question</label>
+                      <input type="text" className="w-full h-11 md:h-14 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl px-5 md:px-6 text-[13px] md:text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner" placeholder="Ask student something unique..." value={showIntakeModal.challenge_question} onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})} />
                    </div>
                 </div>
 
-                <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 pt-4 border-t border-white/5">
-                   <button onClick={() => setShowIntakeModal(null)} className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all">Discard</button>
-                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-3 active:scale-[0.98]">
-                     {actionLoading === showIntakeModal.item.id ? <RefreshCw size={18} className="animate-spin" /> : <PackageCheck size={18} />}
+                {/* Sticky bottom action bar — now always visible and centered container */}
+                <div className="shrink-0 px-5 py-4 md:px-8 md:py-6 border-t border-white/5 bg-slate-900/95 backdrop-blur-sm flex flex-row items-center gap-3 md:gap-4">
+                   <button onClick={() => setShowIntakeModal(null)} className="px-5 md:px-8 py-4 md:py-5 text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-xl md:rounded-2xl hover:bg-white/10">Discard</button>
+                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-2 md:gap-3 active:scale-[0.98]">
+                     {actionLoading === showIntakeModal.item.id ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
                      {actionLoading === showIntakeModal.item.id ? 'Securing...' : 'Verify & Secure'}
                    </button>
                 </div>

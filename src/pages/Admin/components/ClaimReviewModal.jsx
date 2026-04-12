@@ -15,7 +15,8 @@ import {
   PackageCheck,
   XCircle,
   ThumbsUp,
-  History
+  History,
+  X
 } from 'lucide-react';
 
 /**
@@ -62,10 +63,18 @@ const ClaimReviewModal = ({
                   </p>
               </div>
           </div>
-          <div className="flex items-center gap-3">
-             {[1,2,3].map(s => (
-                 <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${claimReviewStep === s ? 'w-12 bg-uni-400 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.5)]' : 'w-4 bg-white/10'}`} />
-             ))}
+          <div className="flex items-center gap-4">
+             <div className="flex items-center gap-3">
+                {[1,2,3].map(s => (
+                    <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${claimReviewStep === s ? 'w-12 bg-uni-400 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.5)]' : 'w-4 bg-white/10'}`} />
+                ))}
+             </div>
+             <button 
+               onClick={() => setSelectedClaim(null)}
+               className="w-12 h-12 rounded-full border border-white/5 hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-lg"
+             >
+               <X size={20} />
+             </button>
           </div>
         </div>
 

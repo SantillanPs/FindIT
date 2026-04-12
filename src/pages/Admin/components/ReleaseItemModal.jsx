@@ -9,7 +9,8 @@ import {
   FileText,
   CreditCard,
   MessageCircleQuestion,
-  Trophy
+  Trophy,
+  X
 } from 'lucide-react';
 import ImageUpload from '../../../components/ImageUpload';
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,12 @@ const ReleaseItemModal = ({
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative z-10 shadow-3xl space-y-5 md:space-y-6 overflow-y-auto max-h-[90vh] custom-scrollbar"
       >
+        <button 
+          onClick={() => setShowReleaseModal(null)}
+          className="absolute top-6 right-6 md:top-8 md:right-8 w-10 h-10 rounded-full border border-white/5 hover:bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all z-20"
+        >
+          <X size={18} />
+        </button>
         <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
           <div className="space-y-1.5">
             <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">Item Release</h3>

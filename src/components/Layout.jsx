@@ -148,8 +148,8 @@ const LayoutContents = ({ children }) => {
       };
     },
     enabled: !!user && (user.role === 'admin' || user.role === 'super_admin'),
-    refetchInterval: 30000, // Sync every 30s
-    staleTime: 1000 * 10,
+    refetchInterval: 60000, // Sync every 1m
+    staleTime: 1000 * 30,
   });
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
@@ -275,8 +275,8 @@ const LayoutContents = ({ children }) => {
             </SidebarFooter>
           </Sidebar>
 
-          <div className="flex-grow flex flex-col relative overflow-hidden">
-            <header className="h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 flex items-center justify-between px-4 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[40]">
+          <div className="flex-grow flex flex-col relative overflow-hidden layout-main-container">
+            <header className="h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 flex items-center justify-between px-4 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[500]">
                 <div className="flex items-center gap-4">
                   {user && (
                     <button 
@@ -352,7 +352,7 @@ const LayoutContents = ({ children }) => {
                 </div>
             </header>
 
-            <main className="flex-grow overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-[10] text-left">
+            <main className="flex-grow overflow-y-auto p-4 md:p-8 custom-scrollbar relative text-left">
               <div className={`${(location.pathname.startsWith('/admin') || location.pathname.startsWith('/super')) ? 'max-w-[1700px] w-full' : 'max-w-6xl'} mx-auto`}>
                   {user.role === 'student' && !user.is_verified && (
                       <div className="mb-8 app-card border-brand-gold/30 bg-brand-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 backdrop-blur-md">
@@ -404,9 +404,16 @@ const LayoutContents = ({ children }) => {
         </div>
       )}
 
-      {/* Modern Feedback Trigger with Smooth Expansion */}
-      <div className="fixed bottom-8 right-8 z-[70] group">
-        <div className="absolute inset-0 bg-white blur-2xl opacity-10 group-hover:opacity-30 transition-opacity"></div>
+      {/* Refined Feedback Trigger — Smaller, smart z-index, and reactive scale */}
+      <style>{`
+        body.modal-open .feedback-trigger {
+          transform: scale(0);
+          opacity: 0;
+          pointer-events: none;
+        }
+      `}</style>
+      <div className="fixed bottom-6 right-6 z-[45] group feedback-trigger transition-all duration-300">
+        <div className="absolute inset-0 bg-white blur-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
         <Button
           variant="outline"
           size="icon"
@@ -414,21 +421,21 @@ const LayoutContents = ({ children }) => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={cn(
-            "relative h-16 rounded-[24px] bg-slate-900/40 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-2xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start shadow-white/10",
-            isHovered ? "w-52 px-5 opacity-100" : "w-16 px-3"
+            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
+            isHovered ? "w-40 px-4" : "w-11 px-0 justify-center"
           )}
         >
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 flex items-center justify-center shrink-0">
-              <MessageSquare className="w-7 h-7 text-white transition-transform group-hover:scale-110" />
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white transition-all" />
             </div>
             <AnimatePresence>
               {isHovered && (
                 <motion.span
-                  initial={{ opacity: 0, width: 0, marginLeft: 0 }}
-                  animate={{ opacity: 1, width: "auto", marginLeft: "12px" }}
-                  exit={{ opacity: 0, width: 0, marginLeft: 0 }}
-                  className="text-sm font-bold text-white uppercase tracking-[0.2em] whitespace-nowrap overflow-hidden"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap"
                 >
                   Feedback
                 </motion.span>
