@@ -263,47 +263,35 @@ const LayoutContents = ({ children }) => {
                )}
             </SidebarContent>
 
-            <SidebarFooter className="p-3 border-t border-white/5 bg-slate-950/20">
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger 
-                      render={
-                        <SidebarMenuButton 
-                          size="lg"
-                          className="data-[state=open]:bg-white/10 group/profile-button focus-visible:ring-0"
-                        >
-                           <Avatar className="h-8 w-8 rounded-lg border border-white/10 ring-2 ring-uni-500/10 transition-all">
-                             <AvatarImage src={user.photo_url} />
-                             <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-bold uppercase">
-                               {user.email.substring(0, 2).toUpperCase()}
-                             </AvatarFallback>
-                           </Avatar>
-                           <div className="flex flex-col min-w-0 flex-grow text-left">
-                              <span className="text-sm font-semibold text-white truncate">{user.email.split('@')[0]}</span>
-                              <span className="text-[11px] font-bold text-slate-400 capitalize">{user.role.replace('_', ' ')}</span>
-                           </div>
-                           <ChevronDown size={14} className="text-slate-600 mr-1 group-data-[state=open]/profile-button:rotate-180 transition-transform" />
-                        </SidebarMenuButton>
-                      }
-                    />
-                    <DropdownMenuContent 
-                      side="top" 
-                      align="end" 
-                      sideOffset={12}
-                      className="w-[180px] bg-[#0f172a] border border-white/10 p-1.5 rounded-xl shadow-2xl z-[150] outline-none"
-                    >
-                      <DropdownMenuItem 
+            <SidebarFooter className="p-4 border-t border-white/5 bg-slate-950/20">
+               <div className="flex items-center justify-between gap-3 w-full">
+                  <div className="flex items-center gap-3 min-w-0">
+                     <Avatar className="h-9 w-9 rounded-full border border-white/10 ring-2 ring-uni-500/10 shadow-2xl">
+                       <AvatarImage src={user.photo_url} />
+                       <AvatarFallback className="bg-uni-500/10 text-uni-400 text-[10px] font-bold uppercase">
+                         {user.email.substring(0, 2).toUpperCase()}
+                       </AvatarFallback>
+                     </Avatar>
+                     <div className="flex flex-col min-w-0 text-left">
+                        <span className="text-sm font-bold text-white truncate tracking-tight">{user.email.split('@')[0]}</span>
+                        <span className="text-[10px] font-black text-slate-500 capitalize tracking-[0.15em]">{user.role.replace('_', ' ')}</span>
+                     </div>
+                  </div>
+                  
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
                         onClick={handleLogout}
-                        className="flex items-center gap-4 px-4 py-4 text-white hover:bg-white hover:text-black border border-white/5 rounded-xl cursor-pointer transition-all duration-300 group no-underline outline-none focus:bg-white focus:text-black shadow-2xl"
+                        className="h-9 w-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/5 text-slate-500 hover:text-white hover:bg-rose-500/20 hover:border-rose-500/20 transition-all group shadow-xl active:scale-90"
                       >
-                        <LogOut size={18} className="transition-transform group-hover:scale-110" />
-                        <span className="text-[10px] font-bold tracking-[0.2em] uppercase">Sign Out Protocol</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </SidebarMenuItem>
-              </SidebarMenu>
+                        <LogOut size={16} className="transition-transform group-hover:translate-x-0.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="bg-slate-950 border-white/10 text-[10px] font-bold uppercase tracking-widest text-white">
+                      Terminate Session
+                    </TooltipContent>
+                  </Tooltip>
+               </div>
             </SidebarFooter>
           </Sidebar>
 
