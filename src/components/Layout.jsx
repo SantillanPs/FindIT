@@ -308,7 +308,7 @@ const LayoutContents = ({ children }) => {
           </Sidebar>
 
           <div className="flex-grow flex flex-col relative overflow-hidden">
-            <header className="h-24 flex-shrink-0 border-b border-white/5 flex items-center justify-between px-6 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[40]">
+            <header className="h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 flex items-center justify-between px-4 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[40]">
                 <div className="flex items-center gap-4">
                   {user && (
                     <button 
@@ -357,7 +357,7 @@ const LayoutContents = ({ children }) => {
         <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed w-full text-left">
           <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
           
-          <header className="sticky top-0 z-[60] h-24 flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
+          <header className="sticky top-0 z-[60] h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
               <div className="flex justify-between h-full items-center">
                 <Link to="/" onClick={handleLogoClick} className="flex items-center gap-3 md:gap-4 group no-underline">
