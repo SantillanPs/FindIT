@@ -50,57 +50,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const totalSteps = 5;
 
-  // Pre-fill Logic
-  useEffect(() => {
-    const pEmail = searchParams.get('email');
-    const pFirst = searchParams.get('first_name');
-    const pLast = searchParams.get('last_name');
-    const pCollege = searchParams.get('college');
-
-    if (pEmail) setEmail(pEmail);
-    if (pFirst) setFirstName(pFirst);
-    if (pLast) setLastName(pLast);
-    if (pCollege) setDepartment(pCollege);
-  }, [searchParams]);
-
-  // Auth Guard: Redirect if already logged in and not in success flow
-  useEffect(() => {
-    const userRole = user?.role;
-    // If session exists, we aren't in success mode, and we aren't currently submitting
-    if (user && !isSuccess && !loading) {
-      sessionStorage.removeItem('registration_in_progress');
-      // Navigate to their specific role dashboard
-      let dashboardPath = '/student';
-      if (userRole === 'super_admin') dashboardPath = '/super';
-      else if (userRole === 'admin') dashboardPath = '/admin';
-      
-      navigate(dashboardPath);
-    }
-  }, [user, isSuccess, loading, navigate]);
-
-  const handleNext = () => {
-    setError('');
-    
-    if (step === 1) {
-      if (!email || !password) return setError("Email and password are required.");
-      if (password.length < 6) return setError("Password must be at least 6 characters.");
-    }
-
-    if (step === 2) {
-      if (!firstName || !lastName || !studentId) return setError("All profile fields are required.");
-    }
-
-    if (step === 3 && !department) return setError("Please select your college.");
-    if (step === 4 && !proofUrl) return setError("Verification proof is required.");
-
-    setStep(s => Math.min(s + 1, totalSteps));
-  };
-  
-  const handlePrev = () => {
-    setError('');
-    setStep(s => Math.max(s - 1, 1));
-  };
-
+  // Tanstack Mutation
   const { mutate: handleRegister, isPending: loading } = useMutation({
     mutationFn: async () => {
       sessionStorage.setItem('registration_in_progress', 'true');
@@ -158,6 +108,57 @@ const Register = () => {
       });
     }
   });
+
+  // Pre-fill Logic
+  useEffect(() => {
+    const pEmail = searchParams.get('email');
+    const pFirst = searchParams.get('first_name');
+    const pLast = searchParams.get('last_name');
+    const pCollege = searchParams.get('college');
+
+    if (pEmail) setEmail(pEmail);
+    if (pFirst) setFirstName(pFirst);
+    if (pLast) setLastName(pLast);
+    if (pCollege) setDepartment(pCollege);
+  }, [searchParams]);
+
+  // Auth Guard: Redirect if already logged in and not in success flow
+  useEffect(() => {
+    const userRole = user?.role;
+    // If session exists, we aren't in success mode, and we aren't currently submitting
+    if (user && !isSuccess && !loading) {
+      sessionStorage.removeItem('registration_in_progress');
+      // Navigate to their specific role dashboard
+      let dashboardPath = '/student';
+      if (userRole === 'super_admin') dashboardPath = '/super';
+      else if (userRole === 'admin') dashboardPath = '/admin';
+      
+      navigate(dashboardPath);
+    }
+  }, [user, isSuccess, loading, navigate]);
+
+  const handleNext = () => {
+    setError('');
+    
+    if (step === 1) {
+      if (!email || !password) return setError({ message: "Email and password are required." });
+      if (password.length < 6) return setError({ message: "Password must be at least 6 characters." });
+    }
+
+    if (step === 2) {
+      if (!firstName || !lastName || !studentId) return setError({ message: "All profile fields are required." });
+    }
+
+    if (step === 3 && !department) return setError({ message: "Please select your college." });
+    if (step === 4 && !proofUrl) return setError({ message: "Verification proof is required." });
+
+    setStep(s => Math.min(s + 1, totalSteps));
+  };
+  
+  const handlePrev = () => {
+    setError('');
+    setStep(s => Math.max(s - 1, 1));
+  };
 
   const handleSubmit = () => {
     setError('');
