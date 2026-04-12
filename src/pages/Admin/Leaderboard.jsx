@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Trophy, Shield, AlertTriangle, UserX, UserCheck, 
-  ArrowUpCircle, ArrowDownCircle, Search, BadgeCheck,
-  Award, Users, ArrowRight
-} from 'lucide-react';
+  Trophy, Shield, AlertTriangle, 
+  Search, BadgeCheck,
+  Award, Users} from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';

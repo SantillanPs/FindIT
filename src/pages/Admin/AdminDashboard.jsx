@@ -7,26 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Database, 
   RefreshCw, 
   Search,
   LayoutDashboard,
-  ClipboardCheck,
   ShieldCheck,
-  X,
-  PackageCheck,
-  History,
-  Trophy,
-  PieChart,
-  Eye,
-  Sparkles,
-  Warehouse,
-  HelpCircle,
-  Stamp,
-  Package,
-  FileText,
-  LayoutGrid
-} from "lucide-react";
+  PackageCheck} from "lucide-react";
 
 // Modular Components
 import InventoryTab from './components/InventoryTab';
@@ -294,7 +279,7 @@ const AdminDashboard = () => {
 
   const filteredItems = recentFound.filter(item => {
     if (item.status === 'released') return false;
-    if (inventoryFilter === 'pending' && item.status !== 'reported') return false;
+    if (inventoryFilter === 'pending' && !['reported', 'available'].includes(item.status)) return false;
     if (inventoryFilter === 'vault' && item.status !== 'in_custody') return false;
     if (inventoryFilter === 'ready' && item.status !== 'claimed') return false;
     if (searchTerm === 'today') return new Date(item.date_found).toLocaleDateString() === new Date().toLocaleDateString();

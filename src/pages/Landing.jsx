@@ -85,6 +85,7 @@ const Landing = () => {
           const query = supabase
             .from('found_items')
             .select('*')
+            .eq('status', 'in_custody')
             .ilike('title', `%${searchQuery}%`)
             .order('date_found', { ascending: false })
             .limit(12);
@@ -96,16 +97,17 @@ const Landing = () => {
           const { data: searchData, error: searchError } = await supabase.rpc('match_found_items', {
             query_embedding: embedData.embedding,
             match_threshold: 0.2,
-            match_count: 12
+            match_count: 24 // Fetch more to allow for filtering
           });
-          data = searchData;
+          data = searchData?.filter(item => item.status === 'in_custody').slice(0, 12);
           error = searchError;
         }
       } else {
         // REGULAR FETCH (Latest items)
         let query = supabase
           .from('found_items')
-          .select('id, title, category, description, photo_url, date_found, location')
+          .select('id, title, category, description, photo_url, date_found, location, status')
+          .eq('status', 'in_custody')
           .order('date_found', { ascending: false })
           .limit(12);
 
@@ -182,45 +184,8 @@ const Landing = () => {
       <div className="absolute inset-0 z-0 pointer-events-none opacity-40 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-sky-900/20 via-transparent to-transparent"></div>
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[400px] md:w-[800px] h-[400px] md:h-[800px] bg-sky-500/5 rounded-full pointer-events-none"></div>
 
-      {/* Super Admin Control Center */}
-      {user?.role === 'super_admin' && (
-        <section className="max-w-7xl mx-auto px-6 relative z-50">
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-6 md:p-10 rounded-[2.5rem] bg-gradient-to-br from-uni-600 to-sky-600 border border-white/20 shadow-2xl shadow-uni-600/20 flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative"
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
-            <div className="space-y-4 text-center md:text-left relative z-10">
-              <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full bg-white/20 backdrop-blur-md border border-white/20">
-                <ShieldAlert className="h-4 w-4 text-white" />
-                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Super Admin Console</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tighter uppercase leading-none">System Oversight Active</h2>
-              <p className="text-white/80 text-xs md:text-sm font-medium italic uppercase tracking-wider max-w-xl opacity-90">
-                You have elevated privileges. Use this section to access global configurations, staff roles, and advanced audit logs.
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-4 relative z-10">
-              <Button 
-                onClick={() => navigate('/super')}
-                className="h-14 px-8 rounded-xl bg-white text-uni-700 font-bold text-[10px] uppercase tracking-widest italic shadow-xl hover:bg-slate-100 transition-all active:scale-95"
-              >
-                <LayoutGrid className="mr-3 h-4 w-4" />
-                System Overview
-              </Button>
-              <Button 
-                onClick={() => navigate('/admin/analytics')}
-                className="h-14 px-8 rounded-xl bg-white/10 text-white border border-white/20 font-bold text-[10px] uppercase tracking-widest italic backdrop-blur-md hover:bg-white/20 transition-all active:scale-95"
-              >
-                <PieChartIcon className="mr-3 h-4 w-4" />
-                Live Insights
-              </Button>
-            </div>
-          </motion.div>
-        </section>
-      )}
+
+
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 md:pt-0 md:pb-32 overflow-hidden">

@@ -99,7 +99,7 @@ const InventoryCard = React.memo(({
                         ? 'bg-green-500/10 text-green-400 border-green-500/20' 
                         : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
                      }`}>
-                        {item.status === 'in_custody' ? 'REPOSITORY' : item.status === 'reported' ? 'INTAKE' : 'RELEASED'}
+                        {item.status === 'in_custody' ? 'REPOSITORY' : ['reported', 'available'].includes(item.status) ? 'INTAKE' : 'RELEASED'}
                      </Badge>
                   </div>
 

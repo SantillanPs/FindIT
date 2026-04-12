@@ -320,11 +320,21 @@ const Register = () => {
               )}
 
               {step === 4 && (
-                <div className="space-y-4 text-center">
-                  <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-2 italic leading-none">Member Authorization</p>
-                  <div className="relative z-20">
-                    <ImageUpload label="Upload your COR or ID" value={proofUrl} onUploadSuccess={setProofUrl} />
+                <div className="space-y-6 text-center">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest italic leading-none">Member Authorization</p>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest opacity-60">Verification Proof Required</p>
                   </div>
+                  <div className="relative z-20">
+                    <ImageUpload 
+                      description="Student ID or COR (JPG/PNG)" 
+                      value={proofUrl} 
+                      onUploadSuccess={setProofUrl} 
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-500 font-medium italic leading-tight px-4 opacity-80">
+                    Please ensure your name and ID number are clearly visible for faster account approval.
+                  </p>
                 </div>
               )}
 

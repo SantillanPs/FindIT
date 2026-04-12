@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 
-const ImageUpload = ({ onUploadSuccess, value }) => {
+const ImageUpload = ({ onUploadSuccess, value, description }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(value || '');
@@ -78,14 +78,18 @@ const ImageUpload = ({ onUploadSuccess, value }) => {
             </div>
           ) : (
             <div 
-              className="flex flex-col items-center justify-center space-y-4"
+              className="flex flex-col items-center justify-center space-y-4 px-8 text-center"
             >
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-500">
+              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-500 transition-colors group-hover:text-sky-400 group-hover:bg-white/10">
                 <i className="fa-solid fa-camera text-2xl"></i>
               </div>
-              <div>
+              <div className="space-y-1">
                 <p className="text-xs font-black text-white uppercase tracking-widest">Click to Upload Photo</p>
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">JPEG, PNG, or WebP</p>
+                {description ? (
+                  <p className="text-[10px] text-sky-400/80 font-bold uppercase tracking-widest italic">{description}</p>
+                ) : (
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">JPEG, PNG, or WebP</p>
+                )}
               </div>
             </div>
           )}

@@ -1,21 +1,16 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Shield, 
   Search, 
   BadgeCheck,
   Users,
-  Eye,
-  FileText,
-  UserCheck,
-  History,
   Filter,
   CheckCircle2,
   Clock,
   ArrowRight,
   ShieldAlert,
   XCircle,
-  HelpCircle,
   RefreshCw
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
