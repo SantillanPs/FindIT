@@ -281,7 +281,7 @@ const LayoutContents = ({ children }) => {
                   {user && (
                     <button 
                       onClick={toggleSidebar}
-                      className="lg:hidden w-12 h-12 flex items-center justify-center bg-white/5 rounded-xl border border-white/10 text-slate-300 hover:bg-white/10 transition-colors active:scale-95 shadow-lg relative z-[50]"
+                      className="lg:hidden w-12 h-12 flex items-center justify-center text-slate-300 hover:text-white transition-colors active:scale-95 relative z-[50]"
                     >
                         <Menu size={24} />
                     </button>

@@ -132,6 +132,12 @@
   h1, h2, h3, h4, h5, h6 {
     color: var(--text-header);
   }
+
+  /* Global fix for native select dropdowns in dark theme (prevents white-on-white text) */
+  select option {
+    color: #0f172a !important; /* text-slate-900 */
+    background-color: #ffffff !important;
+  }
 }
 
 @layer components {
@@ -335,12 +341,18 @@
   }
 
   /* Utilities */
-  .no-scrollbar::-webkit-scrollbar {
+  .no-scrollbar::-webkit-scrollbar,
+  .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  .no-scrollbar {
+  .no-scrollbar,
+  .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
   .mask-horizontal-fade {

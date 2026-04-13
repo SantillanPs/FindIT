@@ -1,17 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { domToPng } from 'modern-screenshot';
 import { 
   MessageSquare, 
   Bug, 
   Lightbulb, 
   Sparkles, 
-  Camera, 
   Upload, 
   Trash2, 
   X, 
   Send,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ImagePlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -38,44 +37,18 @@ const FeedbackModal = ({ isOpen, onClose }) => {
     message: '',
   });
   const [screenshot, setScreenshot] = useState(null);
-  const [isCapturing, setIsCapturing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
 
   const types = [
-    { id: 'bug', label: 'Report a Bug', icon: Bug, color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
-    { id: 'feature', label: 'New Feature', icon: Lightbulb, color: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/20' },
-    { id: 'ux', label: 'User Experience', icon: Sparkles, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
-    { id: 'general', label: 'General Feedback', icon: MessageSquare, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+    { id: 'bug', label: 'Bug', icon: Bug, color: 'text-red-400', activeBg: 'bg-red-500/15', activeBorder: 'border-red-500/40', activeRing: 'ring-red-500/20' },
+    { id: 'feature', label: 'Feature', icon: Lightbulb, color: 'text-amber-400', activeBg: 'bg-amber-500/15', activeBorder: 'border-amber-500/40', activeRing: 'ring-amber-500/20' },
+    { id: 'ux', label: 'UX', icon: Sparkles, color: 'text-cyan-400', activeBg: 'bg-cyan-500/15', activeBorder: 'border-cyan-500/40', activeRing: 'ring-cyan-500/20' },
+    { id: 'general', label: 'General', icon: MessageSquare, color: 'text-uni-400', activeBg: 'bg-uni-500/15', activeBorder: 'border-uni-500/40', activeRing: 'ring-uni-500/20' },
   ];
 
-  const handleCapture = async () => {
-    setIsCapturing(true);
-    
-    const modalElement = document.querySelector('[role="dialog"]');
-    if (modalElement) modalElement.style.visibility = 'hidden';
 
-    try {
-      const dataUrl = await domToPng(document.body, {
-        scale: window.devicePixelRatio || 1,
-        backgroundColor: '#020617', // Match dark theme
-      });
-      
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' });
-      
-      setScreenshot(file);
-      setPreviewUrl(dataUrl);
-
-      if (modalElement) modalElement.style.visibility = 'visible';
-    } catch (error) {
-      console.error('Screenshot failed:', error);
-      if (modalElement) modalElement.style.visibility = 'visible';
-    } finally {
-      setIsCapturing(false);
-    }
-  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -136,24 +109,35 @@ const FeedbackModal = ({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-xl bg-slate-900/40 backdrop-blur-2xl border-white/10 shadow-2xl p-0 overflow-hidden rounded-[24px] max-h-[90vh] flex flex-col ring-1 ring-white/10">
-        {/* Header */}
-        <div className="p-6 border-b border-white/5 flex items-center justify-between bg-gradient-to-b from-white/[0.03] to-transparent shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-uni-500/10 rounded-xl flex items-center justify-center text-uni-400 ring-1 ring-uni-500/20">
-              <MessageSquare className="w-6 h-6" />
-            </div>
-            <div>
-              <DialogTitle className="text-lg font-bold text-white tracking-tight italic uppercase">Institutional Feedback</DialogTitle>
-              <DialogDescription className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-1">Direct channel to University Super Admin</DialogDescription>
-            </div>
+      <DialogContent
+        className={cn(
+          "w-[calc(100%-40px)] mx-auto max-w-md bg-slate-900 border border-slate-700/50 shadow-2xl",
+          "overflow-hidden flex flex-col rounded-[24px]",
+          "data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-[48%]",
+          "duration-300"
+        )}
+      >
+        {/* Compact Header */}
+        <div className="px-5 pt-5 pb-3 flex items-center gap-3 shrink-0 border-b border-slate-700/40">
+          <div className="w-10 h-10 bg-uni-500/10 rounded-xl flex items-center justify-center text-uni-400 ring-1 ring-uni-500/25 shrink-0">
+            <MessageSquare className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <DialogTitle className="text-[15px] font-bold text-white tracking-tight italic uppercase leading-tight">
+              Institutional Feedback
+            </DialogTitle>
+            <DialogDescription className="text-[9px] text-slate-400 font-black uppercase tracking-[0.15em] mt-0.5">
+              Direct channel to Super Admin
+            </DialogDescription>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col flex-grow">
-          <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar flex-grow">
-            {/* Type Selector */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Scrollable form body */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-grow min-h-0">
+          <div className="px-5 pt-4 pb-4 space-y-4 overflow-y-auto flex-grow custom-scrollbar overscroll-contain">
+
+            {/* Type Selector — Horizontal scrollable pills for thumb-reach */}
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5 scrollbar-hide mask-horizontal-fade">
               {types.map((t) => {
                 const Icon = t.icon;
                 const isActive = formData.type === t.id;
@@ -163,14 +147,18 @@ const FeedbackModal = ({ isOpen, onClose }) => {
                     type="button"
                     onClick={() => setFormData({ ...formData, type: t.id })}
                     className={cn(
-                      "flex flex-col items-center gap-2 p-3 rounded-[16px] border transition-all duration-300",
+                      "flex items-center gap-2 px-4 py-2.5 rounded-full border whitespace-nowrap transition-all duration-200 shrink-0",
+                      "active:scale-[0.96] touch-manipulation",
                       isActive
-                        ? "bg-uni-500/10 border-uni-500/40 ring-1 ring-uni-500/20 shadow-[0_0_20px_rgba(var(--uni-primary-rgb),0.1)]"
-                        : "bg-white/[0.02] border-white/5 opacity-50 hover:opacity-100 hover:bg-white/[0.05]"
+                        ? `${t.activeBg} ${t.activeBorder} ring-1 ${t.activeRing}`
+                        : "bg-slate-800/60 border-slate-700/40 opacity-75 active:opacity-100"
                     )}
                   >
-                    <Icon className={cn("w-5 h-5", isActive ? t.color : "text-slate-400")} />
-                    <span className={cn("text-[8px] font-black uppercase tracking-widest text-center", isActive ? "text-white" : "text-slate-500")}>
+                    <Icon className={cn("w-4 h-4 shrink-0", isActive ? t.color : "text-slate-400")} />
+                    <span className={cn(
+                      "text-[11px] font-bold uppercase tracking-wide",
+                      isActive ? "text-white" : "text-slate-400"
+                    )}>
                       {t.label}
                     </span>
                   </button>
@@ -178,75 +166,61 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               })}
             </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Subject Line</Label>
-                <Input
-                  required
-                  placeholder="Summarize your feedback..."
-                  className="h-10 bg-white/5 border-white/10 rounded-lg focus:ring-uni-500/30 transition-all italic font-medium"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Message Body</Label>
-                <Textarea
-                  required
-                  rows={3}
-                  placeholder="Provide detailed context. For bugs, include steps to reproduce..."
-                  className="bg-white/5 border-white/10 rounded-xl focus:ring-uni-500/30 transition-all leading-relaxed"
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                />
-              </div>
+            {/* Subject */}
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject</Label>
+              <Input
+                required
+                placeholder="What's this about?"
+                className="h-12 bg-slate-800 border-slate-700/60 rounded-xl focus:ring-uni-500/30 focus:border-uni-500/40 text-[15px] text-slate-100 font-medium placeholder:text-slate-500 transition-all"
+                value={formData.subject}
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              />
             </div>
 
-            {/* Screenshot Section */}
-            <div className="space-y-3">
-              <Label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Visual Evidence (Optional)</Label>
+            {/* Message */}
+            <div className="space-y-1.5">
+              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Details</Label>
+              <Textarea
+                required
+                rows={4}
+                placeholder="Describe your feedback. For bugs, include steps to reproduce..."
+                className="bg-slate-800 border-slate-700/60 rounded-xl focus:ring-uni-500/30 focus:border-uni-500/40 text-[15px] text-slate-100 leading-relaxed placeholder:text-slate-500 transition-all resize-none"
+                value={formData.message}
+                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              />
+            </div>
+
+            {/* Visual Evidence — compact */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Screenshot <span className="text-slate-500 normal-case font-medium">(optional)</span>
+              </Label>
+              
               {previewUrl ? (
-                <div className="relative group w-full h-48 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                  <img src={previewUrl} alt="Preview" className="w-full h-full object-cover grayscale-[0.2] transition-all group-hover:grayscale-0" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-3">
-                    <Button 
-                      type="button" 
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
-                      className="w-10 h-10 rounded-full border border-white/10 shadow-lg transform scale-90 group-hover:scale-100 transition-transform"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="relative w-full rounded-2xl overflow-hidden border border-slate-700/60">
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="w-full h-36 object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { setScreenshot(null); setPreviewUrl(null); }}
+                    className="absolute top-2.5 right-2.5 w-9 h-9 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/80 active:scale-90 transition-transform touch-manipulation"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div 
-                    onClick={handleCapture}
-                    className="group/capture h-24 rounded-2xl border border-white/5 bg-slate-900/40 hover:bg-slate-900/60 hover:border-uni-500/30 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden"
-                  >
-                    {isCapturing ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-slate-500 group-hover/capture:text-white" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover/capture:text-white group-hover/capture:bg-uni-500/20 transition-all">
-                        <Camera className="w-5 h-5" />
-                      </div>
-                    )}
-                    <span className="text-[10px] font-black text-slate-500 group-hover/capture:text-white uppercase tracking-widest italic relative z-10 transition-colors">Capture Screen</span>
-                  </div>
-
-                  <div 
+                  <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="group/upload h-24 rounded-2xl border border-dashed border-white/10 bg-slate-900/20 hover:bg-slate-900/40 hover:border-uni-500/20 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl border border-dashed bg-slate-800/40 border-slate-600/40 active:bg-slate-700/60 active:scale-[0.98] touch-manipulation transition-all"
                   >
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-500 group-hover/upload:text-white group-hover/upload:bg-uni-500/20 transition-all">
-                        <Upload className="w-5 h-5" />
-                    </div>
-                    <span className="text-[10px] font-black text-slate-500 group-hover/upload:text-white uppercase tracking-widest italic transition-colors">Upload Evidence</span>
-                  </div>
-                </div>
+                    <ImagePlus className="w-5 h-5 text-slate-400" />
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Upload Screenshot</span>
+                  </button>
               )}
               <input 
                 type="file" 
@@ -257,46 +231,52 @@ const FeedbackModal = ({ isOpen, onClose }) => {
               />
             </div>
           </div>
-        </form>
 
-        {/* Footer */}
-        <div className="p-6 border-t border-white/5 bg-slate-900/20 flex flex-col sm:flex-row items-center justify-between gap-6 shrink-0">
-          <div className="hidden sm:block space-y-1">
-             <div className="flex items-center gap-2">
-               <AlertCircle className="w-3 h-3 text-slate-600" />
-               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Metadata Encrypted</p>
-             </div>
-             <p className="text-[8px] text-slate-600 uppercase tracking-[0.15em] font-medium ml-5">Browser & Page URL included</p>
+          {/* Sticky Footer — full-width primary CTA */}
+          <div className="px-5 py-4 border-t border-slate-700/40 bg-slate-900/80 backdrop-blur-xl shrink-0 safe-area-bottom">
+            <div className="flex gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onClose}
+                className="h-12 px-5 rounded-xl text-slate-400 active:text-white active:bg-slate-700/50 text-[11px] font-bold uppercase tracking-wider transition-all touch-manipulation shrink-0"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={isSubmitting || !formData.subject || !formData.message}
+                className={cn(
+                  "flex-1 h-12 rounded-xl text-white text-[11px] font-black uppercase tracking-[0.15em]",
+                  "bg-gradient-to-r from-uni-600 to-uni-500 active:from-uni-500 active:to-uni-400",
+                  "shadow-[0_4px_24px_rgba(var(--uni-primary-rgb),0.25)]",
+                  "disabled:opacity-40 disabled:shadow-none",
+                  "transition-all flex items-center justify-center gap-2.5 border-none",
+                  "active:scale-[0.98] touch-manipulation"
+                )}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Submit Feedback
+                  </>
+                )}
+              </Button>
+            </div>
+            <div className="flex items-center justify-center gap-1.5 mt-2.5">
+              <AlertCircle className="w-3 h-3 text-slate-700" />
+              <p className="text-[9px] text-slate-600 font-medium uppercase tracking-widest">
+                Page URL & device info auto-attached
+              </p>
+            </div>
           </div>
-          <div className="flex gap-3 w-full sm:w-auto">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="flex-grow sm:flex-grow-0 h-10 px-6 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 text-[9px] font-black uppercase tracking-widest transition-all"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit" // Changed to submit to trigger form onSubmit
-              onClick={handleSubmit}
-              disabled={isSubmitting || !formData.subject || !formData.message}
-              className="flex-grow sm:flex-grow-0 h-10 px-8 rounded-lg bg-gradient-to-br from-uni-600 to-uni-500 hover:from-uni-500 hover:to-uni-400 text-white text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_4px_20px_rgba(var(--uni-primary-rgb),0.3)] transition-all flex items-center justify-center gap-2 border-none group"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Transmitting...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                  Seal and Submit
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
