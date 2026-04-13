@@ -458,7 +458,7 @@ const AdminDashboard = () => {
                 {/* Sticky bottom action bar — now always visible and centered container */}
                 <div className="shrink-0 px-5 py-4 md:px-8 md:py-6 border-t border-white/5 bg-slate-900/95 backdrop-blur-sm flex flex-row items-center gap-3 md:gap-4">
                    <button onClick={() => setShowIntakeModal(null)} className="px-5 md:px-8 py-4 md:py-5 text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-xl md:rounded-2xl hover:bg-white/10">Discard</button>
-                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id || !showIntakeModal.verification_note} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-2 md:gap-3 active:scale-[0.98]">
+                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-2 md:gap-3 active:scale-[0.98]">
                      {actionLoading === showIntakeModal.item.id ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
                      {actionLoading === showIntakeModal.item.id ? 'Securing...' : 'Verify & Secure'}
                    </button>
