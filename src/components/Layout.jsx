@@ -8,6 +8,7 @@ import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import FeedbackModal from './FeedbackModal';
 import { useTheme } from '../context/ThemeContext';
+import { SidebarUser } from './SidebarUser';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -271,7 +272,12 @@ const LayoutContents = ({ children }) => {
             </SidebarContent>
 
             <SidebarFooter className="p-4 border-t border-white/5 bg-slate-950/20">
-               {/* Profile and Logout relocated to Header Top Right */}
+              <SidebarUser 
+                user={user} 
+                theme={theme} 
+                toggleTheme={toggleTheme} 
+                handleLogout={handleLogout} 
+              />
             </SidebarFooter>
           </Sidebar>
 
@@ -298,57 +304,6 @@ const LayoutContents = ({ children }) => {
                 </div>
                 <div className="flex items-center gap-3">
                   {user.role === 'student' && <NotificationCenter />}
-                  
-                  <DropdownMenu>
-                    <DropdownMenuTrigger render={
-                      <button className="flex items-center gap-2 pl-1 pr-1 py-1 rounded-full hover:bg-white/5 transition-all group outline-none border border-transparent hover:border-white/5">
-                        <Avatar className="h-8 w-8 rounded-full shadow-xl transition-transform group-hover:scale-105 after:border-sky-400">
-                          <AvatarImage src={user.photo_url} />
-                          <AvatarFallback className="bg-transparent text-sky-400 text-[10px] font-bold uppercase">
-                            {user.email.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col items-start hidden md:flex mr-1">
-                          <span className="text-[11px] font-bold text-white uppercase tracking-wider leading-none">{user.first_name || user.email.split('@')[0]}</span>
-                          <span className="text-[9px] font-medium text-slate-500 uppercase tracking-widest mt-1">{user.role.replace('_', ' ')}</span>
-                        </div>
-                      </button>
-                    } />
-                    
-                    <DropdownMenuContent align="end" className="w-max bg-glass-bg backdrop-blur-xl border-glass-border shadow-2xl p-1.5">
-                      <div className="px-2 py-1.5 mb-1">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Account Identity</p>
-                      </div>
-                      
-                      <DropdownMenuItem 
-                        onClick={() => navigate(user.role === 'student' ? '/profile' : `/admin/profile/${user.id}`)}
-                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-white/10 text-slate-300 focus:text-white transition-colors cursor-pointer"
-                      >
-                        <User size={14} />
-                        <span className="text-xs font-bold uppercase tracking-widest">My Profile</span>
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuItem 
-                        onClick={toggleTheme}
-                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-white/10 text-slate-300 focus:text-white transition-colors cursor-pointer"
-                      >
-                        {theme === 'dark' ? <Sun size={14} className="text-amber-500" /> : <Moon size={14} />}
-                        <span className="text-xs font-bold uppercase tracking-widest">
-                          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                        </span>
-                      </DropdownMenuItem>
-                      
-                      <DropdownMenuSeparator className="bg-white/5 my-1.5" />
-                      
-                      <DropdownMenuItem 
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-2 py-2 rounded-lg focus:bg-rose-500/10 text-slate-400 focus:text-rose-400 transition-colors cursor-pointer"
-                      >
-                        <LogOut size={14} />
-                        <span className="text-xs font-bold uppercase tracking-widest">Sign Out</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
             </header>
 
