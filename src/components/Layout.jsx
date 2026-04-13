@@ -185,7 +185,7 @@ const LayoutContents = ({ children }) => {
       <BackgroundEffects />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
-      {user ? (
+      {user && location.pathname !== '/reset-password' ? (
         <div className="flex w-full h-full overflow-hidden relative">
           <Sidebar className="bg-slate-900/40 backdrop-blur-xl border-r border-white/5 shadow-[20px_0_50px_rgba(0,0,0,0.3)] transition-all">
             <SidebarHeader className="p-6 pb-2">
@@ -387,8 +387,12 @@ const LayoutContents = ({ children }) => {
                 </Link>
                 <div className="flex items-center gap-2 md:gap-6">
                   <ThemeToggle />
-                  <Link to="/register" className="hidden md:flex text-slate-400 hover:text-white px-4 h-12 items-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all">Register</Link>
-                  <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
+                  {location.pathname !== '/reset-password' && (
+                    <>
+                      <Link to="/register" className="hidden md:flex text-slate-400 hover:text-white px-4 h-12 items-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all">Register</Link>
+                      <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

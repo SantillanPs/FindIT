@@ -11,8 +11,11 @@ const MasterDataProvider = ({ children }) => {
         queryKey: ['categories'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('v_categories_sorted')
-                .select('*');
+                .from('master_categories')
+                .select('*')
+                .eq('is_active', true)
+                .order('hit_count', { ascending: false })
+                .order('label', { ascending: true });
                 
             if (error) throw error;
             
@@ -34,8 +37,9 @@ const MasterDataProvider = ({ children }) => {
                 .from('master_colleges')
                 .select('*')
                 .eq('is_active', true)
-                .order('label');
+                .order('label', { ascending: true });
             if (error) throw error;
+            console.info(`[Context] Colleges [Source: Resilient Table Fallback]:`, data?.length || 0, 'items');
             return data || [];
         },
         staleTime: 1000 * 60 * 60, // 1 hour
@@ -56,26 +60,24 @@ const MasterDataProvider = ({ children }) => {
                     .from('department_leaderboard')
                     .select('*')
             ]);
-
+            
             if (studentsRes.error) throw studentsRes.error;
             if (deptsRes.error) throw deptsRes.error;
 
-            const maskedStudents = (studentsRes.data || []).map((user, i) => {
-                const fname = user.first_name || "";
-                const lname = user.last_name || "";
-                const maskedFirst = fname ? `${fname[0]}***` : "*";
-                const maskedLast = lname ? `${lname[0]}***` : "*";
-                const maskedName = `${maskedFirst} ${maskedLast}`.trim();
-                const finalName = user.show_full_name ? `${fname} ${lname}`.trim() : maskedName;
+            console.info(`[Context] Leaderboard [Source: Resilient Table Fallback]:`, studentsRes.data?.length || 0, 'students');
 
-                return {
-                    id: user.id,
-                    full_name_masked: finalName || "Anonymous Student",
-                    department: user.department || "General Education",
-                    integrity_points: user.integrity_points,
-                    rank: i + 1
-                };
-            });
+            // Manual Masking Fallback
+            const maskedStudents = (studentsRes.data || []).map((s, idx) => ({
+                id: s.id,
+                full_name_masked: s.show_full_name && s.first_name && s.last_name
+                    ? `${s.first_name} ${s.last_name}`
+                    : (s.first_name || s.last_name) 
+                        ? `${s.first_name?.charAt(0) || '*'}${s.first_name ? '***' : ''} ${s.last_name?.charAt(0) || '*'}${s.last_name ? '***' : ''}`
+                        : "Anonymous Student",
+                department: s.department || "General Education",
+                integrity_points: s.integrity_points,
+                rank: idx + 1
+            }));
 
             return {
                 students: maskedStudents,

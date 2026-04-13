@@ -111,11 +111,11 @@ const AppContent = () => {
           <Route path="/claim-status/:trackingId" element={<ClaimStatus />} />
           <Route path="/report/lost" element={<ReportLostItem />} />
           <Route path="/lost-report-status/:trackingId" element={<LostReportStatus />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>

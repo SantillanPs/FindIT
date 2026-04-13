@@ -106,22 +106,34 @@ const Landing = () => {
         // REGULAR FETCH (Latest items)
         let query = supabase
           .from('found_items')
-          .select('id, title, category, description, photo_url, date_found, location, status')
-          .eq('status', 'in_custody')
-          .order('date_found', { ascending: false })
-          .limit(12);
+          .select('*')
+          .eq('status', 'in_custody');
 
         if (selectedCategory && selectedCategory !== 'all') {
           query = query.eq('category', selectedCategory);
         }
 
-        const res = await query;
-        data = res.data;
-        error = res.error;
+        const { data: resData, error: resError } = await query.limit(12);
+        
+        // Manual Data Mapping & Masking Fallback
+        data = (resData || []).map(item => {
+          // Fallback to registry_signal if columns are missing from top-level cache
+          const idName = item.identified_name || item.registry_signal?.identified_name;
+          const rawId = item.identified_student_id || item.registry_signal?.identified_student_id;
+          
+          return {
+            ...item,
+            identified_name: idName,
+            identified_student_id: rawId && String(rawId).includes('-')
+              ? `${String(rawId).split('-')[0]}****`
+              : rawId
+          };
+        });
+        error = resError;
       }
       
       if (error) throw error;
-      console.info(`[Query] Found Items:`, data?.length || 0, 'records');
+      console.info(`[Query] Found Items [Source: Resilient Table Fallback]:`, data?.length || 0, 'records');
       return data || [];
     },
     placeholderData: keepPreviousData,
@@ -133,12 +145,12 @@ const Landing = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lost_items')
-        .select('id, title, category, description, photo_url, date_lost, location')
-        .order('date_lost', { ascending: false })
+        .select('*')
+        .eq('status', 'reported')
         .limit(12);
 
       if (error) throw error;
-      console.info(`[Query] Lost Reports:`, data?.length || 0, 'records');
+      console.info(`[Query] Lost Reports [Source: Resilient Table Fallback]:`, data?.length || 0, 'records');
       return data || [];
     },
     placeholderData: keepPreviousData,
@@ -276,7 +288,7 @@ const Landing = () => {
                     <div className="space-y-2">
                        <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] italic">Identified Owner:</p>
                        <h3 className="text-2xl md:text-3xl font-black text-white italic tracking-tight uppercase line-clamp-1">
-                         {item.identified_name || `ID: ${item.identified_student_id?.replace(/(\d{4})-(\d{2})/, '$1-****')}`}
+                         {item.identified_name || `ID: ${item.identified_student_id}`}
                        </h3>
                     </div>
   

@@ -48,6 +48,7 @@ const Register = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const totalSteps = 5;
 
   // Tanstack Mutation
@@ -137,12 +138,39 @@ const Register = () => {
     }
   }, [user, isSuccess, loading, navigate]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setError('');
     
     if (step === 1) {
       if (!email || !password) return setError({ message: "Email and password are required." });
       if (password.length < 6) return setError({ message: "Password must be at least 6 characters." });
+
+      // Security check: Verify if email exists
+      setIsCheckingEmail(true);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('user_profiles_v1')
+          .select('email')
+          .eq('email', email.toLowerCase().trim())
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        
+        if (data) {
+          setError({ 
+            message: "Email already in use.",
+            hint: "This email address is already registered. Please use a different email or log in to continue." 
+          });
+          setIsCheckingEmail(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Email verification error:', err);
+        // We continue anyway IF the check fails for some reason (network error), 
+        // as the final signUp will catch it regardless, but we tried to be helpful.
+      } finally {
+        setIsCheckingEmail(false);
+      }
     }
 
     if (step === 2) {
@@ -360,8 +388,12 @@ const Register = () => {
 
         <CardFooter className="flex flex-col gap-4 border-t border-white/5 pt-6">
           {step < totalSteps ? (
-            <Button onClick={handleNext} className="w-full bg-white text-black font-black uppercase tracking-[0.2em] italic h-12 rounded-xl">
-              Next Step
+            <Button 
+              onClick={handleNext} 
+              disabled={isCheckingEmail}
+              className="w-full bg-white text-black font-black uppercase tracking-[0.2em] italic h-12 rounded-xl"
+            >
+              {isCheckingEmail ? "Checking Registry..." : "Next Step"}
             </Button>
           ) : (
             <Button onClick={handleSubmit} disabled={loading} className="w-full bg-sky-500 text-white font-black uppercase tracking-[0.2em] italic h-12 rounded-xl">

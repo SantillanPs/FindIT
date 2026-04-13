@@ -25,6 +25,17 @@ const Login = () => {
   const [view, setView] = useState('login'); // 'login' or 'forgot'
   const [resetEmail, setResetEmail] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  React.useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
   
   const { login, session, user } = useAuth();
   const navigate = useNavigate();
@@ -61,6 +72,7 @@ const Login = () => {
     },
     onSuccess: () => {
       setResetSuccess(true);
+      setCountdown(60);
     },
     onError: (err) => {
       setError(err.message || 'Failed to send reset link.');
@@ -205,11 +217,11 @@ const Login = () => {
                   </div>
                   <Button 
                     type="submit" 
-                    disabled={resetLoading} 
+                    disabled={resetLoading || countdown > 0} 
                     className="w-full bg-white hover:bg-slate-200 text-black font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all group"
                   >
-                    {resetLoading ? 'Sending...' : 'Send Reset Link'}
-                    {!resetLoading && <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
+                    {resetLoading ? 'Sending...' : (countdown > 0 ? `Retry in ${countdown}s` : 'Send Reset Link')}
+                    {!resetLoading && countdown === 0 && <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
                   </Button>
                   <button 
                     type="button"
@@ -232,12 +244,21 @@ const Login = () => {
                       <span className="text-sky-400 font-bold uppercase tracking-widest">Dev Note:</span> Check your backend terminal output for the mock reset link.
                     </p>
                   </div>
-                  <Button 
-                    onClick={() => { setView('login'); setResetSuccess(false); setResetEmail(''); }}
-                    className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all"
-                  >
-                    Return to Sign In
-                  </Button>
+                  <div className="flex flex-col gap-3 w-full">
+                    <Button 
+                      onClick={() => handleForgotPassword(resetEmail)}
+                      disabled={resetLoading || countdown > 0}
+                      className="w-full bg-white/10 hover:bg-white/20 border border-white/10 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all"
+                    >
+                      {resetLoading ? 'Sending...' : (countdown > 0 ? `Resend in ${countdown}s` : 'Resend Link')}
+                    </Button>
+                    <Button 
+                      onClick={() => { setView('login'); setResetSuccess(false); setResetEmail(''); }}
+                      className="w-full bg-slate-800 hover:bg-slate-700 text-white font-black uppercase tracking-[0.2em] italic py-6 rounded-xl transition-all"
+                    >
+                      Return to Sign In
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
