@@ -13,14 +13,12 @@ const FoundPublicFeed = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [categoryStats, setCategoryStats] = useState([]);
-  const { categories: CATEGORIES } = useMasterData();
+  const { categories: CATEGORIES, categoryStats, sortedCategories } = useMasterData();
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPublicFeed();
-    fetchStats();
   }, []);
 
   const fetchPublicFeed = async () => {
@@ -38,43 +36,6 @@ const FoundPublicFeed = () => {
       setLoading(false);
     }
   };
-
-  const fetchStats = async () => {
-    try {
-      // Simple aggregation of counts per category
-      const { data, error } = await supabase
-        .from('found_items')
-        .select('category');
-      
-      if (error) throw error;
-      
-      const counts = data.reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + 1;
-        return acc;
-      }, {});
-      
-      const stats = Object.keys(counts).map(key => ({
-        category_id: key,
-        hit_count: counts[key]
-      }));
-      
-      setCategoryStats(stats);
-    } catch (err) {
-      logSupabaseError('Feed Stats Registry', err);
-    }
-  };
-
-  const sortedCategories = useMemo(() => {
-    const statsMap = categoryStats.reduce((acc, curr) => ({
-      ...acc, [curr.category_id]: curr.hit_count
-    }), {});
-    
-    return [...CATEGORIES].sort((a, b) => {
-      if (a.id === 'Other') return 1;
-      if (b.id === 'Other') return -1;
-      return (statsMap[b.id] || 0) - (statsMap[a.id] || 0);
-    });
-  }, [categoryStats]);
 
   const filteredItems = items.filter(item => {
     const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase()) || 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { useMasterData } from '../context/MasterDataContext';
 
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
@@ -31,87 +33,67 @@ const GuestReportItem = () => {
     attributes: {}
   });
   
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 7;
 
-  const [categoryStats, setCategoryStats] = useState([]);
+  const queryClient = useQueryClient();
   const [otherItemName, setOtherItemName] = useState('');
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('found_items')
-          .select('category');
-        
-        if (error) throw error;
-        
-        const statsMap = (data || []).reduce((acc, item) => {
-          acc[item.category] = (acc[item.category] || 0) + 1;
-          return acc;
-        }, {});
+  // 1. Submit lost item using TanStack Mutation
+  const submissionMutation = useMutation({
+    mutationFn: async (reportPayload) => {
+      const { data, error } = await supabase.rpc('submit_lost_item_v2', { 
+        registry_signal: reportPayload 
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidate dashboard and list keys
+      queryClient.invalidateQueries({ queryKey: ['lost_items'] });
+      queryClient.invalidateQueries({ queryKey: ['student_dashboard'] });
+      setSuccess(true);
+      window.scrollTo(0, 0);
+    },
+    onError: (err) => {
+      setError(err.message || 'Something went wrong. Please try again.');
+    }
+  });
 
-        const formattedStats = Object.keys(statsMap).map(cat => ({
-          category: cat,
-          count: statsMap[cat]
-        }));
-
-        setCategoryStats(formattedStats);
-      } catch (err) {
-        console.error("Failed to fetch cluster stats from Supabase", err);
-      }
-    };
-    fetchStats();
-  }, []);
 
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    setLoading(true);
     setError('');
 
-    try {
-      const finalData = { ...formData };
-      if (formData.category === 'Other') {
-        finalData.title = otherItemName;
-      } else {
-        finalData.title = formData.category;
-      }
-
-      const reportPayload = {
-        title: formData.title || formData.category,
-        description: formData.description || `Reported ${formData.category}`,
-        category: formData.category,
-        location: formData.location,
-        date_lost: formData.date_lost,
-        guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
-        guest_email: formData.guest_email,
-        guest_phone: formData.contact_info,
-        photo_url: formData.photo_url,
-        photo_thumbnail_url: formData.photo_url,
-        status: 'reported',
-        is_verified: false,
-        registry_signal: { ...formData, reporter_type: 'guest' }
-      };
-
-      const { error } = await supabase.rpc('submit_lost_item_v2', { 
-        registry_signal: reportPayload 
-      });
-
-      if (error) throw error;
-
-      setSuccess(true);
-      window.scrollTo(0, 0);
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    const finalData = { ...formData };
+    if (formData.category === 'Other') {
+      finalData.title = otherItemName;
+    } else {
+      finalData.title = formData.category;
     }
+
+    const reportPayload = {
+      title: formData.title || formData.category,
+      description: formData.description || `Reported ${formData.category}`,
+      category: formData.category,
+      location: formData.location,
+      date_lost: formData.date_lost,
+      guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
+      guest_email: formData.guest_email,
+      guest_phone: formData.contact_info,
+      photo_url: formData.photo_url,
+      photo_thumbnail_url: formData.photo_url,
+      status: 'reported',
+      is_verified: false,
+      registry_signal: { ...formData, reporter_type: 'guest' }
+    };
+
+    submissionMutation.mutate(reportPayload);
   };
 
   const containerVariants = {
@@ -160,7 +142,6 @@ const GuestReportItem = () => {
               <CategorySelection 
                 formData={formData}
                 setFormData={setFormData}
-                categoryStats={categoryStats}
                 otherItemName={otherItemName}
                 setOtherItemName={setOtherItemName}
                 onNext={() => goToStep(3)}
@@ -224,7 +205,7 @@ const GuestReportItem = () => {
                 type="lost"
                 formData={formData}
                 otherItemName={otherItemName}
-                loading={loading}
+                loading={submissionMutation.isPending}
                 onSubmit={handleSubmit}
               />
             )}
@@ -232,7 +213,7 @@ const GuestReportItem = () => {
         </AnimatePresence>
       </div>
 
-      {!loading && (
+      {!submissionMutation.isPending && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

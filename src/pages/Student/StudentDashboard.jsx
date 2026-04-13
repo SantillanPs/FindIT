@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import AchievementBadge from '../../components/AchievementBadge';
 
 const StudentDashboard = () => {
-  const [personalLost, setPersonalLost] = useState([]);
-  const [personalFound, setPersonalFound] = useState([]);
-  const [publicFound, setPublicFound] = useState([]);
-  const [publicLost, setPublicLost] = useState([]);
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [deptRank, setDeptRank] = useState(null);
-  const [pendingMatches, setPendingMatches] = useState([]);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
   useEffect(() => {
@@ -26,51 +19,92 @@ const StudentDashboard = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchDashData();
-    }
-  }, [user]);
+  // 1. Fetch Personal Lost Items
+  const { data: personalLost = [], isLoading: isPersonalLostLoading } = useQuery({
+    queryKey: ['lost_items', 'personal', user?.email],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('lost_items').select('*').eq('guest_email', user?.email);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.email
+  });
 
-  const fetchDashData = async () => {
-    setLoading(true);
-    try {
-      const [pLostRes, pFoundRes, pubFoundRes, pubLostRes, deptsRes, assetsRes, notifsRes] = await Promise.all([
-        supabase.from('lost_items').select('*').eq('guest_email', user.email),
-        supabase.from('found_items').select('*').eq('guest_email', user.email),
-        supabase.from('found_items').select('*').order('date_found', { ascending: false }).limit(3),
-        supabase.from('lost_items').select('*').order('date_lost', { ascending: false }).limit(3),
-        supabase.from('department_leaderboard').select('*'),
-        supabase.from('assets').select('*'),
-        supabase.from('notifications').select('*').eq('user_id', user.id).eq('is_read', false)
-      ]);
+  // 2. Fetch Personal Found Items
+  const { data: personalFound = [], isLoading: isPersonalFoundLoading } = useQuery({
+    queryKey: ['found_items', 'personal', user?.email],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('found_items').select('*').eq('guest_email', user?.email);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.email
+  });
+
+  // 3. Fetch Public Snapshot (Found)
+  const { data: publicFound = [], isLoading: isPublicFoundLoading } = useQuery({
+    queryKey: ['found_items', 'public', 'latest'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('found_items').select('*').order('date_found', { ascending: false }).limit(3);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // 4. Fetch Public Snapshot (Lost)
+  const { data: publicLost = [], isLoading: isPublicLostLoading } = useQuery({
+    queryKey: ['lost_items', 'public', 'latest'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('lost_items').select('*').order('date_lost', { ascending: false }).limit(3);
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // 5. Fetch Assets
+  const { data: assets = [], isLoading: isAssetsLoading } = useQuery({
+    queryKey: ['assets'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('assets').select('*');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  // 6. Fetch Leaderboard & Standing
+  const { data: deptRank } = useQuery({
+    queryKey: ['leaderboard', 'standing', user?.department],
+    queryFn: async () => {
+      const { data: rankings, error } = await supabase.from('department_leaderboard').select('*');
+      if (error) throw error;
       
-      setPersonalLost(pLostRes.data || []);
-      setPersonalFound(pFoundRes.data || []);
-      setPublicFound(pubFoundRes.data || []);
-      setPublicLost(pubLostRes.data || []);
-      setAssets(assetsRes.data || []);
-      
-      if (deptsRes.data && user.department) {
-        const rankings = deptsRes.data;
+      if (rankings && user?.department) {
         const index = rankings.findIndex(r => r.department === user.department);
         if (index !== -1) {
-          setDeptRank({ 
+          return { 
             rank: index + 1, 
             total: rankings.length, 
             points: rankings[index].total_points 
-          });
+          };
         }
       }
+      return null;
+    },
+    enabled: !!user?.department
+  });
 
-      const matches = (notifsRes.data || []).filter(n => n.title?.includes("Direct Match"));
-      setPendingMatches(matches);
-    } catch (error) {
-      console.error('Fatal dashboard sync error', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // 7. Fetch Notifications/Matches
+  const { data: pendingMatches = [] } = useQuery({
+    queryKey: ['notifications', 'matches', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('notifications').select('*').eq('user_id', user.id).eq('is_read', false);
+      if (error) throw error;
+      return (data || []).filter(n => n.title?.includes("Direct Match"));
+    },
+    enabled: !!user?.id
+  });
+
+  const loading = isPersonalLostLoading || isPersonalFoundLoading || isPublicFoundLoading || isPublicLostLoading || isAssetsLoading;
 
   const statVariants = {
     hidden: { y: 20, opacity: 0 },

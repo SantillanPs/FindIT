@@ -5,25 +5,12 @@ import { useMasterData } from '../../context/MasterDataContext';
 const CategorySelection = ({ 
   formData, 
   setFormData, 
-  categoryStats, 
   otherItemName, 
   setOtherItemName, 
   onNext 
 }) => {
-  const { categories: CATEGORIES, loading } = useMasterData();
+  const { categories: CATEGORIES, sortedCategories, loading } = useMasterData();
   const [showAllCategories, setShowAllCategories] = useState(false);
-
-  const sortedCategories = useMemo(() => {
-    const statsMap = categoryStats.reduce((acc, curr) => ({
-      ...acc, [curr.category_id]: curr.hit_count
-    }), {});
-    
-    return [...CATEGORIES].sort((a, b) => {
-      if (a.id === 'Other') return 1;
-      if (b.id === 'Other') return -1;
-      return (statsMap[b.id] || 0) - (statsMap[a.id] || 0);
-    });
-  }, [categoryStats, CATEGORIES]); // Add CATEGORIES dependency
 
   if (loading) return (
     <div className="flex justify-center p-20">
@@ -32,8 +19,8 @@ const CategorySelection = ({
   );
 
   const featuredCategories = sortedCategories.slice(0, 6);
-  const remainingCategories = sortedCategories.slice(6).filter(c => c.id !== 'Other');
-  const otherCategory = CATEGORIES.find(c => c.id === 'Other') || { icon: 'fa-question-circle', label: 'Other' };
+  const remainingCategories = sortedCategories.slice(6).filter(c => c.id !== 'other');
+  const otherCategory = CATEGORIES.find(c => c.id === 'other') || { icon: 'fa-question-circle', label: 'Other' };
 
   return (
     <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
@@ -103,14 +90,14 @@ const CategorySelection = ({
           </AnimatePresence>
 
           <div className={`p-8 rounded-[3rem] border-2 transition-all flex flex-col items-center gap-8 ${
-            formData.category === 'Other' 
+            formData.category === 'other' 
               ? 'bg-white/10 border-uni-500' 
               : 'bg-white/5 border-dashed border-white/10'
           }`}>
             <button
-              onClick={() => setFormData({ ...formData, category: 'Other' })}
+              onClick={() => setFormData({ ...formData, category: 'other' })}
               className={`flex items-center gap-6 w-full justify-center transition-all ${
-                formData.category === 'Other' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'
+                formData.category === 'other' ? 'text-white scale-105' : 'text-slate-500 hover:text-white'
               }`}
             >
               <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center text-3xl border border-white/10">
@@ -123,7 +110,7 @@ const CategorySelection = ({
             </button>
 
             <AnimatePresence>
-              {formData.category === 'Other' && (
+              {formData.category === 'other' && (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

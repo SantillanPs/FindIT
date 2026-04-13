@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useMasterData } from '../../context/MasterDataContext';
 
 // Shared Flow Components
 import ReportStepHeader from '../../components/ReportFlow/ReportStepHeader';
@@ -32,41 +34,38 @@ const ReportLostItem = () => {
     attributes: {}
   });
   
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
   const totalSteps = 7;
+
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
-  const [categoryStats, setCategoryStats] = useState([]);
+  const { categoryStats } = useMasterData();
   const [otherItemName, setOtherItemName] = useState('');
 
+  // 1. Submit lost item using TanStack Mutation
+  const submissionMutation = useMutation({
+    mutationFn: async (reportPayload) => {
+      const { data, error } = await supabase.rpc('submit_lost_item_v2', { 
+        registry_signal: reportPayload 
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      // Invalidate dashboard and list keys
+      queryClient.invalidateQueries({ queryKey: ['lost_items'] });
+      queryClient.invalidateQueries({ queryKey: ['student_dashboard'] });
+      navigate('/student');
+    },
+    onError: (err) => {
+      setError(err.message || 'Something went wrong. Please try again.');
+    }
+  });
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('found_items')
-          .select('category');
-        
-        if (error) throw error;
-        
-        const statsMap = (data || []).reduce((acc, item) => {
-          acc[item.category] = (acc[item.category] || 0) + 1;
-          return acc;
-        }, {});
-
-        const formattedStats = Object.keys(statsMap).map(cat => ({
-          category: cat,
-          count: statsMap[cat]
-        }));
-
-        setCategoryStats(formattedStats);
-      } catch (err) {
-        console.error("Failed to fetch stats from Supabase", err);
-      }
-    };
-    fetchStats();
 
     // Pre-fill contact info if user is logged in
     if (user) {
@@ -84,43 +83,30 @@ const ReportLostItem = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    setLoading(true);
     setError('');
 
-    try {
-      const finalData = { ...formData };
-      if (formData.category === 'Other') {
-        finalData.title = otherItemName;
-      } else {
-        finalData.title = formData.category;
-      }
-
-      const reportPayload = {
-        title: formData.title || formData.category,
-        description: formData.description || `Student Reported ${formData.category}`,
-        category: formData.category,
-        location: formData.location,
-        date_lost: formData.date_lost,
-        photo_url: formData.photo_url,
-        photo_thumbnail_url: formData.photo_url,
-        owner_id: user?.id || null,
-        status: 'reported',
-        is_verified: true,
-        registry_signal: { ...formData, reporter_type: 'student' }
-      };
-
-      const { error } = await supabase.rpc('submit_lost_item_v2', { 
-        registry_signal: reportPayload 
-      });
-
-      if (error) throw error;
-
-      navigate('/student');
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    const finalData = { ...formData };
+    if (formData.category === 'Other') {
+      finalData.title = otherItemName;
+    } else {
+      finalData.title = formData.category;
     }
+
+    const reportPayload = {
+      title: formData.title || formData.category,
+      description: formData.description || `Student Reported ${formData.category}`,
+      category: formData.category,
+      location: formData.location,
+      date_lost: formData.date_lost,
+      photo_url: formData.photo_url,
+      photo_thumbnail_url: formData.photo_url,
+      owner_id: user?.id || null,
+      status: 'reported',
+      is_verified: true,
+      registry_signal: { ...formData, reporter_type: 'student' }
+    };
+
+    submissionMutation.mutate(reportPayload);
   };
 
   const containerVariants = {
@@ -165,7 +151,6 @@ const ReportLostItem = () => {
               <CategorySelection 
                 formData={formData}
                 setFormData={setFormData}
-                categoryStats={categoryStats}
                 otherItemName={otherItemName}
                 setOtherItemName={setOtherItemName}
                 onNext={() => goToStep(3)}
@@ -230,7 +215,7 @@ const ReportLostItem = () => {
                 type="lost"
                 formData={formData}
                 otherItemName={otherItemName}
-                loading={loading}
+                loading={submissionMutation.isPending}
                 onSubmit={handleSubmit}
               />
             )}
@@ -238,7 +223,7 @@ const ReportLostItem = () => {
         </AnimatePresence>
       </div>
 
-      {!loading && (
+      {!submissionMutation.isPending && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

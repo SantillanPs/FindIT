@@ -1,6 +1,7 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { CATEGORY_METADATA, DEFAULT_CATEGORY_META } from '../constants/categoryMetadata';
 
 const MasterDataContext = createContext();
 
@@ -10,12 +11,17 @@ const MasterDataProvider = ({ children }) => {
         queryKey: ['categories'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('master_categories')
-                .select('*')
-                .eq('is_active', true)
-                .order('label');
+                .from('v_categories_sorted')
+                .select('*');
+                
             if (error) throw error;
-            return data || [];
+            
+            // Merge hardcoded metadata (icons/emojis) with pre-sorted DB labels
+            return (data || []).map(cat => ({
+                ...cat,
+                hit_count: cat.hit_count || 0,
+                ...(CATEGORY_METADATA[cat.id?.toLowerCase()] || DEFAULT_CATEGORY_META)
+            }));
         },
         staleTime: 1000 * 60 * 60, // 1 hour
     });
@@ -79,11 +85,16 @@ const MasterDataProvider = ({ children }) => {
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
+    // 2. Colleges Query (Keep separate as it's a different domain)
+    const sortedCategories = useMemo(() => {
+        return categories;
+    }, [categories]);
+
     const loading = categoriesLoading || collegesLoading;
     const error = categoriesError || collegesError;
 
     return (
-        <MasterDataContext.Provider value={{ categories, colleges, leaderboard, loading, error }}>
+        <MasterDataContext.Provider value={{ categories, colleges, leaderboard, sortedCategories, loading, error }}>
             {children}
         </MasterDataContext.Provider>
     );

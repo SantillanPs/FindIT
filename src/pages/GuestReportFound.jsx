@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { useMasterData } from '../context/MasterDataContext';
 
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
@@ -33,120 +35,97 @@ const GuestReportFound = () => {
     category: '',
     attributes: {}
   });
-  
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
   const totalSteps = 7;
 
-  const [categoryStats, setCategoryStats] = useState([]);
+  const queryClient = useQueryClient();
   const [otherItemName, setOtherItemName] = useState('');
   const [hasIdentification, setHasIdentification] = useState(false);
   const [reportData, setReportData] = useState(null);
   
   const [searchParams] = useSearchParams();
   const matchId = searchParams.get('match');
-  const [matchedReport, setMatchedReport] = useState(null);
 
+  // 1. Fetch matched report using TanStack Query
+  const { data: matchedReport } = useQuery({
+    queryKey: ['lostItem', matchId],
+    queryFn: async () => {
+      if (!matchId) return null;
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('*')
+        .eq('id', matchId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!matchId
+  });
+
+  // 2. Submit found item using TanStack Mutation
+  const submissionMutation = useMutation({
+    mutationFn: async (reportPayload) => {
+      const { data, error } = await supabase.rpc('submit_found_item_v2', { 
+        registry_signal: reportPayload 
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setReportData(data);
+      queryClient.invalidateQueries({ queryKey: ['found_items'] });
+      queryClient.invalidateQueries({ queryKey: ['student_dashboard'] });
+      setSuccess(true);
+      window.scrollTo(0, 0);
+    },
+    onError: (err) => {
+      setError(err.message || 'Something went wrong. Please try again.');
+    }
+  });
+
+  // Sync category if matchId is present
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // Fetch category counts from found_items
-        const { data, error } = await supabase
-          .from('found_items')
-          .select('category');
-        
-        if (error) throw error;
-        
-        // Group by category manually or use a specialized view if needed
-        const statsMap = (data || []).reduce((acc, item) => {
-          acc[item.category] = (acc[item.category] || 0) + 1;
-          return acc;
-        }, {});
-
-        const formattedStats = Object.keys(statsMap).map(cat => ({
-          category: cat,
-          count: statsMap[cat]
-        }));
-
-        setCategoryStats(formattedStats);
-      } catch (err) {
-        console.error("Failed to fetch category stats from Supabase", err);
-      }
-    };
-    fetchStats();
-
-    const fetchMatchedReport = async () => {
-      if (matchId) {
-        try {
-          const { data, error } = await supabase
-            .from('lost_items')
-            .select('*')
-            .eq('id', matchId)
-            .single();
-          
-          if (error) throw error;
-          
-          setMatchedReport(data);
-          setFormData(prev => ({
-            ...prev,
-            category: data.category,
-            matched_lost_id: parseInt(matchId)
-          }));
-        } catch (err) {
-          console.error("Failed to fetch matched report from Supabase", err);
-        }
-      }
-    };
-    fetchMatchedReport();
-  }, [matchId]);
+    if (matchedReport) {
+      setFormData(prev => ({
+        ...prev,
+        category: matchedReport.category,
+        matched_lost_id: parseInt(matchId)
+      }));
+    }
+  }, [matchedReport, matchId]);
 
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    setLoading(true);
     setError('');
 
-    try {
-      const finalData = { ...formData };
-      if (formData.category === 'Other') {
-        finalData.title = otherItemName;
-      } else {
-        finalData.title = formData.category;
-      }
-
-      const reportPayload = {
-        title: formData.title || formData.category,
-        description: formData.description || `Found ${formData.category}`,
-        category: formData.category,
-        location: formData.location,
-        date_found: formData.date_found,
-        photo_url: formData.photo_url,
-        photo_thumbnail_url: formData.photo_url,
-        guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
-        guest_email: formData.guest_email,
-        guest_phone: formData.contact_info,
-        status: 'reported',
-        registry_signal: { ...formData, reporter_type: 'guest' }
-      };
-
-      const { data, error } = await supabase.rpc('submit_found_item_v2', { 
-        registry_signal: reportPayload 
-      });
-
-      if (error) throw error;
-
-      setReportData(data);
-      setSuccess(true);
-      window.scrollTo(0, 0);
-    } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    const finalData = { ...formData };
+    if (formData.category === 'Other') {
+      finalData.title = otherItemName;
+    } else {
+      finalData.title = formData.category;
     }
+
+    const reportPayload = {
+      title: formData.title || formData.category,
+      description: formData.description || `Found ${formData.category}`,
+      category: formData.category,
+      location: formData.location,
+      date_found: formData.date_found,
+      photo_url: formData.photo_url,
+      photo_thumbnail_url: formData.photo_url,
+      guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
+      guest_email: formData.guest_email,
+      guest_phone: formData.contact_info,
+      status: 'reported',
+      registry_signal: { ...formData, reporter_type: 'guest' }
+    };
+
+    submissionMutation.mutate(reportPayload);
   };
 
   const containerVariants = {
@@ -201,7 +180,6 @@ const GuestReportFound = () => {
               <CategorySelection 
                 formData={formData}
                 setFormData={setFormData}
-                categoryStats={categoryStats}
                 otherItemName={otherItemName}
                 setOtherItemName={setOtherItemName}
                 onNext={() => goToStep(3)}
@@ -283,7 +261,7 @@ const GuestReportFound = () => {
                   type="found"
                   formData={formData}
                   otherItemName={otherItemName}
-                  loading={loading}
+                  loading={submissionMutation.isPending}
                   onSubmit={handleSubmit}
                 />
               </>
@@ -292,7 +270,7 @@ const GuestReportFound = () => {
         </AnimatePresence>
       </div>
 
-      {!loading && (
+      {!submissionMutation.isPending && (
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
