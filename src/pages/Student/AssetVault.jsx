@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import EmptyState from '../../components/EmptyState';
 
 const AssetVault = () => {
   const { user } = useAuth();
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newAsset, setNewAsset] = useState({
     category: '',
@@ -19,29 +19,52 @@ const AssetVault = () => {
   });
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchAssets();
-    }
-  }, [user]);
-
-  const fetchAssets = async () => {
-    setLoading(true);
-    try {
+  // 1. Fetch Assets (TanStack Query + View)
+  const { data: assets = [], isLoading: loading } = useQuery({
+    queryKey: ['assets', 'me', user?.id],
+    queryFn: async () => {
       const { data, error } = await supabase
-        .from('assets')
+        .from('v_my_assets')
         .select('*')
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAssets(data || []);
-    } catch (error) {
-      console.error('Failed to fetch assets from Supabase', error);
-    } finally {
-      setLoading(false);
+      return data || [];
+    },
+    enabled: !!user?.id
+  });
+
+  // 2. Add Asset Mutation
+  const addAssetMutation = useMutation({
+    mutationFn: async (assetData) => {
+      const { error } = await supabase
+        .from('internal.assets')
+        .insert([{ ...assetData, owner_id: user.id }]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets', 'me', user?.id] });
+      setIsAddModalOpen(false);
+      setNewAsset({
+        category: '', brand: '', model_name: '', serial_number: '', description: '', photo_url: ''
+      });
     }
-  };
+  });
+
+  // 3. Delete Asset Mutation
+  const deleteAssetMutation = useMutation({
+    mutationFn: async (assetId) => {
+      const { error } = await supabase
+        .from('internal.assets')
+        .delete()
+        .eq('id', assetId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assets', 'me', user?.id] });
+    }
+  });
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -71,50 +94,14 @@ const AssetVault = () => {
     }
   };
 
-  const handleAddAsset = async (e) => {
+  const handleAddAsset = (e) => {
     e.preventDefault();
-    try {
-      const { error } = await supabase
-        .from('assets')
-        .insert([
-          {
-            ...newAsset,
-            owner_id: user.id,
-            created_at: new Date().toISOString()
-          }
-        ]);
-
-      if (error) throw error;
-
-      setIsAddModalOpen(false);
-      setNewAsset({
-        category: '',
-        brand: '',
-        model_name: '',
-        serial_number: '',
-        description: '',
-        photo_url: ''
-      });
-      fetchAssets();
-    } catch (error) {
-      console.error('Failed to add asset to Supabase', error);
-    }
+    addAssetMutation.mutate(newAsset);
   };
 
-  const handleDeleteAsset = async (assetId) => {
+  const handleDeleteAsset = (assetId) => {
     if (!window.confirm("Are you sure you want to remove this asset from your vault?")) return;
-    
-    try {
-      const { error } = await supabase
-        .from('assets')
-        .delete()
-        .eq('id', assetId);
-
-      if (error) throw error;
-      fetchAssets();
-    } catch (error) {
-      console.error('Failed to delete asset from Supabase', error);
-    }
+    deleteAssetMutation.mutate(assetId);
   };
 
   return (
@@ -282,15 +269,15 @@ const AssetVault = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={uploading}
+                    disabled={uploading || addAssetMutation.isPending}
                     className="flex-[2] bg-uni-600 hover:bg-uni-500 text-white py-4 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {uploading ? (
+                    {uploading || addAssetMutation.isPending ? (
                          <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                     ) : (
                         <i className="fa-solid fa-shield-check text-xs"></i>
                     )}
-                    Secure Registration
+                    {addAssetMutation.isPending ? 'Registering...' : 'Secure Registration'}
                   </button>
                 </div>
               </form>

@@ -77,7 +77,7 @@ const MyClaims = () => {
     queryKey: ['my-claims', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('vmy_claims')
+        .from('v_me_claims')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });

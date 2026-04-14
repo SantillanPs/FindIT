@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +8,7 @@ const SystemOverview = () => {
     queryKey: ['system-overview-stats'],
     queryFn: async () => {
       const { data: users, error } = await supabase
-        .from('user_profiles_v1')
+        .from('v_super_staff_management')
         .select('role');
       
       if (error) throw error;

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import LostReportCard from '../../components/LostReportCard';
 import WitnessReportModal from '../../components/WitnessReportModal';
@@ -8,52 +9,38 @@ import { useMasterData } from '../../context/MasterDataContext';
 
 const LostReportsRegistry = () => {
   const { categories: CATEGORIES } = useMasterData();
-  const [lostReports, setLostReports] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [visibleItems, setVisibleItems] = useState(6);
 
-  useEffect(() => {
-    fetchLostReports();
-  }, []);
-
-  const fetchLostReports = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('lost_items')
+  // 1. Fetch Lost Reports (TanStack Query + Standardized Masked View)
+  const { data: lostReports = [], isLoading: loading } = useQuery({
+    queryKey: ['lost_reports', 'public', selectedCategory, searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from('v_public_lost_items')
         .select('*')
-        .eq('is_public', true)
         .order('date_lost', { ascending: false });
 
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      if (searchQuery.trim()) {
+        const search = `%${searchQuery.trim()}%`;
+        query = query.or(`title.ilike.${search},description.ilike.${search},location.ilike.${search},owner_name_masked.ilike.${search}`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      setLostReports(data || []);
-    } catch (err) {
-      console.error("Failed to fetch lost reports from Supabase", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    staleTime: 1000 * 60,
+  });
 
-  const handleWitness = (report) => {
-    setSelectedLostReport(report);
-    setShowWitnessModal(true);
-  };
-
-  const filteredReports = lostReports
-    .filter(report => {
-      const matchesSearch = (report.description?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            report.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            report.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            report.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            report.owner_name?.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => new Date(b.date_lost) - new Date(a.date_lost));
+  const filteredReports = lostReports; // Already filtered by server
 
   return (
     <motion.div 

@@ -1,50 +1,44 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import EmptyState from '../../components/EmptyState';
-import { useAuth } from '../../context/AuthContext';
-import { logSupabaseError } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
 import ItemCard from '../../components/ItemCard';
 
 const FoundPublicFeed = () => {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const { categories: CATEGORIES, categoryStats, sortedCategories } = useMasterData();
-  const { user } = useAuth();
+  const { sortedCategories } = useMasterData();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchPublicFeed();
-  }, []);
-
-  const fetchPublicFeed = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('found_items')
-        .select('id, title, category, description, photo_url, date_found, location')
+  // 1. Data Fetching (TanStack Query + Standardized View)
+  const { data: items = [], isLoading: loading } = useQuery({
+    queryKey: ['found_items', 'public', selectedCategory, searchQuery],
+    queryFn: async () => {
+      let query = supabase
+        .from('v_public_found_items')
+        .select('*')
         .order('date_found', { ascending: false });
-      
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error) {
-      logSupabaseError('Public Feed Submission', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.description.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.location.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      if (searchQuery.trim()) {
+        const search = `%${searchQuery.trim()}%`;
+        query = query.or(`title.ilike.${search},description.ilike.${search},location.ilike.${search}`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60, // 1 min cache
   });
+
+  const filteredItems = items; // Already filtered by server
 
   const containerVariants = {
     hidden: { opacity: 0 },

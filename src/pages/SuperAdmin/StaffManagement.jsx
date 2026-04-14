@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -11,7 +12,7 @@ const StaffManagement = () => {
     queryKey: ['staff-list'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('users')
+        .from('v_super_staff_management')
         .select('*')
         .order('role', { ascending: false });
 
@@ -23,7 +24,7 @@ const StaffManagement = () => {
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, newRole }) => {
       const { error } = await supabase
-        .from('users')
+        .from('user_profiles_v1')
         .update({ role: newRole })
         .eq('id', userId);
       

@@ -40,7 +40,6 @@ const LandingTab = () => {
       setLoading(true);
       const { data, error } = await Promise.race([
         supabase
-          .schema('internal')
           .from('site_configs')
           .select('*')
           .eq('id', 'main')
@@ -69,7 +68,6 @@ const LandingTab = () => {
       setStatus(null);
       
       const { error } = await supabase
-        .schema('internal')
         .from('site_configs')
         .update({
           ...config,

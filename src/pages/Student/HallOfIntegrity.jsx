@@ -1,51 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 
 const HallOfIntegrity = () => {
   const [leaderboardType, setLeaderboardType] = useState('students');
-  const [topColleges, setTopColleges] = useState([]);
-  const [topStudents, setTopStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLeaderboardData();
-  }, []);
-
-  const fetchLeaderboardData = async () => {
-    setLoading(true);
-    try {
-      // Fetch department leaderboard from the view we created earlier
-      const { data: colleges, error: colError } = await supabase
-        .from('department_leaderboard')
-        .select('*');
-
-      // Fetch student leaderboard from user_profiles_v1 table
-      const { data: students, error: studError } = await supabase
-        .from('user_profiles_v1')
-        .select('id, full_name, email, department, integrity_points')
-        .eq('role', 'student')
-        .gt('integrity_points', 0)
-        .order('integrity_points', { ascending: false })
+  // 1. Student Leaderboard Query (Standardized View)
+  const { data: topStudents = [], isLoading: studentsLoading } = useQuery({
+    queryKey: ['leaderboard_students'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_public_leaderboard')
+        .select('*')
         .limit(20);
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 mins
+  });
 
-      if (colError) throw colError;
-      if (studError) throw studError;
+  // 2. Department Leaderboard Query (Standardized View)
+  const { data: topColleges = [], isLoading: collegesLoading } = useQuery({
+    queryKey: ['leaderboard_departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_public_dept_leaderboard')
+        .select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 1000 * 60 * 5, // 5 mins
+  });
 
-      // Map students to include masked name for privacy
-      const maskedStudents = (students || []).map(s => ({
-        ...s,
-        full_name_masked: s.full_name ? `${s.full_name.split(' ')[0]} ${s.full_name.split(' ').slice(1).map(n => n[0] + '.').join(' ')}` : 'Anonymous Student'
-      }));
-
-      setTopColleges(colleges || []);
-      setTopStudents(maskedStudents);
-    } catch (err) {
-      console.error("Failed to fetch leaderboard data from Supabase", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loading = leaderboardType === 'students' ? studentsLoading : collegesLoading;
 
   return (
     <motion.div 

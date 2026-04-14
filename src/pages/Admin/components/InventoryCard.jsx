@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText } from "lucide-react";
+import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText, Activity } from "lucide-react";
 import { imageCache } from '../../../lib/imageCache';
 
 const InventoryCard = React.memo(({ 

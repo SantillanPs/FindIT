@@ -136,7 +136,7 @@ const LayoutContents = ({ children }) => {
         supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }),
         supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported'),
-        user?.role === 'super_admin' ? supabase.schema('internal').from('feedbacks').select('id', { count: 'exact', head: true }).eq('status', 'pending') : Promise.resolve({ count: 0 })
+        user?.role === 'super_admin' ? supabase.rpc('count_pending_feedbacks').then(res => ({ count: res.data || 0 })) : Promise.resolve({ count: 0 })
       ]);
 
       const [claimsRes, matchesRes, lostRes, feedbackRes] = results.map(r => r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason });

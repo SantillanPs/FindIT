@@ -19,70 +19,92 @@ const StudentDashboard = () => {
     }
   }, []);
 
-  // 1. Fetch Personal Lost Items
-  const { data: personalLost = [], isLoading: isPersonalLostLoading } = useQuery({
-    queryKey: ['lost_items', 'personal', user?.email],
+  // 1. Fetch My Case Queue (Personal Records)
+  // v_me_claims covers claims made by the user
+  const { data: myClaims = [], isLoading: isClaimsLoading } = useQuery({
+    queryKey: ['claims', 'me', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('lost_items').select('*').eq('guest_email', user?.email);
+      const { data, error } = await supabase
+        .from('v_me_claims')
+        .select('*')
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!user?.email
+    enabled: !!user?.id
   });
 
-  // 2. Fetch Personal Found Items
-  const { data: personalFound = [], isLoading: isPersonalFoundLoading } = useQuery({
-    queryKey: ['found_items', 'personal', user?.email],
+  // 2. Fetch My Lost Reports
+  const { data: myLostReports = [], isLoading: isMyLostLoading } = useQuery({
+    queryKey: ['lost_reports', 'me', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('found_items').select('*').eq('guest_email', user?.email);
+      const { data, error } = await supabase
+        .from('lost_items')
+        .select('*')
+        .eq('owner_id', user?.id)
+        .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    enabled: !!user?.email
+    enabled: !!user?.id
   });
 
-  // 3. Fetch Public Snapshot (Found)
+  // 3. Fetch Public Snapshot (Found) - Standardized View
   const { data: publicFound = [], isLoading: isPublicFoundLoading } = useQuery({
     queryKey: ['found_items', 'public', 'latest'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('found_items').select('*').order('date_found', { ascending: false }).limit(3);
+      const { data, error } = await supabase
+        .from('v_public_found_items')
+        .select('*')
+        .order('date_found', { ascending: false })
+        .limit(3);
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  // 4. Fetch Public Snapshot (Lost)
+  // 4. Fetch Public Snapshot (Lost) - Standardized View (Masked)
   const { data: publicLost = [], isLoading: isPublicLostLoading } = useQuery({
     queryKey: ['lost_items', 'public', 'latest'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('lost_items').select('*').order('date_lost', { ascending: false }).limit(3);
+      const { data, error } = await supabase
+        .from('v_public_lost_items')
+        .select('*')
+        .order('date_lost', { ascending: false })
+        .limit(3);
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
-  // 5. Fetch Assets
+  // 5. Fetch Assets - Standardized View
   const { data: assets = [], isLoading: isAssetsLoading } = useQuery({
-    queryKey: ['assets'],
+    queryKey: ['assets', 'me', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('assets').select('*');
+      const { data, error } = await supabase
+        .from('v_my_assets')
+        .select('*')
+        .eq('owner_id', user?.id);
       if (error) throw error;
-      return data;
-    }
+      return data || [];
+    },
+    enabled: !!user?.id
   });
 
-  // 6. Fetch Leaderboard & Standing
+  // 6. Fetch Leaderboard & Standing - Standardized View
   const { data: deptRank } = useQuery({
     queryKey: ['leaderboard', 'standing', user?.department],
     queryFn: async () => {
-      const { data: rankings, error } = await supabase.from('department_leaderboard').select('*');
+      const { data: rankings, error } = await supabase
+        .from('v_public_dept_leaderboard')
+        .select('*');
       if (error) throw error;
       
       if (rankings && user?.department) {
         const index = rankings.findIndex(r => r.department === user.department);
         if (index !== -1) {
           return { 
-            rank: index + 1, 
+            rank: rankings[index].rank, 
             total: rankings.length, 
             points: rankings[index].total_points 
           };
@@ -97,14 +119,19 @@ const StudentDashboard = () => {
   const { data: pendingMatches = [] } = useQuery({
     queryKey: ['notifications', 'matches', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('notifications').select('*').eq('user_id', user.id).eq('is_read', false);
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .ilike('title', '%Direct Match%');
       if (error) throw error;
-      return (data || []).filter(n => n.title?.includes("Direct Match"));
+      return data || [];
     },
     enabled: !!user?.id
   });
 
-  const loading = isPersonalLostLoading || isPersonalFoundLoading || isPublicFoundLoading || isPublicLostLoading || isAssetsLoading;
+  const loading = isClaimsLoading || isMyLostLoading || isPublicFoundLoading || isPublicLostLoading || isAssetsLoading;
 
   const statVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -180,10 +207,10 @@ const StudentDashboard = () => {
 
       {/* Stats */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <StatCard index={0} icon="fa-search" label="Lost" value={personalLost.length} color="blue" variants={statVariants} />
-        <StatCard index={1} icon="fa-hand-holding-heart" label="Found" value={personalFound.length} color="green" variants={statVariants} />
+        <StatCard index={0} icon="fa-search" label="Lost" value={myLostReports.length} color="blue" variants={statVariants} />
+        <StatCard index={1} icon="fa-hand-holding-heart" label="Found" value={myClaims.length} color="green" variants={statVariants} />
         <StatCard index={2} icon="fa-award" label="Points" value={user?.integrity_points || 0} color="gold" variants={statVariants} />
-        <StatCard index={3} icon="fa-bolt" label="Active" value={personalLost.filter(r => r.status === 'matched').length} color="blue" variants={statVariants} />
+        <StatCard index={3} icon="fa-bolt" label="Active" value={myClaims.filter(r => r.status === 'matched').length} color="blue" variants={statVariants} />
         <StatCard index={4} icon="fa-box-archive" label="Vault" value={assets.length} color="purple" variants={statVariants} />
       </section>
 
@@ -262,7 +289,7 @@ const StudentDashboard = () => {
                                     <div className="text-left min-w-0">
                                         <h4 className="text-[10px] font-black text-white uppercase tracking-widest truncate">{report.title}</h4>
                                         <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                            {report.location} <span className="text-slate-800">•</span> {report.guest_first_name ? `${report.guest_first_name[0]}***` : 'Student'}
+                                            {report.location} <span className="text-slate-800">•</span> {report.owner_name_masked}
                                         </p>
                                     </div>
                                 </div>
@@ -314,16 +341,16 @@ const StudentDashboard = () => {
                 <div className="space-y-4">
                     {loading ? (
                         Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-white/5 rounded-xl"></div>)
-                    ) : (personalLost.length + personalFound.length) === 0 ? (
+                    ) : (myLostReports.length + myClaims.length) === 0 ? (
                         <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest text-center py-6 italic border border-dashed border-white/5 rounded-2xl">No active cases.</p>
                     ) : (
-                        [...personalLost, ...personalFound].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map((case_item, i) => (
+                        [...myLostReports, ...myClaims].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4).map((case_item, i) => (
                             <div key={i} className="flex items-center justify-between group p-2 hover:bg-white/[0.02] rounded-xl transition-all cursor-default">
                                 <div className="text-left">
-                                    <p className="text-[9px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{case_item.title}</p>
+                                    <p className="text-[9px] font-black text-white uppercase tracking-widest truncate max-w-[120px]">{case_item.title || case_item.found_item_title}</p>
                                     <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tighter">{case_item.status.replace('_', ' ')}</p>
                                 </div>
-                                <div className={`w-1.5 h-1.5 rounded-full ${['matched', 'pending_owner'].includes(case_item.status) ? 'bg-blue-500' : 'bg-slate-700'}`}></div>
+                                <div className={`w-1.5 h-1.5 rounded-full ${['matched', 'pending_owner', 'approved', 'secure'].includes(case_item.status) ? 'bg-blue-500' : 'bg-slate-700'}`}></div>
                             </div>
                         ))
                     )}

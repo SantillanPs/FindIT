@@ -2,6 +2,7 @@ import React from 'react';
 import ClaimCard from './ClaimCard';
 import { ClipboardList, SearchX } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AnimatePresence } from "framer-motion";
 
 const ClaimsTab = ({ 
   filteredClaims, 
@@ -39,17 +40,19 @@ const ClaimsTab = ({
            </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {filteredClaims.map(claim => (
-            <ClaimCard 
-              key={claim.id} 
-              claim={claim} 
-              onReview={(c) => {
-                setSelectedClaim(c);
-                setClaimReviewStep(1);
-              }} 
-            />
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredClaims.map(claim => (
+              <ClaimCard 
+                key={claim.id} 
+                claim={claim} 
+                onReview={(c) => {
+                  setSelectedClaim(c);
+                  setClaimReviewStep(1);
+                }} 
+              />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>

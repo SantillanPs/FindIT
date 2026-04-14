@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { format } from 'date-fns';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +10,7 @@ const AuditLogs = () => {
     queryKey: ['audit-logs'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('audit_logs')
+        .from('v_super_audit_logs')
         .select('*')
         .order('timestamp', { ascending: false });
 

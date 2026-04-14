@@ -50,8 +50,8 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
     if (!user && (!guestName.trim() || !guestEmail.trim())) return;
 
     setLoading(true);
+    try {
       const { error } = await supabase
-        .schema('internal')
         .from('witness_reports')
         .insert([{
           lost_item_id: report.id,

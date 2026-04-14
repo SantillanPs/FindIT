@@ -21,7 +21,6 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger }) => {
     queryKey: ['admin_witness_reports'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .schema('internal')
         .from('witness_reports')
         .select('*')
         .order('created_at', { ascending: false });
@@ -35,7 +34,6 @@ const WitnessReportsTab = ({ setPreviewImage, refreshTrigger }) => {
     setActionLoading(reportId);
     try {
       const { error } = await supabase
-        .schema('internal')
         .from('witness_reports')
         .update({ status })
         .eq('id', reportId);

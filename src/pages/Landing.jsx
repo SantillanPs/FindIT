@@ -58,7 +58,6 @@ const Landing = () => {
     queryKey: ['site_config'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .schema('internal')
         .from('site_configs')
         .select('*')
         .eq('id', 'main')
