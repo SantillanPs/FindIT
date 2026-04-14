@@ -215,7 +215,6 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/super" icon={Globe} label="System Overview" />
                      <SideNavItem to="/super/feedback" icon={MessageSquare} label="Feedback Hub" count={adminStats.feedbacks} />
                      <SideNavItem to="/super/staff" icon={Users} label="Staff Management" />
-                     <SideNavItem to="/super/registry" icon={Shield} label="Account Approval" />
                      <SideNavItem to="/super/audit" icon={ShieldCheck} label="Security Audit Logs" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />

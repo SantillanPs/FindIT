@@ -156,7 +156,6 @@ const AppContent = () => {
             <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
               <Route path="/super" element={<SuperAdminDashboard />} />
               <Route path="/super/staff" element={<SuperAdminDashboard />} />
-              <Route path="/super/registry" element={<SuperAdminDashboard />} />
               <Route path="/super/audit" element={<SuperAdminDashboard />} />
               <Route path="/super/feedback" element={<SuperAdminDashboard />} />
             </Route>

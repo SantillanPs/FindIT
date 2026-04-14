@@ -35,7 +35,6 @@ const SuperAdminDashboard = () => {
     { id: 'landing', label: 'Landing Page', icon: 'fa-desktop' },
     { id: 'feedback', label: 'Feedback Hub', icon: 'fa-comments' },
     { id: 'staff', label: 'Staff Management', icon: 'fa-users-gear' },
-    { id: 'registry', label: 'Account Approval', icon: 'fa-shield' },
     { id: 'audit', label: 'Audit Logs', icon: 'fa-shield-halved' }
   ];
 
@@ -55,7 +54,6 @@ const SuperAdminDashboard = () => {
             {currentTab === 'staff' && <StaffManagement />}
             {currentTab === 'audit' && <AuditLogs />}
             {currentTab === 'feedback' && <FeedbackHub />}
-            {currentTab === 'registry' && <MemberRegistry setIsSyncing={(val) => {}} refreshTrigger={0} />}
           </motion.div>
         </AnimatePresence>
       </div>
