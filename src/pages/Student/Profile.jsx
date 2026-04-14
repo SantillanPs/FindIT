@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUserProfile } from '../../hooks/useUserProfile';
+import { imageCache } from '../../lib/imageCache';
 import { 
   Smartphone,
   Mail,
@@ -19,19 +22,30 @@ import {
   X,
   RefreshCw,
   Clock,
-  Edit3
+  Edit3,
+  Loader2
 } from 'lucide-react';
 import ImageUpload from '../../components/ImageUpload';
+import { useProfileUpload } from '../../hooks/useProfileUpload';
 
 const Profile = () => {
   const { userId } = useParams();
   const { user: currentUser, refreshUser } = useAuth();
   const { colleges } = useMasterData();
+  const queryClient = useQueryClient();
   
-  const [profileUser, setProfileUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const isOwnProfile = !userId || userId === currentUser?.id;
+  const targetId = userId || currentUser?.id;
+
+  const { data: profileUser, isLoading: loading, error: profileError } = useUserProfile(targetId);
+  
+  const [avatarError, setAvatarError] = useState(false);
+  const [proofError, setProofError] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
+  const { uploadAvatar, uploading: avatarUploading } = useProfileUpload();
+  const avatarInputRef = React.useRef(null);
   
   const [editForm, setEditForm] = useState({
     first_name: '',
@@ -40,36 +54,21 @@ const Profile = () => {
     department: ''
   });
 
-  const isOwnProfile = !userId || userId === currentUser?.id;
-  const targetId = userId || currentUser?.id;
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const { data: userData, error: userError } = await supabase
-          .from('user_profiles_v1')
-          .select('*')
-          .eq('id', targetId)
-          .single();
-          
-        if (userError) throw userError;
-        setProfileUser(userData);
-        
-        setEditForm({
-          first_name: userData.first_name || '',
-          last_name: userData.last_name || '',
-          student_id_number: userData.student_id_number || '',
-          department: userData.department || ''
-        });
-
-      } catch (err) {
-        console.error('Failed to fetch profile', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (targetId) fetchProfile();
-  }, [targetId]);
+    if (profileUser) {
+      setEditForm({
+        first_name: profileUser.first_name || '',
+        last_name: profileUser.last_name || '',
+        student_id_number: profileUser.student_id_number || '',
+        department: profileUser.department || ''
+      });
+      
+      // Initialize error states based on cache
+      if (profileUser.photo_url) setAvatarError(imageCache.isFailed(profileUser.photo_url));
+      if (profileUser.verification_proof_url) setProofError(imageCache.isFailed(profileUser.verification_proof_url));
+    }
+  }, [profileUser]);
 
   const handleSaveProfile = async () => {
     setSaveLoading(true);
@@ -87,7 +86,10 @@ const Profile = () => {
         .single();
 
       if (error) throw error;
-      setProfileUser(data);
+      
+      // Standard: Invalidate queries after mutation
+      await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
+      
       setIsEditing(false);
       refreshUser();
     } catch (err) {
@@ -97,26 +99,67 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const url = await uploadAvatar(file);
+    if (url) {
+      // Standard: Invalidate queries after mutation
+      await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
+    }
+  };
+
   if (loading) return null;
 
   return (
     <div className="max-w-2xl mx-auto pb-32 relative z-10 w-full">
       {/* Profile Header */}
       <div className="flex flex-col items-center justify-center pt-10 pb-8 px-6 text-center">
-        <div className="relative group mb-5">
+        <div className="relative group mb-4">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-900 flex items-center justify-center text-4xl font-bold text-white overflow-hidden border-2 border-white/10 shadow-2xl relative z-10">
-            {profileUser.photo_url ? (
-              <img src={profileUser.photo_url} alt="Profile" className="w-full h-full object-cover" />
+            {profileUser.photo_url && !avatarError ? (
+              <img 
+                src={profileUser.photo_url} 
+                alt="Profile" 
+                className="w-full h-full object-cover" 
+                onError={() => {
+                  imageCache.markFailed(profileUser.photo_url);
+                  setAvatarError(true);
+                }}
+              />
             ) : (
               <span className="font-bold tracking-tight text-white/30 uppercase">
                 {profileUser.first_name?.charAt(0) || 'U'}
               </span>
             )}
+            
+            {avatarUploading && (
+              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-20">
+                <Loader2 size={24} className="text-uni-400 animate-spin" />
+              </div>
+            )}
           </div>
+          
           {isOwnProfile && (
-            <button className="absolute bottom-0 right-0 p-2.5 bg-slate-800 text-white rounded-full shadow-lg border border-white/10 z-20 hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all">
-              <Camera size={14} strokeWidth={2.5} />
-            </button>
+            <>
+              <input 
+                type="file" 
+                ref={avatarInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleAvatarSelect}
+                disabled={avatarUploading}
+              />
+              <button 
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                title="Change Profile Picture"
+                className="absolute -bottom-1 -right-1 p-2.5 bg-slate-800 text-white rounded-full shadow-lg border border-white/10 z-20 hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center"
+              >
+                <Camera size={14} strokeWidth={2.5} />
+              </button>
+            </>
           )}
         </div>
 
@@ -251,11 +294,19 @@ const Profile = () => {
           />
           
           <div className="p-5 sm:p-6 bg-transparent">
-            {profileUser.verification_proof_url ? (
+            {(profileUser.verification_proof_url && !proofError) ? (
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">ID Document Proof</p>
                 <div className="aspect-video w-full bg-slate-950 rounded-2xl border border-white/5 overflow-hidden">
-                  <img src={profileUser.verification_proof_url} alt="Proof of ID" className="w-full h-full object-cover" />
+                  <img 
+                    src={profileUser.verification_proof_url} 
+                    alt="Proof of ID" 
+                    className="w-full h-full object-cover" 
+                    onError={() => {
+                      imageCache.markFailed(profileUser.verification_proof_url);
+                      setProofError(true);
+                    }}
+                  />
                 </div>
               </div>
             ) : (
@@ -277,7 +328,10 @@ const Profile = () => {
                       .from('user_profiles_v1')
                       .update({ verification_proof_url: url, verification_status: 'pending' })
                       .eq('id', currentUser.id);
-                    if (!error) refreshUser();
+                    if (!error) {
+                       await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
+                       refreshUser();
+                    }
                   }}
                 />
               </div>

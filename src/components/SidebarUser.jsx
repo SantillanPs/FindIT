@@ -27,9 +27,9 @@ export function SidebarUser({ user, theme, toggleTheme, handleLogout }) {
           <DropdownMenuTrigger render={
             <button className="outline-none group">
               <Avatar className="h-9 w-9 rounded-xl shadow-xl transition-transform group-hover:scale-110 border border-white/10 cursor-pointer">
-                <AvatarImage src={user.photo_url} />
-                <AvatarFallback className="bg-slate-900 text-sky-400 text-[10px] font-bold uppercase">
-                  {user.email.substring(0, 2).toUpperCase()}
+                <AvatarImage src={user.photo_url} className="object-cover" />
+                <AvatarFallback className="bg-slate-900 text-uni-400 text-[10px] font-bold uppercase transition-colors group-hover:text-white group-hover:bg-uni-500/20">
+                  {user.first_name?.charAt(0) || user.email.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </button>
