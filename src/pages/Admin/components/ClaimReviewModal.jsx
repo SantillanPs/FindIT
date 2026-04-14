@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { imageCache } from '../../../lib/imageCache';
 import { 
   ShieldCheck, 
-  AlertCircle, 
+  AlertCircle,
+  AlertTriangle,
+  HelpCircle,
   CheckCircle2, 
   SearchCheck,
   ArrowRight, 
@@ -41,415 +43,215 @@ const ClaimReviewModal = ({
   if (!selectedClaim) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl"
+        className="absolute inset-0 bg-slate-950/20 backdrop-blur-md"
         onClick={() => setSelectedClaim(null)}
       />
+      
       <motion.div 
-        initial={{ scale: 0.95, opacity: 0, y: 20 }}
+        initial={{ scale: 0.9, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="w-full max-w-4xl bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden relative z-10 shadow-3xl flex flex-col max-h-[90vh]"
+        exit={{ scale: 0.9, opacity: 0, y: 30 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="w-full max-w-2xl bg-[#0F172A] border border-white/10 rounded-2xl overflow-hidden relative z-10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] flex flex-col max-h-[85dvh] sm:max-h-[90vh]"
       >
-        {/* Header */}
-        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-          <div className="flex items-center gap-5">
-              <div className="w-12 h-12 rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
-                  <SearchCheck size={24} />
-              </div>
-              <div>
-                  <h3 className="text-xl font-bold text-white tracking-tight">Review Claim Details</h3>
-                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
-                    Case #{selectedClaim.id.toString().padStart(5, '0')} • Pending Resolution
-                  </p>
-              </div>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="flex items-center gap-3">
-                {[1,2,3].map(s => (
-                    <div key={s} className={`h-1.5 rounded-full transition-all duration-500 ${claimReviewStep === s ? 'w-12 bg-uni-400 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.5)]' : 'w-4 bg-white/10'}`} />
-                ))}
-             </div>
-             <button 
-               onClick={() => setSelectedClaim(null)}
-               className="w-12 h-12 rounded-full border border-white/5 hover:bg-white/5 flex items-center justify-center text-slate-400 hover:text-white transition-all shadow-lg"
-             >
-               <X size={20} />
-             </button>
-          </div>
-        </div>
+        {/* Absolute Close Button */}
+        <button 
+            onClick={() => setSelectedClaim(null)}
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 rounded-full bg-[#1e293b] border border-white/10 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all z-50 group active:scale-90 shadow-xl"
+        >
+            <X size={16} className="transition-transform duration-300" />
+        </button>
 
-        {/* Context Strip (Backlog Item #97) */}
-        <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center gap-6">
-          <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shrink-0">
-            {selectedClaim.item_photo_url && !itemImgError ? (
-              <img 
-                src={selectedClaim.item_photo_url} 
-                alt="" 
-                className="w-full h-full object-cover" 
-                onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-700">
-                <ImageIcon size={20} />
-              </div>
-            )}
-          </div>
-          <div className="min-w-0 flex-grow py-0.5">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md">
-                {selectedClaim.item_category}
-              </Badge>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{selectedClaim.item_location}</p>
+        {/* Header Section */}
+        <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6 flex items-start gap-3 shrink-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20 shadow-inner group overflow-hidden relative shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-uni-500/20 to-transparent opacity-50" />
+                <SearchCheck size={20} className="relative z-10 sm:scale-110" />
             </div>
-            <h4 className="text-sm font-bold text-white truncate">{selectedClaim.item_title}</h4>
-          </div>
+            
+            <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0">
+                <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate pr-10">Review Claim</h3>
+                
+                <div className="flex flex-col gap-1.5 sm:gap-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-widest shrink-0">
+                            ID #{selectedClaim.id.toString().padStart(5, '0')}
+                        </span>
+                        <div className="w-1 h-1 rounded-full bg-slate-800" />
+                        <span className="text-[9px] sm:text-[10px] text-slate-500 font-black uppercase tracking-[0.1em]">
+                            TRIAGE VIEW
+                        </span>
+                    </div>
+                    
+                    <span className="text-[9px] sm:text-[10px] text-uni-400 font-black uppercase tracking-[0.15em] flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-uni-400 animate-pulse shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
+                        PENDING RESOLUTION
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {/* Context Strip (Mini Core) */}
+        <div className="px-3 py-2 mx-4 sm:px-4 sm:py-3 sm:mx-6 bg-slate-800/50 border border-white/5 rounded-xl flex items-center gap-3 sm:gap-4 group transition-all cursor-default shrink-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl overflow-hidden bg-[#0F172A] border border-white/5 shadow-2xl relative shrink-0">
+                {selectedClaim.item_photo_url && !itemImgError ? (
+                    <img 
+                        src={selectedClaim.item_photo_url} 
+                        alt="" 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                        onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }}
+                    />
+                ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-600 bg-[#0F172A]">
+                        <ImageIcon size={24} />
+                    </div>
+                )}
+            </div>
+            
+            <div className="min-w-0 flex-1 py-1">
+                <div className="flex items-center gap-2 mb-1.5">
+                    <Badge className="bg-uni-500/10 text-uni-400 border-uni-400/20 text-[9px] font-black uppercase tracking-[0.15em] px-2.5 py-0.5 rounded-md">
+                        {selectedClaim.item_category}
+                    </Badge>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">
+                        {selectedClaim.item_location}
+                    </span>
+                </div>
+                <h4 className="text-base font-bold text-white tracking-tight leading-none group-hover:text-uni-400 transition-colors">
+                    {selectedClaim.item_title}
+                </h4>
+            </div>
         </div>
 
 
-        <div className="flex-grow overflow-y-auto no-scrollbar p-8 md:p-12">
-          <AnimatePresence mode="wait">
-            {claimReviewStep === 1 && (
-              <motion.div 
-                key="rev1" 
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                className="space-y-10"
-              >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                      <div className="space-y-8">
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                            <PackageCheck size={12} /> Original Item Record
-                          </span>
-                          <div className="p-8 bg-white/[0.03] rounded-[2rem] border border-white/5 space-y-5 text-left shadow-inner">
-                               <div className="flex justify-between items-start">
-                                  <h4 className="text-2xl font-bold text-white tracking-tight">{selectedClaim.item_title}</h4>
-                                  <div className="bg-white/5 border border-white/10 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full">
-                                    FOUND ITEM
-                                  </div>
-                               </div>
-                               <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                  <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-uni-400" /> {selectedClaim.item_location}</span>
-                                  <span className="flex items-center gap-2"><FileText size={14} className="text-uni-400" /> {selectedClaim.item_date_found ? new Date(selectedClaim.item_date_found).toLocaleDateString() : 'Unknown'}</span>
-                               </div>
-                               <p className="text-[13px] text-slate-400 font-medium leading-relaxed">{selectedClaim.item_description || 'No detailed description.'}</p>
+
+        <div className="flex-grow overflow-y-auto no-scrollbar px-4 py-4 space-y-6 pb-24 sm:pb-4">
+            
+            {/* Visual Evidence Stack */}
+            <div className="space-y-2">
+                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Visual Evidence</p>
+                 <div className="rounded-xl border border-white/10 overflow-hidden divide-y divide-white/10 relative shadow-xl shadow-black/50">
+                     {/* Original Item */}
+                     <div className="bg-[#0F172A] relative aspect-video sm:aspect-[21/9]">
+                          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded-md border border-white/10 text-[8px] font-black text-white uppercase tracking-widest shadow-md">
+                               System Record
                           </div>
-
-                          <div className="p-8 bg-uni-500/5 rounded-[2rem] border border-uni-500/10 space-y-5 text-left">
-                              <div className="flex items-center gap-2">
-                                 <ShieldCheck size={14} className="text-uni-400" />
-                                 <span className="text-[10px] font-bold text-uni-400 uppercase tracking-widest">Internal Staff Reference</span>
-                              </div>
-                              <div className="space-y-4">
-                                 <div>
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Staff Note</p>
-                                    <p className="text-[13px] font-medium text-slate-200 pl-4 border-l border-uni-500/20 italic">
-                                       {selectedClaim.found_item_verification_note || "No internal notes provided."}
-                                    </p>
-                                 </div>
-                                 <div className="pt-2">
-                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-2">Planned Challenge Question</p>
-                                    <p className="text-xs font-bold text-white bg-black/40 px-4 py-3 rounded-xl border border-white/5">
-                                       {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
-                                     </p>
-                                 </div>
-                              </div>
-                          </div>
-                      </div>
-
-                      <div className="space-y-8">
-                           <div className="flex items-center justify-between">
-                               <span className="text-[10px] font-bold text-uni-400 uppercase tracking-widest flex items-center gap-2">
-                                 <User size={12} /> Claimant Information
-                               </span>
-                               {selectedClaim.similarity_score !== undefined && (
-                                   <div className="px-3 py-1 bg-uni-500/10 rounded-full border border-uni-500/20 text-[9px] font-bold text-uni-400 uppercase tracking-widest flex items-center gap-2">
-                                       Match Score: {(selectedClaim.similarity_score * 100).toFixed(0)}%
-                                   </div>
-                               )}
-                           </div>
-                           
-                          <div className="p-8 bg-slate-950/50 rounded-[2.5rem] border border-white/5 space-y-6 text-left relative overflow-hidden shadow-2xl">
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-4">
-                                      <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-slate-500"><User size={18} /></div>
-                                      <div>
-                                        <p className="text-lg font-bold text-white tracking-tight">{selectedClaim.owner_name}</p>
-                                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedClaim.course_department || 'Student'}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    {selectedClaim.found_item_challenge_question && (
-                                        <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-2">
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Answer to Prompt</p>
-                                            <p className="text-[13px] text-white font-medium italic">"{selectedClaim.proof_description}"</p>
-                                        </div>
-                                    )}
-
-                                    {/* Data Comparison: Structural Attributes */}
-                                    {(selectedClaim.found_item_attributes || selectedClaim.lost_item_attributes || selectedClaim.claim_attributes) && (
-                                        <div className="pt-6 border-t border-white/5 space-y-5">
-                                            <div className="flex items-center justify-between">
-                                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                                    <SearchCheck size={14} className="text-uni-400" />
-                                                    Attribute Check
-                                                </p>
-                                                {(() => {
-                                                    const comparisonSource = selectedClaim.lost_item_attributes || selectedClaim.claim_attributes;
-                                                    if (!comparisonSource) return null;
-                                                    
-                                                    const hasConflict = Object.keys(selectedClaim.found_item_attributes || {}).some(key => 
-                                                        comparisonSource[key] && 
-                                                        selectedClaim.found_item_attributes[key]?.toLowerCase() !== comparisonSource[key].toLowerCase()
-                                                    );
-
-                                                    return hasConflict ? (
-                                                        <span className="text-[9px] font-bold text-red-500 bg-red-500/10 px-3 py-1 rounded-lg border border-red-500/20 uppercase tracking-widest">
-                                                            Mismatch
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-lg border border-emerald-500/20 uppercase tracking-widest">
-                                                            Consistent
-                                                        </span>
-                                                    );
-                                                })()}
-                                            </div>
-
-                                            <div className="space-y-3">
-                                                {Object.keys(selectedClaim.found_item_attributes || {}).filter(k => k.trim() !== '').map(key => {
-                                                    const foundVal = selectedClaim.found_item_attributes[key];
-                                                    const claimVal = selectedClaim.claim_attributes?.[key];
-                                                    const lostVal = selectedClaim.lost_item_attributes?.[key];
-                                                    const verifiedVal = claimVal || lostVal;
-                                                    const isMismatch = verifiedVal && foundVal.toLowerCase() !== verifiedVal.toLowerCase();
-
-                                                    return (
-                                                        <div key={`attr-${key}`} className={`flex items-center justify-between p-4 rounded-[1.25rem] border ${isMismatch ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
-                                                            <div className="space-y-1">
-                                                                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{key}</p>
-                                                                <div className="flex items-center gap-2">
-                                                                  <p className={`text-[11px] font-bold uppercase tracking-widest ${isMismatch ? 'text-red-400 line-through opacity-50' : 'text-white'}`}>{foundVal}</p>
-                                                                  {isMismatch && <ArrowRight size={10} className="text-slate-600" />}
-                                                                  {isMismatch && <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">{verifiedVal}</p>}
-                                                                </div>
-                                                            </div>
-                                                            {isMismatch ? <AlertCircle size={14} className="text-red-500" /> : verifiedVal ? <CheckCircle2 size={14} className="text-emerald-500" /> : null}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
+                          {selectedClaim.item_photo_url && !itemImgError ? (
+                                <img src={selectedClaim.item_photo_url} alt="Original item" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }} />
+                          ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
+                                    <ImageIcon size={24} className="text-slate-800" />
+                                    <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No Record Photo</p>
                                 </div>
+                          )}
+                     </div>
+                     {/* Proof Item */}
+                     <div className="bg-slate-900 relative aspect-video sm:aspect-[21/9]">
+                          <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-uni-500/20 backdrop-blur-md rounded-md border border-uni-500/30 text-[8px] font-black text-uni-400 uppercase tracking-widest shadow-md">
+                               Claimant Proof
                           </div>
-                      </div>
-                  </div>
-
-                  <button 
-                      onClick={() => setClaimReviewStep(2)}
-                      className="w-full bg-white text-slate-950 py-6 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-uni-600 hover:text-white transition-all shadow-xl flex items-center justify-center gap-4"
-                  >
-                       Compare Evidence Photos
-                       <ArrowRight size={16} />
-                  </button>
-              </motion.div>
-            )}
-
-
-            {claimReviewStep === 2 && (
-              <motion.div 
-                key="rev2" 
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                className="space-y-12"
-              >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-left">
-                      <div className="space-y-4">
-                          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 px-2">
-                             <ShieldCheck size={14} /> Found Item (Staff Input)
-                          </p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/5 overflow-hidden relative shadow-2xl text-left">
-                              {selectedClaim.item_photo_url && !itemImgError ? (
-                                  <img 
-                                    src={selectedClaim.item_photo_url} 
-                                    className="w-full h-full object-cover" 
-                                    alt="Original item" 
-                                    onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }}
-                                  />
-                              ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center space-y-4 bg-white/[0.02]">
-                                      <ImageIcon size={40} className="text-slate-800" />
-                                      <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No primary photo</p>
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-
-                      <div className="space-y-4">
-                          <p className="text-[10px] font-bold text-uni-400 uppercase tracking-widest flex items-center gap-2 px-2">
-                             <ImageIcon size={14} /> Claimant Submission
-                          </p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-uni-500/10 overflow-hidden relative shadow-2xl shadow-uni-600/5 text-left">
-                              {selectedClaim.proof_photo_url && !proofImgError ? (
-                                  <img 
-                                    src={selectedClaim.proof_photo_url} 
-                                    className="w-full h-full object-cover" 
-                                    alt="Claim proof" 
-                                    onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }}
-                                  />
-                              ) : (
-                                  <div className="w-full h-full flex flex-col items-center justify-center space-y-4 bg-white/[0.02]">
-                                      <XCircle size={40} className="text-slate-800" />
-                                      <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">No proof photo provided</p>
-                                  </div>
-                              )}
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                      <div className="lg:col-span-1 p-8 bg-white/[0.02] rounded-[2rem] border border-white/5 flex flex-col justify-center space-y-4">
-                           <div className="w-10 h-10 rounded-xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
-                               <Scale size={20} />
-                           </div>
-                           <div className="space-y-2">
-                             <h4 className="text-[10px] font-bold text-white uppercase tracking-widest">Review Logic</h4>
-                             <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
-                               Analyze item context against the claimant's visual proof and account history.
-                             </p>
-                           </div>
-                      </div>
-                      <div className="lg:col-span-3 p-8 md:p-10 bg-black/40 rounded-[2.5rem] border border-white/5 shadow-inner">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                             <div className="space-y-4">
-                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Ownership Profile</p>
-                                <div className="space-y-1">
-                                    <p className="text-xl font-bold text-white tracking-tight leading-none">{selectedClaim.owner_name}</p>
-                                    <p className="text-[10px] text-uni-400 font-bold uppercase tracking-widest mt-2">{selectedClaim.course_department || 'General Member'}</p>
+                          {selectedClaim.proof_photo_url && !proofImgError ? (
+                                <img src={selectedClaim.proof_photo_url} alt="Claim proof" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }} />
+                          ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
+                                    <XCircle size={24} className="text-slate-800" />
+                                    <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No Proof Uploaded</p>
                                 </div>
-                             </div>
-                             <div className="md:border-l border-white/5 md:pl-10 space-y-4">
-                                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Contact Info</p>
-                                <div className="flex flex-col gap-3">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center text-uni-400">
-                                          <MessageSquare size={14} />
-                                        </div>
-                                        <p className="text-xs font-bold text-white uppercase tracking-wider">{selectedClaim.contact_info || 'N/A'}</p>
-                                    </div>
-                                    {selectedClaim.guest_email && (
-                                        <p className="text-[11px] text-slate-500 font-medium pl-12">{selectedClaim.guest_email}</p>
-                                    )}
-                                </div>
-                             </div>
-                          </div>
-                      </div>
-                  </div>
+                          )}
+                     </div>
+                 </div>
+            </div>
 
-                  <div className="flex items-center gap-4">
-                      <button onClick={() => setClaimReviewStep(1)} className="px-10 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all">Back to Details</button>
-                      <button 
-                          onClick={() => setClaimReviewStep(3)}
-                          className="flex-grow bg-white text-slate-950 py-5 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-uni-600 hover:text-white transition-all shadow-xl"
-                      >
-                           Submit Decision
-                      </button>
-                  </div>
-              </motion.div>
-            )}
-
-
-            {claimReviewStep === 3 && (
-              <motion.div 
-                key="rev3" 
-                initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
-                className="space-y-12 py-10"
-              >
-                  <div className="max-w-xl mx-auto text-center space-y-8">
-                      <div className="w-20 h-20 bg-uni-500/10 rounded-3xl flex items-center justify-center mx-auto border border-uni-500/20 text-uni-400 shadow-2xl">
-                        <ThumbsUp size={32} />
+            {/* Authentication Check (The Q&A) */}
+            <div className="space-y-2">
+                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Authentication Check</p>
+                 <div className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
+                     <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
+                         <div className="flex items-center justify-between">
+                             <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Verification Question</span>
+                             <HelpCircle size={14} className="text-slate-500" />
+                         </div>
+                         <p className="text-[13px] font-bold text-slate-300">
+                             {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
+                         </p>
+                     </div>
+                     <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
+                         <div className="flex items-center justify-between">
+                             <span className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Claimant's Answer</span>
+                             <MessageSquare size={14} className="text-uni-400" />
+                         </div>
+                         <p className="text-[13px] font-medium text-white italic">
+                             "{selectedClaim.proof_description || 'No direct answer provided.'}"
+                         </p>
+                     </div>
+                 </div>
+            </div>
+            
+            {/* Claimant Identity & Staff Alerts */}
+            <div className="flex flex-col gap-3">
+                 <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Identity & Meta</p>
+                 
+                 <div className="flex items-center gap-3 px-1">
+                      <div className="w-10 h-10 rounded-full bg-slate-800 border border-white/5 flex items-center justify-center text-slate-400 shrink-0">
+                          <User size={18} />
                       </div>
-                      <div className="space-y-3">
-                        <h4 className="text-3xl font-bold text-white tracking-tight">Final Decision</h4>
-                        <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">
-                            Upon approval, the student will be notified and this item will be secured for physical collection.
-                        </p>
+                      <div className="min-w-0 flex-1">
+                          <h4 className="text-base font-bold text-white truncate">{selectedClaim.owner_name}</h4>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedClaim.course_department || 'STUDENT'}</p>
                       </div>
-                      
-                      <div className="p-8 bg-white/[0.02] rounded-[2rem] border border-white/5 flex items-center justify-center gap-10 mx-auto w-fit">
-                          <div className="text-left border-r border-white/10 pr-10">
-                               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Selected Item</p>
-                               <p className="text-sm text-white font-bold tracking-tight">{selectedClaim.item_title}</p>
+                      {selectedClaim.similarity_score !== undefined && (
+                          <div className="px-2 py-1 bg-uni-400/10 rounded-md border border-uni-400/20 text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">
+                              {(selectedClaim.similarity_score * 100).toFixed(0)}% MATCH
                           </div>
-                          <div className="text-left">
-                               <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Release To</p>
-                               <p className="text-sm text-uni-400 font-bold tracking-tight">{selectedClaim.owner_name}</p>
-                          </div>
-                      </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-                      {selectedClaim.status === 'approved' ? (
-                          <button 
-                            onClick={() => { handleClaimReview(selectedClaim.id, 'approved'); setSelectedClaim(null); }}
-                            disabled={actionLoading}
-                            className="col-span-2 group p-10 rounded-[2.5rem] bg-emerald-600 border border-emerald-500/50 hover:bg-emerald-500 hover:shadow-emerald-600/20 transition-all text-center space-y-5 shadow-2xl"
-                        >
-                            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform">
-                                <History size={24} />
-                            </div>
-                            <div className="space-y-2">
-                                <p className="text-[12px] font-bold text-white uppercase tracking-widest">
-                                    Approve & Prepare for Pickup
-                                </p>
-                                <p className="text-[10px] text-white/60 font-medium">
-                                    Notify the student that the item is ready for collection
-                                </p>
-                            </div>
-                        </button>
-                      ) : (
-                        <>
-                          <button 
-                              onClick={() => { handleClaimReview(selectedClaim.id, 'rejected'); setSelectedClaim(null); }}
-                              disabled={actionLoading}
-                              className="group p-10 rounded-[2.5rem] bg-white/[0.02] border border-white/10 hover:border-red-500/30 hover:bg-red-500/10 transition-all text-center space-y-5 shadow-inner"
-                          >
-                              <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mx-auto group-hover:scale-110 transition-transform">
-                                <XCircle size={24} />
-                              </div>
-                              <div className="space-y-1">
-                                  <p className="text-[12px] font-bold text-white uppercase tracking-widest">Decline Claim</p>
-                                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest opacity-60">Insufficient evidence</p>
-                              </div>
-                          </button>
-                          
-                          <button 
-                              onClick={() => { handleClaimReview(selectedClaim.id, 'approved'); setSelectedClaim(null); }}
-                              disabled={actionLoading}
-                              className="group p-10 rounded-[2.5rem] bg-uni-600 border border-uni-500/20 hover:bg-uni-500 hover:shadow-2xl hover:shadow-uni-600/20 transition-all text-center space-y-5"
-                          >
-                              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform">
-                                <ThumbsUp size={24} />
-                              </div>
-                              <div className="space-y-1">
-                                  <p className="text-[12px] font-bold text-white uppercase tracking-widest">Approve Claim</p>
-                                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">Notify for collection</p>
-                              </div>
-                          </button>
-                        </>
                       )}
-                  </div>
-                  
-                  <div className="pt-6 text-center">
-                    <button onClick={() => setClaimReviewStep(2)} className="text-[10px] font-bold text-slate-600 uppercase tracking-widest hover:text-white transition-all flex items-center gap-2 mx-auto">
-                      <ArrowRight size={12} className="rotate-180" /> Review visual evidence
-                    </button>
-                  </div>
-              </motion.div>
+                 </div>
+
+                 {selectedClaim.found_item_verification_note && (
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3 mt-2">
+                          <AlertTriangle size={16} className="text-amber-500 shrink-0 mt-0.5" />
+                          <div>
+                              <p className="text-[9px] font-black text-amber-500 uppercase tracking-[0.2em] mb-1">Staff Alert</p>
+                              <p className="text-[12px] font-medium text-amber-500/90 leading-snug">
+                                  {selectedClaim.found_item_verification_note}
+                              </p>
+                          </div>
+                      </div>
+                  )}
+            </div>
+
+        </div>
+        
+        {/* Unified Sticky Decision Bar */}
+        <div className="sticky bottom-0 p-4 bg-[#0F172A] border-t border-white/5 mt-auto z-20 shrink-0 pb-safe">
+            <div className="flex gap-3">
+                <button 
+                    onClick={() => { handleClaimReview(selectedClaim.id, 'rejected'); setSelectedClaim(null); }}
+                    disabled={actionLoading}
+                    className="flex-[1] bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-3.5 sm:py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    <XCircle size={16} /> Decline
+                </button>
+                <button 
+                    onClick={() => { handleClaimReview(selectedClaim.id, 'approved'); setSelectedClaim(null); }}
+                    disabled={actionLoading}
+                    className="flex-[1.5] bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[11px] uppercase tracking-[0.2em] py-3.5 sm:py-4 rounded-xl transition-all shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                    <CheckCircle2 size={16} /> Approve Proof
+                </button>
+            </div>
+            {actionLoading && (
+                <div className="absolute inset-0 bg-[#0F172A]/80 backdrop-blur-sm flex items-center justify-center z-30">
+                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.2em] animate-pulse relative z-10 flex items-center gap-2">
+                         <span className="w-3 h-3 border-2 border-uni-400 border-t-white rounded-full animate-spin" />
+                         Processing Decision...
+                    </p>
+                </div>
             )}
-          </AnimatePresence>
         </div>
       </motion.div>
     </div>
