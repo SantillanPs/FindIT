@@ -2,10 +2,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
 import { supabase } from '../../../lib/supabase';
 import { 
-  Search, 
   ShieldCheck, 
   AlertCircle, 
-  CheckCircle, 
+  CheckCircle2, 
+  SearchCheck,
   ArrowRight, 
   Image as ImageIcon, 
   FileText,
@@ -54,7 +54,7 @@ const ClaimReviewModal = ({
         <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
           <div className="flex items-center gap-5">
               <div className="w-12 h-12 rounded-2xl bg-uni-500/10 flex items-center justify-center text-uni-400 border border-uni-500/20">
-                  <ClipboardSearch size={24} />
+                  <SearchCheck size={24} />
               </div>
               <div>
                   <h3 className="text-xl font-bold text-white tracking-tight">Review Claim Details</h3>
@@ -161,7 +161,7 @@ const ClaimReviewModal = ({
                                         <div className="pt-6 border-t border-white/5 space-y-5">
                                             <div className="flex items-center justify-between">
                                                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                                    <ClipboardSearch size={14} className="text-uni-400" />
+                                                    <SearchCheck size={14} className="text-uni-400" />
                                                     Attribute Check
                                                 </p>
                                                 {(() => {
