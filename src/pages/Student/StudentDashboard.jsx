@@ -27,6 +27,7 @@ const StudentDashboard = () => {
       const { data, error } = await supabase
         .from('v_me_claims')
         .select('*')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
@@ -210,7 +211,7 @@ const StudentDashboard = () => {
         <StatCard index={0} icon="fa-search" label="Lost" value={myLostReports.length} color="blue" variants={statVariants} />
         <StatCard index={1} icon="fa-hand-holding-heart" label="Found" value={myClaims.length} color="green" variants={statVariants} />
         <StatCard index={2} icon="fa-award" label="Points" value={user?.integrity_points || 0} color="gold" variants={statVariants} />
-        <StatCard index={3} icon="fa-bolt" label="Active" value={myClaims.filter(r => r.status === 'matched').length} color="blue" variants={statVariants} />
+        <StatCard index={3} icon="fa-bolt" label="Active" value={myClaims.filter(r => ['matched', 'approved'].includes(r.status)).length} color="blue" variants={statVariants} />
         <StatCard index={4} icon="fa-box-archive" label="Vault" value={assets.length} color="purple" variants={statVariants} />
       </section>
 

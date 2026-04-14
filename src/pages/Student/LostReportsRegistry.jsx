@@ -14,6 +14,11 @@ const LostReportsRegistry = () => {
   const [selectedLostReport, setSelectedLostReport] = useState(null);
   const [showWitnessModal, setShowWitnessModal] = useState(false);
   const [visibleItems, setVisibleItems] = useState(6);
+  
+  const handleWitness = (report) => {
+    setSelectedLostReport(report);
+    setShowWitnessModal(true);
+  };
 
   // 1. Fetch Lost Reports (TanStack Query + Standardized Masked View)
   const { data: lostReports = [], isLoading: loading } = useQuery({
@@ -122,7 +127,7 @@ const LostReportsRegistry = () => {
         <WitnessReportModal 
           isOpen={showWitnessModal}
           onClose={() => setShowWitnessModal(false)}
-          lostItem={selectedLostReport}
+          report={selectedLostReport}
         />
       )}
     </motion.div>

@@ -332,10 +332,10 @@ const MyClaims = () => {
                     <div className="flex items-start gap-4">
                       {/* Item Thumbnail */}
                       <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-slate-900 border border-white/5 overflow-hidden flex-shrink-0">
-                        {claim.item_photo_url ? (
+                        {claim.found_item_photo ? (
                           <img
-                            src={claim.item_photo_url}
-                            alt={claim.item_title}
+                            src={claim.found_item_photo}
+                            alt={claim.found_item_title}
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -358,14 +358,14 @@ const MyClaims = () => {
                         </div>
 
                         <h2 className="text-sm md:text-base font-black text-white uppercase tracking-tight truncate">
-                          {claim.item_title || 'Claimed Item'}
+                          {claim.found_item_title || 'Claimed Item'}
                         </h2>
 
                         <div className="flex items-center gap-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                          {claim.item_category && (
+                          {claim.found_item_category && (
                             <span className="flex items-center gap-1">
                               <i className="fa-solid fa-tag text-[7px] text-slate-600"></i>
-                              {claim.item_category}
+                              {claim.found_item_category}
                             </span>
                           )}
                           <span className="text-slate-700">•</span>
@@ -467,7 +467,7 @@ const MyClaims = () => {
                                 </div>
                               )}
 
-                              {claim.item_location && (
+                              {claim.found_item_location && (
                                 <div className="space-y-2">
                                   <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
                                     <i className="fa-solid fa-location-dot text-[8px] text-slate-700"></i>
@@ -475,13 +475,13 @@ const MyClaims = () => {
                                   </p>
                                   <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
                                     <p className="text-white text-[11px] font-bold uppercase tracking-wider">
-                                      {claim.item_location}
+                                      {claim.found_item_location}
                                     </p>
                                   </div>
                                 </div>
                               )}
 
-                              {!claim.admin_notes && !claim.item_location && (
+                              {!claim.admin_notes && !claim.found_item_location && (
                                 <div className="flex items-center justify-center h-full min-h-[80px] border border-dashed border-white/5 rounded-xl">
                                   <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
                                     No additional details yet
