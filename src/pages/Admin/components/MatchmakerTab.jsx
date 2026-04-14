@@ -49,7 +49,7 @@ const MatchmakerTab = ({
       ) : (
         <div className="space-y-16">
            {filteredMatches.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500" style={{ animationDelay: `${gIdx * 100}ms` }}>
+              <div key={`match-group-${group.found_item.id}`} className="space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-500" style={{ animationDelay: `${gIdx * 100}ms` }}>
                  <MatchGroupHeader 
                    foundItem={group.found_item} 
                    setPreviewImage={setPreviewImage} 
@@ -59,7 +59,7 @@ const MatchmakerTab = ({
                     <div className="absolute left-3 top-0 bottom-4 w-px bg-gradient-to-b from-uni-500/30 via-uni-500/10 to-transparent"></div>
                     {group.top_matches.map((match, mIdx) => (
                        <MatchCard 
-                          key={mIdx}
+                          key={`match-card-${group.found_item.id}-${match.id}`}
                           match={match}
                           foundItem={group.found_item}
                           onDeepCompare={setSelectedMatchPair}

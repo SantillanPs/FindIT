@@ -3,13 +3,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Search, 
-  CheckCircle, 
+  CheckCircle,
+  CheckCircle2,
   ArrowRight, 
   User, 
   MapPin, 
   Calendar,
   Sparkles,
-  ClipboardList
+  ClipboardList,
+  SearchCheck
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 
@@ -43,7 +45,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
                 <div className="space-y-1.5">
                    <h2 className="text-3xl font-bold text-white tracking-tight">Review Match Details</h2>
                    <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest flex items-center gap-2">
-                     <FileSearch size={14} className="text-uni-400" /> Compare submitted reports for potential confirmation
+                     <SearchCheck size={14} className="text-uni-400" /> Compare submitted reports for potential confirmation
                    </p>
                 </div>
                <button 

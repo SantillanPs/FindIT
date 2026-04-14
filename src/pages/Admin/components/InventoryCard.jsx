@@ -30,7 +30,7 @@ const InventoryCard = React.memo(({
 
   // Extract only filled attribute values
   const filledAttributes = item.attributes
-    ? Object.entries(item.attributes).filter(([, v]) => v && String(v).trim())
+    ? Object.entries(item.attributes).filter(([k, v]) => k.trim() !== '' && v && String(v).trim())
     : [];
 
   const hasDescription = item.description && item.description.trim().length > 0;
@@ -146,7 +146,7 @@ const InventoryCard = React.memo(({
           {filledAttributes.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {filledAttributes.map(([key, val]) => (
-                <div key={key} className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg">
+                <div key={`inv-attr-${key}`} className="flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.04] border border-white/[0.06] rounded-lg">
                   <span className="text-[9px] font-bold text-slate-600 uppercase tracking-wider">{key}</span>
                   <span className="text-[10px] font-black text-slate-300">{String(val)}</span>
                 </div>

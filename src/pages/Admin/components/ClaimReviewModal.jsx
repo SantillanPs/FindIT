@@ -19,6 +19,7 @@ import {
   X,
   Lock
 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 
 /**
  * ClaimReviewModal - Premium Professional (Pro Max)
@@ -218,7 +219,7 @@ const ClaimReviewModal = ({
                                             </div>
 
                                             <div className="space-y-3">
-                                                {Object.keys(selectedClaim.found_item_attributes || {}).map(key => {
+                                                {Object.keys(selectedClaim.found_item_attributes || {}).filter(k => k.trim() !== '').map(key => {
                                                     const foundVal = selectedClaim.found_item_attributes[key];
                                                     const claimVal = selectedClaim.claim_attributes?.[key];
                                                     const lostVal = selectedClaim.lost_item_attributes?.[key];
@@ -226,7 +227,7 @@ const ClaimReviewModal = ({
                                                     const isMismatch = verifiedVal && foundVal.toLowerCase() !== verifiedVal.toLowerCase();
 
                                                     return (
-                                                        <div key={key} className={`flex items-center justify-between p-4 rounded-[1.25rem] border ${isMismatch ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
+                                                        <div key={`attr-${key}`} className={`flex items-center justify-between p-4 rounded-[1.25rem] border ${isMismatch ? 'bg-red-500/5 border-red-500/20' : 'bg-white/5 border-white/5'}`}>
                                                             <div className="space-y-1">
                                                                 <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{key}</p>
                                                                 <div className="flex items-center gap-2">

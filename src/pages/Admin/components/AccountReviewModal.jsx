@@ -11,7 +11,7 @@ import {
   Eye,
   Loader2,
   AlertCircle,
-  FileSearch,
+  SearchCheck,
   Check,
   XCircle,
   MessageSquare,
@@ -253,7 +253,7 @@ const AccountReviewModal = ({ isOpen, onClose, student, onComplete }) => {
                                  rel="noopener noreferrer"
                                  className="h-12 px-6 bg-white text-slate-950 rounded-xl flex items-center gap-3 font-bold text-[11px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all shadow-2xl"
                                >
-                                  <FileSearch size={16} />
+                                  <SearchCheck size={16} />
                                   Full resolution
                                </a>
                             </div>

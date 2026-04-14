@@ -10,6 +10,7 @@ import {
   CreditCard,
   MessageCircleQuestion,
   Trophy,
+  RefreshCw,
   X
 } from 'lucide-react';
 import ImageUpload from '../../../components/ImageUpload';

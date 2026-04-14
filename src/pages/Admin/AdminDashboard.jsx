@@ -467,12 +467,13 @@ const AdminDashboard = () => {
 
         {/* Modals & Overlays */}
         <AnimatePresence>
-          {selectedClaim && <ClaimReviewModal {...{selectedClaim, setSelectedClaim, claimReviewStep, setClaimReviewStep, handleClaimReview, actionLoading: actionLoading === `claim-${selectedClaim.id}`}} />}
-          {showReleaseModal && <ReleaseItemModal {...{showReleaseModal, setShowReleaseModal, releaseStep, setReleaseStep, releaseForm, setReleaseForm, handleDirectRelease, actionLoading: actionLoading === showReleaseModal.id}} />}
-          {selectedMatchPair && <MatchComparisonModal {...{selectedMatchPair, setSelectedMatchPair, handleConnectMatch}} />}
-          {previewImage && <ImagePreviewOverlay {...{previewImage, setPreviewImage}} />}
+          {selectedClaim && <ClaimReviewModal key="claim-review" {...{selectedClaim, setSelectedClaim, claimReviewStep, setClaimReviewStep, handleClaimReview, actionLoading: actionLoading === `claim-${selectedClaim.id}`}} />}
+          {showReleaseModal && <ReleaseItemModal key="release-item" {...{showReleaseModal, setShowReleaseModal, releaseStep, setReleaseStep, releaseForm, setReleaseForm, handleDirectRelease, actionLoading: actionLoading === showReleaseModal.id}} />}
+          {selectedMatchPair && <MatchComparisonModal key="match-comparison" {...{selectedMatchPair, setSelectedMatchPair, handleConnectMatch}} />}
+          {previewImage && <ImagePreviewOverlay key="image-preview" {...{previewImage, setPreviewImage}} />}
           
           <ManualIntakeModal 
+            key="manual-intake"
             isOpen={showManualIntake} 
             onClose={() => setShowManualIntake(false)} 
             onSubmit={(data) => manualIntakeMutation.mutate(data)}
@@ -480,7 +481,7 @@ const AdminDashboard = () => {
           />
 
           {showIntakeModal && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 isolate">
+            <div key="intake-overlay" className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 isolate">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/20 backdrop-blur-sm" />
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0, y: 20 }} 

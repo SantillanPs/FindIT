@@ -38,8 +38,6 @@ const MemberVerification = () => {
     } catch (err) {
       console.error('Failed to update verification status in Supabase', err);
     }
-  };
- Josephson
 
   const containerVariants = {
     hidden: { opacity: 0 },

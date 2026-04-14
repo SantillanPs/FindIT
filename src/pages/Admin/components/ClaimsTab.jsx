@@ -44,7 +44,7 @@ const ClaimsTab = ({
           <AnimatePresence mode="popLayout">
             {filteredClaims.map(claim => (
               <ClaimCard 
-                key={claim.id} 
+                key={`pending-claim-${claim.id}`} 
                 claim={claim} 
                 onReview={(c) => {
                   setSelectedClaim(c);
