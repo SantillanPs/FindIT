@@ -1,46 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState([]);
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
-  }, [isOpen]);
-
-  const fetchNotifications = async () => {
-    try {
+  // 1. Synchronized Data Fetching (Backend Standard 2.1)
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotifications(data || []);
-    } catch (err) {
-      console.error('Failed to fetch notifications from Supabase', err);
-    }
-  };
+      return data || [];
+    },
+    // Only poll when the center is open to save resources, 
+    // but keep a reasonable staleTime for background freshness.
+    refetchInterval: isOpen ? 10000 : 60000, 
+  });
 
-  const markAsRead = async (id) => {
-    try {
+  // 2. Optimized Mutation (Backend Standard 2.2)
+  const markReadMutation = useMutation({
+    mutationFn: async (id) => {
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
         .eq('id', id);
-
       if (error) throw error;
-      fetchNotifications();
-    } catch (err) {
-      console.error('Failed to mark as read in Supabase', err);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     }
-  };
+  });
+
+  const markAsRead = (id) => markReadMutation.mutate(id);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -112,11 +112,16 @@ const NotificationCenter = () => {
                         key={n.id} 
                         className={`p-5 hover:bg-brand-primary/5 transition-all cursor-pointer relative group ${n.is_read ? 'opacity-40' : ''}`}
                         onClick={() => {
-                          if (n.found_item_id && n.lost_item_id && n.title.includes("Direct Match")) {
+                          const titleLower = n.title.toLowerCase();
+                          if (n.found_item_id && n.lost_item_id && titleLower.includes("direct match")) {
                             navigate(`/match-review/${n.lost_item_id}/${n.found_item_id}`);
-                            setIsOpen(false);
+                          } else if (titleLower.includes("verified") || titleLower.includes("verification")) {
+                            navigate('/profile');
+                          } else if (titleLower.includes("claim")) {
+                            navigate('/my-claims');
                           }
                           markAsRead(n.id);
+                          setIsOpen(false);
                         }}
                       >
                         {!n.is_read && (

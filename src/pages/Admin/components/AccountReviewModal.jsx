@@ -51,14 +51,10 @@ const AccountReviewModal = ({ isOpen, onClose, student, onComplete }) => {
     setLoading(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase
-        .from('user_profiles_v1')
-        .update({ 
-          is_verified: true, 
-          verification_status: 'approved',
-          verification_feedback: null 
-        })
-        .eq('id', student.id);
+      const { error: updateError } = await supabase.rpc('rpc_verify_student_account', {
+        p_user_id: student.id,
+        p_is_approved: true
+      });
 
       if (updateError) throw updateError;
       
@@ -81,14 +77,11 @@ const AccountReviewModal = ({ isOpen, onClose, student, onComplete }) => {
     setLoading(true);
     setError(null);
     try {
-      const { error: updateError } = await supabase
-        .from('user_profiles_v1')
-        .update({ 
-          is_verified: false, 
-          verification_status: 'rejected',
-          verification_feedback: rejectionReason.trim()
-        })
-        .eq('id', student.id);
+      const { error: updateError } = await supabase.rpc('rpc_verify_student_account', {
+        p_user_id: student.id,
+        p_is_approved: false,
+        p_feedback: rejectionReason.trim()
+      });
 
       if (updateError) throw updateError;
       
