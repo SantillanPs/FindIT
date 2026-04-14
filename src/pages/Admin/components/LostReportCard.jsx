@@ -21,7 +21,8 @@ import {
   ClipboardCheck,
   Zap,
   Clock,
-  Info
+  Info,
+  Archive
 } from "lucide-react";
 
 /**
@@ -123,6 +124,12 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
                         <span className="text-xs">{categoryInfo.emoji}</span>
                         {report.category || 'General'}
                      </Badge>
+                     {report.is_manual_entry && (
+                        <Badge className="bg-uni-500/20 text-uni-400 border-uni-500/30 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 shadow-xl">
+                           <Archive size={10} />
+                           Archive
+                        </Badge>
+                     )}
                      <span className="text-[10px] font-bold text-slate-500 tracking-wider">#{report.id.toString().slice(-4)}</span>
                  </div>
                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors truncate">

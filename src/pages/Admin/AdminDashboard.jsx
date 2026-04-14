@@ -12,6 +12,8 @@ import {
   LayoutDashboard,
   ShieldCheck,
   PackageCheck,
+  Archive,
+  Image as ImageIcon,
   X} from "lucide-react";
 
 // Modular Components
@@ -33,6 +35,7 @@ import ReleaseItemModal from './components/ReleaseItemModal';
 import ClaimReviewModal from './components/ClaimReviewModal';
 import MatchComparisonModal from './components/MatchComparisonModal';
 import ImagePreviewOverlay from './components/ImagePreviewOverlay';
+import ManualIntakeModal from './components/ManualIntakeModal';
 
 /**
  * AdminDashboard - Premium Professional (Pro Max)
@@ -61,17 +64,18 @@ const AdminDashboard = () => {
   const [claimReviewStep, setClaimReviewStep] = useState(1);
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
   const [showIntakeModal, setShowIntakeModal] = useState(null);
+  const [showManualIntake, setShowManualIntake] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
   // Sync modal state with body class for global layout response (z-index lifting)
   useEffect(() => {
-    if (showIntakeModal) {
+    if (showIntakeModal || showManualIntake) {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
     }
     return () => document.body.classList.remove('modal-open');
-  }, [showIntakeModal]);
+  }, [showIntakeModal, showManualIntake]);
 
   // Queries
   const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
@@ -215,6 +219,36 @@ const AdminDashboard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
       queryClient.invalidateQueries({ queryKey: ['admin_history'] });
+    }
+  });
+
+  const manualIntakeMutation = useMutation({
+    mutationFn: async (data) => {
+      const isFound = data.type === 'found';
+      const tableName = isFound ? 'found_items' : 'lost_items';
+      
+      const payload = {
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        location: data.location,
+        [isFound ? 'date_found' : 'date_lost']: `${data.date}T12:00:00Z`,
+        [isFound ? 'guest_name' : 'guest_name']: data.reporter_name, // Map to guest_name for manual entries
+        status: data.status,
+        is_manual_entry: true,
+        attributes: {
+          assisted_by: data.assisted_by,
+          time: data.time,
+          source: 'Physical Register'
+        }
+      };
+
+      const { error } = await supabase.from(tableName).insert([payload]);
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [variables.type === 'found' ? 'admin_inventory' : 'admin_lost'] });
+      setShowManualIntake(false);
     }
   });
 
@@ -394,6 +428,14 @@ const AdminDashboard = () => {
             </div>
 
             <button 
+              onClick={() => setShowManualIntake(true)}
+              className="flex items-center justify-center gap-3 bg-uni-500/10 hover:bg-uni-500/20 text-uni-400 h-14 px-8 rounded-[1.5rem] border border-uni-500/20 text-[11px] font-bold uppercase tracking-widest transition-all shadow-xl active:scale-[0.98]"
+            >
+              <Archive size={16} />
+              Manual Intake
+            </button>
+
+            <button 
               onClick={refreshActiveTab}
               disabled={isSyncing}
               className={`flex items-center justify-center gap-3 bg-uni-600 hover:bg-white hover:text-slate-950 text-white h-14 px-8 rounded-[1.5rem] border border-uni-400/20 text-[11px] font-bold uppercase tracking-widest transition-all shadow-2xl active:scale-[0.98] ${isSyncing ? 'opacity-50' : ''}`}
@@ -429,6 +471,13 @@ const AdminDashboard = () => {
           {showReleaseModal && <ReleaseItemModal {...{showReleaseModal, setShowReleaseModal, releaseStep, setReleaseStep, releaseForm, setReleaseForm, handleDirectRelease, actionLoading: actionLoading === showReleaseModal.id}} />}
           {selectedMatchPair && <MatchComparisonModal {...{selectedMatchPair, setSelectedMatchPair, handleConnectMatch}} />}
           {previewImage && <ImagePreviewOverlay {...{previewImage, setPreviewImage}} />}
+          
+          <ManualIntakeModal 
+            isOpen={showManualIntake} 
+            onClose={() => setShowManualIntake(false)} 
+            onSubmit={(data) => manualIntakeMutation.mutate(data)}
+            actionLoading={manualIntakeMutation.isPending}
+          />
 
           {showIntakeModal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 isolate">

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText, Activity } from "lucide-react";
+import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText, Activity, Archive } from "lucide-react";
 import { imageCache } from '../../../lib/imageCache';
 
 const InventoryCard = React.memo(({ 
@@ -103,6 +103,12 @@ const InventoryCard = React.memo(({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {item.is_manual_entry && (
+                <Badge className="bg-uni-500/20 text-uni-400 border-uni-500/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-xl">
+                  <Archive size={10} />
+                  Archive
+                </Badge>
+              )}
               {item.claim_count > 0 && (
                 <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
                   <Activity size={10} />
