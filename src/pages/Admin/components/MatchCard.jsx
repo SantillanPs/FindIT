@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { imageCache } from '../../../lib/imageCache';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ import {
  */
 const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLoading, setPreviewImage }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imgError, setImgError] = useState(imageCache.isFailed(match.item.photo_url));
 
   const getConfidenceTier = (score) => {
     if (score >= 0.85) return { 
@@ -169,8 +171,13 @@ const MatchCard = ({ match, foundItem, onDeepCompare, onAuthorizeMatch, actionLo
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center overflow-hidden">
-                      {match.item.photo_url ? (
-                        <img src={match.item.photo_url} className="w-full h-full object-cover" alt="" />
+                      {match.item.photo_url && !imgError ? (
+                        <img 
+                          src={match.item.photo_url} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          onError={() => { imageCache.markFailed(match.item.photo_url); setImgError(true); }}
+                        />
                       ) : (
                         <Lock className="text-slate-700" size={18} />
                       )}

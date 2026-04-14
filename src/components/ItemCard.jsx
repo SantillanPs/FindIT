@@ -1,9 +1,11 @@
 import React from 'react';
+import { imageCache } from '../lib/imageCache';
 import { useMasterData } from '../context/MasterDataContext';
 import { AlignLeft, Clock, ShieldCheck, Share2, Package, Fingerprint } from 'lucide-react';
 
 const ItemCard = ({ item, onClick, onShare }) => {
   const { categories: CATEGORIES } = useMasterData();
+  const [imgError, setImgError] = React.useState(imageCache.isFailed(item.photo_thumbnail_url || item.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === item.category);
   
   const formattedDate = new Date(item.date_found).toLocaleDateString('en-US', {
@@ -25,12 +27,13 @@ const ItemCard = ({ item, onClick, onShare }) => {
     >
       {/* 1. Image Header Section */}
       <div className="relative aspect-[16/10] overflow-hidden bg-bg-elevated/20 transition-all duration-700">
-        {item.photo_url ? (
+        {item.photo_url && !imgError ? (
           <img 
             src={item.photo_thumbnail_url || item.photo_url} 
             alt={item.title} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
             loading="lazy"
+            onError={() => { imageCache.markFailed(item.photo_thumbnail_url || item.photo_url); setImgError(true); }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">

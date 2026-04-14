@@ -1,6 +1,6 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
-import { supabase } from '../../../lib/supabase';
+import { imageCache } from '../../../lib/imageCache';
 import { 
   ShieldCheck, 
   AlertCircle, 
@@ -16,7 +16,8 @@ import {
   XCircle,
   ThumbsUp,
   History,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 
 /**
@@ -33,6 +34,9 @@ const ClaimReviewModal = ({
   handleClaimReview, 
   actionLoading 
 }) => {
+  const [itemImgError, setItemImgError] = useState(selectedClaim ? imageCache.isFailed(selectedClaim.item_photo_url) : false);
+  const [proofImgError, setProofImgError] = useState(selectedClaim ? imageCache.isFailed(selectedClaim.proof_photo_url) : false);
+
   if (!selectedClaim) return null;
 
   return (
@@ -81,8 +85,13 @@ const ClaimReviewModal = ({
         {/* Context Strip (Backlog Item #97) */}
         <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center gap-6">
           <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shrink-0">
-            {selectedClaim.item_photo_url ? (
-              <img src={selectedClaim.item_photo_url} alt="" className="w-full h-full object-cover" />
+            {selectedClaim.item_photo_url && !itemImgError ? (
+              <img 
+                src={selectedClaim.item_photo_url} 
+                alt="" 
+                className="w-full h-full object-cover" 
+                onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-700">
                 <ImageIcon size={20} />
@@ -260,9 +269,14 @@ const ClaimReviewModal = ({
                           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2 px-2">
                              <ShieldCheck size={14} /> Found Item (Staff Input)
                           </p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/5 overflow-hidden relative shadow-2xl">
-                              {selectedClaim.item_photo_url ? (
-                                  <img src={selectedClaim.item_photo_url} className="w-full h-full object-cover" alt="Original item" />
+                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/5 overflow-hidden relative shadow-2xl text-left">
+                              {selectedClaim.item_photo_url && !itemImgError ? (
+                                  <img 
+                                    src={selectedClaim.item_photo_url} 
+                                    className="w-full h-full object-cover" 
+                                    alt="Original item" 
+                                    onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }}
+                                  />
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center space-y-4 bg-white/[0.02]">
                                       <ImageIcon size={40} className="text-slate-800" />
@@ -276,9 +290,14 @@ const ClaimReviewModal = ({
                           <p className="text-[10px] font-bold text-uni-400 uppercase tracking-widest flex items-center gap-2 px-2">
                              <ImageIcon size={14} /> Claimant Submission
                           </p>
-                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-uni-500/10 overflow-hidden relative shadow-2xl shadow-uni-600/5">
-                              {selectedClaim.proof_photo_url ? (
-                                  <img src={selectedClaim.proof_photo_url} className="w-full h-full object-cover" alt="Claim proof" />
+                          <div className="aspect-video bg-slate-950 rounded-[2rem] border border-uni-500/10 overflow-hidden relative shadow-2xl shadow-uni-600/5 text-left">
+                              {selectedClaim.proof_photo_url && !proofImgError ? (
+                                  <img 
+                                    src={selectedClaim.proof_photo_url} 
+                                    className="w-full h-full object-cover" 
+                                    alt="Claim proof" 
+                                    onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }}
+                                  />
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center space-y-4 bg-white/[0.02]">
                                       <XCircle size={40} className="text-slate-800" />

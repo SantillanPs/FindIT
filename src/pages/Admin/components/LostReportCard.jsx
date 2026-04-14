@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { imageCache } from '../../../lib/imageCache';
 import { useMasterData } from '../../../context/MasterDataContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,7 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
   const [notes, setNotes] = useState(report.admin_notes || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [imgError, setImgError] = useState(imageCache.isFailed(report.photo_url));
 
   const reportMatches = matches.filter(m => m.top_matches.some(tm => tm.item.id === report.id));
   const bestScore = reportMatches.length > 0 
@@ -59,11 +61,23 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
       }`}>
         {report.photo_url ? (
           <div className="relative w-full h-full">
-            <img 
-              src={report.photo_url} 
-              alt={report.title} 
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
-            />
+            {report.photo_url && !imgError ? (
+              <img 
+                src={report.photo_url} 
+                alt={report.title} 
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" 
+                onError={() => { imageCache.markFailed(report.photo_url); setImgError(true); }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-between px-5 sm:px-8 bg-gradient-to-br from-slate-900 to-black">
+                <div className="text-2xl opacity-10 group-hover:scale-110 group-hover:opacity-20 transition-all duration-700">
+                    {categoryInfo.emoji}
+                </div>
+                <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                    IMAGE UNAVAILABLE
+                </div>
+              </div>
+            )}
             <button 
                 onClick={() => onPreview(report.photo_url)}
                 className="absolute inset-0 bg-slate-950/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"

@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterData } from '../context/MasterDataContext';
 import { useAuth } from '../context/AuthContext';
 import { AlignLeft, Calendar, Heart, Eye, Search } from 'lucide-react';
+import { imageCache } from '../lib/imageCache';
 
 const LostReportCard = ({ report, onWitness }) => {
   const navigate = useNavigate();
   const { categories: CATEGORIES } = useMasterData();
   const { user } = useAuth();
+  const [imgError, setImgError] = useState(imageCache.isFailed(report.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
   const formattedDate = new Date(report.date_lost).toLocaleDateString('en-US', {
@@ -25,12 +27,13 @@ const LostReportCard = ({ report, onWitness }) => {
   return (
     <div className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-rose-500/40 transition-all duration-500 overflow-hidden flex flex-col">
       {/* 1. Image/Header Section */}
-      <div className={`relative overflow-hidden bg-bg-elevated/20 transition-all duration-700 ${report.photo_url ? 'aspect-[16/10]' : 'h-32'}`}>
-        {report.photo_url ? (
+      <div className={`relative overflow-hidden bg-bg-elevated/20 transition-all duration-700 ${report.photo_url && !imgError ? 'aspect-[16/10]' : 'h-32'}`}>
+        {report.photo_url && !imgError ? (
           <img 
             src={report.photo_url} 
             alt={report.title} 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
+            onError={() => { imageCache.markFailed(report.photo_url); setImgError(true); }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-between px-8 bg-gradient-to-br from-slate-900 to-slate-950">

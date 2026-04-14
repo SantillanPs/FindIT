@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { imageCache } from '../../lib/imageCache';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -50,6 +51,198 @@ const StatusBadge = ({ status }) => {
       <i className={`fa-solid ${c.icon} text-[8px]`}></i>
       {c.label}
     </span>
+  );
+};
+
+// ─── Sub-Components ──────────────────────────────────────────
+
+const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
+  const [imgError, setImgError] = useState(imageCache.isFailed(claim.found_item_photo));
+
+  return (
+    <motion.div
+      layout
+      className="bg-white/[0.02] rounded-2xl md:rounded-[2rem] border border-white/5 overflow-hidden group relative"
+    >
+      {/* Status Accent Line */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full ${
+        claim.status === 'approved' ? 'bg-green-500' :
+        claim.status === 'rejected' ? 'bg-red-500' :
+        'bg-uni-500'
+      }`}></div>
+
+      {/* ── Card Header (always visible) ── */}
+      <div
+        className="p-5 md:p-6 pl-6 md:pl-8 cursor-pointer"
+        onClick={onToggle}
+      >
+        <div className="flex items-start gap-4">
+          {/* Item Thumbnail */}
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-slate-900 border border-white/5 overflow-hidden flex-shrink-0">
+            {claim.found_item_photo && !imgError ? (
+              <img
+                src={claim.found_item_photo}
+                alt={claim.found_item_title}
+                className="w-full h-full object-cover"
+                onError={() => { imageCache.markFailed(claim.found_item_photo); setImgError(true); }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-xl text-slate-700">
+                <i className="fa-solid fa-box"></i>
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <StatusBadge status={claim.status} />
+              {claim.scheduled_pickup_time && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-white uppercase tracking-widest">
+                  <i className="fa-solid fa-calendar-check text-green-400 text-[8px]"></i>
+                  {new Date(claim.scheduled_pickup_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </div>
+
+            <h2 className="text-sm md:text-base font-black text-white uppercase tracking-tight truncate">
+              {claim.found_item_title || 'Claimed Item'}
+            </h2>
+
+            <div className="flex items-center gap-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+              {claim.found_item_category && (
+                <span className="flex items-center gap-1">
+                  <i className="fa-solid fa-tag text-[7px] text-slate-600"></i>
+                  {claim.found_item_category}
+                </span>
+              )}
+              <span className="text-slate-700">•</span>
+              <span>{new Date(claim.created_at).toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'})}</span>
+              {claim.tracking_id && (
+                <>
+                  <span className="text-slate-700">•</span>
+                  <span className="text-uni-400">{claim.tracking_id}</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Expand Chevron */}
+          <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+            <motion.i
+              animate={{ rotate: isExpanded ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="fa-solid fa-chevron-down text-[10px] text-slate-600"
+            ></motion.i>
+          </div>
+        </div>
+
+        {/* Status-specific inline message */}
+        {claim.status === 'pending' && (
+          <div className="mt-4 flex items-center gap-2 pl-[72px] md:pl-[80px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-uni-500 animate-pulse"></div>
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+              In the custodial review queue — you'll be notified by email
+            </p>
+          </div>
+        )}
+        {claim.status === 'approved' && !claim.scheduled_pickup_time && (
+          <div className="mt-4 pl-[72px] md:pl-[80px]">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSchedule(claim);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 rounded-xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-green-600 transition-all min-h-[36px]"
+            >
+              <i className="fa-solid fa-calendar-check text-[9px]"></i>
+              Schedule Pickup
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Expanded Details ── */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 md:px-6 pb-6 pl-6 md:pl-8 space-y-6 border-t border-white/5 pt-5">
+              {/* Timeline */}
+              <ResolutionTimeline
+                status={claim.status}
+                isPickupReady={claim.is_pickup_ready}
+              />
+
+              {/* Proof + Notes Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Proof */}
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                    <i className="fa-solid fa-quote-left text-[8px] text-slate-700"></i>
+                    Your Proof
+                  </p>
+                  <div className="p-4 bg-slate-950/30 rounded-xl border border-white/5">
+                    <p className="text-white font-bold italic text-xs leading-relaxed">
+                      "{claim.proof_description}"
+                    </p>
+                  </div>
+                  {claim.proof_photo_url && (
+                    <div className="w-full h-32 rounded-xl overflow-hidden border border-white/5 mt-2">
+                      <img src={claim.proof_photo_url} alt="Proof" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Admin Notes / Location */}
+                <div className="space-y-4">
+                  {claim.admin_notes && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest flex items-center gap-2">
+                        <i className="fa-solid fa-comment-dots text-[9px]"></i>
+                        Custodian Notes
+                      </p>
+                      <div className="p-4 bg-uni-500/5 rounded-xl border border-uni-500/10">
+                        <p className="text-slate-300 text-[11px] leading-relaxed font-bold">
+                          {claim.admin_notes}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {claim.found_item_location && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
+                        <i className="fa-solid fa-location-dot text-[8px] text-slate-700"></i>
+                        Item Location
+                      </p>
+                      <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
+                        <p className="text-white text-[11px] font-bold uppercase tracking-wider">
+                          {claim.found_item_location}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!claim.admin_notes && !claim.found_item_location && (
+                    <div className="flex items-center justify-center h-full min-h-[80px] border border-dashed border-white/5 rounded-xl">
+                      <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
+                        No additional details yet
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
@@ -307,196 +500,15 @@ const MyClaims = () => {
         /* ── Claims List ── */
         <AnimatePresence mode="popLayout">
           <div className="space-y-5">
-            {claims.map((claim) => {
-              const isExpanded = expandedClaim === claim.id;
-
-              return (
-                <motion.div
-                  key={claim.id}
-                  variants={itemVariants}
-                  layout
-                  className="bg-white/[0.02] rounded-2xl md:rounded-[2rem] border border-white/5 overflow-hidden group relative"
-                >
-                  {/* Status Accent Line */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r-full ${
-                    claim.status === 'approved' ? 'bg-green-500' :
-                    claim.status === 'rejected' ? 'bg-red-500' :
-                    'bg-uni-500'
-                  }`}></div>
-
-                  {/* ── Card Header (always visible) ── */}
-                  <div
-                    className="p-5 md:p-6 pl-6 md:pl-8 cursor-pointer"
-                    onClick={() => setExpandedClaim(isExpanded ? null : claim.id)}
-                  >
-                    <div className="flex items-start gap-4">
-                      {/* Item Thumbnail */}
-                      <div className="w-14 h-14 md:w-16 md:h-16 rounded-xl bg-slate-900 border border-white/5 overflow-hidden flex-shrink-0">
-                        {claim.found_item_photo ? (
-                          <img
-                            src={claim.found_item_photo}
-                            alt={claim.found_item_title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl text-slate-700">
-                            <i className="fa-solid fa-box"></i>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <StatusBadge status={claim.status} />
-                          {claim.scheduled_pickup_time && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-white uppercase tracking-widest">
-                              <i className="fa-solid fa-calendar-check text-green-400 text-[8px]"></i>
-                              {new Date(claim.scheduled_pickup_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                            </span>
-                          )}
-                        </div>
-
-                        <h2 className="text-sm md:text-base font-black text-white uppercase tracking-tight truncate">
-                          {claim.found_item_title || 'Claimed Item'}
-                        </h2>
-
-                        <div className="flex items-center gap-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                          {claim.found_item_category && (
-                            <span className="flex items-center gap-1">
-                              <i className="fa-solid fa-tag text-[7px] text-slate-600"></i>
-                              {claim.found_item_category}
-                            </span>
-                          )}
-                          <span className="text-slate-700">•</span>
-                          <span>{new Date(claim.created_at).toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'})}</span>
-                          {claim.tracking_id && (
-                            <>
-                              <span className="text-slate-700">•</span>
-                              <span className="text-uni-400">{claim.tracking_id}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Expand Chevron */}
-                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-                        <motion.i
-                          animate={{ rotate: isExpanded ? 180 : 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="fa-solid fa-chevron-down text-[10px] text-slate-600"
-                        ></motion.i>
-                      </div>
-                    </div>
-
-                    {/* Status-specific inline message */}
-                    {claim.status === 'pending' && (
-                      <div className="mt-4 flex items-center gap-2 pl-[72px] md:pl-[80px]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-uni-500 animate-pulse"></div>
-                        <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                          In the custodial review queue — you'll be notified by email
-                        </p>
-                      </div>
-                    )}
-                    {claim.status === 'approved' && !claim.scheduled_pickup_time && (
-                      <div className="mt-4 pl-[72px] md:pl-[80px]">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSchedulingClaim(claim);
-                          }}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 rounded-xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-green-600 transition-all min-h-[36px]"
-                        >
-                          <i className="fa-solid fa-calendar-check text-[9px]"></i>
-                          Schedule Pickup
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* ── Expanded Details ── */}
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-5 md:px-6 pb-6 pl-6 md:pl-8 space-y-6 border-t border-white/5 pt-5">
-                          {/* Timeline */}
-                          <ResolutionTimeline
-                            status={claim.status}
-                            isPickupReady={claim.is_pickup_ready}
-                          />
-
-                          {/* Proof + Notes Grid */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            {/* Proof */}
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                                <i className="fa-solid fa-quote-left text-[8px] text-slate-700"></i>
-                                Your Proof
-                              </p>
-                              <div className="p-4 bg-slate-950/30 rounded-xl border border-white/5">
-                                <p className="text-white font-bold italic text-xs leading-relaxed">
-                                  "{claim.proof_description}"
-                                </p>
-                              </div>
-                              {claim.proof_photo_url && (
-                                <div className="w-full h-32 rounded-xl overflow-hidden border border-white/5 mt-2">
-                                  <img src={claim.proof_photo_url} alt="Proof" className="w-full h-full object-cover" />
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Admin Notes / Location */}
-                            <div className="space-y-4">
-                              {claim.admin_notes && (
-                                <div className="space-y-2">
-                                  <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest flex items-center gap-2">
-                                    <i className="fa-solid fa-comment-dots text-[9px]"></i>
-                                    Custodian Notes
-                                  </p>
-                                  <div className="p-4 bg-uni-500/5 rounded-xl border border-uni-500/10">
-                                    <p className="text-slate-300 text-[11px] leading-relaxed font-bold">
-                                      {claim.admin_notes}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {claim.found_item_location && (
-                                <div className="space-y-2">
-                                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
-                                    <i className="fa-solid fa-location-dot text-[8px] text-slate-700"></i>
-                                    Item Location
-                                  </p>
-                                  <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5">
-                                    <p className="text-white text-[11px] font-bold uppercase tracking-wider">
-                                      {claim.found_item_location}
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
-
-                              {!claim.admin_notes && !claim.found_item_location && (
-                                <div className="flex items-center justify-center h-full min-h-[80px] border border-dashed border-white/5 rounded-xl">
-                                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">
-                                    No additional details yet
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
+            {claims.map((claim) => (
+              <ClaimItem
+                key={claim.id}
+                claim={claim}
+                isExpanded={expandedClaim === claim.id}
+                onToggle={() => setExpandedClaim(expandedClaim === claim.id ? null : claim.id)}
+                onSchedule={setSchedulingClaim}
+              />
+            ))}
           </div>
         </AnimatePresence>
       )}

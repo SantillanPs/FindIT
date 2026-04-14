@@ -5,6 +5,7 @@
 class ImageCacheManager {
   constructor() {
     this.loadedUrls = new Set();
+    this.failedUrls = new Set();
     this.preloading = new Map();
   }
 
@@ -12,8 +13,18 @@ class ImageCacheManager {
     return this.loadedUrls.has(url);
   }
 
+  isFailed(url) {
+    return this.failedUrls.has(url);
+  }
+
   markLoaded(url) {
     this.loadedUrls.add(url);
+    this.failedUrls.delete(url);
+  }
+
+  markFailed(url) {
+    this.failedUrls.add(url);
+    this.loadedUrls.delete(url);
   }
 
   preload(url) {
@@ -27,6 +38,7 @@ class ImageCacheManager {
         resolve(true);
       };
       img.onerror = () => {
+        this.markFailed(url);
         this.preloading.delete(url);
         resolve(false);
       };

@@ -28,6 +28,8 @@ const ClaimCard = React.memo(({ claim, onReview }) => {
   const { categories: CATEGORIES } = useMasterData();
   const categoryData = CATEGORIES?.find(c => c.id === claim.item_category);
   const [itemImgLoaded, setItemImgLoaded] = useState(imageCache.isLoaded(claim.item_photo_url));
+  const [itemImgError, setItemImgError] = useState(imageCache.isFailed(claim.item_photo_url));
+  const [proofImgError, setProofImgError] = useState(imageCache.isFailed(claim.proof_photo_url));
 
   const formattedDate = claim.created_at
     ? new Date(claim.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase()
@@ -69,7 +71,7 @@ const ClaimCard = React.memo(({ claim, onReview }) => {
           <div className="absolute inset-0 grid grid-cols-2">
             {/* Left: Original Item */}
             <div className="relative overflow-hidden border-r border-white/10">
-              {claim.item_photo_url ? (
+              {claim.item_photo_url && !itemImgError ? (
                 <>
                   <motion.img
                     initial={itemImgLoaded ? { opacity: 1 } : { opacity: 0 }}
@@ -78,12 +80,14 @@ const ClaimCard = React.memo(({ claim, onReview }) => {
                     alt="Found item"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
                     onLoad={() => { imageCache.markLoaded(claim.item_photo_url); setItemImgLoaded(true); }}
+                    onError={() => { imageCache.markFailed(claim.item_photo_url); setItemImgError(true); }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
                 </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-slate-950/60">
-                  <ImageIcon size={28} className="text-slate-700" />
+                <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950/60 gap-1 opacity-60">
+                  <ImageIcon size={22} className="text-slate-700" />
+                  <span className="text-[7px] font-black text-slate-700 uppercase tracking-widest">Photo Empty</span>
                 </div>
               )}
               <div className="absolute bottom-3 left-3 z-10">
@@ -95,19 +99,22 @@ const ClaimCard = React.memo(({ claim, onReview }) => {
 
             {/* Right: Claimant Proof */}
             <div className="relative overflow-hidden">
-              {claim.proof_photo_url ? (
+              {claim.proof_photo_url && !proofImgError ? (
                 <>
                   <img
                     src={claim.proof_photo_url}
                     alt="Claimant proof"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                    onError={() => { imageCache.markFailed(claim.proof_photo_url); setProofImgError(true); }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
                 </>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950/60 gap-2">
                   <Fingerprint size={24} className="text-slate-700" />
-                  <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">No photo proof</span>
+                  <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest">
+                    {proofImgError ? 'Photo Error' : 'No photo proof'}
+                  </span>
                 </div>
               )}
               <div className="absolute bottom-3 right-3 z-10">

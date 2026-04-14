@@ -17,6 +17,7 @@ const InventoryCard = React.memo(({
 }) => {
   const { categories: CATEGORIES } = useMasterData();
   const [imgLoaded, setImgLoaded] = useState(imageCache.isLoaded(item.photo_url));
+  const [imgError, setImgError] = useState(imageCache.isFailed(item.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === item.category);
 
   const formattedDate = new Date(item.created_at || item.date_found).toLocaleDateString('en-US', {
@@ -48,7 +49,7 @@ const InventoryCard = React.memo(({
         <div className={`relative overflow-hidden bg-slate-950 transition-all duration-700 rounded-t-[2rem] ${
           item.photo_url ? 'aspect-[21/9]' : 'h-16 sm:h-20'
         }`}>
-          {item.photo_url ? (
+          {item.photo_url && !imgError ? (
             <>
               <motion.img
                 initial={imgLoaded ? { opacity: 1 } : { opacity: 0 }}
@@ -57,6 +58,7 @@ const InventoryCard = React.memo(({
                 alt={item.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out"
                 onLoad={() => { imageCache.markLoaded(item.photo_url); setImgLoaded(true); }}
+                onError={() => { imageCache.markFailed(item.photo_url); setImgError(true); }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/20 z-10" />
             </>
