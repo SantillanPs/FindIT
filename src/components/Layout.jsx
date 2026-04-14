@@ -382,17 +382,27 @@ const LayoutContents = ({ children }) => {
         <Button
           variant="outline"
           size="icon"
-          onClick={() => setIsFeedbackOpen(true)}
+          onClick={() => {
+            if (['admin', 'super_admin'].includes(user?.role)) {
+              window.dispatchEvent(new CustomEvent('open-manual-intake'));
+            } else {
+              setIsFeedbackOpen(true);
+            }
+          }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={cn(
-            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-xl transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
-            isHovered ? "w-40 px-4" : "w-11 px-0 justify-center"
+            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
+            isHovered ? (['admin', 'super_admin'].includes(user?.role) ? "w-48 px-4" : "w-40 px-4") : "w-11 px-0 justify-center"
           )}
         >
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white transition-all" />
+              {['admin', 'super_admin'].includes(user?.role) ? (
+                <Archive className="w-4 h-4 text-sky-400 group-hover:text-white transition-all" />
+              ) : (
+                <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white transition-all" />
+              )}
             </div>
             <AnimatePresence>
               {isHovered && (
@@ -402,7 +412,7 @@ const LayoutContents = ({ children }) => {
                   exit={{ opacity: 0, x: -10 }}
                   className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap"
                 >
-                  Feedback
+                  {['admin', 'super_admin'].includes(user?.role) ? 'Manual Intake' : 'Feedback'}
                 </motion.span>
               )}
             </AnimatePresence>

@@ -21,8 +21,9 @@ import InventoryTab from './components/InventoryTab';
 import ClaimsTab from './components/ClaimsTab';
 import MatchmakerTab from './components/MatchmakerTab';
 import LostReportsTab from './components/LostReportsTab';
-import ReleasedItemsTable from './components/ReleasedItemsTable';
+import ActivityFeed from './components/ActivityFeed';
 import WitnessReportsTab from './components/WitnessReportsTab';
+import AdminHeader from './components/AdminHeader';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
 import MemberRegistry from './MemberRegistry';
@@ -67,14 +68,20 @@ const AdminDashboard = () => {
   const [showManualIntake, setShowManualIntake] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // Sync modal state with body class for global layout response (z-index lifting)
+  // Global event listeners for sidebar actions
   useEffect(() => {
+    const handleOpenIntake = () => setShowManualIntake(true);
+    window.addEventListener('open-manual-intake', handleOpenIntake);
+    
     if (showIntakeModal || showManualIntake) {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
     }
-    return () => document.body.classList.remove('modal-open');
+    return () => {
+      window.removeEventListener('open-manual-intake', handleOpenIntake);
+      document.body.classList.remove('modal-open');
+    };
   }, [showIntakeModal, showManualIntake]);
 
   // Queries
@@ -125,9 +132,15 @@ const AdminDashboard = () => {
     refetchInterval: 60000,
   });
 
-  const { data: historyItems = [], isLoading: historyLoading } = useQuery({
+  const { data: historyItems = [], isLoading: historyLoading, refetch: refetchHistory } = useQuery({
     queryKey: ['admin_history'],
     queryFn: async () => {
+      // Step 1: Try the preferred activity log view
+      const { data: activityData, error: activityError } = await supabase.from('v_admin_activity_log').select('*');
+      
+      if (!activityError && activityData) return activityData;
+
+      // Step 2: Fallback to existing released history if view hasn't been created yet
       const { data, error } = await supabase.from('v_admin_history').select('*');
       if (error) throw error;
       return data || [];
@@ -395,57 +408,17 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="space-y-10 pb-32 max-w-[1600px] mx-auto">
-        {/* Module Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 px-4">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 rounded-[1.25rem] bg-slate-900 border border-white/5 flex items-center justify-center text-uni-400 shadow-2xl">
-              <LayoutDashboard size={24} />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">Administration Panel</h2>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Main Registry</h1>
-                <Badge variant="outline" className="bg-uni-500/10 text-uni-400 border-uni-500/20 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-                  Live
-                </Badge>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen">
+        <AdminHeader 
+          currentTab={currentTab}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          onSync={refreshActiveTab}
+          isSyncing={isSyncing}
+          isLoading={loading}
+        />
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-            <div className="relative group w-full md:w-96">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-uni-400 transition-colors">
-                <Search size={18} />
-              </div>
-              <input 
-                type="text" 
-                placeholder="Search items, users, or IDs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-14 bg-slate-900/40 border border-white/10 rounded-[1.5rem] pl-14 pr-6 text-sm font-semibold text-white placeholder:text-slate-600 focus:border-uni-500/50 focus:bg-slate-900/60 outline-none backdrop-blur-3xl transition-all shadow-xl"
-              />
-            </div>
-
-            <button 
-              onClick={() => setShowManualIntake(true)}
-              className="flex items-center justify-center gap-3 bg-uni-500/10 hover:bg-uni-500/20 text-uni-400 h-14 px-8 rounded-[1.5rem] border border-uni-500/20 text-[11px] font-bold uppercase tracking-widest transition-all shadow-xl active:scale-[0.98]"
-            >
-              <Archive size={16} />
-              Manual Intake
-            </button>
-
-            <button 
-              onClick={refreshActiveTab}
-              disabled={isSyncing}
-              className={`flex items-center justify-center gap-3 bg-uni-600 hover:bg-white hover:text-slate-950 text-white h-14 px-8 rounded-[1.5rem] border border-uni-400/20 text-[11px] font-bold uppercase tracking-widest transition-all shadow-2xl active:scale-[0.98] ${isSyncing ? 'opacity-50' : ''}`}
-            >
-              <RefreshCw size={16} className={isSyncing ? 'animate-spin' : ''} />
-              {isSyncing ? 'Synchronizing' : 'Sync Registry'}
-            </button>
-          </div>
-        </div>
-
+        <div className="pb-32 max-w-[1600px] mx-auto px-4 md:px-8 mt-8">
         {/* Content Tabs */}
         <Tabs value={currentTab} onValueChange={(val) => navigate(`/admin/${val === 'found' ? '' : val}`)} className="w-full">
           <div className="bg-slate-900/30 rounded-[2.5rem] border border-white/5 backdrop-blur-3xl shadow-3xl overflow-hidden min-h-[700px] w-full">
@@ -455,8 +428,22 @@ const AdminDashboard = () => {
               <TabsContent value="matches" className="m-0 focus-visible:outline-none"><MatchmakerTab {...{filteredMatches, setSelectedMatchPair, handleConnectMatch, actionLoading, setPreviewImage}} /></TabsContent>
               <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
-              <TabsContent value="history" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
-              <TabsContent value="released" className="m-0 focus-visible:outline-none"><ReleasedItemsTable releasedItems={historyFiltered} /></TabsContent>
+              <TabsContent value="history" className="m-0 focus-visible:outline-none">
+                <ActivityFeed 
+                  activities={historyFiltered} 
+                  loading={historyLoading} 
+                  searchTerm={searchTerm} 
+                  onSearchChange={setSearchTerm} 
+                />
+              </TabsContent>
+              <TabsContent value="released" className="m-0 focus-visible:outline-none">
+                <ActivityFeed 
+                  activities={historyFiltered} 
+                  loading={historyLoading} 
+                  searchTerm={searchTerm} 
+                  onSearchChange={setSearchTerm} 
+                />
+              </TabsContent>
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
               <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry}} /></TabsContent>
@@ -583,6 +570,7 @@ const AdminDashboard = () => {
             </div>
           )}
         </AnimatePresence>
+      </div>
     </div>
   );
 };
