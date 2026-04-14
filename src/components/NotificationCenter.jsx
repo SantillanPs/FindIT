@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { CheckCircle2, AlertCircle, Info, BellRing, ChevronRight } from 'lucide-react';
 
 const NotificationCenter = () => {
   const navigate = useNavigate();
@@ -41,6 +42,44 @@ const NotificationCenter = () => {
   });
 
   const markAsRead = (id) => markReadMutation.mutate(id);
+
+  const getNotificationStyle = (title) => {
+    const t = title.toLowerCase();
+    
+    if (t.includes('denied') || t.includes('rejected') || t.includes('failed')) {
+      return {
+        Icon: AlertCircle,
+        iconBg: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+        titleText: 'text-rose-400',
+        dot: 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+      };
+    }
+    
+    if (t.includes('verified') || t.includes('approved') || t.includes('success')) {
+      return {
+        Icon: CheckCircle2,
+        iconBg: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+        titleText: 'text-emerald-400',
+        dot: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
+      };
+    }
+
+    if (t.includes('update') || t.includes('pending')) {
+      return {
+        Icon: BellRing,
+        iconBg: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+        titleText: 'text-amber-400',
+        dot: 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+      };
+    }
+
+    return {
+      Icon: Info,
+      iconBg: 'bg-sky-500/10 text-sky-400 border border-sky-500/20',
+      titleText: 'text-sky-400',
+      dot: 'bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.5)]'
+    };
+  };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
@@ -82,35 +121,45 @@ const NotificationCenter = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 mt-4 w-80 max-h-[480px] bg-slate-900 border border-brand-border rounded-lg z-50 overflow-hidden flex flex-col backdrop-blur-xl"
+              className="absolute right-0 mt-4 w-[360px] max-h-[500px] bg-slate-900 border border-brand-border rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col backdrop-blur-xl"
             >
-              <div className="p-4 border-b border-brand-border bg-slate-950/80 flex justify-between items-center">
-                <h4 className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Live Status Updates</h4>
+              <div className="p-4 border-b border-white/5 bg-slate-950/80 flex justify-between items-center">
+                <h4 className="text-[11px] font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                  <BellRing size={14} className="text-brand-primary" />
+                  Live Status Updates
+                </h4>
                 <motion.button 
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsOpen(false)} 
-                  className="text-slate-500 hover:text-white transition-colors"
+                  className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
                 >
-                  <span className="text-sm">✕</span>
+                  <span className="text-xs">✕</span>
                 </motion.button>
               </div>
 
               <div className="overflow-y-auto custom-scrollbar bg-slate-900/40">
                 {notifications.length === 0 ? (
                   <div className="p-12 text-center">
-                    <div className="text-4xl mb-4 opacity-10">📭</div>
-                    <p className="text-[10px] text-slate-600 font-black uppercase tracking-[0.2em]">Queue Synchronized</p>
+                    <div className="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mx-auto mb-4 border border-white/5">
+                      <BellRing size={24} className="text-slate-600" />
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">Inbox Zero</p>
+                    <p className="text-xs text-slate-600 mt-2">You have no pending updates.</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-brand-border/20">
-                    {notifications.map((n, index) => (
+                  <div className="divide-y divide-white/5">
+                    {notifications.map((n, index) => {
+                      const style = getNotificationStyle(n.title);
+                      const Icon = style.Icon;
+                      
+                      return (
                       <motion.div 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
                         key={n.id} 
-                        className={`p-5 hover:bg-brand-primary/5 transition-all cursor-pointer relative group ${n.is_read ? 'opacity-40' : ''}`}
+                        className={`p-4 hover:bg-white/[0.03] transition-all cursor-pointer relative group flex gap-3.5 ${n.is_read ? 'opacity-50' : ''}`}
                         onClick={() => {
                           const titleLower = n.title.toLowerCase();
                           if (n.found_item_id && n.lost_item_id && titleLower.includes("direct match")) {
@@ -125,22 +174,34 @@ const NotificationCenter = () => {
                         }}
                       >
                         {!n.is_read && (
-                          <div className="absolute top-6 right-5 w-1.5 h-1.5 bg-brand-primary rounded-full border border-brand-primary/40"></div>
+                          <div className={`absolute top-5 right-4 w-2 h-2 rounded-full ${style.dot}`}></div>
                         )}
-                        <div className="font-black text-[11px] text-white uppercase tracking-wider mb-2 pr-6 group-hover:text-brand-primary transition-colors">{n.title}</div>
-                        <div className="text-[11px] text-slate-500 leading-relaxed mb-3 italic font-bold">
-                          "{n.message}"
+                        
+                        <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${style.iconBg} shadow-sm mt-0.5`}>
+                          <Icon size={16} strokeWidth={2.5} />
                         </div>
-                        <div className="text-[9px] font-black text-slate-700 uppercase tracking-widest flex items-center justify-between">
-                          <span>{new Date(n.created_at).toLocaleDateString()}</span>
-                          <span className="opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">MARK AS READ →</span>
+
+                        <div className="flex-1 min-w-0 pr-4">
+                          <div className={`font-black text-[11px] uppercase tracking-wider mb-1 ${style.titleText}`}>
+                            {n.title}
+                          </div>
+                          <div className="text-xs text-slate-300 leading-relaxed font-medium">
+                            {n.message}
+                          </div>
+                          <div className="text-[10px] font-bold text-slate-500 mt-3 flex justify-between items-center group-hover:text-slate-400 transition-colors">
+                            <span>{new Date(n.created_at).toLocaleDateString()}</span>
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-bold text-brand-primary">
+                              VIEW {n.title.toLowerCase().includes('claim') ? 'CLAIM' : 'PROFILE'} <ChevronRight size={10} strokeWidth={3} />
+                            </span>
+                          </div>
                         </div>
                       </motion.div>
-                    ))}
+                    )})}
                   </div>
                 )}
               </div>
               
+
               <div className="p-4 border-t border-brand-border bg-slate-950/80 text-center">
                 <button 
                   className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-white transition-colors"

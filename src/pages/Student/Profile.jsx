@@ -41,7 +41,7 @@ const Profile = () => {
   
   const [avatarError, setAvatarError] = useState(false);
   const [proofError, setProofError] = useState(false);
-  
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);  
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const { uploadAvatar, uploading: avatarUploading } = useProfileUpload();
@@ -293,50 +293,31 @@ const Profile = () => {
             accent="slate" 
           />
           
-          <div className="p-5 sm:p-6 bg-transparent">
-            {(profileUser.verification_proof_url && !proofError) ? (
-              <div className="space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">ID Document Proof</p>
-                <div className="aspect-video w-full bg-slate-950 rounded-2xl border border-white/5 overflow-hidden">
-                  <img 
-                    src={profileUser.verification_proof_url} 
-                    alt="Proof of ID" 
-                    className="w-full h-full object-cover" 
-                    onError={() => {
-                      imageCache.markFailed(profileUser.verification_proof_url);
-                      setProofError(true);
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-               <div className="text-center p-6 bg-slate-950/30 rounded-2xl border border-white/5 border-dashed">
-                  <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center mx-auto mb-4 border border-white/5">
-                    <Smartphone size={20} className="text-slate-500" />
+          {isOwnProfile && (
+            <div className="p-5 sm:p-6 bg-transparent border-t border-white/10">
+              {(profileUser.verification_status === 'rejected' || !profileUser.verification_proof_url) ? (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-rose-500/5 rounded-2xl border border-rose-500/20">
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-rose-400 mb-1 flex items-center gap-1.5"><AlertCircle size={14} /> Action Required</p>
+                    <p className="text-xs text-rose-300 font-medium">{profileUser.verification_status === 'rejected' ? 'Your verification was denied.' : 'Please upload a valid institutional ID to get verified.'}</p>
                   </div>
-                  <p className="text-sm font-bold text-slate-300 mb-1">No ID Proof Submitted</p>
-                  <p className="text-xs text-slate-500 max-w-[250px] mx-auto">Upload your institutional ID to verify your profile and speed up claims.</p>
-               </div>
-            )}
-
-            {isOwnProfile && (profileUser.verification_status === 'rejected' || !profileUser.verification_proof_url) && (
-              <div className="mt-6">
-                <ImageUpload 
-                  label="Upload ID Proof"
-                  onUploadSuccess={async (url) => {
-                    const { error } = await supabase
-                      .from('user_profiles_v1')
-                      .update({ verification_proof_url: url, verification_status: 'pending' })
-                      .eq('id', currentUser.id);
-                    if (!error) {
-                       await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
-                       refreshUser();
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
+                  <button onClick={() => setIsVerificationModalOpen(true)} className="px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs tracking-wide rounded-xl transition-all whitespace-nowrap shadow-lg shadow-rose-500/20 active:scale-95">
+                    Resolve Issue
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
+                  <div className="mt-0.5 p-1.5 bg-sky-500/10 rounded-lg">
+                     <ShieldCheck size={16} className="text-sky-400" />
+                  </div>
+                  <div>
+                     <p className="text-xs font-bold text-white tracking-wide">Document Secured</p>
+                     <p className="text-[11px] text-slate-400 mt-0.5">Your identity proof is stored securely and is not publicly visible.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </SettingsGroup>
         
       </div>
@@ -389,6 +370,64 @@ const Profile = () => {
           </motion.div>
         </AnimatePresence>
       )}
+
+      {/* Verification Resolution Modal */}
+      <AnimatePresence>
+        {isVerificationModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+              onClick={() => setIsVerificationModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="text-uni-400" size={18} /> Verification Center
+                </h3>
+                <button onClick={() => setIsVerificationModalOpen(false)} className="text-slate-500 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 w-7 h-7 rounded-full flex items-center justify-center">
+                  <X size={14} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {profileUser.verification_status === 'rejected' && profileUser.verification_feedback && (
+                  <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl shadow-inner">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-2 flex items-center gap-1.5"><AlertCircle size={14} /> Admin Feedback</p>
+                    <p className="text-[13px] text-rose-200 leading-relaxed italic font-medium">"{profileUser.verification_feedback}"</p>
+                  </div>
+                )}
+                
+                <div className="space-y-3">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Upload New ID Proof</p>
+                  <ImageUpload 
+                    label="Select Official ID"
+                    onUploadSuccess={async (url) => {
+                      const { error } = await supabase
+                        .from('user_profiles_v1')
+                        .update({ verification_proof_url: url, verification_status: 'pending' })
+                        .eq('id', currentUser.id);
+                      if (!error) {
+                         await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
+                         refreshUser();
+                         setIsVerificationModalOpen(false);
+                      }
+                    }}
+                  />
+                  <p className="text-[10px] text-slate-500 text-center mt-2 px-4 leading-relaxed">Ensure all details are clearly visible. Blurry or cropped images will be rejected.</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
