@@ -139,8 +139,11 @@ const LayoutContents = ({ children }) => {
         user?.role === 'super_admin' ? supabase.rpc('count_pending_feedbacks').then(res => ({ count: res.data || 0 })) : Promise.resolve({ count: 0 })
       ]);
 
-      const [claimsRes, matchesRes, lostRes, feedbackRes] = results.map(r => r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason });
+      const [claimsRes, matchesRes, lostRes, feedbackRes] = results.map(r => 
+        r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason }
+      );
 
+      // If the RPC specifically failed, we just show 0 or keep old count instead of crashing
       return {
         claims: claimsRes?.count || 0,
         matches: matchesRes?.data?.length || 0,

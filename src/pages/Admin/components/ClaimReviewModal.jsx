@@ -122,9 +122,11 @@ const ClaimReviewModal = ({
                         {selectedClaim.item_location}
                     </span>
                 </div>
-                <h4 className="text-base font-bold text-white tracking-tight leading-none group-hover:text-uni-400 transition-colors">
-                    {selectedClaim.item_title}
-                </h4>
+                {selectedClaim.item_title.toLowerCase() !== selectedClaim.item_category.toLowerCase() && (
+                  <h4 className="text-base font-bold text-white tracking-tight leading-none group-hover:text-uni-400 transition-colors">
+                      {selectedClaim.item_title}
+                  </h4>
+                )}
             </div>
         </div>
 
@@ -230,14 +232,14 @@ const ClaimReviewModal = ({
         <div className="sticky bottom-0 p-4 bg-[#0F172A] border-t border-white/5 mt-auto z-20 shrink-0 pb-safe">
             <div className="flex gap-3">
                 <button 
-                    onClick={() => { handleClaimReview(selectedClaim.id, 'rejected'); setSelectedClaim(null); }}
+                    onClick={() => { handleClaimReview(selectedClaim, 'rejected'); setSelectedClaim(null); }}
                     disabled={actionLoading}
                     className="flex-[1] bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-3.5 sm:py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                     <XCircle size={16} /> Decline
                 </button>
                 <button 
-                    onClick={() => { handleClaimReview(selectedClaim.id, 'approved'); setSelectedClaim(null); }}
+                    onClick={() => { handleClaimReview(selectedClaim, 'approved'); setSelectedClaim(null); }}
                     disabled={actionLoading}
                     className="flex-[1.5] bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[11px] uppercase tracking-[0.2em] py-3.5 sm:py-4 rounded-xl transition-all shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 disabled:opacity-50"
                 >

@@ -107,18 +107,24 @@ const AdminDashboard = () => {
     refetchInterval: 60000,
   });
 
-  const { data: matches = [], isLoading: matchesLoading } = useQuery({
+  // 1. Core Data Queries
+  const { data: matches = [], isLoading: matchesLoading, isError: matchesError } = useQuery({
     queryKey: ['admin_matches'],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_admin_matches', {
         match_threshold: 0.3,
         match_count: 5
       });
-      if (error) throw error;
+      if (error) {
+        console.warn('[MATCHMAKER] Similarity engine reported an error:', error.message);
+        throw error;
+      };
       return data || [];
     },
     placeholderData: keepPreviousData,
-    refetchInterval: 60000,
+    refetchInterval: 300000, // Reduced frequency to 5m to avoid server strain
+    staleTime: 1000 * 60 * 2, // 2m stale time
+    retry: false, // Don't spam the server on a 520
   });
 
   const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
@@ -346,16 +352,19 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleClaimReview = async (claimId, status) => {
-    setActionLoading(`claim-${claimId}`);
+  const handleClaimReview = async (claim, status) => {
+    const displayId = claim.id;
+    setActionLoading(`claim-${displayId}`);
+    
     try {
+      // The RPC function has been synchronized to accept the integer ID
       await claimReviewMutation.mutateAsync({ 
-        claimId, 
+        claimId: claim.id, 
         status, 
         adminNotes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
       });
     } catch (err) {
-      console.error('Review failed', err);
+      console.error('Review failed:', err.message);
     } finally {
       setActionLoading(null);
     }
@@ -425,7 +434,16 @@ const AdminDashboard = () => {
             <div className="p-4 md:p-8 lg:p-10 w-full">
               <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="claims" className="m-0 focus-visible:outline-none"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
-              <TabsContent value="matches" className="m-0 focus-visible:outline-none"><MatchmakerTab {...{filteredMatches, setSelectedMatchPair, handleConnectMatch, actionLoading, setPreviewImage}} /></TabsContent>
+              <TabsContent value="matches" className="m-0 focus-visible:outline-none">
+                <MatchmakerTab {...{
+                  filteredMatches, 
+                  setSelectedMatchPair, 
+                  handleConnectMatch, 
+                  actionLoading, 
+                  setPreviewImage,
+                  isError: matchesError
+                }} />
+              </TabsContent>
               <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none">
