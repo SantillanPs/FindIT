@@ -108,6 +108,7 @@ const SubmitClaim = () => {
       if (!user && data.tracking_id) {
         setTrackingId(data.tracking_id);
       } else {
+        sessionStorage.setItem('claim_just_submitted', 'true');
         navigate('/my-claims');
       }
     },
