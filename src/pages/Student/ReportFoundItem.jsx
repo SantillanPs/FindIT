@@ -13,6 +13,7 @@ import DetailsStep from '../../components/ReportFlow/DetailsStep';
 import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
 import { useMasterData } from '../../context/MasterDataContext';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
+import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
 import IdentificationStep from '../../components/ReportFlow/IdentificationStep';
 import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
 import ReportSummary from '../../components/ReportFlow/ReportSummary';
