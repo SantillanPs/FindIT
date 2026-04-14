@@ -11,11 +11,8 @@ const MasterDataProvider = ({ children }) => {
         queryKey: ['categories'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('master_categories')
-                .select('*')
-                .eq('is_active', true)
-                .order('hit_count', { ascending: false })
-                .order('label', { ascending: true });
+                .from('v_active_categories')
+                .select('*');
                 
             if (error) throw error;
             
@@ -28,33 +25,29 @@ const MasterDataProvider = ({ children }) => {
         },
         staleTime: 1000 * 60 * 60, // 1 hour
     });
-
+ 
     // 2. Colleges Query
     const { data: colleges = [], isLoading: collegesLoading, error: collegesError } = useQuery({
         queryKey: ['colleges'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('master_colleges')
-                .select('*')
-                .eq('is_active', true)
-                .order('label', { ascending: true });
+                .from('v_active_colleges')
+                .select('*');
             if (error) throw error;
-            console.info(`[Context] Colleges [Source: Resilient Table Fallback]:`, data?.length || 0, 'items');
+            console.info(`[Context] Colleges [Source: Standardized View]:`, data?.length || 0, 'items');
             return data || [];
         },
         staleTime: 1000 * 60 * 60, // 1 hour
     });
 
     // 3. Leaderboard Query
-    const { data: leaderboard = { students: [], departments: [] }, isLoading: leaderboardLoading } = useQuery({
+    const { data: leaderboard = { students: [], departments: [] } } = useQuery({
         queryKey: ['leaderboard'],
         queryFn: async () => {
             const [studentsRes, deptsRes] = await Promise.all([
                 supabase
-                    .from('user_profiles_v1')
-                    .select('id, first_name, last_name, show_full_name, department, integrity_points')
-                    .eq('role', 'student')
-                    .order('integrity_points', { ascending: false })
+                    .from('v_public_student_leaderboard')
+                    .select('*')
                     .limit(10),
                 supabase
                     .from('department_leaderboard')
@@ -64,23 +57,10 @@ const MasterDataProvider = ({ children }) => {
             if (studentsRes.error) throw studentsRes.error;
             if (deptsRes.error) throw deptsRes.error;
 
-            console.info(`[Context] Leaderboard [Source: Resilient Table Fallback]:`, studentsRes.data?.length || 0, 'students');
-
-            // Manual Masking Fallback
-            const maskedStudents = (studentsRes.data || []).map((s, idx) => ({
-                id: s.id,
-                full_name_masked: s.show_full_name && s.first_name && s.last_name
-                    ? `${s.first_name} ${s.last_name}`
-                    : (s.first_name || s.last_name) 
-                        ? `${s.first_name?.charAt(0) || '*'}${s.first_name ? '***' : ''} ${s.last_name?.charAt(0) || '*'}${s.last_name ? '***' : ''}`
-                        : "Anonymous Student",
-                department: s.department || "General Education",
-                integrity_points: s.integrity_points,
-                rank: idx + 1
-            }));
+            console.info(`[Context] Leaderboard [Source: Standardized View]:`, studentsRes.data?.length || 0, 'students');
 
             return {
-                students: maskedStudents,
+                students: studentsRes.data || [],
                 departments: deptsRes.data || []
             };
         },

@@ -48,7 +48,7 @@ const PageLoader = () => (
 
 const AppContent = () => {
   const auth = useAuth() || {};
-  const { user, session, loading } = auth;
+  const { session, loading } = auth;
   
   const location = useLocation();
   const [showRescueLink, setShowRescueLink] = useState(false);
@@ -59,7 +59,8 @@ const AppContent = () => {
       // Give standard cold-start time (10s) before offering rescue
       timeout = setTimeout(() => setShowRescueLink(true), 10000);
     } else {
-      setShowRescueLink(false);
+      // Reset asynchronously to avoid cascading render warnings
+      Promise.resolve().then(() => setShowRescueLink(false));
     }
     return () => clearTimeout(timeout);
   }, [loading]);
@@ -168,7 +169,6 @@ const AppContent = () => {
 
 
 function App() {
-  const isMobile = window.innerWidth < 1024;
 
   return (
     <Router>

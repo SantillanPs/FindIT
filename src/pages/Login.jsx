@@ -42,6 +42,7 @@ const Login = () => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const isRegistered = searchParams.get('registered') === 'true';
+  const returnTo = searchParams.get('returnTo');
 
   const { mutate: handleLogin, isPending: loading } = useMutation({
     mutationFn: async ({ email, password }) => {
@@ -51,6 +52,13 @@ const Login = () => {
       });
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      // If we have a returnTo param (e.g. from claim flow), redirect there
+      if (returnTo) {
+        navigate(returnTo, { replace: true });
+      }
+      // Otherwise GuestRoute auto-redirects to dashboard
     },
     onError: (err) => {
       setError(err.message || 'Invalid email or password.');

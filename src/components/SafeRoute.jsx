@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export const ProtectedRoute = ({ children }) => {
@@ -23,8 +23,10 @@ export const ProtectedRoute = ({ children }) => {
 
 export const GuestRoute = () => {
   const { session, user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   // Bypass redirect if in the middle of a registration success flow
   const isRegistering = sessionStorage.getItem('registration_in_progress') === 'true';
+  const returnTo = searchParams.get('returnTo');
 
   if (loading) {
     return (
@@ -47,5 +49,11 @@ export const GuestRoute = () => {
   // If session exists but user is null, stay on the page (profile sync is happening)
   const shouldRedirect = session && user && !isRegistering;
 
-  return shouldRedirect ? <Navigate to={getDashboardPath(user.role)} replace /> : <Outlet />;
+  if (shouldRedirect) {
+    // If returnTo param is set (e.g. claim flow), redirect there instead
+    const redirectPath = returnTo || getDashboardPath(user.role);
+    return <Navigate to={redirectPath} replace />;
+  }
+
+  return <Outlet />;
 };

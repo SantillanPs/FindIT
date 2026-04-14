@@ -1,132 +1,198 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import ImageUpload from '../../components/ImageUpload';
 import { useAuth } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 
-const SubmitClaim = () => {
-  const { colleges: COLLEGES, loading: metadataLoading } = useMasterData();
-  const { itemId } = useParams();
-  const [item, setItem] = useState(null);
-  const [proof, setProof] = useState('');
-  const [proofPhotoUrl, setProofPhotoUrl] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  
-  // Guest State
-  const [guestFirstName, setGuestFirstName] = useState('');
-  const [guestLastName, setGuestLastName] = useState('');
-  const [guestEmail, setGuestEmail] = useState('');
-  const [contactMethod, setContactMethod] = useState('Email');
-  const [contactInfo, setContactInfo] = useState('');
-  const [courseDepartment, setCourseDepartment] = useState('');
-  const [trackingId, setTrackingId] = useState('');
-  const [attributes, setAttributes] = useState({});
-  const [copied, setCopied] = useState(false);
+// Step definitions for the new importance-first flow
+const STEPS = [
+  { id: 'challenge', label: 'Ownership', icon: 'fa-shield-halved' },
+  { id: 'photo', label: 'Evidence', icon: 'fa-camera' },
+  { id: 'identity', label: 'Identity', icon: 'fa-user' },
+  { id: 'review', label: 'Review', icon: 'fa-check-double' },
+];
 
+const SubmitClaim = () => {
+  const { colleges: COLLEGES } = useMasterData();
+  const { itemId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [step, setStep] = useState(1);
-  const totalSteps = 5;
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchItem();
-  }, [itemId]);
+  // Storage Key for draft persistence
+  const DRAFT_KEY = `claim_draft_${itemId}`;
 
-  const goToStep = (target) => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setStep(target);
-  };
-
-  const fetchItem = async () => {
+  // 1. Initial State (restored from session storage if exists)
+  const initialDraft = useMemo(() => {
     try {
+      const saved = sessionStorage.getItem(DRAFT_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch (_) {
+      return null;
+    }
+  }, [DRAFT_KEY]);
+
+  const [proof, setProof] = useState(initialDraft?.proof || '');
+  const [proofPhotoUrl, setProofPhotoUrl] = useState(initialDraft?.proofPhotoUrl || '');
+  const [attributes, setAttributes] = useState(initialDraft?.attributes || {});
+  const [step, setStep] = useState(initialDraft?.step || 1);
+  const [completedSteps, setCompletedSteps] = useState(new Set(initialDraft?.completedSteps || []));
+  
+  // Guest State (Identity)
+  const [guestFirstName, setGuestFirstName] = useState(initialDraft?.guestFirstName || '');
+  const [guestLastName, setGuestLastName] = useState(initialDraft?.guestLastName || '');
+  const [guestEmail, setGuestEmail] = useState(initialDraft?.guestEmail || '');
+  const [contactMethod, setContactMethod] = useState(initialDraft?.contactMethod || 'Email');
+  const [contactInfo, setContactInfo] = useState(initialDraft?.contactInfo || '');
+  const [courseDepartment, setCourseDepartment] = useState(initialDraft?.courseDepartment || '');
+
+  const [trackingId, setTrackingId] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
+
+  // 2. Draft Persistence Effect
+  useEffect(() => {
+    const draft = {
+      proof,
+      proofPhotoUrl,
+      attributes,
+      step,
+      completedSteps: Array.from(completedSteps),
+      guestFirstName,
+      guestLastName,
+      guestEmail,
+      contactMethod,
+      contactInfo,
+      courseDepartment
+    };
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [DRAFT_KEY, proof, proofPhotoUrl, attributes, step, completedSteps, guestFirstName, guestLastName, guestEmail, contactMethod, contactInfo, courseDepartment]);
+
+  // 3. Data Fetching (TanStack Query) — compliant with Section 2.1
+  const { data: item, isLoading: itemLoading } = useQuery({
+    queryKey: ['found-item', itemId],
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('found_items')
         .select('*')
         .eq('id', itemId)
         .single();
-      
       if (error) throw error;
-      
-      if (data) {
-        setItem(data);
-      } else {
-        setError('Registry entry not found or no longer available.');
-      }
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('System error retrieving item context.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data;
+    },
+    enabled: !!itemId,
+  });
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setSubmitting(true);
-    setError('');
-
-    try {
-      const genTrackingId = user ? null : `TRK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
-      const payload = {
-        found_item_id: parseInt(itemId),
-        proof_description: proof,
-        proof_photo_url: proofPhotoUrl,
-        guest_first_name: guestFirstName || (user?.first_name),
-        guest_last_name: guestLastName || (user?.last_name),
-        guest_email: guestEmail || (user?.email),
-        contact_method: contactMethod,
-        contact_info: contactInfo,
-        course_department: courseDepartment,
-        attributes_json: JSON.stringify(attributes),
-        student_id: user?.id || null,
-        status: 'pending',
-        tracking_id: genTrackingId,
-        created_at: new Date().toISOString()
-      };
-
+  // 4. Submission Mutation — compliant with Section 2.2
+  const claimMutation = useMutation({
+    mutationFn: async (payload) => {
       const { data, error } = await supabase
         .from('claims')
         .insert([payload])
         .select()
         .single();
-      
       if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      // Clear persistence on success
+      sessionStorage.removeItem(DRAFT_KEY);
       
-      if (!user && genTrackingId) {
-        setTrackingId(genTrackingId);
+      // Invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['my-claims'] });
+      
+      if (!user && data.tracking_id) {
+        setTrackingId(data.tracking_id);
       } else {
         navigate('/my-claims');
       }
-    } catch (err) {
+    },
+    onError: (err) => {
       setError(err.message || 'Submission failure. Please try again.');
-      setStep(4); // Go back to proof if error
-    } finally {
-      setSubmitting(false);
+      setStep(1);
     }
+  });
+
+  // Auto-fill contact info for logged-in users (syncing with user object)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (user && !initialDraft && !contactInfo) {
+      setContactMethod('Email');
+      setContactInfo(user.email || '');
+      setCourseDepartment(user.college || '');
+    }
+  }, [user]); // Only trigger when user loads
+
+  const goToStep = useCallback((target) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (target > step) {
+      setCompletedSteps(prev => new Set([...prev, step]));
+    }
+    setStep(target);
+  }, [step]);
+
+  const getActualStep = (displayStep) => {
+    if (user) {
+      if (displayStep >= 3) return 4; // jump to review
+      return displayStep;
+    }
+    return displayStep;
+  };
+
+  const getDisplaySteps = () => {
+    if (user) {
+      return STEPS.filter(s => s.id !== 'identity');
+    }
+    return STEPS;
+  };
+
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+    setError('');
+
+    const genTrackingId = user ? null : `TRK-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+    
+    const payload = {
+      found_item_id: itemId,
+      proof_description: proof,
+      proof_photo_url: proofPhotoUrl,
+      guest_first_name: guestFirstName,
+      guest_last_name: guestLastName,
+      guest_email: guestEmail,
+      contact_method: contactMethod,
+      contact_info: contactInfo,
+      course_department: courseDepartment,
+      attributes_json: attributes,
+      user_id: user?.id || null, // Standardized column name is user_id
+      status: 'pending',
+      tracking_id: genTrackingId,
+    };
+
+    claimMutation.mutate(payload);
   };
 
   const containerVariants = {
-    hidden: { opacity: 0, x: 20 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
-    exit: { opacity: 0, x: -20, transition: { duration: 0.3 } }
+    hidden: { opacity: 0, y: 12 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+    exit: { opacity: 0, y: -8, transition: { duration: 0.2 } }
   };
 
-  if (loading) return (
+  const actualStep = getActualStep(step);
+
+  if (itemLoading) return (
     <div className="flex justify-center py-32">
       <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
     </div>
   );
 
+  // ── Success Screen (Guest Tracking) ──
   if (trackingId) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[85vh] py-20 px-4 text-center space-y-12">
-        {/* Minimal Success Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -141,14 +207,12 @@ const SubmitClaim = () => {
             </p>
         </motion.div>
 
-        {/* Unified Action Hub */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="w-full max-w-4xl grid md:grid-cols-2 gap-px bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black"
         >
-            
             {/* Left: Tracking Module */}
             <div className="p-10 md:p-14 bg-black/40 space-y-8 flex flex-col justify-between text-left">
                 <div className="space-y-3">
@@ -225,14 +289,13 @@ const SubmitClaim = () => {
                     <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest max-w-[200px]">
                         This claim is secured to your student dashboard.
                     </p>
-                    <Link to="/dashboard" className="text-uni-400 text-[9px] font-black uppercase tracking-widest hover:underline pt-4">
+                    <Link to="/student" className="text-uni-400 text-[9px] font-black uppercase tracking-widest hover:underline pt-4">
                         View Dashboard →
                     </Link>
                 </div>
             )}
         </motion.div>
 
-        {/* Action Footer */}
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -248,36 +311,59 @@ const SubmitClaim = () => {
     );
   }
 
+  // ── Main Claim Flow ──
+  const displaySteps = getDisplaySteps();
+
   return (
     <div className="max-w-4xl mx-auto min-h-[80vh] flex flex-col">
-       {/* Seamless Header */}
-       <div className="space-y-8 mb-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 pb-8">
-              <div className="space-y-2 flex items-center gap-6">
-                  {item && (
-                    <div className="w-16 h-16 bg-white/5 rounded-2xl border border-white/10 flex items-center justify-center text-3xl overflow-hidden shrink-0">
-                      {item.photo_url ? <img src={item.photo_url} className="w-full h-full object-cover opacity-50" /> : '📦'}
-                    </div>
+       {/* ── Header with Item Context ── */}
+       <div className="space-y-6 mb-8">
+          {/* Item Context Card — always visible */}
+          {item && (
+            <div className="flex items-center gap-4 p-4 bg-white/[0.03] rounded-2xl border border-white/5">
+              <div className="w-14 h-14 bg-white/5 rounded-xl border border-white/10 flex items-center justify-center text-2xl overflow-hidden shrink-0">
+                {item.photo_url ? <img src={item.photo_url} className="w-full h-full object-cover opacity-60" alt="" /> : '📦'}
+              </div>
+              <div className="flex-grow min-w-0">
+                <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.3em]">Claiming</p>
+                <h1 className="text-lg font-black text-white uppercase tracking-tight leading-none truncate">{item.title || item.category}</h1>
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{item.category} • {item.location || 'Unknown location'}</p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Clickable Step Navigator ── */}
+          <div className="flex items-center gap-2 px-1">
+            {displaySteps.map((s, idx) => {
+              const stepNum = idx + 1;
+              const isActive = step === stepNum;
+              const isComplete = completedSteps.has(stepNum) || step > stepNum;
+              const isClickable = isComplete || isActive;
+
+              return (
+                <React.Fragment key={s.id}>
+                  <button
+                    onClick={() => isClickable && goToStep(stepNum)}
+                    disabled={!isClickable}
+                    className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all min-h-[48px] ${
+                      isActive  
+                        ? 'bg-uni-500 text-white shadow-lg shadow-uni-500/20' 
+                        : isComplete 
+                          ? 'bg-uni-500/10 text-uni-400 hover:bg-uni-500/20 cursor-pointer' 
+                          : 'bg-white/[0.03] text-slate-600 cursor-default'
+                    }`}
+                  >
+                    <i className={`fa-solid ${isComplete && !isActive ? 'fa-check' : s.icon} text-[11px]`}></i>
+                    <span className="text-[9px] font-black uppercase tracking-widest hidden md:inline">{s.label}</span>
+                  </button>
+                  {idx < displaySteps.length - 1 && (
+                    <div className={`flex-grow h-0.5 rounded-full transition-colors ${
+                      step > stepNum ? 'bg-uni-500/40' : 'bg-white/5'
+                    }`}></div>
                   )}
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.4em]">Claim Submission</p>
-                    <h1 className="text-3xl font-black text-white uppercase tracking-tighter leading-none italic">Claim this Item</h1>
-                  </div>
-              </div>
-              <div className="flex flex-col items-end gap-3 min-w-[140px]">
-                  <div className="text-right">
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Progress</p>
-                    <p className="text-sm font-black text-white uppercase italic leading-none">Step {step} of {totalSteps}</p>
-                  </div>
-                  <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden border border-white/5">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(step / totalSteps) * 100}%` }}
-                      transition={{ duration: 0.8, ease: "circOut" }}
-                      className="h-full bg-uni-500 shadow-[0_0_10px_rgba(var(--uni-500-rgb),0.5)]"
-                    />
-                  </div>
-              </div>
+                </React.Fragment>
+              );
+            })}
           </div>
           
           <AnimatePresence mode="wait">
@@ -286,217 +372,63 @@ const SubmitClaim = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="p-6 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-black uppercase tracking-widest text-center rounded-3xl flex items-center justify-center gap-4"
+                className="p-5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-black uppercase tracking-widest text-center rounded-2xl flex items-center justify-center gap-4"
               >
-                 <i className="fa-solid fa-circle-exclamation text-xl"></i>
+                 <i className="fa-solid fa-circle-exclamation text-lg"></i>
                  {error}
               </motion.div>
             )}
           </AnimatePresence>
        </div>
 
-       <div className="flex-grow flex flex-col relative px-4">
+       {/* ── Step Content ── */}
+       <div className="flex-grow flex flex-col relative px-1">
          <AnimatePresence mode="wait">
            <motion.div
-             key={step}
+             key={actualStep}
              variants={containerVariants}
              initial="hidden"
              animate="visible"
              exit="exit"
              className="flex-grow flex flex-col"
            >
-             {step === 1 && (
-               <div className="space-y-12 flex-grow flex flex-col justify-center py-10 text-center">
+             {/* ═══════════════════════════════════════════════════
+                 STEP 1: Ownership Challenge
+                 ═══════════════════════════════════════════════════ */}
+             {actualStep === 1 && (
+               <div className="space-y-10 flex-grow flex flex-col justify-center py-8 text-center">
                  <div className="space-y-4">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 1: Visual Proof (Optional)</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Do you have any photo<br/>of the item?"</h2>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">This could be a photo of you with the item, its receipt, or a screenshot of a unique mark.</p>
-                 </div>
-
-                 <div className="max-w-xl mx-auto w-full space-y-10">
-                    <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5">
-                        <ImageUpload
-                            value={proofPhotoUrl}
-                            onUploadSuccess={(url) => setProofPhotoUrl(url)}
-                        />
-                    </div>
-
-                    <button
-                      onClick={() => goToStep(2)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 flex items-center justify-center gap-4"
-                    >
-                      {proofPhotoUrl ? 'Next Step →' : 'Skip & Continue →'}
-                    </button>
-                 </div>
-               </div>
-             )}
-
-             {step === 2 && (
-               <div className="space-y-12 flex-grow flex flex-col justify-center py-10 text-center">
-                 <div className="space-y-4">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 2: Identification</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Please tell us<br/>who is claiming"</h2>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Provide your identification details.</p>
-                 </div>
-
-                 <div className="max-w-2xl mx-auto w-full space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">First Name</label>
-                            <input 
-                                type="text"
-                                required
-                                placeholder="Juan"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
-                                value={guestFirstName || (user?.first_name)}
-                                onChange={(e) => setGuestFirstName(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Last Name</label>
-                            <input 
-                                type="text"
-                                required
-                                placeholder="Dela Cruz"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
-                                value={guestLastName || (user?.last_name)}
-                                onChange={(e) => setGuestLastName(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                        <div className="space-y-4 text-left">
-                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Course / Dept</label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                {COLLEGES.map((college) => (
-                                    <button
-                                        key={college.id}
-                                        type="button"
-                                        onClick={() => setCourseDepartment(college.label)}
-                                        className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-3 group relative overflow-hidden ${
-                                            courseDepartment === college.label
-                                                ? 'bg-uni-500 border-uni-500 text-white'
-                                                : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/20'
-                                        }`}
-                                    >
-                                        <i className={`fa-solid ${college.icon} text-2xl transition-transform group-hover:scale-110 ${courseDepartment === college.label ? 'scale-110' : ''}`}></i>
-                                        <span className="text-[9px] font-black tracking-widest text-center leading-tight">{college.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <button
-                          disabled={(!guestFirstName && !user?.first_name) || (!guestLastName && !user?.last_name) || !courseDepartment}
-                          onClick={() => goToStep(3)}
-                          className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
-                        >
-                          Continue →
-                        </button>
-                    </div>
-                </div>
-            )}
-
-             {step === 3 && (
-               <div className="space-y-12 flex-grow flex flex-col justify-center py-10 text-center">
-                 <div className="space-y-4">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 3: Contact Priority</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"How should we<br/>get in touch?"</h2>
-                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Choose where you'd like to receive the result of your claim.</p>
-                 </div>
-
-                 <div className="max-w-2xl mx-auto w-full space-y-10">
-                    <div className="grid grid-cols-3 gap-4">
-                        {[
-                          { id: 'Email', icon: 'fa-paper-plane', label: 'Email' },
-                          { id: 'Facebook', icon: 'fa-facebook', label: 'Facebook' },
-                          { id: 'Phone', icon: 'fa-mobile-screen', label: 'Phone' }
-                        ].map(method => (
-                          <button
-                            key={method.id}
-                            type="button"
-                            onClick={() => setContactMethod(method.id)}
-                            className={`p-6 rounded-3xl border flex flex-col items-center gap-4 transition-all ${
-                              contactMethod === method.id 
-                                ? 'bg-uni-500 border-uni-500 text-white scale-105' 
-                                : 'bg-white/5 border-white/5 text-slate-500 hover:border-white/10'
-                            }`}
-                          >
-                            <i className={`${method.id === 'Facebook' ? 'fa-brands' : 'fa-solid'} ${method.icon} text-2xl`}></i>
-                            <span className="text-[10px] font-black uppercase tracking-widest font-mono">{method.label}</span>
-                          </button>
-
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">{contactMethod} Details</label>
-                            <input 
-                                type={contactMethod === 'Email' ? 'email' : 'text'}
-                                required
-                                placeholder={contactMethod === 'Facebook' ? 'FB Link or Handle' : contactMethod === 'Phone' ? '09XX XXX XXXX' : 'your@email.com'}
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px]"
-                                value={contactInfo}
-                                onChange={(e) => setContactInfo(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-3 text-left">
-                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-6">Backup Email (Opt)</label>
-                            <input 
-                                type="email"
-                                placeholder="Backup notification email"
-                                className="w-full bg-white/5 border border-white/10 rounded-full px-8 py-5 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] opacity-40 focus:opacity-100"
-                                value={guestEmail}
-                                onChange={(e) => setGuestEmail(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    <button
-                      disabled={!contactInfo}
-                      onClick={() => goToStep(4)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
-                    >
-                      Save Contact →
-                    </button>
-                 </div>
-               </div>
-             )}
-
-             {step === 4 && (
-               <div className="space-y-12 flex-grow flex flex-col justify-center py-10 text-center">
-                 <div className="space-y-4">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 4: Ownership Challenge</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">
-                      {item?.challenge_question ? "Please answer the Challenge" : "Why is this yours?"}
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Step 1: Prove Ownership</span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">
+                      {item?.challenge_question ? <>Answer the<br/>Challenge</> : <>Why is this<br/>yours?</>}
                     </h2>
                     {item?.challenge_question ? (
-                       <div className="max-w-xl mx-auto p-6 bg-uni-500/5 border border-uni-400/20 rounded-3xl mt-4">
-                          <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.2em] mb-2">Question from Administrator</p>
-                          <p className="text-lg font-black text-white uppercase italic tracking-tight italic">"{item.challenge_question}"</p>
+                       <div className="max-w-xl mx-auto p-5 bg-uni-500/5 border border-uni-400/20 rounded-2xl">
+                          <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em] mb-2">Question from Administrator</p>
+                          <p className="text-base font-black text-white italic tracking-tight">"{item.challenge_question}"</p>
                        </div>
                     ) : (
-                       <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Mention unique marks, lock screens, or internal contents.</p>
+                       <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">Mention unique marks, lock screens, stickers, or internal contents.</p>
                     )}
                  </div>
 
                   <div className="max-w-2xl mx-auto w-full space-y-8">
-                     {/* Structured Verification Audit */}
+                     {/* Structured Physical Characteristics Audit */}
                      {item && ITEM_ATTRIBUTES[item.category] && (
-                        <div className="bg-white/5 p-8 rounded-[2.5rem] border border-white/5 space-y-6 text-left">
-                           <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.3em] flex items-center gap-2 mb-4">
+                        <div className="bg-white/[0.03] p-6 md:p-8 rounded-[2rem] border border-white/5 space-y-6 text-left">
+                           <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.3em] flex items-center gap-2">
                               <i className="fa-solid fa-list-check"></i>
-                              Physical Characteristics Audit
+                              Physical Characteristics
                            </p>
                            
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                               {(ITEM_ATTRIBUTES[item.category] || []).map(field => (
                                 <div key={field} className="space-y-2">
                                   <label className="block text-[9px] font-black text-slate-500 tracking-widest uppercase ml-4">{field}</label>
                                   
                                   {field === 'Color' || field === 'Primary Color' || field === 'Frame Color' ? (
                                     <select
-                                      className="w-full bg-slate-950 border border-white/10 rounded-full px-6 py-4 text-[11px] font-bold text-white focus:border-uni-500 outline-none transition-all"
+                                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-5 py-4 text-[11px] font-bold text-white focus:border-uni-500 outline-none transition-all min-h-[48px]"
                                       value={attributes[field] || ''}
                                       onChange={(e) => setAttributes({ ...attributes, [field]: e.target.value })}
                                     >
@@ -505,7 +437,7 @@ const SubmitClaim = () => {
                                     </select>
                                   ) : field === 'Condition' ? (
                                     <select
-                                      className="w-full bg-slate-950 border border-white/10 rounded-full px-6 py-4 text-[11px] font-bold text-white focus:border-uni-500 outline-none transition-all"
+                                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-5 py-4 text-[11px] font-bold text-white focus:border-uni-500 outline-none transition-all min-h-[48px]"
                                       value={attributes[field] || ''}
                                       onChange={(e) => setAttributes({ ...attributes, [field]: e.target.value })}
                                     >
@@ -515,7 +447,7 @@ const SubmitClaim = () => {
                                   ) : (
                                     <input 
                                       type="text"
-                                      className="w-full bg-slate-950 border border-white/10 rounded-full px-6 py-4 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all tracking-widest uppercase"
+                                      className="w-full bg-slate-950 border border-white/10 rounded-xl px-5 py-4 text-[11px] font-black text-white focus:border-uni-500 outline-none transition-all tracking-widest uppercase min-h-[48px]"
                                       value={attributes[field] || ''}
                                       onChange={(e) => setAttributes({ ...attributes, [field]: e.target.value })}
                                       placeholder={`Enter ${field}`}
@@ -527,110 +459,315 @@ const SubmitClaim = () => {
                         </div>
                      )}
 
+                     {/* Narrative Proof */}
                      <div className="space-y-3 text-left">
-                        <label className="text-[10px] font-black text-slate-500 tracking-widest ml-10 flex items-center gap-2">
+                        <label className="text-[9px] font-black text-slate-500 tracking-widest ml-6 flex items-center gap-2 uppercase">
                            <i className="fa-solid fa-pen-nib text-[8px] text-uni-400"></i>
-                           {item?.challenge_question ? "Additional Verification Context" : "Unique Narrative Proof"}
+                           {item?.challenge_question ? "Your Answer" : "Describe proof only the owner would know"}
                         </label>
                         <textarea 
-                            rows="6"
+                            rows="5"
                             required
-                            placeholder={item?.challenge_question ? "Provide the correct answer to the question above..." : "Describe details only the owner would know (e.g. Scratches, stickers, wallpaper, contents)..."}
-                            className="w-full bg-white/5 border border-white/10 rounded-[2.5rem] p-8 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] min-h-[150px] resize-none"
+                            placeholder={item?.challenge_question ? "Type your answer to the question above..." : "e.g. There's a scratch on the top-left corner, my wallpaper is a sunset photo, the case has a sticker..."}
+                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-wide text-[12px] min-h-[120px] resize-none leading-relaxed"
                             value={proof}
                             onChange={(e) => setProof(e.target.value)}
                         />
                      </div>
+
                     <button
                       disabled={proof.length < 5}
-                      onClick={() => goToStep(5)}
-                      className="w-full bg-uni-600 text-white py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] hover:bg-white hover:text-black transition-all active:scale-95 disabled:opacity-20"
+                      onClick={() => goToStep(2)}
+                      className="w-full bg-uni-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all active:scale-[0.98] disabled:opacity-20 min-h-[56px] flex items-center justify-center gap-3"
                     >
-                      Next Step →
+                      Continue <i className="fa-solid fa-arrow-right text-[10px]"></i>
                     </button>
                  </div>
                </div>
              )}
 
-             {step === 5 && (
-               <div className="space-y-12 flex-grow flex flex-col justify-center py-10">
-                 <div className="space-y-4 text-center">
-                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">Step 5: Final Review</span>
-                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">"Please check everything<br/>one last time."</h2>
+             {/* ═══════════════════════════════════════════════════
+                 STEP 2: Photo Evidence
+                 ═══════════════════════════════════════════════════ */}
+             {actualStep === 2 && (
+               <div className="space-y-10 flex-grow flex flex-col justify-center py-8 text-center">
+                 <div className="space-y-4">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Step 2: Photo Evidence (Optional)</span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Got a photo<br/>of the item?"</h2>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">A photo of you with the item, its receipt, or a screenshot of a unique mark.</p>
                  </div>
 
-                 <div className="max-w-3xl mx-auto w-full space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Claimant Context */}
-                        <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 space-y-6">
-                           <div className="space-y-1">
-                              <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Claimant</p>
-                              <p className="text-xl font-black text-white uppercase italic">{user ? `${user.first_name} ${user.last_name}` : `${guestFirstName} ${guestLastName}`}</p>
-                              <p className="text-[10px] text-uni-400 font-bold uppercase">{user ? user.role : courseDepartment}</p>
-                           </div>
-                           <div className="pt-4 border-t border-white/5 space-y-1">
-                              <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Contact Method</p>
-                               <p className="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
-                                 <i className={`${contactMethod === 'Facebook' ? 'fa-brands fa-facebook' : 'fa-solid ' + (contactMethod === 'Phone' ? 'fa-mobile-screen' : 'fa-paper-plane')} text-uni-400`}></i>
-                                {contactInfo}
-                              </p>
-                           </div>
+                 <div className="max-w-xl mx-auto w-full space-y-8">
+                    <div className="p-6 bg-white/[0.02] rounded-[2.5rem] border border-white/5">
+                        <ImageUpload
+                            value={proofPhotoUrl}
+                            onUploadSuccess={(url) => setProofPhotoUrl(url)}
+                        />
+                    </div>
+
+                    <button
+                      onClick={() => goToStep(user ? 3 : 3)}
+                      className="w-full bg-uni-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all active:scale-[0.98] min-h-[56px] flex items-center justify-center gap-3"
+                    >
+                      {proofPhotoUrl ? <>Continue <i className="fa-solid fa-arrow-right text-[10px]"></i></> : <>Skip & Continue <i className="fa-solid fa-arrow-right text-[10px]"></i></>}
+                    </button>
+                 </div>
+               </div>
+             )}
+
+             {/* ═══════════════════════════════════════════════════
+                 STEP 3: Identity + Contact (Guests only)
+                 ═══════════════════════════════════════════════════ */}
+             {actualStep === 3 && !user && (
+               <div className="space-y-10 flex-grow flex flex-col justify-center py-8 text-center">
+                 <div className="space-y-4">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Step 3: Your Info</span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Who's claiming<br/>& how to reach you?"</h2>
+                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">We need your identity and preferred contact method.</p>
+                 </div>
+
+                 <div className="max-w-2xl mx-auto w-full space-y-8">
+                    {/* ── "Have an Account?" Login Shortcut ── */}
+                    <div className="p-5 bg-uni-500/5 border border-uni-500/15 rounded-2xl flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex items-center gap-3 flex-grow">
+                        <div className="w-10 h-10 rounded-xl bg-uni-500/10 flex items-center justify-center shrink-0">
+                          <i className="fa-solid fa-right-to-bracket text-uni-400 text-sm"></i>
                         </div>
+                        <div className="text-left">
+                          <p className="text-[11px] font-black text-white">Already have an account?</p>
+                          <p className="text-[9px] text-slate-400 font-bold">Sign in to auto-fill your details</p>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/login?returnTo=${encodeURIComponent(`/submit-claim/${itemId}`)}`}
+                        className="px-6 py-3 rounded-xl bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all shrink-0 min-h-[44px] flex items-center"
+                      >
+                        Sign In →
+                      </Link>
+                    </div>
 
-                        {/* Evidence Context */}
-                        <div className="p-8 glass-panel rounded-[2.5rem] border border-white/5 space-y-6">
-                           <div className="space-y-6">
-                              <div className="space-y-1">
-                                <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Evidence Details</p>
-                                <p className="text-[11px] font-bold text-slate-400 uppercase leading-relaxed line-clamp-3">"{proof}"</p>
-                              </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-grow h-px bg-white/10"></div>
+                      <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Or continue as guest</span>
+                      <div className="flex-grow h-px bg-white/10"></div>
+                    </div>
 
-                              {Object.keys(attributes).length > 0 && (
-                                <div className="pt-4 border-t border-white/5 space-y-3">
-                                   <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Physical Details</p>
-                                   <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                                      {Object.entries(attributes).map(([k, v]) => (
-                                        <div key={k} className="flex flex-col">
-                                          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{k}</span>
-                                          <span className="text-[10px] font-black text-uni-400 uppercase italic tracking-tight">{v || 'N/A'}</span>
-                                        </div>
-                                      ))}
-                                   </div>
-                                </div>
-                              )}
-                              
-                              {proofPhotoUrl && (
-                                <div className="w-full h-32 rounded-xl border border-white/10 overflow-hidden relative group">
-                                   <img src={proofPhotoUrl} className="w-full h-full object-cover" />
-                                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                      <span className="text-[8px] font-black text-white uppercase tracking-widest">Ownership Photo</span>
-                                   </div>
-                                </div>
-                              )}
-                           </div>
+                    {/* Identity Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">First Name</label>
+                            <input 
+                                type="text"
+                                required
+                                placeholder="Juan"
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-6 py-4 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] min-h-[48px]"
+                                value={guestFirstName}
+                                onChange={(e) => setGuestFirstName(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">Last Name</label>
+                            <input 
+                                type="text"
+                                required
+                                placeholder="Dela Cruz"
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-6 py-4 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] min-h-[48px]"
+                                value={guestLastName}
+                                onChange={(e) => setGuestLastName(e.target.value)}
+                            />
                         </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <button 
-                            onClick={() => goToStep(4)} 
-                            className="flex-1 py-6 rounded-2xl bg-white/5 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all"
-                        >
-                            Wait, I need to edit
-                        </button>
+                    {/* College Selector */}
+                    <div className="space-y-3 text-left">
+                        <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">College / Department</label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {COLLEGES.map((college) => (
+                                <button
+                                    key={college.id}
+                                    type="button"
+                                    onClick={() => setCourseDepartment(college.label)}
+                                    className={`p-4 md:p-5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 group relative overflow-hidden min-h-[48px] ${
+                                        courseDepartment === college.label
+                                            ? 'bg-uni-500 border-uni-500 text-white'
+                                            : 'bg-white/[0.03] border-white/5 text-slate-500 hover:border-white/20'
+                                    }`}
+                                >
+                                    <i className={`fa-solid ${college.icon} text-xl transition-transform group-hover:scale-110 ${courseDepartment === college.label ? 'scale-110' : ''}`}></i>
+                                    <span className="text-[8px] font-black tracking-widest text-center leading-tight">{college.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Contact Method */}
+                    <div className="space-y-3 text-left">
+                        <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">Preferred Contact</label>
+                        <div className="grid grid-cols-3 gap-3">
+                            {['Email', 'Facebook', 'Phone'].map(method => (
+                              <button
+                                key={method}
+                                type="button"
+                                onClick={() => setContactMethod(method)}
+                                className={`p-4 rounded-2xl border flex flex-col items-center gap-3 transition-all min-h-[48px] ${
+                                  contactMethod === method 
+                                    ? 'bg-uni-500 border-uni-500 text-white scale-[1.02]' 
+                                    : 'bg-white/[0.03] border-white/5 text-slate-500 hover:border-white/10'
+                                }`}
+                              >
+                                <i className={`fa-solid ${method === 'Facebook' ? 'fa-brands fa-facebook' : method === 'Phone' ? 'fa-mobile-screen' : 'fa-paper-plane'} text-xl`}></i>
+                                <span className="text-[9px] font-black uppercase tracking-widest">{method}</span>
+                              </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Contact Input */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                         <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">{contactMethod} Details</label>
+                            <input 
+                                type={contactMethod === 'Email' ? 'email' : 'text'}
+                                required
+                                placeholder={contactMethod === 'Facebook' ? 'FB Link or Handle' : contactMethod === 'Phone' ? '09XX XXX XXXX' : 'your@email.com'}
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-6 py-4 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] min-h-[48px]"
+                                value={contactInfo}
+                                onChange={(e) => setContactInfo(e.target.value)}
+                            />
+                        </div>
+                        <div className="space-y-2 text-left">
+                            <label className="text-[10px] font-black text-slate-500 tracking-widest ml-5">Backup Email (Opt)</label>
+                            <input 
+                                type="email"
+                                placeholder="Backup notification email"
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-6 py-4 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-widest text-[11px] opacity-50 focus:opacity-100 min-h-[48px]"
+                                value={guestEmail}
+                                onChange={(e) => setGuestEmail(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <button
+                      disabled={(!guestFirstName) || (!guestLastName) || !courseDepartment || !contactInfo}
+                      onClick={() => goToStep(4)}
+                      className="w-full bg-uni-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all active:scale-[0.98] disabled:opacity-20 min-h-[56px] flex items-center justify-center gap-3"
+                    >
+                      Review Claim <i className="fa-solid fa-arrow-right text-[10px]"></i>
+                    </button>
+                 </div>
+               </div>
+             )}
+
+             {/* ═══════════════════════════════════════════════════
+                 STEP 4 (or 3 for logged-in): Final Review
+                 ═══════════════════════════════════════════════════ */}
+             {actualStep === 4 && (
+               <div className="space-y-10 flex-grow flex flex-col justify-center py-8">
+                 <div className="space-y-4 text-center">
+                    <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest italic">
+                      {user ? 'Step 3' : 'Step 4'}: Final Review
+                    </span>
+                    <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">"Check everything<br/>one last time."</h2>
+                 </div>
+
+                 <div className="max-w-2xl mx-auto w-full space-y-5">
+                    {/* ── Claimant Card ── */}
+                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5 space-y-4">
+                       <div className="flex items-center justify-between">
+                          <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Claimant</p>
+                          {!user && (
+                            <button onClick={() => goToStep(3)} className="text-[8px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
+                              <i className="fa-solid fa-pen text-[7px]"></i> Edit
+                            </button>
+                          )}
+                       </div>
+                       <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-uni-500/10 flex items-center justify-center">
+                            <i className="fa-solid fa-user text-uni-400 text-sm"></i>
+                          </div>
+                          <div>
+                            <p className="text-base font-black text-white uppercase italic">
+                              {user ? `${user.first_name} ${user.last_name}` : `${guestFirstName} ${guestLastName}`}
+                            </p>
+                            <p className="text-[10px] text-uni-400 font-bold uppercase">{user ? (user.college || user.role) : courseDepartment}</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* ── Contact Card ── */}
+                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5 space-y-4">
+                       <div className="flex items-center justify-between">
+                          <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Contact Method</p>
+                          {!user && (
+                            <button onClick={() => goToStep(3)} className="text-[8px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
+                              <i className="fa-solid fa-pen text-[7px]"></i> Edit
+                            </button>
+                          )}
+                       </div>
+                       <div className="flex items-center gap-3">
+                          <i className={`${contactMethod === 'Facebook' ? 'fa-brands fa-facebook' : 'fa-solid ' + (contactMethod === 'Phone' ? 'fa-mobile-screen' : 'fa-paper-plane')} text-uni-400`}></i>
+                          <p className="text-[12px] font-black text-white uppercase tracking-widest">{contactInfo}</p>
+                       </div>
+                    </div>
+
+                    {/* ── Evidence Card ── */}
+                    <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5 space-y-4">
+                       <div className="flex items-center justify-between">
+                          <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Ownership Evidence</p>
+                          <button onClick={() => goToStep(1)} className="text-[8px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
+                            <i className="fa-solid fa-pen text-[7px]"></i> Edit
+                          </button>
+                       </div>
+                       <p className="text-[11px] font-bold text-slate-400 leading-relaxed">"{proof}"</p>
+
+                       {Object.keys(attributes).filter(k => attributes[k]).length > 0 && (
+                         <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-x-4 gap-y-2">
+                            {Object.entries(attributes).filter(([,v]) => v).map(([k, v]) => (
+                              <div key={k} className="flex flex-col">
+                                <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{k}</span>
+                                <span className="text-[10px] font-black text-uni-400 uppercase italic tracking-tight">{v}</span>
+                              </div>
+                            ))}
+                         </div>
+                       )}
+                    </div>
+
+                    {/* ── Photo Card ── */}
+                    {proofPhotoUrl && (
+                      <div className="p-6 bg-white/[0.03] rounded-2xl border border-white/5 space-y-4">
+                         <div className="flex items-center justify-between">
+                            <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">Photo Evidence</p>
+                            <button onClick={() => goToStep(2)} className="text-[8px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors flex items-center gap-1.5">
+                              <i className="fa-solid fa-pen text-[7px]"></i> Change
+                            </button>
+                         </div>
+                         <div className="w-full h-40 rounded-xl border border-white/10 overflow-hidden relative group">
+                            <img src={proofPhotoUrl} className="w-full h-full object-cover" alt="Proof" />
+                         </div>
+                      </div>
+                    )}
+
+                    {/* ── Action Buttons (Thumb Zone) ── */}
+                    <div className="pt-4 space-y-3">
                         <button
-                          disabled={submitting}
+                          disabled={claimMutation.isPending}
                           onClick={handleSubmit}
-                          className="flex-[2] bg-white text-black py-7 rounded-[2rem] font-black text-sm uppercase tracking-[0.5em] hover:bg-uni-500 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-6 group"
+                          className="w-full bg-white text-black py-5 rounded-2xl font-black text-sm uppercase tracking-[0.3em] hover:bg-uni-500 hover:text-white transition-all active:scale-[0.98] flex items-center justify-center gap-4 group min-h-[60px] shadow-xl shadow-black/20"
                         >
-                          {submitting ? (
+                          {claimMutation.isPending ? (
                             <div className="w-5 h-5 border-[3px] border-slate-900 border-t-transparent rounded-full animate-spin"></div>
                           ) : (
                             <>
-                                <i className="fa-solid fa-paper-plane text-xl group-hover:rotate-12 transition-transform"></i>
+                                <i className="fa-solid fa-paper-plane text-lg group-hover:rotate-12 transition-transform"></i>
                                 Submit Claim
                             </>
                           )}
+                        </button>
+                        <button 
+                            onClick={() => goToStep(user ? 2 : 3)} 
+                            className="w-full py-4 rounded-xl bg-white/[0.03] text-slate-500 font-black text-[10px] uppercase tracking-widest hover:text-white transition-all min-h-[48px]"
+                        >
+                            ← Wait, I need to edit
                         </button>
                     </div>
                  </div>

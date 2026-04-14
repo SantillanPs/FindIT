@@ -1,199 +1,197 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
+import ResolutionTimeline from './components/ResolutionTimeline';
 
 const ClaimStatus = () => {
-  const { trackingId } = useParams();
-  const [claim, setClaim] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+    const { trackingId } = useParams();
+    const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchStatus();
-  }, [trackingId]);
+    // 1. Data Fetching (TanStack Query) — compliant with Section 2.1
+    const { data: claim, isLoading, error: queryError } = useQuery({
+        queryKey: ['claim-status', trackingId],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('claims')
+                .select(`
+                    *,
+                    found_items (
+                        title,
+                        category,
+                        photo_url,
+                        location
+                    )
+                `)
+                .eq('tracking_id', trackingId)
+                .maybeSingle();
 
-  const fetchStatus = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('claims')
-        .select(`
-          *,
-          found_items (
-            id,
-            title,
-            category,
-            description,
-            location
-          )
-        `)
-        .eq('tracking_id', trackingId)
-        .single();
-      
-      if (error) throw error;
-      
-      // Flatten the data for easier consumption in the existing UI
-      const formattedClaim = {
-        ...data,
-        found_item_title: data.found_items?.title,
-        found_item_category: data.found_items?.category,
-        found_item_description: data.found_items?.description
-      };
-      
-      setClaim(formattedClaim);
-    } catch (err) {
-      console.error('Fetch error:', err);
-      setError('Invalid or expired tracking link.');
-    } finally {
-      setLoading(false);
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!trackingId,
+        retry: 1,
+    });
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+                <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Verifying Link Protocol...</p>
+            </div>
+        );
     }
-  };
 
-  if (loading) return (
-    <div className="flex justify-center py-32">
-      <div className="w-8 h-8 border-2 border-white/5 border-t-uni-500 rounded-full animate-spin"></div>
-    </div>
-  );
-
-  if (error) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <i className="fa-solid fa-link-slash text-4xl text-slate-700"></i>
-        <h2 className="text-xl font-black text-white uppercase tracking-tight">{error}</h2>
-        <Link to="/" className="text-[10px] font-black text-uni-400 uppercase tracking-widest hover:text-white transition-colors">
-            Return to Home
-        </Link>
-    </div>
-  );
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-xl mx-auto space-y-8"
-    >
-      <header className="text-center space-y-2">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Claim Status</h1>
-        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-          Tracking ID: <span className="text-slate-300 font-mono">{trackingId.slice(0, 8)}...</span>
-        </p>
-      </header>
-
-      <div className="glass-panel p-8 md:p-12 rounded-[2.5rem] bg-slate-900/40 border border-white/10 space-y-10">
-        {/* Status Timeline */}
-        <div className="flex flex-col gap-8 relative">
-            {/* Connecting Line */}
-            <div className="absolute left-4 top-4 bottom-4 w-0.5 bg-white/5"></div>
-
-            {/* Step 1: Submitted */}
-            <div className="flex items-start gap-6 relative">
-                <div className="w-8 h-8 bg-uni-500 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10">
-                    <i className="fa-solid fa-check text-[10px] text-white"></i>
-                </div>
-                <div className="space-y-1">
-                    <h3 className="text-sm font-black text-white uppercase tracking-tight">Claim Submitted</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        {new Date(claim.created_at).toLocaleString()}
-                    </p>
-                </div>
-            </div>
-
-            {/* Step 2: Review */}
-            <div className="flex items-start gap-6 relative">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10 transition-colors ${
-                    claim.status === 'pending' 
-                    ? 'bg-amber-500' 
-                    : 'bg-uni-500'
-                }`}>
-                    {claim.status === 'pending' ? (
-                        <i className="fa-solid fa-hourglass text-[10px] text-black"></i>
-                    ) : (
-                        <i className="fa-solid fa-check text-[10px] text-white"></i>
-                    )}
-                </div>
-                <div className="space-y-1">
-                    <h3 className={`text-sm font-black uppercase tracking-tight ${
-                        claim.status === 'pending' ? 'text-amber-400' : 'text-white'
-                    }`}>Staff Review</h3>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                        {claim.status === 'pending' ? 'In Progress...' : 'Completed'}
-                    </p>
-                </div>
-            </div>
-
-            {/* Step 3: Decision */}
-            <div className="flex items-start gap-6 relative">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-4 border-slate-900 z-10 ${
-                    claim.status === 'pending' ? 'bg-slate-800' :
-                    claim.status === 'approved' ? 'bg-green-500' :
-                    'bg-red-500'
-                }`}>
-                    {claim.status === 'approved' && <i className="fa-solid fa-check text-[10px] text-white"></i>}
-                    {claim.status === 'rejected' && <i className="fa-solid fa-xmark text-[10px] text-white"></i>}
+    if (queryError || !claim) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
+                <div className="h-16 w-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 text-2xl border border-red-500/20">
+                    <i className="fa-solid fa-triangle-exclamation"></i>
                 </div>
                 <div className="space-y-2">
-                    <h3 className={`text-sm font-black uppercase tracking-tight ${
-                         claim.status === 'pending' ? 'text-slate-600' :
-                         claim.status === 'approved' ? 'text-green-400' :
-                         'text-red-400'
-                    }`}>
-                        {claim.status === 'pending' ? 'Decision Pending' : 
-                         claim.status === 'approved' ? 'Approved - Ready for Pickup' : 
-                         'Claim Rejected'}
-                    </h3>
-                    
-                    {claim.status === 'approved' && (
-                        <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-                            <p className="text-[10px] font-bold text-green-300 leading-relaxed">
-                                Please visit the Student Affairs Office (Room 101) with your student ID to collect your <strong>{claim.found_item_title || claim.found_item_category}</strong>.
-                            </p>
-                        </div>
-                    )}
-
-                    {claim.status === 'rejected' && (
-                        <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                            <p className="text-[10px] font-bold text-red-300 leading-relaxed">
-                                {claim.admin_notes || 'We could not verify your ownership at this time.'}
-                            </p>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-
-        {/* Claim Info */}
-        <div className="pt-8 border-t border-white/5 grid grid-cols-2 gap-6">
-            <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Claimant</span>
-                <p className="text-[11px] font-black text-white uppercase tracking-tight">{claim.guest_full_name || 'Verified Student'}</p>
-                <p className="text-[9px] text-uni-400 font-bold uppercase">{claim.course_department || 'Student Profile'}</p>
-            </div>
-            <div className="space-y-1">
-                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Contact Via</span>
-                <div className="flex items-center gap-2">
-                    <i className={`fa-brands ${claim.contact_method === 'Facebook' ? 'fa-facebook' : 'fa-solid ' + (claim.contact_method === 'Phone' ? 'fa-phone' : 'fa-envelope')} text-slate-400 text-[10px]`}></i>
-                    <p className="text-[11px] font-black text-white uppercase tracking-tight">{claim.contact_info || 'Account Details'}</p>
-                </div>
-            </div>
-        </div>
-
-        {/* Item Details (Context) */}
-        <div className="pt-8 border-t border-white/5 space-y-4">
-            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block font-mono">Claiming Item</span>
-            <div className="flex items-center gap-4 text-left p-4 bg-white/5 rounded-2xl">
-                <div className="w-12 h-12 bg-slate-950 rounded-lg flex items-center justify-center text-xl overflow-hidden border border-white/5">
-                   {claim.found_item_description ? '📦' : '📷'}
-                </div>
-                <div>
-                    <p className="text-white font-black uppercase text-sm tracking-tight">{claim.found_item_title || claim.found_item_category}</p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest line-clamp-1 italic">
-                        "{claim.proof_description}"
+                    <h2 className="text-xl font-black text-white uppercase italic">Access Denied</h2>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest max-w-xs">
+                        Tracking ID not found or may have expired. Please verify your claim URL.
                     </p>
                 </div>
+                <Link to="/" className="text-uni-400 text-[10px] font-black uppercase tracking-widest hover:underline">
+                    Return to Registry
+                </Link>
+            </div>
+        );
+    }
+
+    return (
+        <div className="max-w-4xl mx-auto py-10 px-4 space-y-12">
+            {/* Header / Tracking Card */}
+            <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/[0.03] border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden"
+            >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/5 blur-[100px] pointer-events-none"></div>
+                
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 relative z-10">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                            <i className="fa-solid fa-magnifying-glass-location text-uni-400 text-sm"></i>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Live Claim Tracker</span>
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter leading-none">
+                            {claim.found_items?.title || 'Claim Status'}
+                        </h1>
+                        <div className="flex items-center gap-3">
+                           <div className="px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-[9px] font-black text-white uppercase tracking-widest">
+                               ID: {trackingId}
+                           </div>
+                           <span className="text-slate-500 text-[10px] sm:text-xs">|</span>
+                           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
+                               Started {new Date(claim.created_at).toLocaleDateString()}
+                           </p>
+                        </div>
+                    </div>
+
+                    <div className="shrink-0 flex gap-3">
+                        <button 
+                            onClick={handleCopyLink}
+                            className="bg-white text-black px-6 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all flex items-center gap-3 shadow-xl shadow-black/40 min-h-[48px]"
+                        >
+                            <i className={`fa-solid ${copied ? 'fa-check' : 'fa-link'}`}></i>
+                            {copied ? 'Link Copied' : 'Share Link'}
+                        </button>
+                    </div>
+                </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {/* ── Status Timeline ── */}
+                <div className="md:col-span-2 space-y-8">
+                    <div className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 space-y-8">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-black text-white uppercase tracking-[0.2em] italic">Verification Audit</h3>
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-uni-400 animate-pulse"></div>
+                                <span className="text-[8px] font-black text-uni-400 uppercase tracking-widest italic">Live Status</span>
+                            </div>
+                        </div>
+                        
+                        <ResolutionTimeline 
+                          status={claim.status} 
+                          isPickupReady={claim.is_pickup_ready}
+                        />
+                    </div>
+
+                    {/* Admin Message */}
+                    {claim.admin_notes && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="p-8 bg-uni-500/5 border border-uni-500/10 rounded-[2rem] space-y-3"
+                        >
+                            <div className="flex items-center gap-2 text-uni-400">
+                                <i className="fa-solid fa-comment-dots text-sm"></i>
+                                <span className="text-[9px] font-black uppercase tracking-widest">Message from Custodian</span>
+                            </div>
+                            <p className="text-white text-sm font-bold leading-relaxed italic uppercase tracking-tight">
+                                "{claim.admin_notes}"
+                            </p>
+                        </motion.div>
+                    )}
+                </div>
+
+                {/* ── Item Info Sidebar ── */}
+                <div className="space-y-6">
+                    <div className="bg-white/[0.03] border border-white/5 rounded-[2rem] p-6 space-y-6 overflow-hidden relative">
+                        {claim.found_items?.photo_url ? (
+                            <img 
+                                src={claim.found_items.photo_url} 
+                                className="w-full aspect-square object-cover rounded-2xl opacity-70 mb-4" 
+                                alt="Item" 
+                            />
+                        ) : (
+                            <div className="w-full aspect-square bg-white/5 flex items-center justify-center text-4xl mb-4 rounded-2xl">
+                                📦
+                            </div>
+                        )}
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Item Category</p>
+                                <p className="text-xs font-black text-white uppercase italic">{claim.found_items?.category || 'General'}</p>
+                            </div>
+                            <div>
+                                <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mb-1">Last Seen At</p>
+                                <p className="text-xs font-black text-white uppercase italic">{claim.found_items?.location || 'Campus'}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sign Up Upsell */}
+                    <div className="bg-gradient-to-br from-uni-500/20 to-transparent border border-uni-500/30 rounded-[2rem] p-8 space-y-5">
+                        <div className="w-10 h-10 bg-uni-500/20 rounded-xl flex items-center justify-center text-uni-400 mb-2">
+                            <i className="fa-solid fa-graduation-cap"></i>
+                        </div>
+                        <h4 className="text-sm font-black text-white uppercase italic">Lost another item?</h4>
+                        <p className="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">
+                            Register now to sync your claims and post "Lost" alerts to the student dashboard.
+                        </p>
+                        <Link 
+                            to="/register" 
+                            className="block w-full text-center py-3 bg-white text-black rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-uni-500 hover:text-white transition-all min-h-[44px] flex items-center justify-center"
+                        >
+                            Join Registry →
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
-      </div>
-    </motion.div>
-  );
+    );
 };
 
 export default ClaimStatus;

@@ -106,8 +106,8 @@ const ItemCard = ({ item, onClick, onShare }) => {
                 }}
                 className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
             >
-                <ShieldCheck className="h-4 w-4" />
-                <span>Secure Item</span>
+                <Fingerprint className="h-4 w-4" />
+                <span>Claim Item</span>
             </button>
             <button 
                 onClick={(e) => {

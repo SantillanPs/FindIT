@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { logSupabaseError } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
 import { 
   Trophy, 
@@ -83,9 +82,8 @@ const Landing = () => {
 
         if (embedError) {
           const query = supabase
-            .from('found_items')
+            .from('v_public_found_items')
             .select('*')
-            .eq('status', 'in_custody')
             .ilike('title', `%${searchQuery}%`)
             .order('date_found', { ascending: false })
             .limit(12);
@@ -103,11 +101,11 @@ const Landing = () => {
           error = searchError;
         }
       } else {
-        // REGULAR FETCH (Latest items)
+        // REGULAR FETCH (Latest items from Standardized View)
         let query = supabase
-          .from('found_items')
+          .from('v_public_found_items')
           .select('*')
-          .eq('status', 'in_custody');
+          .order('date_found', { ascending: false });
 
         if (selectedCategory && selectedCategory !== 'all') {
           query = query.eq('category', selectedCategory);
@@ -115,25 +113,16 @@ const Landing = () => {
 
         const { data: resData, error: resError } = await query.limit(12);
         
-        // Manual Data Mapping & Masking Fallback
-        data = (resData || []).map(item => {
-          // Fallback to registry_signal if columns are missing from top-level cache
-          const idName = item.identified_name || item.registry_signal?.identified_name;
-          const rawId = item.identified_student_id || item.registry_signal?.identified_student_id;
-          
-          return {
-            ...item,
-            identified_name: idName,
-            identified_student_id: rawId && String(rawId).includes('-')
-              ? `${String(rawId).split('-')[0]}****`
-              : rawId
-          };
-        });
+        // Data Mapping (Simplified: Uses SQL-masked fields)
+        data = (resData || []).map(item => ({
+          ...item,
+          identified_student_id: item.identified_student_id_masked
+        }));
         error = resError;
       }
       
       if (error) throw error;
-      console.info(`[Query] Found Items [Source: Resilient Table Fallback]:`, data?.length || 0, 'records');
+      console.info(`[Query] Found Items [Source: Standardized View]:`, data?.length || 0, 'records');
       return data || [];
     },
     placeholderData: keepPreviousData,
@@ -144,13 +133,12 @@ const Landing = () => {
     queryKey: ['lost_reports'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('lost_items')
+        .from('v_public_lost_items')
         .select('*')
-        .eq('status', 'reported')
         .limit(12);
 
       if (error) throw error;
-      console.info(`[Query] Lost Reports [Source: Resilient Table Fallback]:`, data?.length || 0, 'records');
+      console.info(`[Query] Lost Reports [Source: Standardized View]:`, data?.length || 0, 'records');
       return data || [];
     },
     placeholderData: keepPreviousData,
