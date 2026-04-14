@@ -370,7 +370,14 @@ const LayoutContents = ({ children }) => {
           pointer-events: none;
         }
       `}</style>
-      <div className="fixed bottom-6 right-6 z-[45] group feedback-trigger transition-all duration-300">
+      <AnimatePresence>
+        {location.pathname !== '/super/feedback' && (
+          <motion.div 
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="fixed bottom-6 right-6 z-[45] group feedback-trigger transition-all duration-300"
+          >
         <div className="absolute inset-0 bg-white blur-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
         <Button
           variant="outline"
@@ -401,7 +408,9 @@ const LayoutContents = ({ children }) => {
             </AnimatePresence>
           </div>
         </Button>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
