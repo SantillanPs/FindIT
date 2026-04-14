@@ -44,7 +44,7 @@ const ClaimCard = ({ claim, onReview }) => {
                     <div className="flex items-center gap-2">
                        <ShieldCheck size={14} className="text-uni-400" />
                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Claimed Item:</span>
-                       <span className="text-xs font-semibold text-slate-300">{claim.found_items?.title || 'General Item'}</span>
+                       <span className="text-xs font-semibold text-slate-300">{claim.item_title || 'General Item'}</span>
                     </div>
                     {claim.owner_email && (
                       <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-800"></div>

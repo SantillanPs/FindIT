@@ -11,7 +11,7 @@ const MasterDataProvider = ({ children }) => {
         queryKey: ['categories'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('v_active_categories')
+                .from('v_public_categories')
                 .select('*');
                 
             if (error) throw error;
@@ -31,7 +31,7 @@ const MasterDataProvider = ({ children }) => {
         queryKey: ['colleges'],
         queryFn: async () => {
             const { data, error } = await supabase
-                .from('v_active_colleges')
+                .from('v_public_colleges')
                 .select('*');
             if (error) throw error;
             console.info(`[Context] Colleges [Source: Standardized View]:`, data?.length || 0, 'items');
@@ -46,11 +46,11 @@ const MasterDataProvider = ({ children }) => {
         queryFn: async () => {
             const [studentsRes, deptsRes] = await Promise.all([
                 supabase
-                    .from('v_public_student_leaderboard')
+                    .from('v_public_leaderboard')
                     .select('*')
                     .limit(10),
                 supabase
-                    .from('department_leaderboard')
+                    .from('v_public_dept_leaderboard')
                     .select('*')
             ]);
             

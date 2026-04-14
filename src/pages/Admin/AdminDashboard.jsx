@@ -77,7 +77,7 @@ const AdminDashboard = () => {
   const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
     queryKey: ['admin_inventory'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('found_items').select('*').neq('status', 'released');
+      const { data, error } = await supabase.from('v_admin_inventory').select('*').neq('status', 'released');
       if (error) throw error;
       return data || [];
     },
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
   const { data: pendingClaims = [], isLoading: claimsLoading } = useQuery({
     queryKey: ['admin_claims'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('claims').select('*, found_items(*)').eq('status', 'pending');
+      const { data, error } = await supabase.from('v_admin_claims').select('*').eq('status', 'pending');
       if (error) throw error;
       return data || [];
     },
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
   const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
     queryKey: ['admin_lost'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('lost_items').select('*');
+      const { data, error } = await supabase.from('v_admin_lost_reports').select('*');
       if (error) throw error;
       return data || [];
     },
@@ -124,7 +124,7 @@ const AdminDashboard = () => {
   const { data: historyItems = [], isLoading: historyLoading } = useQuery({
     queryKey: ['admin_history'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('found_items').select('*').eq('status', 'released');
+      const { data, error } = await supabase.from('v_admin_history').select('*');
       if (error) throw error;
       return data || [];
     },
@@ -148,13 +148,74 @@ const AdminDashboard = () => {
                   (currentTab === 'lost' && reportsLoading) || 
                   (currentTab === 'history' && historyLoading);
 
-  // Mutations
-  const statusMutation = useMutation({
-    mutationFn: async ({ id, status }) => {
-      const { error } = await supabase.from('found_items').update({ status }).eq('id', id);
+  // Mutations (Standardized)
+  const foundItemUpdateMutation = useMutation({
+    mutationFn: async ({ id, updates }) => {
+      const { error } = await supabase.from('found_items').update(updates).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_inventory'] })
+  });
+
+  const foundItemBulkUpdateMutation = useMutation({
+    mutationFn: async ({ ids, status }) => {
+      const { error } = await supabase.from('found_items').update({ status }).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_inventory'] })
+  });
+
+  const claimReviewMutation = useMutation({
+    mutationFn: async ({ claimId, status, adminNotes }) => {
+      const { error } = await supabase.rpc('rpc_handle_claim_review', {
+        p_claim_id: claimId,
+        p_status: status,
+        p_admin_notes: adminNotes
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_claims'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
+    }
+  });
+
+  const connectMatchMutation = useMutation({
+    mutationFn: async ({ foundId, lostId }) => {
+      const { error } = await supabase.rpc('rpc_connect_match', {
+        p_found_id: foundId,
+        p_lost_id: lostId
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_matches'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_lost'] });
+    }
+  });
+
+  const lostItemStatusMutation = useMutation({
+    mutationFn: async ({ id, status, admin_notes }) => {
+      const { error } = await supabase.from('lost_items').update({ status, admin_notes }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_lost'] })
+  });
+
+  const releaseItemMutation = useMutation({
+    mutationFn: async ({ id, releaseData }) => {
+      const { error } = await supabase.from('found_items').update({
+        status: 'released',
+        ...releaseData,
+        released_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_history'] });
+    }
   });
 
   const refreshActiveTab = () => {
@@ -174,9 +235,7 @@ const AdminDashboard = () => {
     
     setActionLoading(item.id);
     try {
-      const { error } = await supabase.from('found_items').update({ status }).eq('id', item.id);
-      if (error) throw error;
-      refreshActiveTab();
+      await foundItemUpdateMutation.mutateAsync({ id: item.id, updates: { status } });
     } catch (err) {
       console.error('Update failed', err);
     } finally {
@@ -188,16 +247,16 @@ const AdminDashboard = () => {
     const { item, verification_note, challenge_question, attributes } = showIntakeModal;
     setActionLoading(item.id);
     try {
-      const { error } = await supabase.from('found_items').update({ 
-        status: 'in_custody',
-        verification_note,
-        challenge_question,
-        attributes
-      }).eq('id', item.id);
-      
-      if (error) throw error;
+      await foundItemUpdateMutation.mutateAsync({ 
+        id: item.id, 
+        updates: { 
+          status: 'in_custody',
+          verification_note,
+          challenge_question,
+          attributes
+        }
+      });
       setShowIntakeModal(null);
-      await refreshActiveTab();
     } catch (err) {
       console.error('Intake failed', err);
     } finally {
@@ -208,9 +267,7 @@ const AdminDashboard = () => {
   const handleBulkStatusUpdate = async (itemIds, status) => {
     setActionLoading('bulk');
     try {
-      const { error } = await supabase.from('found_items').update({ status }).in('id', itemIds);
-      if (error) throw error;
-      refreshActiveTab();
+      await foundItemBulkUpdateMutation.mutateAsync({ ids: itemIds, status });
     } catch (err) {
       console.error('Bulk update failed', err);
     } finally {
@@ -222,20 +279,19 @@ const AdminDashboard = () => {
     if (e) e.preventDefault();
     setActionLoading(showReleaseModal.id);
     try {
-      const { error } = await supabase.from('found_items').update({
-        status: 'released',
-        released_to_name: releaseForm.name,
-        released_to_id_number: releaseForm.id_number,
-        released_by_name: user?.full_name || 'Admin Staff',
-        released_to_photo_url: releaseForm.photo_url,
-        released_at: new Date().toISOString()
-      }).eq('id', showReleaseModal.id);
+      await releaseItemMutation.mutateAsync({
+        id: showReleaseModal.id,
+        releaseData: {
+          released_to_name: releaseForm.name,
+          released_to_id_number: releaseForm.id_number,
+          released_by_name: user?.full_name || 'Admin Staff',
+          released_to_photo_url: releaseForm.photo_url
+        }
+      });
         
-      if (error) throw error;
       setShowReleaseModal(null);
       setReleaseStep(1);
       setReleaseForm({ name: '', id_number: '', photo_url: '' });
-      await refreshActiveTab();
     } catch (err) {
       console.error('Release failed', err);
     } finally {
@@ -246,19 +302,11 @@ const AdminDashboard = () => {
   const handleClaimReview = async (claimId, status) => {
     setActionLoading(`claim-${claimId}`);
     try {
-      const { error } = await supabase.from('claims').update({ 
+      await claimReviewMutation.mutateAsync({ 
+        claimId, 
         status, 
-        admin_notes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
-      }).eq('id', claimId);
-        
-      if (error) throw error;
-      if (status === 'approved') {
-          const claim = pendingClaims.find(c => c.id === claimId);
-          if (claim && claim.found_item_id) {
-              await supabase.from('found_items').update({ status: 'claimed' }).eq('id', claim.found_item_id);
-          }
-      }
-      await refreshActiveTab();
+        adminNotes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
+      });
     } catch (err) {
       console.error('Review failed', err);
     } finally {
@@ -269,10 +317,7 @@ const AdminDashboard = () => {
   const handleConnectMatch = async (foundId, lostId) => {
     setActionLoading(`match-${foundId}-${lostId}`);
     try {
-      const { error: fError } = await supabase.from('found_items').update({ status: 'claimed' }).eq('id', foundId);
-      const { error: lError } = await supabase.from('lost_items').update({ status: 'resolved' }).eq('id', lostId);
-      if (fError || lError) throw (fError || lError);
-      await refreshActiveTab();
+      await connectMatchMutation.mutateAsync({ foundId, lostId });
     } catch (err) {
       console.error('Connection failed', err);
     } finally {
@@ -283,9 +328,7 @@ const AdminDashboard = () => {
   const handleLostReportUpdate = async (reportId, updates) => {
     setActionLoading(`lost-${reportId}`);
     try {
-      const { error } = await supabase.from('lost_items').update(updates).eq('id', reportId);
-      if (error) throw error;
-      await refreshActiveTab();
+      await lostItemStatusMutation.mutateAsync({ id: reportId, ...updates });
     } catch (err) {
       console.error('Lost report update failed', err);
     } finally {
@@ -306,10 +349,10 @@ const AdminDashboard = () => {
     return (item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || item.category?.toLowerCase().includes(searchTerm.toLowerCase()) || item.location?.toLowerCase().includes(searchTerm.toLowerCase()) || item.id.toString().includes(searchTerm));
   });
 
-  const historyFiltered = historyItems.filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || item.released_to_name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.id.toString().includes(searchTerm));
-  const filteredClaims = pendingClaims.filter(claim => claim.owner_name?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.found_items?.category?.toLowerCase().includes(searchTerm.toLowerCase()) || claim.student_id?.toString().includes(searchTerm));
-  const filteredMatches = matches.filter(group => group.found_item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || group.found_item.category?.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredLostReports = lostReports.filter(report => report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.guest_first_name + ' ' + report.guest_last_name).toLowerCase().includes(searchTerm.toLowerCase()) || report.id.toString().includes(searchTerm));
+  const historyFiltered = historyItems.filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (item.released_to_name && item.released_to_name.toLowerCase().includes(searchTerm.toLowerCase())) || item.id.toString().includes(searchTerm));
+  const filteredClaims = pendingClaims.filter(claim => (claim.owner_name && claim.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || (claim.item_category && claim.item_category.toLowerCase().includes(searchTerm.toLowerCase())) || claim.student_id?.toString().includes(searchTerm));
+  const filteredMatches = matches.filter(group => group.found_item?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || group.found_item?.category?.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredLostReports = lostReports.filter(report => report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.owner_name && report.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || report.id.toString().includes(searchTerm));
 
   if (loading) return (
     <div className="flex justify-center py-32">
@@ -415,6 +458,29 @@ const AdminDashboard = () => {
                   >
                     <X size={16} />
                   </button>
+                </div>
+
+                {/* Context Strip (Backlog Item #97) */}
+                <div className="px-5 py-4 md:px-8 md:py-5 bg-white/[0.02] border-b border-white/5 flex items-center gap-4">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shrink-0">
+                    {showIntakeModal.item.photo_url ? (
+                      <img src={showIntakeModal.item.photo_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-slate-700">
+                        <ImageIcon size={24} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-grow py-1">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md">
+                        {showIntakeModal.item.category}
+                      </Badge>
+                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{showIntakeModal.item.location}</p>
+                    </div>
+                    <h4 className="text-sm font-bold text-white truncate mb-1">{showIntakeModal.item.title}</h4>
+                    <p className="text-[11px] text-slate-500 line-clamp-1 italic font-medium">"{showIntakeModal.item.description || 'No description provided'}"</p>
+                  </div>
                 </div>
 
                 {/* Scrollable content */}

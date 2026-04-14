@@ -100,13 +100,21 @@ const InventoryCard = React.memo(({
                 {formattedDate}
               </div>
             </div>
-            <Badge className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shrink-0 ${
-              item.status === 'released'
-                ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
-            }`}>
-              {item.status === 'in_custody' ? 'REPOSITORY' : ['reported', 'available'].includes(item.status) ? 'INTAKE' : 'RELEASED'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {item.claim_count > 0 && (
+                <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5">
+                  <Activity size={10} />
+                  {item.claim_count} Claims
+                </Badge>
+              )}
+              <Badge className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shrink-0 ${
+                item.status === 'released'
+                  ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                  : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
+              }`}>
+                {item.status === 'in_custody' ? 'REPOSITORY' : ['reported', 'available'].includes(item.status) ? 'INTAKE' : 'RELEASED'}
+              </Badge>
+            </div>
           </div>
 
           {/* Item title — primary identifier */}

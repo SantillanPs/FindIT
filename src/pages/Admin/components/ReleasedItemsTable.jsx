@@ -52,14 +52,14 @@ const ReleasedItemsTable = ({ releasedItems }) => {
                        <div className="text-xs font-bold text-slate-200">
                           {item.released_to_id ? (
                             <Link to={`/admin/profile/${item.released_to_id}`} className="hover:text-uni-400 border-b border-transparent hover:border-uni-400/30 transition-all">
-                              {item.released_to_name || item.identified_name}
+                              {item.released_to_name || 'Anonymous Receiver'}
                             </Link>
                           ) : (
-                            item.released_to_name || item.identified_name || 'Registry Claimant'
+                            item.released_to_name || 'Walk-in Claimant'
                           )}
                        </div>
                        <div className="text-[9px] text-slate-500 font-bold uppercase tracking-widest">
-                         {item.released_to_id_number || item.identified_student_id || 'Public Release'}
+                         {item.released_to_id_number || 'No ID Recorded'}
                        </div>
                     </div>
                  </div>

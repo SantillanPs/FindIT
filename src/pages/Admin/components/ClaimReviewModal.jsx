@@ -78,6 +78,29 @@ const ClaimReviewModal = ({
           </div>
         </div>
 
+        {/* Context Strip (Backlog Item #97) */}
+        <div className="px-8 py-4 bg-white/[0.02] border-b border-white/5 flex items-center gap-6">
+          <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shrink-0">
+            {selectedClaim.item_photo_url ? (
+              <img src={selectedClaim.item_photo_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-700">
+                <ImageIcon size={20} />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0 flex-grow py-0.5">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md">
+                {selectedClaim.item_category}
+              </Badge>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{selectedClaim.item_location}</p>
+            </div>
+            <h4 className="text-sm font-bold text-white truncate">{selectedClaim.item_title}</h4>
+          </div>
+        </div>
+
+
         <div className="flex-grow overflow-y-auto no-scrollbar p-8 md:p-12">
           <AnimatePresence mode="wait">
             {claimReviewStep === 1 && (
@@ -93,16 +116,16 @@ const ClaimReviewModal = ({
                           </span>
                           <div className="p-8 bg-white/[0.03] rounded-[2rem] border border-white/5 space-y-5 text-left shadow-inner">
                                <div className="flex justify-between items-start">
-                                  <h4 className="text-2xl font-bold text-white tracking-tight">{selectedClaim.found_items?.item_name || selectedClaim.found_items?.title}</h4>
+                                  <h4 className="text-2xl font-bold text-white tracking-tight">{selectedClaim.item_title}</h4>
                                   <div className="bg-white/5 border border-white/10 text-slate-400 text-[10px] font-bold px-3 py-1 rounded-full">
                                     FOUND ITEM
                                   </div>
                                </div>
                                <div className="flex flex-wrap items-center gap-6 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                                  <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-uni-400" /> {selectedClaim.found_items?.location_zone || selectedClaim.found_items?.location}</span>
-                                  <span className="flex items-center gap-2"><FileText size={14} className="text-uni-400" /> {(selectedClaim.found_items?.found_time || selectedClaim.found_items?.date_found) ? new Date(selectedClaim.found_items.found_time || selectedClaim.found_items.date_found).toLocaleDateString() : 'Unknown'}</span>
+                                  <span className="flex items-center gap-2"><ShieldCheck size={14} className="text-uni-400" /> {selectedClaim.item_location}</span>
+                                  <span className="flex items-center gap-2"><FileText size={14} className="text-uni-400" /> {selectedClaim.item_date_found ? new Date(selectedClaim.item_date_found).toLocaleDateString() : 'Unknown'}</span>
                                </div>
-                               <p className="text-[13px] text-slate-400 font-medium leading-relaxed">{selectedClaim.found_item_description || 'No detailed description.'}</p>
+                               <p className="text-[13px] text-slate-400 font-medium leading-relaxed">{selectedClaim.item_description || 'No detailed description.'}</p>
                           </div>
 
                           <div className="p-8 bg-uni-500/5 rounded-[2rem] border border-uni-500/10 space-y-5 text-left">
@@ -238,8 +261,8 @@ const ClaimReviewModal = ({
                              <ShieldCheck size={14} /> Found Item (Staff Input)
                           </p>
                           <div className="aspect-video bg-slate-950 rounded-[2rem] border border-white/5 overflow-hidden relative shadow-2xl">
-                              {selectedClaim.found_item_photo_url ? (
-                                  <img src={selectedClaim.found_item_photo_url} className="w-full h-full object-cover" alt="Original item" />
+                              {selectedClaim.item_photo_url ? (
+                                  <img src={selectedClaim.item_photo_url} className="w-full h-full object-cover" alt="Original item" />
                               ) : (
                                   <div className="w-full h-full flex flex-col items-center justify-center space-y-4 bg-white/[0.02]">
                                       <ImageIcon size={40} className="text-slate-800" />
@@ -338,7 +361,7 @@ const ClaimReviewModal = ({
                       <div className="p-8 bg-white/[0.02] rounded-[2rem] border border-white/5 flex items-center justify-center gap-10 mx-auto w-fit">
                           <div className="text-left border-r border-white/10 pr-10">
                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Selected Item</p>
-                               <p className="text-sm text-white font-bold tracking-tight">{selectedClaim.found_items?.item_name || selectedClaim.found_items?.title}</p>
+                               <p className="text-sm text-white font-bold tracking-tight">{selectedClaim.item_title}</p>
                           </div>
                           <div className="text-left">
                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Release To</p>
@@ -350,30 +373,19 @@ const ClaimReviewModal = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                       {selectedClaim.status === 'approved' ? (
                           <button 
-                            onClick={async () => {
-                                try {
-                                    const { error } = await supabase.from('claims').update({ is_pickup_ready: true, status: 'approved' }).eq('id', selectedClaim.id);
-                                    if (error) throw error;
-                                    setSelectedClaim(null);
-                                    window.location.reload(); 
-                                } catch (err) { console.error('Failed to mark as ready', err); }
-                            }}
-                            disabled={actionLoading || selectedClaim.is_pickup_ready}
-                            className={`col-span-2 group p-10 rounded-[2.5rem] border transition-all text-center space-y-5 shadow-2xl ${
-                                selectedClaim.is_pickup_ready 
-                                ? 'bg-slate-900 border-white/5 cursor-not-allowed opacity-50' 
-                                : 'bg-emerald-600 border-emerald-500/50 hover:bg-emerald-500 hover:shadow-emerald-600/20'
-                            }`}
+                            onClick={() => { handleClaimReview(selectedClaim.id, 'approved'); setSelectedClaim(null); }}
+                            disabled={actionLoading}
+                            className="col-span-2 group p-10 rounded-[2.5rem] bg-emerald-600 border border-emerald-500/50 hover:bg-emerald-500 hover:shadow-emerald-600/20 transition-all text-center space-y-5 shadow-2xl"
                         >
                             <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center text-white mx-auto group-hover:scale-110 transition-transform">
                                 <History size={24} />
                             </div>
                             <div className="space-y-2">
                                 <p className="text-[12px] font-bold text-white uppercase tracking-widest">
-                                    {selectedClaim.is_pickup_ready ? 'Picking Preparation Complete' : 'Prepare for Physical Pickup'}
+                                    Approve & Prepare for Pickup
                                 </p>
                                 <p className="text-[10px] text-white/60 font-medium">
-                                    {selectedClaim.is_pickup_ready ? 'Student has been notified' : 'Notify the student that the item is ready for collection'}
+                                    Notify the student that the item is ready for collection
                                 </p>
                             </div>
                         </button>
