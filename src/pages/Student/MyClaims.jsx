@@ -165,17 +165,15 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
               </div>
             </div>
 
-            {/* Location */}
-            {claim.found_item_location && (
-              <div className="p-3 bg-white/[0.04] rounded-lg border border-white/5 space-y-1">
-                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  <i className="fa-solid fa-location-dot text-[7px]"></i> Where to Go
-                </p>
-                <p className="text-[13px] font-black text-white">
-                  {claim.found_item_location}
-                </p>
-              </div>
-            )}
+            {/* Location — always USG Office */}
+            <div className="p-3 bg-white/[0.04] rounded-lg border border-white/5 space-y-1">
+              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                <i className="fa-solid fa-location-dot text-[7px]"></i> Where to Go
+              </p>
+              <p className="text-[13px] font-black text-white">
+                USG Office
+              </p>
+            </div>
 
             <p className="text-[8px] font-bold text-emerald-400/50 uppercase tracking-widest">
               Bring a valid ID to claim your item
