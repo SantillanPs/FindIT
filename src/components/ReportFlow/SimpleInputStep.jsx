@@ -21,8 +21,11 @@ const SimpleInputStep = ({
 
       <div className="max-w-xl mx-auto w-full space-y-10 group">
           <div className="relative">
+             <label htmlFor="simple-input-field" className="sr-only">{title}</label>
              {icon && <i className={`fa-solid ${icon} absolute left-8 top-1/2 -translate-y-1/2 text-uni-400 text-2xl opacity-60`}></i>}
              <input 
+              id="simple-input-field"
+              name="input-field"
               type="text"
               placeholder={placeholder}
               className={`w-full bg-white/5 border-2 border-white/10 rounded-[3.5rem] p-10 ${icon ? 'pl-20' : 'px-10'} text-2xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700`}

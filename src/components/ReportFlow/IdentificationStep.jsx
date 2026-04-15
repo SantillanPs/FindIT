@@ -35,8 +35,15 @@ const IdentificationStep = ({
           </button>
 
           <div className="space-y-2 p-4">
-             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest block ml-2">Student ID Found?</label>
+             <label 
+              htmlFor="identified-student-id"
+              className="text-[9px] font-black text-slate-600 uppercase tracking-widest block ml-2"
+             >
+                Student ID Found?
+             </label>
             <input 
+              id="identified-student-id"
+              name="identified-student-id"
               type="text"
               placeholder="e.g. 2021-10042"
               className="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 text-sm font-black text-white focus:border-uni-500 transition-all outline-none"
@@ -45,8 +52,15 @@ const IdentificationStep = ({
             />
           </div>
           <div className="space-y-2 p-4">
-             <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest block ml-2">Name on Item?</label>
+             <label 
+              htmlFor="identified-name"
+              className="text-[9px] font-black text-slate-600 uppercase tracking-widest block ml-2"
+             >
+                Name on Item?
+             </label>
             <input 
+              id="identified-name"
+              name="identified-name"
               type="text"
               placeholder="e.g. Juan Cruz"
               className="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 text-sm font-black text-white focus:border-uni-500 transition-all outline-none"

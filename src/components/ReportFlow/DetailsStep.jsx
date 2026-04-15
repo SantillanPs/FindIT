@@ -29,10 +29,17 @@ const DetailsStep = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-white/5 p-8 rounded-[2rem] border border-white/5">
               {fields.map(field => (
                 <div key={field} className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic">{field}</label>
+                  <label 
+                    htmlFor={`item-attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic"
+                  >
+                    {field}
+                  </label>
                   
                   {field === 'Color' || field === 'Primary Color' || field === 'Frame Color' ? (
                     <select
+                      id={`item-attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
+                      name={`attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
                       className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white focus:border-uni-500 transition-all outline-none appearance-none"
                       value={attributes[field] || ''}
                       onChange={(e) => onAttributeChange(field, e.target.value)}
@@ -42,6 +49,8 @@ const DetailsStep = ({
                     </select>
                   ) : field === 'Condition' ? (
                     <select
+                      id={`item-attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
+                      name={`attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
                       className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white focus:border-uni-500 transition-all outline-none appearance-none"
                       value={attributes[field] || ''}
                       onChange={(e) => onAttributeChange(field, e.target.value)}
@@ -51,6 +60,8 @@ const DetailsStep = ({
                     </select>
                   ) : (
                     <input 
+                      id={`item-attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
+                      name={`attr-${field.toLowerCase().replace(/\s+/g, '-')}`}
                       type="text"
                       placeholder={`Enter ${field.toLowerCase()}`}
                       className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white focus:border-uni-500 transition-all outline-none placeholder:text-slate-700"
@@ -64,8 +75,15 @@ const DetailsStep = ({
           )}
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic">Unique Nuance / Extra Notes (Optional)</label>
+            <label 
+              htmlFor="item-description"
+              className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4 italic"
+            >
+              Unique Nuance / Extra Notes (Optional)
+            </label>
             <textarea 
+                id="item-description"
+                name="description"
                 rows="4"
                 placeholder="Any unique stickers, scratches, or details that help distinguish it?"
                 className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-8 text-lg font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 resize-none leading-relaxed"

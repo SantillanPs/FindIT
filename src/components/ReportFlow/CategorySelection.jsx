@@ -19,8 +19,8 @@ const CategorySelection = ({
   );
 
   const featuredCategories = sortedCategories.slice(0, 6);
-  const remainingCategories = sortedCategories.slice(6).filter(c => c.id !== 'other');
-  const otherCategory = CATEGORIES.find(c => c.id === 'other') || { icon: 'fa-question-circle', label: 'Other' };
+  const remainingCategories = sortedCategories.slice(6).filter(c => c.id?.toLowerCase() !== 'other');
+  const otherCategory = CATEGORIES.find(c => c.id?.toLowerCase() === 'other') || { icon: 'fa-solid fa-circle-question', label: 'Other' };
 
   return (
     <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
@@ -116,7 +116,10 @@ const CategorySelection = ({
                   animate={{ opacity: 1, y: 0 }}
                   className="w-full space-y-6 pt-6 border-t border-white/5"
                 >
+                  <label htmlFor="other-item-name" className="sr-only">Type the item name clearly</label>
                   <input 
+                    id="other-item-name"
+                    name="other-item-name"
                     type="text"
                     placeholder="Type the item name clearly..."
                     className="w-full bg-slate-950 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white text-center focus:border-uni-500 transition-all outline-none"

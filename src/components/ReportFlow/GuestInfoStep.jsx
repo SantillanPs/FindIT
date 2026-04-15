@@ -28,8 +28,15 @@ const GuestInfoStep = ({
       <div className="max-w-4xl mx-auto w-full space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="relative group">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">First Name</label>
+            <label 
+              htmlFor="guest-first-name"
+              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
+            >
+              First Name
+            </label>
             <input 
+              id="guest-first-name"
+              name="first-name"
               type="text"
               placeholder="Juan"
               className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
@@ -38,8 +45,15 @@ const GuestInfoStep = ({
             />
           </div>
           <div className="relative group">
-            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">Last Name</label>
+            <label 
+              htmlFor="guest-last-name"
+              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
+            >
+              Last Name
+            </label>
             <input 
+              id="guest-last-name"
+              name="last-name"
               type="text"
               placeholder="Cruz"
               className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
@@ -51,8 +65,15 @@ const GuestInfoStep = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="relative group">
-             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left">Email Address</label>
+             <label 
+              htmlFor="guest-email"
+              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
+             >
+                Email Address
+             </label>
              <input 
+              id="guest-email"
+              name="email"
               type="email"
               placeholder="juan.cruz@example.com"
               className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
@@ -62,8 +83,15 @@ const GuestInfoStep = ({
           </div>
 
           <div className="relative group">
-             <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left italic text-uni-400">How can we contact you? (Optional)</label>
+             <label 
+              htmlFor="guest-contact-info"
+              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left italic text-uni-400"
+             >
+                How can we contact you? (Optional)
+             </label>
              <textarea 
+              id="guest-contact-info"
+              name="contact-info"
               placeholder="e.g. FB: juan.cruz.12 / Phone: 09123456789"
               className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-[15px] font-bold text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 min-h-[82px] max-h-[82px] resize-none"
               value={contactInfo}

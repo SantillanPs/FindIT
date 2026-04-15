@@ -21,8 +21,15 @@ const DateTimeStep = ({
           <div className="p-10 glass-panel rounded-[3.5rem] border border-white/5 flex flex-col gap-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 text-left">
-                  <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4">Select Date</label>
+                  <label 
+                    htmlFor="report-date"
+                    className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4"
+                  >
+                    Select Date
+                  </label>
                   <input 
+                    id="report-date"
+                    name="date"
                     type="date"
                     className="w-full bg-slate-950/50 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
                     value={value.split('T')[0] || ''}
@@ -33,8 +40,15 @@ const DateTimeStep = ({
                   />
                 </div>
                 <div className="space-y-2 text-left">
-                  <label className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4">Select Time</label>
+                  <label 
+                    htmlFor="report-time"
+                    className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-4"
+                  >
+                    Select Time
+                  </label>
                   <input 
+                    id="report-time"
+                    name="time"
                     type="time"
                     className="w-full bg-slate-950/50 border-2 border-white/10 rounded-2xl p-6 text-xl font-black text-white focus:border-uni-500 outline-none transition-all uppercase tracking-widest"
                     value={value.split('T')[1] || ''}

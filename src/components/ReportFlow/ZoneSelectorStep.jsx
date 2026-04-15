@@ -226,13 +226,29 @@ const ZoneSelectorStep = ({
   };
 
   const handleManualEntry = () => {
-    const newSelected = [...selectedZones, { id: null, name: `Manual: ${otherLocation}` }];
-    setSelectedZones(newSelected);
-    setFormData({
-      ...formData,
-      location: newSelected.map(z => z.name).join(', '),
-      potential_zone_ids: newSelected.map(z => z.id).filter(id => id !== null)
-    });
+    // 1. Prepare the location entry name
+    const manualLocationName = `Manual: ${otherLocation}`;
+    
+    if (!multiSelect) {
+        // Single Select (Found Item Flow): Set data and go next
+        setFormData({
+            ...formData,
+            location: manualLocationName,
+            zone_id: null, // manual entry has no zone ID
+            potential_zone_ids: []
+        });
+        onNext();
+    } else {
+        // Multi-select (Lost Report Flow): Add to the path
+        const newSelected = [...selectedZones, { id: null, name: manualLocationName }];
+        setSelectedZones(newSelected);
+        setFormData({
+          ...formData,
+          location: newSelected.map(z => z.name).join(', '),
+          potential_zone_ids: newSelected.map(z => z.id).filter(id => id !== null)
+        });
+    }
+    
     setOtherLocation('');
     setShowOtherInput(false);
   };
@@ -430,7 +446,7 @@ const ZoneSelectorStep = ({
                         <i className="fa-solid fa-map-pin"></i>
                         </div>
                         <div className="text-center">
-                        <p className="text-[11px] font-black uppercase tracking-[0.2em]">Other Step</p>
+                        <p className="text-[11px] font-black uppercase tracking-[0.2em]">Other Area</p>
                         <p className="text-[8px] font-bold opacity-40 uppercase tracking-widest mt-1">Manual Entry</p>
                         </div>
                     </button>
@@ -444,14 +460,27 @@ const ZoneSelectorStep = ({
                 className="w-full glass-panel p-12 rounded-[3rem] border border-white/5 space-y-8"
                 >
                 <div className="text-center space-y-4">
-                    <div className="w-20 h-20 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto text-3xl text-uni-400 border border-uni-500/20">📍</div>
-                    <h3 className="text-2xl font-black text-white uppercase tracking-tight italic">Trace this step</h3>
-                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Type the building, room, or specific area you passed by.</p>
+                    <div className="w-20 h-20 bg-uni-500/10 rounded-full flex items-center justify-center mx-auto text-3xl text-uni-400 border border-uni-500/20">
+                        <i className="fas fa-location-crosshairs"></i>
+                    </div>
+                    <h3 className="text-2xl font-black text-white uppercase tracking-tight italic">
+                        {multiSelect ? 'Trace this step' : 'Pin your discovery'}
+                    </h3>
+                    <label 
+                        htmlFor="manual-location-input"
+                        className="text-slate-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed block"
+                    >
+                        {multiSelect 
+                            ? 'Type the building, room, or specific area you passed by.' 
+                            : 'Specify exactly where you found the item (e.g., under the library stairs).'}
+                    </label>
                 </div>
 
                 <input 
+                    id="manual-location-input"
+                    name="manual-location"
                     type="text"
-                    placeholder="e.g. Near the Law Faculty bench..."
+                    placeholder={multiSelect ? "e.g. Near the Law Faculty bench..." : "e.g. Center lobby, near the water fountain..."}
                     className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-8 text-xl font-black text-white text-center focus:border-uni-500 transition-all outline-none placeholder:text-slate-800"
                     value={otherLocation}
                     onChange={(e) => setOtherLocation(e.target.value)}
@@ -463,7 +492,7 @@ const ZoneSelectorStep = ({
                     disabled={!otherLocation || otherLocation.length < 3}
                     className="w-full bg-white text-black py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] disabled:opacity-20 hover:bg-uni-500 hover:text-white transition-all active:scale-95 border border-black/5"
                 >
-                    Add to Path →
+                    {multiSelect ? 'Add to Path →' : 'Confirm Location →'}
                 </button>
                 </motion.div>
             )}

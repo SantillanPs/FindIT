@@ -259,39 +259,59 @@ const ReportSuccess = ({
 
                   <form onSubmit={handleGhostUpgrade} className="space-y-8">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <input 
-                              type="text"
-                              placeholder="Full Name"
-                              className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
-                              value={fullName}
-                              onChange={(e) => setFullName(e.target.value)}
-                              required
-                          />
-                          <input 
-                              type="text"
-                              placeholder="Student ID"
-                              className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
-                              value={studentId}
-                              onChange={(e) => setStudentId(e.target.value)}
-                              required
-                          />
+                          <div className="space-y-2">
+                            <label htmlFor="upgrade-full-name" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Full Name</label>
+                            <input 
+                                id="upgrade-full-name"
+                                name="full-name"
+                                type="text"
+                                placeholder="Full Name"
+                                className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                required
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label htmlFor="upgrade-student-id" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Student ID</label>
+                            <input 
+                                id="upgrade-student-id"
+                                name="student-id"
+                                type="text"
+                                placeholder="Student ID"
+                                className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
+                                value={studentId}
+                                onChange={(e) => setStudentId(e.target.value)}
+                                required
+                            />
+                          </div>
                       </div>
-                      <input 
-                          type="email"
-                          placeholder="Email Address"
-                          className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
-                          value={ghostEmail}
-                          onChange={(e) => setGhostEmail(e.target.value)}
-                          required
-                      />
-                      <input 
-                          type="password"
-                          placeholder="Set Password"
-                          className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
-                          value={ghostPassword}
-                          onChange={(e) => setGhostPassword(e.target.value)}
-                          required
-                      />
+                      <div className="space-y-2">
+                        <label htmlFor="upgrade-email" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Email Address</label>
+                        <input 
+                            id="upgrade-email"
+                            name="email"
+                            type="email"
+                            placeholder="Email Address"
+                            className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
+                            value={ghostEmail}
+                            onChange={(e) => setGhostEmail(e.target.value)}
+                            required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label htmlFor="upgrade-password" className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">Set Password</label>
+                        <input 
+                            id="upgrade-password"
+                            name="password"
+                            type="password"
+                            placeholder="Set Password"
+                            className="w-full bg-slate-950 border-2 border-white/5 rounded-2xl p-6 text-sm font-black text-white focus:border-uni-500 outline-none"
+                            value={ghostPassword}
+                            onChange={(e) => setGhostPassword(e.target.value)}
+                            required
+                        />
+                      </div>
                       <button 
                           type="submit"
                           disabled={ghosting}
