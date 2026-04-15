@@ -59,6 +59,9 @@ const StatusBadge = ({ status }) => {
 const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
   const [imgError, setImgError] = useState(imageCache.isFailed(claim.found_item_photo));
 
+  const hasSchedule = claim.status === 'approved' && claim.scheduled_pickup_time;
+  const pickupDate = hasSchedule ? new Date(claim.scheduled_pickup_time) : null;
+
   return (
     <motion.div
       layout
@@ -97,12 +100,6 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
               <StatusBadge status={claim.status} />
-              {claim.scheduled_pickup_time && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-[9px] font-black text-white uppercase tracking-widest">
-                  <i className="fa-solid fa-calendar-check text-green-400 text-[8px]"></i>
-                  {new Date(claim.scheduled_pickup_time).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                </span>
-              )}
             </div>
 
             <h2 className="text-sm md:text-base font-black text-white uppercase tracking-tight truncate">
@@ -137,7 +134,56 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
           </div>
         </div>
 
-        {/* Status-specific inline message */}
+        {/* ── PICKUP SCHEDULE CARD (always visible when schedule exists) ── */}
+        {hasSchedule && (
+          <div className="mt-4 ml-[72px] md:ml-[80px] p-4 bg-emerald-500/8 border border-emerald-500/20 rounded-xl space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <i className="fa-solid fa-calendar-check text-emerald-400 text-[10px]"></i>
+              </div>
+              <span className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em]">Pickup Schedule</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {/* Date */}
+              <div className="p-3 bg-white/[0.04] rounded-lg border border-white/5 space-y-1">
+                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <i className="fa-regular fa-calendar text-[7px]"></i> Date
+                </p>
+                <p className="text-[13px] font-black text-white">
+                  {pickupDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+              {/* Time */}
+              <div className="p-3 bg-white/[0.04] rounded-lg border border-white/5 space-y-1">
+                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <i className="fa-regular fa-clock text-[7px]"></i> Time
+                </p>
+                <p className="text-[13px] font-black text-white">
+                  {pickupDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+
+            {/* Location */}
+            {claim.found_item_location && (
+              <div className="p-3 bg-white/[0.04] rounded-lg border border-white/5 space-y-1">
+                <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                  <i className="fa-solid fa-location-dot text-[7px]"></i> Where to Go
+                </p>
+                <p className="text-[13px] font-black text-white">
+                  {claim.found_item_location}
+                </p>
+              </div>
+            )}
+
+            <p className="text-[8px] font-bold text-emerald-400/50 uppercase tracking-widest">
+              Bring a valid ID to claim your item
+            </p>
+          </div>
+        )}
+
+        {/* Status-specific inline message (pending/no-schedule) */}
         {claim.status === 'pending' && (
           <div className="mt-4 flex items-center gap-2 pl-[72px] md:pl-[80px]">
             <div className="w-1.5 h-1.5 rounded-full bg-uni-500 animate-pulse"></div>
@@ -148,16 +194,14 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
         )}
         {claim.status === 'approved' && !claim.scheduled_pickup_time && (
           <div className="mt-4 pl-[72px] md:pl-[80px]">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSchedule(claim);
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 rounded-xl text-[10px] font-black text-white uppercase tracking-widest hover:bg-green-600 transition-all min-h-[36px]"
-            >
-              <i className="fa-solid fa-calendar-check text-[9px]"></i>
-              Schedule Pickup
-            </button>
+            <div className="p-3 bg-amber-500/8 border border-amber-500/20 rounded-xl flex items-center gap-3">
+              <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center shrink-0">
+                <i className="fa-solid fa-clock text-amber-400 text-[10px]"></i>
+              </div>
+              <p className="text-[9px] font-bold text-amber-400 uppercase tracking-widest">
+                Claim approved — pickup schedule will be posted here soon
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -177,6 +221,7 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
               <ResolutionTimeline
                 status={claim.status}
                 isPickupReady={claim.is_pickup_ready}
+                scheduledPickupTime={claim.scheduled_pickup_time}
               />
 
               {/* Proof + Notes Grid */}
@@ -215,7 +260,7 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
                     </div>
                   )}
 
-                  {claim.found_item_location && (
+                  {claim.found_item_location && !hasSchedule && (
                     <div className="space-y-2">
                       <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">
                         <i className="fa-solid fa-location-dot text-[8px] text-slate-700"></i>

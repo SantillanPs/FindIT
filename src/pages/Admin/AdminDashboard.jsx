@@ -189,11 +189,12 @@ const AdminDashboard = () => {
   });
 
   const claimReviewMutation = useMutation({
-    mutationFn: async ({ claimId, status, adminNotes }) => {
+    mutationFn: async ({ claimId, status, adminNotes, scheduledPickupTime }) => {
       const { error } = await supabase.rpc('rpc_handle_claim_review', {
         p_claim_id: claimId,
         p_status: status,
-        p_admin_notes: adminNotes
+        p_admin_notes: adminNotes,
+        p_scheduled_pickup_time: scheduledPickupTime || null
       });
       if (error) throw error;
     },
@@ -352,16 +353,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleClaimReview = async (claim, status) => {
+  const handleClaimReview = async (claim, status, scheduledPickupTime) => {
     const displayId = claim.id;
     setActionLoading(`claim-${displayId}`);
     
     try {
-      // The RPC function has been synchronized to accept the integer ID
       await claimReviewMutation.mutateAsync({ 
         claimId: claim.id, 
         status, 
-        adminNotes: `Processed via dashboard on ${new Date().toLocaleDateString()}` 
+        adminNotes: `Processed via dashboard on ${new Date().toLocaleDateString()}`,
+        scheduledPickupTime
       });
     } catch (err) {
       console.error('Review failed:', err.message);

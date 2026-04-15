@@ -118,9 +118,11 @@ const InventoryCard = React.memo(({
               <Badge className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border shrink-0 ${
                 item.status === 'released'
                   ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                  : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
+                  : item.status === 'claimed'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-inner'
+                    : 'bg-uni-500/10 text-uni-400 border-white/5 shadow-inner'
               }`}>
-                {item.status === 'in_custody' ? 'REPOSITORY' : ['reported', 'available'].includes(item.status) ? 'INTAKE' : 'RELEASED'}
+                {item.status === 'in_custody' ? 'REPOSITORY' : ['reported', 'available'].includes(item.status) ? 'INTAKE' : item.status === 'claimed' ? 'RETURN' : 'RELEASED'}
               </Badge>
             </div>
           </div>
@@ -196,19 +198,18 @@ const InventoryCard = React.memo(({
               </Button>
             ) : (
               <Button
-                disabled={item.status === 'claimed'}
                 onClick={() => {
                   setShowReleaseModal(item);
                   setReleaseForm({ name: item.identified_name || '', id_number: item.identified_student_id || '', photo_url: '' });
                 }}
                 className={`w-full h-14 rounded-2xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 ${
                   item.status === 'claimed'
-                    ? 'bg-slate-800 text-slate-500 border-white/5 cursor-not-allowed'
+                    ? 'border border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-600 hover:text-white'
                     : 'border border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-600 hover:text-white'
                 }`}
               >
                 <BadgeCheck size={18} className="mr-3" />
-                {item.status === 'claimed' ? 'Released' : 'Release Item'}
+                {item.status === 'claimed' ? 'Process Return' : 'Release Item'}
               </Button>
             )}
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
+const ResolutionTimeline = ({ status, isPickupReady, similarityScore, scheduledPickupTime }) => {
   const steps = [
     { id: 'submitted', label: 'Claim Submitted', icon: 'fa-file-import' },
     { id: 'review', label: 'Under Review', icon: 'fa-magnifying-glass' },
@@ -13,11 +13,11 @@ const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
     if (status === 'rejected') return -1;
     if (isPickupReady) return 3;
     if (status === 'approved') return 2;
-    // If pending but has a high similarity score, we can highlight 'review' as active
     return 1;
   };
 
   const currentIndex = getStatusIndex();
+  const pickupDate = scheduledPickupTime ? new Date(scheduledPickupTime) : null;
 
   return (
     <div className="py-8 px-2 md:px-6">
@@ -55,6 +55,11 @@ const ResolutionTimeline = ({ status, isPickupReady, similarityScore }) => {
                 </p>
                 {index === 2 && similarityScore > 0.8 && status === 'pending' && (
                   <p className="text-[7px] font-bold text-uni-400 uppercase tracking-tighter">High AI Match</p>
+                )}
+                {index === 3 && isActive && pickupDate && (
+                  <p className="text-[7px] font-bold text-emerald-400 uppercase tracking-tighter">
+                    {pickupDate.toLocaleDateString([], { month: 'short', day: 'numeric' })} • {pickupDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 )}
               </div>
             </div>

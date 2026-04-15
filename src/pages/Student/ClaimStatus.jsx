@@ -125,6 +125,7 @@ const ClaimStatus = () => {
                         <ResolutionTimeline 
                           status={claim.status} 
                           isPickupReady={claim.is_pickup_ready}
+                          scheduledPickupTime={claim.scheduled_pickup_time}
                         />
                     </div>
 
