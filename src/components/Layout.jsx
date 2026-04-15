@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import FeedbackModal from './FeedbackModal';
+import ManualIntakeModal from '../pages/Admin/components/ManualIntakeModal';
 import { useTheme } from '../context/ThemeContext';
 import { SidebarUser } from './SidebarUser';
 import { 
@@ -128,6 +129,14 @@ const LayoutContents = ({ children }) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const location = useLocation();
+
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [showManualIntake, setShowManualIntake] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  
+  const { toggleSidebar, setOpenMobile } = useSidebar();
   const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
     queryKey: ['admin', 'sidebar_stats', user?.id],
     queryFn: async () => {
@@ -156,17 +165,48 @@ const LayoutContents = ({ children }) => {
     staleTime: 1000 * 30,
   });
 
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-  
-  const { toggleSidebar, setOpenMobile } = useSidebar();
-  const location = useLocation();
 
   useEffect(() => {
     setOpenMobile(false);
   }, [location.pathname, setOpenMobile]);
 
-  const handleLogoClick = (e) => {
+  useEffect(() => {
+    if (showManualIntake) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [showManualIntake]);
+
+  // Global Manual Intake Mutation
+  const manualIntakeMutation = useMutation({
+    mutationFn: async (data) => {
+      const { error } = await supabase.rpc('rpc_manual_intake', {
+        p_type: data.type,
+        p_title: data.title,
+        p_description: data.description,
+        p_category: data.category,
+        p_location: data.location,
+        p_date: `${data.date}T12:00:00Z`,
+        p_reporter_name: data.reporter_name,
+        p_status: data.status,
+        p_assisted_by: data.assisted_by,
+        p_time: data.time,
+        p_photo_url: data.photo_url
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [variables.type === 'found' ? 'admin_inventory' : 'admin_lost'] });
+      // Only close if it's NOT a sequential "Next" operation
+      if (!variables.isNext) {
+        setShowManualIntake(false);
+      }
+    }
+  });
+
+  const handleLogoClick = () => {
     const mainArea = document.querySelector('main');
     if (mainArea) {
       mainArea.scrollTo({ top: 0, behavior: 'smooth' });
@@ -184,10 +224,25 @@ const LayoutContents = ({ children }) => {
     navigate('/login');
   };
 
+  const isAdmin = ['admin', 'super_admin'].includes(user?.role);
+  const isInventoryOrLost = location.pathname === '/admin' || location.pathname === '/admin/lost';
+  const shouldShowManualIntake = isAdmin && isInventoryOrLost;
+  const shouldShowFeedback = !isAdmin;
+  const showButton = shouldShowManualIntake || shouldShowFeedback;
+
   return (
     <div className="app-bg-main h-screen text-text-main flex overflow-hidden w-full relative">
       <BackgroundEffects />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
+      
+      {showManualIntake && (
+        <ManualIntakeModal 
+          isOpen={showManualIntake}
+          onClose={() => setShowManualIntake(false)}
+          onSubmit={(data) => manualIntakeMutation.mutate(data)}
+          actionLoading={manualIntakeMutation.isPending}
+        />
+      )}
 
       {user && location.pathname !== '/reset-password' ? (
         <div className="flex w-full h-full overflow-hidden relative">
@@ -374,7 +429,7 @@ const LayoutContents = ({ children }) => {
         }
       `}</style>
       <AnimatePresence>
-        {location.pathname !== '/super/feedback' && (
+        {location.pathname !== '/super/feedback' && showButton && (
           <motion.div 
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -386,8 +441,8 @@ const LayoutContents = ({ children }) => {
           variant="outline"
           size="icon"
           onClick={() => {
-            if (['admin', 'super_admin'].includes(user?.role)) {
-              window.dispatchEvent(new CustomEvent('open-manual-intake'));
+            if (shouldShowManualIntake) {
+              setShowManualIntake(true);
             } else {
               setIsFeedbackOpen(true);
             }
@@ -396,12 +451,12 @@ const LayoutContents = ({ children }) => {
           onMouseLeave={() => setIsHovered(false)}
           className={cn(
             "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-[width] duration-300 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
-            isHovered ? (['admin', 'super_admin'].includes(user?.role) ? "w-48 px-4" : "w-40 px-4") : "w-11 px-0 justify-center"
+            isHovered ? (shouldShowManualIntake ? "w-48 px-4" : "w-40 px-4") : "w-11 px-0 justify-center"
           )}
         >
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              {['admin', 'super_admin'].includes(user?.role) ? (
+              {shouldShowManualIntake ? (
                 <Archive className="w-4 h-4 text-sky-400 group-hover:text-white" />
               ) : (
                 <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white" />
@@ -415,7 +470,7 @@ const LayoutContents = ({ children }) => {
                   exit={{ opacity: 0, x: -10 }}
                   className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap"
                 >
-                  {['admin', 'super_admin'].includes(user?.role) ? 'Manual Intake' : 'Feedback'}
+                  {shouldShowManualIntake ? 'Manual Intake' : 'Feedback'}
                 </motion.span>
               )}
             </AnimatePresence>

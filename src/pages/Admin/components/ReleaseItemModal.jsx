@@ -35,7 +35,7 @@ const ReleaseItemModal = ({
   if (!showReleaseModal) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -47,7 +47,7 @@ const ReleaseItemModal = ({
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative z-10 shadow-3xl space-y-5 md:space-y-6 overflow-y-auto max-h-[90vh] custom-scrollbar"
+        className="w-full max-w-lg bg-slate-900 border border-white/10 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 relative z-10 shadow-3xl space-y-5 md:space-y-6 overflow-y-auto max-h-[80vh] custom-scrollbar"
       >
         <button 
           onClick={() => setShowReleaseModal(null)}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, 
@@ -10,8 +10,11 @@ import {
   ShieldCheck, 
   Save,
   AlertCircle,
-  Archive
+  Archive,
+  Camera,
+  Plus
 } from 'lucide-react';
+import ImageUpload from '../../../components/ImageUpload';
 import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
 
 /**
@@ -22,6 +25,8 @@ import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
  */
 const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
   const [type, setType] = useState('found'); // 'found' or 'lost'
+  const [showPulse, setShowPulse] = useState(false);
+  const titleInputRef = useRef(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -31,23 +36,53 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
     time: '',
     reporter_name: '',
     assisted_by: '',
+    photo_url: '',
   });
+
+  useEffect(() => {
+    if (showPulse) {
+      const timer = setTimeout(() => setShowPulse(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [showPulse]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setForm({
+      title: '',
+      description: '',
+      category: '',
+      location: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '',
+      reporter_name: '',
+      assisted_by: '',
+      photo_url: '',
+    });
+  };
+
+  const handleSubmit = (e, isNext = false) => {
+    if (e) e.preventDefault();
     onSubmit({
       ...form,
       type,
       // Metadata for manual entry
       is_manual_entry: true,
-      status: type === 'found' ? 'in_custody' : 'open'
+      status: type === 'found' ? 'in_custody' : 'open',
+      isNext
     });
+    if (isNext) {
+      resetForm();
+      setShowPulse(true);
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 100);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 isolate">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 isolate">
       <motion.div 
         initial={{ opacity: 0 }} 
         animate={{ opacity: 1 }} 
@@ -57,9 +92,19 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
       />
       <motion.div 
         initial={{ scale: 0.95, opacity: 0, y: 20 }} 
-        animate={{ scale: 1, opacity: 1, y: 0 }} 
+        animate={{ 
+          scale: showPulse ? [1, 1.02, 1] : 1,
+          opacity: 1, 
+          y: 0,
+          boxShadow: showPulse ? [
+            "0 0 0 0px rgba(59, 130, 246, 0)",
+            "0 0 0 20px rgba(59, 130, 246, 0.4)",
+            "0 0 0 40px rgba(59, 130, 246, 0)"
+          ] : "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+        }} 
+        transition={{ duration: 0.6, ease: "easeOut" }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }} 
-        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] relative z-10 shadow-3xl flex flex-col overflow-hidden max-h-[90vh]"
+        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] relative z-10 shadow-3xl flex flex-col overflow-hidden max-h-[80vh]"
       >
         {/* Header */}
         <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/[0.01]">
@@ -140,6 +185,7 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
               <div className="space-y-2 md:col-span-2">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Item Title / Headline</label>
                 <input 
+                  ref={titleInputRef}
                   required
                   type="text" 
                   placeholder="e.g. Black Leather Wallet"
@@ -184,6 +230,23 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
                 value={form.description}
                 onChange={e => setForm({...form, description: e.target.value})}
               />
+            </div>
+
+            {/* Visual Evidence Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-3 rounded-full bg-uni-500"></div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Visual Evidence {type === 'found' && <span className="text-red-500 ml-1 italic">*Required</span>}
+                </p>
+              </div>
+              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[2rem]">
+                <ImageUpload
+                  value={form.photo_url}
+                  onUploadSuccess={(url) => setForm({ ...form, photo_url: url })}
+                  description={type === 'found' ? "Upload actual photo of the found item" : "Reference photo (optional)"}
+                />
+              </div>
             </div>
           </div>
 
@@ -234,23 +297,39 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
           </div>
         </form>
 
-        {/* Footer */}
-        <div className="p-8 border-t border-white/5 bg-slate-900/80 backdrop-blur-sm flex flex-row items-center gap-4">
+        {/* Footer - Optimized for High-Density Mobile (Pro Max) */}
+        <div className="p-4 md:p-8 border-t border-white/5 bg-slate-900/80 backdrop-blur-sm flex flex-row items-center gap-2">
            <button 
             type="button"
             onClick={onClose} 
-            className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-2xl hover:bg-white/10"
-           >
-            Cancel
-           </button>
-           <button 
-             onClick={handleSubmit}
-             disabled={actionLoading}
-             className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-3 active:scale-[0.98]"
-           >
-             {actionLoading ? <div className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></div> : <Save size={18} />}
-             {actionLoading ? 'Archiving...' : `Store Physical ${type === 'found' ? 'Found' : 'Lost'} Record`}
-           </button>
+            className="px-4 h-12 text-slate-500 hover:text-white hover:bg-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+          >
+            Discard
+          </button>
+
+          <div className="flex-1 flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={() => handleSubmit(null, true)}
+              disabled={actionLoading || (type === 'found' && !form.photo_url)}
+              className="flex-1 h-12 text-[10px] font-bold text-uni-400 bg-uni-500/10 hover:bg-uni-500/20 rounded-xl uppercase tracking-widest transition-all border border-uni-500/20 disabled:opacity-50"
+            >
+              Next
+            </button>
+
+            <button 
+              onClick={handleSubmit}
+              disabled={actionLoading || (type === 'found' && !form.photo_url)}
+              className="flex-[1.5] h-12 bg-uni-500 hover:bg-uni-600 disabled:bg-slate-800 disabled:text-slate-500 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-uni-500/20 transition-all flex items-center justify-center gap-2"
+            >
+              {actionLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Save size={14} />
+              )}
+              Store
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

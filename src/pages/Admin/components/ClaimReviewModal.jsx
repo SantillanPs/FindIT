@@ -72,7 +72,7 @@ const ClaimReviewModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 sm:p-6">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -86,7 +86,7 @@ const ClaimReviewModal = ({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 30 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="w-full max-w-2xl bg-[#0F172A] border border-white/10 rounded-2xl overflow-hidden relative z-10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] flex flex-col max-h-[85dvh] sm:max-h-[90vh]"
+        className="w-full max-w-2xl bg-[#0F172A] border border-white/10 rounded-2xl overflow-hidden relative z-10 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.8)] flex flex-col max-h-[80vh]"
       >
         {/* Absolute Close Button */}
         <button 

@@ -35,7 +35,6 @@ import ReleaseItemModal from './components/ReleaseItemModal';
 import ClaimReviewModal from './components/ClaimReviewModal';
 import MatchComparisonModal from './components/MatchComparisonModal';
 import ImagePreviewOverlay from './components/ImagePreviewOverlay';
-import ManualIntakeModal from './components/ManualIntakeModal';
 
 /**
  * AdminDashboard - Premium Professional (Pro Max)
@@ -64,24 +63,19 @@ const AdminDashboard = () => {
   const [claimReviewStep, setClaimReviewStep] = useState(1);
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
   const [showIntakeModal, setShowIntakeModal] = useState(null);
-  const [showManualIntake, setShowManualIntake] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
   // Global event listeners for sidebar actions
   useEffect(() => {
-    const handleOpenIntake = () => setShowManualIntake(true);
-    window.addEventListener('open-manual-intake', handleOpenIntake);
-    
-    if (showIntakeModal || showManualIntake) {
+    if (showIntakeModal) {
       document.body.classList.add('modal-open');
     } else {
       document.body.classList.remove('modal-open');
     }
     return () => {
-      window.removeEventListener('open-manual-intake', handleOpenIntake);
       document.body.classList.remove('modal-open');
     };
-  }, [showIntakeModal, showManualIntake]);
+  }, [showIntakeModal]);
 
   // Queries
   const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
@@ -241,35 +235,6 @@ const AdminDashboard = () => {
     }
   });
 
-  const manualIntakeMutation = useMutation({
-    mutationFn: async (data) => {
-      const isFound = data.type === 'found';
-      const tableName = isFound ? 'found_items' : 'lost_items';
-      
-      const payload = {
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        location: data.location,
-        [isFound ? 'date_found' : 'date_lost']: `${data.date}T12:00:00Z`,
-        [isFound ? 'guest_name' : 'guest_name']: data.reporter_name, // Map to guest_name for manual entries
-        status: data.status,
-        is_manual_entry: true,
-        attributes: {
-          assisted_by: data.assisted_by,
-          time: data.time,
-          source: 'Physical Register'
-        }
-      };
-
-      const { error } = await supabase.from(tableName).insert([payload]);
-      if (error) throw error;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [variables.type === 'found' ? 'admin_inventory' : 'admin_lost'] });
-      setShowManualIntake(false);
-    }
-  });
 
   const refreshActiveTab = () => {
     queryClient.invalidateQueries({ queryKey: [`admin_${currentTab === 'history' || currentTab === 'released' ? 'history' : currentTab === 'found' ? 'inventory' : currentTab}`] });
@@ -476,23 +441,16 @@ const AdminDashboard = () => {
           {selectedMatchPair && <MatchComparisonModal key="match-comparison" {...{selectedMatchPair, setSelectedMatchPair, handleConnectMatch}} />}
           {previewImage && <ImagePreviewOverlay key="image-preview" {...{previewImage, setPreviewImage}} />}
           
-          <ManualIntakeModal 
-            key="manual-intake"
-            isOpen={showManualIntake} 
-            onClose={() => setShowManualIntake(false)} 
-            onSubmit={(data) => manualIntakeMutation.mutate(data)}
-            actionLoading={manualIntakeMutation.isPending}
-          />
 
           {showIntakeModal && (
-            <div key="intake-overlay" className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 isolate">
+            <div key="intake-overlay" className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-6 isolate">
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/20 backdrop-blur-sm" />
               <motion.div 
                 initial={{ scale: 0.95, opacity: 0, y: 20 }} 
                 animate={{ scale: 1, opacity: 1, y: 0 }} 
                 exit={{ scale: 0.95, opacity: 0, y: 20 }} 
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] relative z-10 shadow-3xl max-h-[90vh] flex flex-col overflow-hidden"
+                className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] relative z-10 shadow-3xl max-h-[80vh] flex flex-col overflow-hidden"
               >
                 {/* Header — compact and centered text mobile-first */}
                 <div className="flex items-center gap-3 px-5 pt-5 pb-4 md:px-8 md:pt-8 md:pb-6 border-b border-white/5 shrink-0">

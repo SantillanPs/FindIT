@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 const ImageUpload = ({ onUploadSuccess, value, description }) => {
@@ -6,6 +6,11 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(value || '');
   const fileInputRef = useRef(null);
+
+  // Sync preview with incoming value (reset support)
+  useEffect(() => {
+    setPreview(value || '');
+  }, [value]);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -27,7 +32,7 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('images')
         .upload(filePath, file);
 

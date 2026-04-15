@@ -25,7 +25,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
   if (!selectedMatchPair) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+    <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-10">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -38,7 +38,7 @@ const MatchComparisonModal = ({ selectedMatchPair, setSelectedMatchPair, handleC
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-        className="relative w-full max-w-5xl bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-3xl"
+        className="relative w-full max-w-5xl bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-3xl max-h-[80vh] overflow-y-auto custom-scrollbar"
       >
         <div className="p-10 space-y-10">
             <div className="flex justify-between items-start">
