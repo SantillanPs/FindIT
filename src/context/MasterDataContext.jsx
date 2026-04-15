@@ -20,7 +20,7 @@ const MasterDataProvider = ({ children }) => {
             return (data || []).map(cat => ({
                 ...cat,
                 hit_count: cat.hit_count || 0,
-                ...(CATEGORY_METADATA[cat.id?.toLowerCase()] || DEFAULT_CATEGORY_META)
+                ...(CATEGORY_METADATA[cat.id?.trim()?.toLowerCase()] || DEFAULT_CATEGORY_META)
             }));
         },
         staleTime: 1000 * 60 * 60, // 1 hour

@@ -3,6 +3,7 @@
  * Move UI-specific assets like icons and emojis here to keep the database lean.
  */
 export const CATEGORY_METADATA = {
+  // Existing & New Mappings (Aligned with DB IDs)
   'cellphone': {
     icon: 'fa-solid fa-mobile-screen-button',
     emoji: '📱'
@@ -15,7 +16,7 @@ export const CATEGORY_METADATA = {
     icon: 'fa-solid fa-tablet-screen-button',
     emoji: '📟'
   },
-  'id-card': {
+  'id card': {
     icon: 'fa-solid fa-id-card',
     emoji: '🪪'
   },
@@ -23,7 +24,7 @@ export const CATEGORY_METADATA = {
     icon: 'fa-solid fa-wallet',
     emoji: '👛'
   },
-  'bag-backpack': {
+  'bag / backpack': {
     icon: 'fa-solid fa-bag-shopping',
     emoji: '🎒'
   },
@@ -31,15 +32,15 @@ export const CATEGORY_METADATA = {
     icon: 'fa-solid fa-key',
     emoji: '🔑'
   },
-  'headphones': {
+  'headphones / earbuds': {
     icon: 'fa-solid fa-headphones',
     emoji: '🎧'
   },
-  'watch': {
+  'watch / wearable': {
     icon: 'fa-solid fa-stopwatch',
     emoji: '⌚'
   },
-  'water-bottle': {
+  'water bottle': {
     icon: 'fa-solid fa-bottle-water',
     emoji: '🍼'
   },
@@ -84,13 +85,24 @@ export const CATEGORY_METADATA = {
     emoji: '📄'
   },
   'wallets': {
-    icon: 'fa-solid fa-bags-shopping',
+    icon: 'fa-solid fa-wallet', // Changed from bags-shopping (Pro) to wallet (Free)
     emoji: '💼'
+  },
+  'umbrella': {
+    icon: 'fa-solid fa-umbrella',
+    emoji: '☂️'
   },
   'other': {
     icon: 'fa-solid fa-box-open',
     emoji: '📦'
-  }
+  },
+
+  // Aliases for retro-compatibility (hyphenated versions)
+  'id-card': { icon: 'fa-solid fa-id-card', emoji: '🪪' },
+  'bag-backpack': { icon: 'fa-solid fa-bag-shopping', emoji: '🎒' },
+  'watch': { icon: 'fa-solid fa-stopwatch', emoji: '⌚' },
+  'headphones': { icon: 'fa-solid fa-headphones', emoji: '🎧' },
+  'water-bottle': { icon: 'fa-solid fa-bottle-water', emoji: '🍼' }
 };
 
 export const DEFAULT_CATEGORY_META = {
