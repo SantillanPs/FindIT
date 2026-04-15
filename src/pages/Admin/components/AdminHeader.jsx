@@ -36,14 +36,13 @@ const AdminHeader = ({
       'released': 'Fulfillment Archive',
       'analytics': 'System Intelligence',
       'users': 'Staff Leaderboard',
-      'registry': 'Member Directory',
-      'landing': 'Platform Overview'
+      'registry': 'Member Directory'
     };
     return labels[slug] || 'Registry';
   };
 
   // Logic to hide actions on purely informational tabs
-  const shouldShowActions = !['analytics', 'users', 'registry', 'landing'].includes(currentTab);
+  const shouldShowActions = !['analytics', 'users', 'registry'].includes(currentTab);
 
   return (
     <div className={cn(

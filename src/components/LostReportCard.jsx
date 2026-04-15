@@ -25,9 +25,9 @@ const LostReportCard = ({ report, onWitness }) => {
   }).toUpperCase();
 
   return (
-    <div className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-rose-500/40 transition-all duration-500 overflow-hidden flex flex-col">
+    <div className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-rose-500/40 overflow-hidden flex flex-col">
       {/* 1. Image/Header Section */}
-      <div className={`relative overflow-hidden bg-bg-elevated/20 transition-all duration-700 ${report.photo_url && !imgError ? 'aspect-[16/10]' : 'h-32'}`}>
+      <div className={`relative overflow-hidden bg-bg-elevated/20 ${report.photo_url && !imgError ? 'aspect-[16/10]' : 'h-32'}`}>
         {report.photo_url && !imgError ? (
           <img 
             src={report.photo_url} 
@@ -73,7 +73,7 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Header Row */}
         <div className="flex-grow">
-            <h3 className="text-xl font-bold text-white leading-tight group-hover:text-rose-400 transition-colors line-clamp-1 mb-1">
+            <h3 className="text-xl font-bold text-white leading-tight group-hover:text-rose-400 line-clamp-1 mb-1">
                 {report.title}
             </h3>
             <div className="flex items-center gap-2 mb-2">
@@ -134,7 +134,7 @@ const LostReportCard = ({ report, onWitness }) => {
                     navigate(`/report-found-guest?match=${report.id}`);
                   }
                 }}
-                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 shadow-xl"
+                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2 shadow-xl"
             >
                 <Heart className="h-4 w-4 fill-black" />
                 <span>I Found This!</span>
@@ -144,7 +144,7 @@ const LostReportCard = ({ report, onWitness }) => {
                   e.stopPropagation();
                   onWitness(report);
                 }}
-                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white active:scale-90"
                 title="I've seen this item!"
             >
                 <Eye className="h-4 w-4" />

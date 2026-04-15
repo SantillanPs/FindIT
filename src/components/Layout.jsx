@@ -185,7 +185,7 @@ const LayoutContents = ({ children }) => {
   };
 
   return (
-    <div className="app-bg-main h-screen text-text-main flex overflow-hidden transition-colors duration-300 w-full relative">
+    <div className="app-bg-main h-screen text-text-main flex overflow-hidden w-full relative">
       <BackgroundEffects />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
 
@@ -346,8 +346,8 @@ const LayoutContents = ({ children }) => {
                   <ThemeToggle />
                   {location.pathname !== '/reset-password' && (
                     <>
-                      <Link to="/register" className="hidden md:flex text-slate-400 hover:text-white px-4 h-12 items-center font-bold text-[10px] uppercase tracking-[0.2em] transition-all">Register</Link>
-                      <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] transition-all shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
+                      <Link to="/register" className="hidden md:flex text-slate-400 hover:text-white px-4 h-12 items-center font-bold text-[10px] uppercase tracking-[0.2em]">Register</Link>
+                      <Link to="/login" className="bg-white hover:bg-slate-200 text-black px-5 md:px-8 h-10 md:h-12 rounded-xl flex items-center justify-center font-bold text-[9px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] shadow-2xl shadow-sky-500/10 active:scale-95">Sign In</Link>
                     </>
                   )}
                 </div>
@@ -379,9 +379,9 @@ const LayoutContents = ({ children }) => {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-[45] group feedback-trigger transition-all duration-300"
+            className="fixed bottom-6 right-6 z-[45] group feedback-trigger"
           >
-        <div className="absolute inset-0 bg-white blur-xl opacity-0 group-hover:opacity-10 transition-opacity"></div>
+        <div className="absolute inset-0 bg-white blur-xl opacity-0 group-hover:opacity-10"></div>
         <Button
           variant="outline"
           size="icon"
@@ -395,16 +395,16 @@ const LayoutContents = ({ children }) => {
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           className={cn(
-            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
+            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-[width] duration-300 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
             isHovered ? (['admin', 'super_admin'].includes(user?.role) ? "w-48 px-4" : "w-40 px-4") : "w-11 px-0 justify-center"
           )}
         >
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 flex items-center justify-center shrink-0">
               {['admin', 'super_admin'].includes(user?.role) ? (
-                <Archive className="w-4 h-4 text-sky-400 group-hover:text-white transition-all" />
+                <Archive className="w-4 h-4 text-sky-400 group-hover:text-white" />
               ) : (
-                <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white transition-all" />
+                <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white" />
               )}
             </div>
             <AnimatePresence>

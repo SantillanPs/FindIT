@@ -27,7 +27,6 @@ import AdminHeader from './components/AdminHeader';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
 import MemberRegistry from './MemberRegistry';
-import LandingTab from './components/LandingTab';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 import { imageCache } from '../../lib/imageCache';
 
@@ -466,7 +465,6 @@ const AdminDashboard = () => {
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
               <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry}} /></TabsContent>
-              <TabsContent value="landing" className="m-0 focus-visible:outline-none"><LandingTab /></TabsContent>
             </div>
           </div>
         </Tabs>

@@ -23,10 +23,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
   return (
     <div 
       onClick={onClick}
-      className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-sky-500/40 transition-all duration-500 cursor-pointer overflow-hidden flex flex-col"
+      className="group relative bg-slate-900/40 backdrop-blur-xl rounded-[2rem] border border-white/10 hover:border-sky-500/40 cursor-pointer overflow-hidden flex flex-col"
     >
       {/* 1. Image Header Section */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-bg-elevated/20 transition-all duration-700">
+      <div className="relative aspect-[16/10] overflow-hidden bg-bg-elevated/20">
         {item.photo_url && !imgError ? (
           <img 
             src={item.photo_thumbnail_url || item.photo_url} 
@@ -68,7 +68,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
 
         {/* Header Row: Location Only (User feedback: Item Name is redundant here) */}
             <div className="flex-grow">
-                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-amber-400 transition-colors line-clamp-1">
+                <h3 className="text-xl font-bold text-white leading-tight group-hover:text-amber-400 line-clamp-1">
                     {item.title}
                 </h3>
                 <div className="flex items-center gap-2 mt-1.5">
@@ -107,7 +107,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
                     e.stopPropagation();
                     onClick();
                 }}
-                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all duration-300 active:scale-95 flex items-center justify-center gap-2"
+                className="flex-grow bg-white hover:bg-slate-200 text-black py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 flex items-center justify-center gap-2"
             >
                 <Fingerprint className="h-4 w-4" />
                 <span>Claim Item</span>
@@ -117,7 +117,7 @@ const ItemCard = ({ item, onClick, onShare }) => {
                     e.stopPropagation();
                     onShare(item);
                 }}
-                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                className="w-12 h-12 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white active:scale-90"
             >
                 <Share2 className="h-4 w-4" />
             </button>

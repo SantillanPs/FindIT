@@ -395,5 +395,134 @@
     background: rgba(148, 163, 184, 0.4);
   }
 
+  /* ═══════════════════════════════════════════════════
+     Landing Page — Light Theme Overrides
+     Dark theme: lt-* classes are inert (no-op).
+     Light theme: .light-theme .landing-page scopes all overrides.
+     ═══════════════════════════════════════════════════ */
+
+  .light-theme .landing-page {
+    color: var(--text-main);
+  }
+
+  /* Headings → dark in light mode */
+  .light-theme .landing-page h1,
+  .light-theme .landing-page h2,
+  .light-theme .landing-page h3 {
+    color: var(--text-header) !important;
+  }
+
+  /* Paragraphs → muted dark */
+  .light-theme .landing-page p {
+    color: var(--text-muted) !important;
+  }
+
+  /* Gradient accent text (hero "Find it.", "Honor Roll") */
+  .light-theme .landing-page .lt-gradient {
+    background-image: linear-gradient(to bottom right, #0369a1, #0ea5e9, #7dd3fc) !important;
+  }
+
+  /* Theme-aware text: replaces text-white on non-heading elements */
+  .light-theme .landing-page .lt {
+    color: var(--text-header) !important;
+  }
+  .light-theme .landing-page .lt-muted {
+    color: var(--text-muted) !important;
+  }
+
+  /* Glass surfaces: cards, panels, search, empty states */
+  .light-theme .landing-page .lt-surface {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(203, 213, 225, 0.6) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  }
+
+  /* Section divider borders */
+  .light-theme .landing-page .lt-divider {
+    border-color: rgba(203, 213, 225, 0.5) !important;
+  }
+
+  /* Outline buttons and links */
+  .light-theme .landing-page .lt-outline {
+    border-color: rgba(203, 213, 225, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    color: var(--text-main) !important;
+  }
+  .light-theme .landing-page .lt-outline:hover {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-header) !important;
+  }
+
+  /* Primary CTA: inverted for light mode (dark bg, white text) */
+  .light-theme .landing-page .lt-cta {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15) !important;
+  }
+  .light-theme .landing-page .lt-cta:hover {
+    background-color: #1e293b !important;
+  }
+
+  /* Tab/pill group container */
+  .light-theme .landing-page .lt-tabs {
+    background-color: rgba(241, 245, 249, 0.7) !important;
+    border-color: rgba(203, 213, 225, 0.5) !important;
+  }
+
+  /* Inactive pills and tabs */
+  .light-theme .landing-page .lt-pill {
+    background-color: rgba(241, 245, 249, 0.8) !important;
+    border-color: rgba(203, 213, 225, 0.6) !important;
+    color: var(--text-muted) !important;
+  }
+  .light-theme .landing-page .lt-pill:hover {
+    background-color: var(--bg-elevated) !important;
+    color: var(--text-header) !important;
+  }
+
+  /* List row hover (leaderboard) */
+  .light-theme .landing-page .lt-row:hover {
+    background-color: rgba(14, 165, 233, 0.04) !important;
+    border-color: rgba(203, 213, 225, 0.5) !important;
+  }
+
+  /* Ambient decorative backgrounds */
+  .light-theme .landing-page .lt-ambient {
+    opacity: 0.08 !important;
+  }
+
+  /* Photo placeholder background */
+  .light-theme .landing-page .lt-photo {
+    background-color: #f1f5f9 !important;
+  }
+
+  /* Overlay badges (e.g., "Identity Linked") */
+  .light-theme .landing-page .lt-overlay {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(203, 213, 225, 0.5) !important;
+  }
+
+  /* Skeleton loading blocks */
+  .light-theme .landing-page .lt-skeleton {
+    background-color: rgba(241, 245, 249, 0.8) !important;
+    border-color: rgba(203, 213, 225, 0.4) !important;
+  }
+
+  /* Toast notification */
+  .light-theme .landing-page .lt-toast {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(203, 213, 225, 0.6) !important;
+  }
+
+  /* Badge pills (colored tag indicators) */
+  .light-theme .landing-page .lt-badge {
+    border-color: rgba(14, 165, 233, 0.25) !important;
+    background-color: rgba(14, 165, 233, 0.06) !important;
+  }
+  .light-theme .landing-page .lt-badge-rose {
+    border-color: rgba(244, 63, 94, 0.25) !important;
+    background-color: rgba(244, 63, 94, 0.06) !important;
+  }
 
 }
+
