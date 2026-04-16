@@ -84,20 +84,20 @@ const WitnessReportModal = ({ isOpen, onClose, report, onSuccess }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      <div className="fixed top-[var(--navbar-height)] inset-x-0 bottom-0 z-[9999] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl"
+          className="absolute inset-0 bg-white/5 backdrop-blur-sm"
         />
         
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: 20 }}
-          className="relative w-full max-w-xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+          className="relative w-full max-w-xl border border-white/20 bg-slate-800/85 backdrop-blur-md rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col max-h-[85vh] md:max-h-none"
         >
           {/* Header */}
           <div className="p-10 border-b border-white/5 flex items-center justify-between">

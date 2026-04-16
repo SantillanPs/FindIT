@@ -17,7 +17,39 @@ const StudentDashboard = () => {
       setShowSuccessBanner(true);
       sessionStorage.removeItem('just_registered');
     }
-  }, []);
+
+    // Auto-launch tutorial for new students
+    if (user && !user.tutorial_completed && user.role === 'student') {
+      // Small delay to ensure styles and IDs are rendered
+      const timer = setTimeout(() => {
+        const event = new CustomEvent('open-tutorial', { detail: { id: 'tour-dashboard' } });
+        window.dispatchEvent(event);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+
+  // Mark tutorial as completed in DB
+  const markTutorialCompleted = async () => {
+    const { error } = await supabase
+      .from('user_profiles_v1')
+      .update({ tutorial_completed: true })
+      .eq('id', user.id);
+    if (!error) {
+      // Optionally update local context if needed
+      console.log('Tutorial marked as completed');
+    }
+  };
+
+  useEffect(() => {
+    const handleTutorialFinish = (e) => {
+      if (e.detail.id === 'tour-dashboard' && e.detail.status === 'finished') {
+        markTutorialCompleted();
+      }
+    };
+    window.addEventListener('tutorial-finished', handleTutorialFinish);
+    return () => window.removeEventListener('tutorial-finished', handleTutorialFinish);
+  }, [user?.id]);
 
   // 1. Fetch My Case Queue (Personal Records)
   // v_me_claims covers claims made by the user
@@ -172,12 +204,14 @@ const StudentDashboard = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <header id="tour-mission-control" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
           <h1 className="text-3xl font-black text-white uppercase tracking-tighter italic">Mission <span className="gradient-text not-italic text-uni-400">Control</span></h1>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Institutional ID: {user?.student_id_number || 'UNRESOLVED'}</p>
         </div>
-        <AchievementBadge points={user?.integrity_points || 0} />
+        <div id="tour-integrity-points">
+          <AchievementBadge points={user?.integrity_points || 0} />
+        </div>
       </header>
 
       {/* Action Alerts */}
@@ -207,7 +241,7 @@ const StudentDashboard = () => {
       </AnimatePresence>
 
       {/* Stats */}
-      <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <section id="tour-stats" className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
         <StatCard index={0} icon="fa-search" label="Lost" value={myLostReports.length} color="blue" variants={statVariants} />
         <StatCard index={1} icon="fa-hand-holding-heart" label="Found" value={myClaims.length} color="green" variants={statVariants} />
         <StatCard index={2} icon="fa-award" label="Points" value={user?.integrity_points || 0} color="gold" variants={statVariants} />
@@ -220,7 +254,7 @@ const StudentDashboard = () => {
         
         {/* Left Col: Public Snapshot */}
         <div className="lg:col-span-2 space-y-8">
-            <div className="space-y-6">
+            <div id="tour-live-feed" className="space-y-6">
                 <div className="flex justify-between items-center px-1">
                     <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-uni-500"></span>
@@ -262,7 +296,7 @@ const StudentDashboard = () => {
                 </div>
             </div>
 
-            <div className="space-y-6">
+            <div id="tour-community-searches" className="space-y-6">
                 <div className="flex justify-between items-center px-1">
                     <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
@@ -305,7 +339,7 @@ const StudentDashboard = () => {
         {/* Right Col: Personal Context */}
         <div className="space-y-8">
             {/* Honor Snapshot */}
-            <div className="glass-panel p-6 rounded-[2rem] border border-brand-gold/30 bg-brand-gold/5 relative overflow-hidden group">
+            <div id="tour-honor-context" className="glass-panel p-6 rounded-[2rem] border border-brand-gold/30 bg-brand-gold/5 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/10 -z-10 group-hover:scale-110 transition-transform duration-700"></div>
                 <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
                     <i className="fa-solid fa-ranking-star text-brand-gold"></i>
@@ -334,7 +368,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Case Queue */}
-            <div className="glass-panel p-6 rounded-[2rem] border border-white/5">
+            <div id="tour-case-queue" className="glass-panel p-6 rounded-[2rem] border border-white/5">
                 <h3 className="text-[11px] font-black text-white uppercase tracking-[0.2em] mb-6 flex items-center gap-2 font-display">
                     <i className="fa-solid fa-clock-rotate-left text-uni-400"></i>
                     Case Queue

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
@@ -10,6 +10,8 @@ import FeedbackModal from './FeedbackModal';
 import ManualIntakeModal from '../pages/Admin/components/ManualIntakeModal';
 import { useTheme } from '../context/ThemeContext';
 import { SidebarUser } from './SidebarUser';
+import HelpMenu from './HelpMenu';
+import TutorialOverlay from './TutorialOverlay';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -26,7 +28,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -134,7 +135,118 @@ const LayoutContents = ({ children }) => {
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [showManualIntake, setShowManualIntake] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
+  
+  // Tutorial State
+  const [activeTour, setActiveTour] = useState(null);
+  const [tourRun, setTourRun] = useState(false);
+
+  const startTour = (tourId) => {
+    setActiveTour(tourId);
+    setTourRun(true);
+  };
+
+  useEffect(() => {
+    const handleOpenTutorial = (e) => {
+      startTour(e.detail.id);
+    };
+    window.addEventListener('open-tutorial', handleOpenTutorial);
+    return () => window.removeEventListener('open-tutorial', handleOpenTutorial);
+  }, []);
+
+  const tourSteps = {
+    'tour-landing': [
+      {
+        target: '#tour-welcome',
+        content: 'Welcome to FindIT! This is your central hub for recovering lost property and reporting found items within the institution.',
+        title: 'Welcome to FindIT',
+        placement: 'center',
+      },
+      {
+        target: '#tour-report-missing',
+        content: 'If you\'ve lost an item, start here to file a report. Our AI matching system will immediately look for potentially matching found items.',
+        title: 'Report Your Loss',
+      },
+      {
+        target: '#tour-report-found',
+        content: 'Found someone else\'s property? Join our "Integrity" mission by registering it here for secure return to its owner.',
+        title: 'Register a Discovery',
+      },
+      {
+        target: '#tour-feed',
+        content: 'Browse the latest found items and active lost reports from across the campus.',
+        title: 'Public Feed',
+      },
+      {
+        target: '#tour-search',
+        content: 'Use our high-speed registry search to quickly filter through thousands of records by title or category.',
+        title: 'Registry Search',
+      },
+      {
+        target: '#tour-leaderboard',
+        content: 'Explore the community Honor Roll to see who leads in integrity points and successful returns!',
+        title: 'Community Honor Roll',
+      },
+    ],
+    'tour-dashboard': [
+      {
+        target: '#tour-mission-control',
+        content: 'Welcome to your Mission Control. Here you can track all your lost and found cases within the institution.',
+        title: 'Dashboard Overview',
+        placement: 'center',
+      },
+      {
+        target: '#tour-integrity-points',
+        content: 'These are your Integrity Points. Earn them by reporting found items and returning property to their rightful owners.',
+        title: 'Honesty Level',
+      },
+      {
+        target: '#tour-stats',
+        content: 'Your case statistics at a glance. Track how many items you\'ve reported, found, and matching statuses.',
+        title: 'Case Insights',
+      },
+      {
+        target: '#tour-live-feed',
+        content: 'The Discovery Feed shows the most recent found items reported by other students. Keep an eye out for yours!',
+        title: 'Real-time Discoveries',
+      },
+      {
+        target: '#tour-community-searches',
+        content: 'Check "Community Searches" to see what your peers have lost. You might have found exactly what they are looking for!',
+        title: 'Help Your Peers',
+      },
+      {
+        target: '#tour-honor-context',
+        content: 'See your standing within your department. Integrity points contribute to your college\'s overall reputation.',
+        title: 'Department Standing',
+      },
+      {
+        target: '#tour-case-queue',
+        content: 'Access your full history of lost and found cases here. Track matches and verify returns in real-time.',
+        title: 'The Queue',
+      },
+    ],
+    'tour-report-lost': [
+      {
+        target: '#tour-report-missing',
+        content: 'Clicking this button starts the missing property workflow.',
+        title: 'Start Process',
+      }
+    ],
+    'tour-report': [
+      {
+        target: '#tour-report-found',
+        content: 'Use this feature to register items you\'ve found. This is the primary way to earn Integrity Points.',
+        title: 'Report Discovery',
+      }
+    ],
+    'tour-report-found': [
+      {
+        target: '#tour-report-found',
+        content: 'Clicking this button starts the found item registration.',
+        title: 'Secure Registry',
+      }
+    ]
+  };
   
   const { toggleSidebar, setOpenMobile } = useSidebar();
   const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
@@ -231,7 +343,7 @@ const LayoutContents = ({ children }) => {
   const showButton = shouldShowManualIntake || shouldShowFeedback;
 
   return (
-    <div className="app-bg-main h-screen text-text-main flex overflow-hidden w-full relative">
+    <div className="app-bg-main h-[100dvh] text-text-main flex overflow-hidden w-full relative">
       <BackgroundEffects />
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
       
@@ -338,7 +450,7 @@ const LayoutContents = ({ children }) => {
             </SidebarFooter>
           </Sidebar>
 
-          <div className="flex-grow flex flex-col relative overflow-hidden layout-main-container">
+          <div className="flex-grow flex flex-col relative h-[100dvh] overflow-hidden layout-main-container">
             <header className="h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 flex items-center justify-between px-4 md:px-12 bg-slate-900/40 backdrop-blur-2xl z-[500]">
                 <div className="flex items-center gap-4">
                   {user && (
@@ -384,7 +496,7 @@ const LayoutContents = ({ children }) => {
           </div>
         </div>
       ) : (
-        <div className="flex-grow flex flex-col h-screen overflow-y-auto custom-scrollbar relative mesh-bg-premium bg-fixed w-full text-left">
+        <div className="flex-grow flex flex-col h-[100dvh] overflow-hidden relative mesh-bg-premium bg-fixed w-full text-left">
           <div className="fixed inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0"></div>
           
           <header className="sticky top-0 z-[60] h-[var(--navbar-height)] flex-shrink-0 border-b border-white/5 bg-slate-900/40 backdrop-blur-2xl">
@@ -409,9 +521,9 @@ const LayoutContents = ({ children }) => {
               </div>
             </div>
           </header>
-          <main className="flex-grow w-full relative z-10"><div key={location.pathname}>{children}</div></main>
+          <main className="flex-grow w-full overflow-y-auto custom-scrollbar transition-all duration-500"><div key={location.pathname}>{children}</div></main>
           {location.pathname === '/' && (
-            <footer className="py-6 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl relative z-10 w-full text-center">
+            <footer className="py-6 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl w-full text-center">
                 <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.4em] opacity-60">
                   FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
                 </p>
@@ -420,65 +532,29 @@ const LayoutContents = ({ children }) => {
         </div>
       )}
 
-      {/* Refined Feedback Trigger — Smaller, smart z-index, and reactive scale */}
-      <style>{`
-        body.modal-open .feedback-trigger {
-          transform: scale(0);
-          opacity: 0;
-          pointer-events: none;
-        }
-      `}</style>
-      <AnimatePresence>
-        {location.pathname !== '/super/feedback' && showButton && (
-          <motion.div 
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="fixed bottom-6 right-6 z-[45] group feedback-trigger"
-          >
-        <div className="absolute inset-0 bg-white blur-xl opacity-0 group-hover:opacity-10"></div>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => {
-            if (shouldShowManualIntake) {
-              setShowManualIntake(true);
-            } else {
-              setIsFeedbackOpen(true);
-            }
-          }}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          className={cn(
-            "relative h-11 rounded-2xl bg-slate-900/60 backdrop-blur-xl border-white/5 group-hover:border-white/20 shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-[width] duration-300 ease-in-out overflow-hidden ring-1 ring-white/10 flex items-center justify-start",
-            isHovered ? (shouldShowManualIntake ? "w-48 px-4" : "w-40 px-4") : "w-11 px-0 justify-center"
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-5 h-5 flex items-center justify-center shrink-0">
-              {shouldShowManualIntake ? (
-                <Archive className="w-4 h-4 text-sky-400 group-hover:text-white" />
-              ) : (
-                <MessageSquare className="w-4 h-4 text-white/70 group-hover:text-white" />
-              )}
-            </div>
-            <AnimatePresence>
-              {isHovered && (
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="text-[10px] font-black text-white uppercase tracking-[0.2em] whitespace-nowrap"
-                >
-                  {shouldShowManualIntake ? 'Manual Intake' : 'Feedback'}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-        </Button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* New Help & Tutorial System */}
+      <HelpMenu 
+        onStartTour={startTour} 
+        onOpenFeedback={() => setIsFeedbackOpen(true)}
+        isLanding={location.pathname === '/'} 
+      />
+
+      <TutorialOverlay 
+        run={tourRun}
+        steps={activeTour ? tourSteps[activeTour] : []}
+        onCallback={(data) => {
+          if (['finished', 'skipped'].includes(data.status)) {
+            const finishedTour = activeTour;
+            setTourRun(false);
+            setActiveTour(null);
+            
+            // Notify specific components that the tutorial finished
+            window.dispatchEvent(new CustomEvent('tutorial-finished', { 
+              detail: { id: finishedTour, status: data.status } 
+            }));
+          }
+        }}
+      />
     </div>
   );
 };

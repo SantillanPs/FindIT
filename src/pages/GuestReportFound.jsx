@@ -139,7 +139,7 @@ const GuestReportFound = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100vh-var(--navbar-height))] flex flex-col px-4">
+    <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100dvh-var(--navbar-height)-4rem)] flex flex-col px-4">
       <ReportStepHeader 
         title="Report Found Item"
         label="Found Item Report"

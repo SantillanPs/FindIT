@@ -8,17 +8,17 @@ const ItemCard = ({ item, onClick, onShare }) => {
   const [imgError, setImgError] = React.useState(imageCache.isFailed(item.photo_thumbnail_url || item.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === item.category);
   
-  const formattedDate = new Date(item.date_found).toLocaleDateString('en-US', {
+  const formattedDate = item.date_found ? new Date(item.date_found).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
-  }).toUpperCase();
+  }).toUpperCase() : null;
 
-  const formattedTime = new Date(item.date_found).toLocaleTimeString('en-US', {
+  const formattedTime = item.date_found ? new Date(item.date_found).toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true
-  }).toUpperCase();
+  }).toUpperCase() : null;
 
   return (
     <div 
@@ -71,10 +71,12 @@ const ItemCard = ({ item, onClick, onShare }) => {
                 <h3 className="text-xl font-bold text-white leading-tight group-hover:text-amber-400 line-clamp-1">
                     {item.title}
                 </h3>
-                <div className="flex items-center gap-2 mt-1.5">
-                   <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Found At</p>
-                   <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{item.location}</p>
-                </div>
+                {item.location && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Found At</p>
+                    <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{item.location}</p>
+                  </div>
+                )}
             </div>
 
         {/* Description List (Replacing the location/time list) */}
@@ -88,16 +90,18 @@ const ItemCard = ({ item, onClick, onShare }) => {
                 </p>
             </div>
             
-            <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/5">
-                    <Clock className="h-3 w-3 text-emerald-400" />
-                </div>
-                <div className="flex gap-2 items-center">
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">{formattedDate}</span>
-                    <span className="text-xs text-white/20">•</span>
-                    <span className="text-xs font-medium text-slate-400">{formattedTime}</span>
-                </div>
-            </div>
+            {formattedDate && (
+              <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 border border-emerald-500/5">
+                      <Clock className="h-3 w-3 text-emerald-400" />
+                  </div>
+                  <div className="flex gap-2 items-center">
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">{formattedDate}</span>
+                      <span className="text-xs text-white/20">•</span>
+                      <span className="text-xs font-medium text-slate-400">{formattedTime}</span>
+                  </div>
+              </div>
+            )}
         </div>
 
         {/* Action Row */}

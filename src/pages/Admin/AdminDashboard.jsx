@@ -13,7 +13,9 @@ import {
   ShieldCheck,
   PackageCheck,
   Archive,
-  Image as ImageIcon,
+  ImageIcon,
+  Eye,
+  EyeOff,
   X} from "lucide-react";
 
 // Modular Components
@@ -44,7 +46,7 @@ import ImagePreviewOverlay from './components/ImagePreviewOverlay';
  */
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [syncTriggers, setSyncTriggers] = useState({ analytics: 0, leaderboard: 0, witnesses: 0, registry: 0 });
+  const [syncTriggers] = useState({ analytics: 0, leaderboard: 0, witnesses: 0, registry: 0 });
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -131,7 +133,7 @@ const AdminDashboard = () => {
     refetchInterval: 60000,
   });
 
-  const { data: historyItems = [], isLoading: historyLoading, refetch: refetchHistory } = useQuery({
+  const { data: historyItems = [], isLoading: historyLoading } = useQuery({
     queryKey: ['admin_history'],
     queryFn: async () => {
       // Step 1: Try the preferred activity log view
@@ -244,9 +246,19 @@ const AdminDashboard = () => {
     if (status === 'in_custody') {
       setShowIntakeModal({ 
         item, 
+        title: item.title || '',
+        description: item.description || '',
+        location: item.location || '',
+        date_found: item.date_found ? new Date(item.date_found).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
         verification_note: item.verification_note || '', 
         challenge_question: item.challenge_question || '',
-        attributes: { ...(item.attributes || {}) }
+        attributes: { ...(item.attributes || {}) },
+        visibility_config: item.visibility_config || {
+          location: true,
+          date_found: true,
+          description: true,
+          hidden_attributes: []
+        }
       });
       return;
     }
@@ -262,16 +274,21 @@ const AdminDashboard = () => {
   };
 
   const handleIntakeSubmit = async () => {
-    const { item, verification_note, challenge_question, attributes } = showIntakeModal;
+    const { item, title, description, location, date_found, verification_note, challenge_question, attributes } = showIntakeModal;
     setActionLoading(item.id);
     try {
       await foundItemUpdateMutation.mutateAsync({ 
         id: item.id, 
         updates: { 
           status: 'in_custody',
+          title,
+          description,
+          location,
+          date_found,
           verification_note,
           challenge_question,
-          attributes
+          attributes,
+          visibility_config: showIntakeModal.visibility_config
         }
       });
       setShowIntakeModal(null);
@@ -484,42 +501,142 @@ const AdminDashboard = () => {
                     )}
                   </div>
                   <div className="min-w-0 flex-grow py-1">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md">
-                        {showIntakeModal.item.category}
-                      </Badge>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">{showIntakeModal.item.location}</p>
-                    </div>
-                    <h4 className="text-sm font-bold text-white truncate mb-1">{showIntakeModal.item.title}</h4>
-                    <p className="text-[11px] text-slate-500 line-clamp-1 italic font-medium">"{showIntakeModal.item.description || 'No description provided'}"</p>
+                      <div className="flex items-center gap-2 mb-1.5 min-w-0">
+                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md shrink-0">
+                          {showIntakeModal.item.category}
+                        </Badge>
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">Review Reported Content</p>
+                      </div>
+                    <h4 className="text-sm font-bold text-white truncate mb-1">Editing Student Submission</h4>
+                    <p className="text-[10px] text-slate-500 font-medium italic">Refine fields below to match physical inventory</p>
                   </div>
                 </div>
 
                 {/* Scrollable content */}
-                <div className="flex-grow overflow-y-auto custom-scrollbar px-5 py-5 md:px-8 md:py-6 space-y-5 md:space-y-6">
+                <div className="flex-grow overflow-y-auto custom-scrollbar px-5 py-5 md:px-8 md:py-6 space-y-6">
+                   {/* Core Information (Vetting) */}
+                   <div className="bg-white/[0.02] p-4 md:p-5 rounded-xl md:rounded-[1.5rem] border border-white/5 space-y-5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1 h-3 rounded-full bg-amber-500"></div>
+                        <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] md:tracking-[0.2em]">Core Information</p>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Title / Identifier</label>
+                          <input 
+                            type="text" 
+                            className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"
+                            value={showIntakeModal.title}
+                            onChange={(e) => setShowIntakeModal({...showIntakeModal, title: e.target.value})}
+                            placeholder="e.g. Blue HydroFlask"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Location Found</label>
+                            <input 
+                              type="text" 
+                              className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"
+                              value={showIntakeModal.location}
+                              onChange={(e) => setShowIntakeModal({...showIntakeModal, location: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Date Found</label>
+                            <input 
+                              type="datetime-local" 
+                              className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all [color-scheme:dark]"
+                              value={showIntakeModal.date_found}
+                              onChange={(e) => setShowIntakeModal({...showIntakeModal, date_found: e.target.value})}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Public Description</label>
+                          <textarea 
+                            className="w-full min-h-[80px] bg-white/[0.03] border border-white/5 rounded-xl p-4 text-xs font-medium text-slate-300 focus:border-uni-500/50 outline-none transition-all resize-none"
+                            value={showIntakeModal.description}
+                            onChange={(e) => setShowIntakeModal({...showIntakeModal, description: e.target.value})}
+                            placeholder="Add specifics that help identify the item..."
+                          />
+                        </div>
+                      </div>
+                   </div>
                    <div className="bg-white/[0.02] p-4 md:p-5 rounded-xl md:rounded-[1.5rem] border border-white/5 space-y-4 md:space-y-5">
                       <div className="flex items-center gap-2">
                         <div className="w-1 h-3 rounded-full bg-uni-500"></div>
                         <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] md:tracking-[0.2em]">Verification Grid</p>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => (
-                          <div key={field} className="space-y-1.5">
-                            <label className="block text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-0.5">{field}</label>
-                            {field.includes('Color') ? (
-                              <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
-                                <option value="" className="text-slate-500">Select {field}</option>{COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            ) : field === 'Condition' ? (
-                              <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
-                                <option value="" className="text-slate-500">Select Condition</option>{CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                            ) : (
-                              <input type="text" className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
-                            )}
-                          </div>
-                        ))}
+                        {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => {
+                          const isHidden = showIntakeModal.visibility_config.hidden_attributes.includes(field);
+                          return (
+                            <div key={field} className="space-y-1.5">
+                              <div className="flex items-center justify-between px-0.5">
+                                <label className="block text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest">{field}</label>
+                                <button 
+                                  onClick={() => {
+                                    const hidden = showIntakeModal.visibility_config.hidden_attributes;
+                                    const nextHidden = isHidden 
+                                      ? hidden.filter(h => h !== field)
+                                      : [...hidden, field];
+                                    setShowIntakeModal({
+                                      ...showIntakeModal,
+                                      visibility_config: { ...showIntakeModal.visibility_config, hidden_attributes: nextHidden }
+                                    });
+                                  }}
+                                  className={`p-1 rounded-md transition-colors ${isHidden ? 'text-amber-500 bg-amber-500/10' : 'text-slate-600 hover:text-slate-400'}`}
+                                  title={isHidden ? "Hidden from Students" : "Visible to Students"}
+                                >
+                                  {isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
+                                </button>
+                              </div>
+                              {field.includes('Color') ? (
+                                <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                                  <option value="" className="text-slate-500">Select {field}</option>{COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                              ) : field === 'Condition' ? (
+                                <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
+                                  <option value="" className="text-slate-500">Select Condition</option>{CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                                </select>
+                              ) : (
+                                <input type="text" className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
+                   </div>
+
+                   {/* Global Visibility Controls */}
+                   <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { key: 'location', label: 'Location', icon: <i className="fa-solid fa-map-pin" /> },
+                        { key: 'date_found', label: 'Date', icon: <i className="fa-solid fa-calendar" /> },
+                        { key: 'description', label: 'Description', icon: <i className="fa-solid fa-align-left" /> }
+                      ].map(cfg => {
+                        const isVisible = showIntakeModal.visibility_config[cfg.key] !== false;
+                        return (
+                          <button
+                            key={cfg.key}
+                            onClick={() => setShowIntakeModal({
+                              ...showIntakeModal,
+                              visibility_config: { ...showIntakeModal.visibility_config, [cfg.key]: !isVisible }
+                            })}
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-2 ${
+                              isVisible 
+                                ? 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10' 
+                                : 'bg-amber-500/5 border-amber-500/20 text-amber-500'
+                            }`}
+                          >
+                            <div className="text-[10px]">{isVisible ? <Eye size={12} /> : <EyeOff size={12} />}</div>
+                            <span className="text-[8px] font-black uppercase tracking-widest">{cfg.label}</span>
+                          </button>
+                        );
+                      })}
                    </div>
 
                    <div className="space-y-2 md:space-y-3">

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
 import { 
@@ -27,7 +28,6 @@ import ItemCard from '../components/ItemCard';
 import ItemThumb from '../components/ItemThumb';
 import LostReportCard from '../components/LostReportCard';
 import LostReportThumb from '../components/LostReportThumb';
-import { motion, AnimatePresence } from 'framer-motion';
 import WitnessReportModal from '../components/WitnessReportModal';
 import ItemDetailsPeek from '../components/ItemDetailsPeek';
 
@@ -200,7 +200,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto text-center px-6 relative z-10">
           
           {/* Mobile: compact single-line title */}
-          <h1 className="text-4xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-tighter leading-[0.85] uppercase mb-4 md:mb-8">
+          <h1 id="tour-welcome" className="text-4xl md:text-7xl lg:text-8xl font-extrabold text-white tracking-tighter leading-[0.85] uppercase mb-4 md:mb-8">
             Lost it? {' '}
             <span className="lt-gradient bg-gradient-to-br from-white via-white/80 to-slate-500 bg-clip-text text-transparent">Find it.</span>
           </h1>
@@ -213,6 +213,7 @@ const Landing = () => {
           {/* CTA Buttons */}
           <div className="flex flex-row justify-center gap-2 md:gap-4 mx-auto">
             <Button 
+                id="tour-report-missing"
                 onClick={() => navigate(user ? '/report/lost' : '/report-lost-guest')}
                 className="lt-cta duration-0 h-9 md:h-12 px-3 md:px-8 gap-1 md:gap-1.5 rounded-lg md:rounded-xl font-bold text-[9px] md:text-[11px] uppercase tracking-[0.1em] md:tracking-[0.2em] bg-white hover:bg-slate-200 text-black shadow-xl shadow-sky-500/10 group whitespace-nowrap"
             >
@@ -220,6 +221,7 @@ const Landing = () => {
                 <PlusCircle className="h-3 w-3 md:h-3.5 md:w-3.5 shrink-0 group-hover:scale-110 transition-transform" />
             </Button>
             <Button 
+                id="tour-report-found"
                 variant="outline"
                 onClick={() => navigate(user ? '/report/found' : '/report-found-guest')}
                 className="lt-outline duration-0 h-9 md:h-12 px-3 md:px-8 gap-1 md:gap-1.5 rounded-lg md:rounded-xl font-bold text-[9px] md:text-[11px] uppercase tracking-[0.1em] md:tracking-[0.2em] border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 text-white group whitespace-nowrap"
@@ -248,6 +250,7 @@ const Landing = () => {
           z-index jumps above drawer when open so it's always clickable
           ═══════════════════════════════════════════════ */}
       <button
+        id="tour-leaderboard"
         onClick={() => setShowLeaderboard(prev => !prev)}
         className={`lt-surface fixed right-3 md:right-6 flex items-center gap-2 h-9 px-3 md:px-4 rounded-xl border backdrop-blur-xl shadow-lg transition-all group ${
           showLeaderboard 
@@ -324,7 +327,7 @@ const Landing = () => {
           {/* Tab Switcher + Desktop Search */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-8">
             {/* Tabs */}
-            <div className="lt-tabs flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl w-full md:w-auto backdrop-blur-md">
+            <div id="tour-feed" className="lt-tabs flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl w-full md:w-auto backdrop-blur-md">
               <button
                 onClick={() => setActiveTab('found')}
                 className={`flex-1 md:flex-none h-10 px-5 md:px-8 rounded-lg font-bold text-[10px] md:text-[11px] uppercase tracking-[0.15em] transition-all ${
@@ -350,7 +353,7 @@ const Landing = () => {
             </div>
 
             {/* Desktop Search */}
-            <div className="hidden md:block relative w-full max-w-sm">
+            <div id="tour-search" className="hidden md:block relative w-full max-w-sm">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
               <Input 
                 ref={searchInputRef}
@@ -543,55 +546,55 @@ const Landing = () => {
 
       {/* Drawer Panel */}
       <div
-        className={`lt-surface fixed right-0 bottom-0 z-[201] w-full max-w-md border-l border-white/10 bg-slate-950/95 backdrop-blur-2xl shadow-2xl overflow-y-auto transition-transform duration-300 ease-out ${
+        className={`lt-surface fixed right-0 bottom-0 z-[201] w-full max-w-sm md:max-w-md border-l border-white/10 bg-slate-900/98 backdrop-blur-md shadow-2xl overflow-y-auto transition-transform duration-300 ease-out custom-scrollbar ${
           showLeaderboard ? 'translate-x-0' : 'translate-x-full'
         }`}
         style={{ top: 'var(--navbar-height)' }}
       >
         {/* Drawer Header */}
-        <div className="sticky top-0 z-10 bg-slate-950/90 backdrop-blur-xl border-b border-white/5 px-6 py-5 flex items-center">
+        <div className="sticky top-0 z-10 bg-slate-900/90 backdrop-blur-xl border-b border-white/5 px-4 md:px-6 py-4 md:py-5 flex items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-              <Trophy className="h-5 w-5 text-amber-400" />
+            <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+              <Trophy className="h-4 w-4 md:h-5 md:w-5 text-amber-400" />
             </div>
             <div>
-              <h2 className="text-lg font-extrabold text-white tracking-tight uppercase leading-none">Honor Roll</h2>
-              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Community Rankings</p>
+              <h2 className="text-base md:text-lg font-extrabold text-white tracking-tight uppercase leading-none">Honor Roll</h2>
+              <p className="text-[8px] md:text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Community Rankings</p>
             </div>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="px-6 pt-5">
-          <div className="lt-tabs flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
+        <div className="px-4 md:px-6 pt-4 md:pt-5">
+          <div className="lt-tabs flex gap-0.5 p-1 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
             <button
               onClick={() => setLeaderboardType('students')}
-              className={`flex-1 h-9 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 h-8 md:h-9 rounded-lg font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
                 leaderboardType === 'students' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-white'
               }`}
             >
-              <GraduationCap className="h-3.5 w-3.5" />
-              Contributors
+              <GraduationCap className="h-3 w-3 md:h-3.5 md:w-3.5" />
+              Users
             </button>
             <button
               onClick={() => setLeaderboardType('colleges')}
-              className={`flex-1 h-9 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+              className={`flex-1 h-8 md:h-9 rounded-lg font-bold text-[9px] md:text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
                 leaderboardType === 'colleges' ? 'bg-white text-black shadow-lg' : 'text-slate-500 hover:text-white'
               }`}
             >
-              <Building2 className="h-3.5 w-3.5" />
-              Colleges
+              <Building2 className="h-3 w-3 md:h-3.5 md:w-3.5" />
+              Groups
             </button>
           </div>
         </div>
 
         {/* Leaderboard List */}
-        <div className="px-6 py-4 space-y-1.5">
+        <div className="px-4 md:px-6 py-3 md:py-4 space-y-1">
           {!masterLoading && leaderboardType === 'students' ? (
             LEADERBOARD_FROM_MASTER?.students?.slice(0, showFullLeaderboard ? 10 : 5).map((student, i) => (
-              <div key={i} className="lt-row flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 group transition-colors">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+              <div key={i} className="lt-row flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 group transition-colors">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-bold ${
                     i === 0 ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30' : 
                     i === 1 ? 'bg-slate-400/10 text-slate-300 border border-slate-400/30' :
                     i === 2 ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30' :
@@ -600,17 +603,17 @@ const Landing = () => {
                     {i + 1}
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <p className="text-[11px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 truncate">
+                    <p className="text-[10px] md:text-[11px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 truncate">
                       {student.full_name_masked}
                     </p>
-                    <p className="text-[9px] font-medium text-slate-500 uppercase tracking-widest mt-0.5 truncate">
+                    <p className="text-[8px] font-medium text-slate-500 uppercase tracking-widest mt-0.5 truncate">
                       {student.department || 'General Education'}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <p className="text-[10px] font-bold text-white tracking-[0.15em] uppercase">{student.integrity_points} <span className="text-slate-500 font-medium">IP</span></p>
-                  <span className="text-base">
+                <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                  <p className="text-[9px] font-bold text-white tracking-[0.15em] uppercase">{student.integrity_points} <span className="text-slate-500 font-medium">IP</span></p>
+                  <span className="text-sm">
                     {i === 0 ? '👑' : i === 1 ? '💎' : i === 2 ? '⚡' : i === 3 ? '🛡️' : '✨'}
                   </span>
                 </div>
@@ -618,9 +621,9 @@ const Landing = () => {
             ))
           ) : (
             LEADERBOARD_FROM_MASTER?.departments?.slice(0, showFullLeaderboard ? 10 : 5).map((col, i) => (
-              <div key={i} className="lt-row flex items-center justify-between p-3 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 group transition-colors">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-bold ${
+              <div key={i} className="lt-row flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:border-white/5 hover:bg-white/5 group transition-colors">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[9px] font-bold ${
                     i === 0 ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30' : 
                     i === 1 ? 'bg-slate-400/10 text-slate-300 border border-slate-400/30' :
                     i === 2 ? 'bg-orange-500/10 text-orange-400 border border-orange-500/30' :
@@ -629,14 +632,14 @@ const Landing = () => {
                     {i + 1}
                   </div>
                   <div className="text-left min-w-0 flex-1">
-                    <p className="text-[11px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 line-clamp-2 leading-tight">
+                    <p className="text-[10px] md:text-[11px] font-bold text-white tracking-wider uppercase group-hover:text-sky-400 line-clamp-2 leading-tight">
                       {col.department}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 shrink-0 ml-3">
-                  <p className="text-[10px] font-bold text-sky-400 tracking-[0.15em] uppercase">{col.total_points} <span className="text-slate-500 font-medium">IP</span></p>
-                  <Building2 className="h-4 w-4 text-slate-700 group-hover:text-slate-500" />
+                <div className="flex items-center gap-2.5 shrink-0 ml-2">
+                  <p className="text-[9px] font-bold text-sky-400 tracking-[0.15em] uppercase">{col.total_points} <span className="text-slate-500 font-medium">IP</span></p>
+                  <Building2 className="h-3.5 w-3.5 text-slate-700 group-hover:text-slate-500" />
                 </div>
               </div>
             ))
@@ -645,15 +648,15 @@ const Landing = () => {
 
         {/* Show More/Less */}
         {(leaderboardType === 'students' ? LEADERBOARD_FROM_MASTER?.students : LEADERBOARD_FROM_MASTER?.departments)?.length > 5 && (
-          <div className="px-6 pb-6">
+          <div className="px-4 md:px-6 pb-6">
             <button
               onClick={() => setShowFullLeaderboard(!showFullLeaderboard)}
-              className="w-full h-10 rounded-xl border border-white/5 bg-white/5 text-slate-500 hover:text-white font-bold text-[9px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-colors"
+              className="w-full h-9 md:h-10 rounded-xl border border-white/5 bg-white/5 text-slate-500 hover:text-white font-bold text-[8px] md:text-[9px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-colors"
             >
               {showFullLeaderboard ? (
-                <>Show Less <ChevronUp className="h-3.5 w-3.5" /></>
+                <>Show Less <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" /></>
               ) : (
-                <>Show All <ChevronDown className="h-3.5 w-3.5" /></>
+                <>Show All <ChevronDown className="h-3 w-3 md:h-3.5 md:w-3.5" /></>
               )}
             </button>
           </div>
