@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+/* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
@@ -362,7 +363,7 @@ const StudentDashboard = () => {
                                 ? `Contribution recognized at Institutional Level ${Math.ceil(user.integrity_points/10)}. Keep climbing.`
                                 : 'Become a guardian of the university by surrendering found items.'}
                         </p>
-                        <Link to="/hall-of-integrity" className="text-[8px] font-black text-brand-gold uppercase tracking-[0.2em] hover:text-white transition-colors block">Enter Hall of Integrity →</Link>
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] block cursor-not-allowed">Hall of Integrity (In Development)</span>
                     </div>
                 </div>
             </div>

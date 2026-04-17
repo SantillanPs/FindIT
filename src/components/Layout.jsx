@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
+/* eslint-disable no-unused-vars */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
@@ -12,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { SidebarUser } from './SidebarUser';
 import HelpMenu from './HelpMenu';
 import TutorialOverlay from './TutorialOverlay';
+import { cn } from "@/lib/utils";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -87,31 +89,48 @@ const BackgroundEffects = () => (
   </div>
 );
 
-const SideNavItem = ({ to, icon: Icon, label, count }) => {
+const SideNavItem = ({ to, icon: Icon, label, count, disabled, isDev }) => {
   const location = useLocation();
   const { setOpenMobile } = useSidebar();
-  const isActive = (to === '/admin' || to === '/super' || to === '/')
+  const isActive = !disabled && ((to === '/admin' || to === '/super' || to === '/')
     ? location.pathname === to 
-    : location.pathname.startsWith(to);
+    : location.pathname.startsWith(to));
+
+  const Comp = (disabled || !to) ? 'div' : Link;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton 
         isActive={isActive}
-        className={`h-14 w-full transition-all duration-300 group border border-transparent !p-0 ${
-          isActive ? 'bg-white text-black shadow-2xl shadow-sky-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'
-        }`}
+        disabled={disabled}
+        className={cn(
+          "h-14 w-full transition-all duration-300 group border border-transparent !p-0",
+          isActive ? 'bg-white text-black shadow-2xl shadow-sky-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5',
+          disabled && "opacity-50 cursor-not-allowed grayscale"
+        )}
         render={
-          <Link 
-            to={to} 
-            onClick={() => setOpenMobile(false)}
-            className="flex items-center gap-4 px-4 w-full h-full no-underline relative z-[110] pointer-events-auto"
+          <Comp 
+            to={!disabled ? to : undefined} 
+            onClick={!disabled ? (() => setOpenMobile(false)) : undefined}
+            className={cn(
+              "flex items-center gap-4 px-4 w-full h-full no-underline relative z-[110]",
+              !disabled ? "pointer-events-auto" : "pointer-events-none"
+            )}
           >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${isActive ? 'bg-black/5 text-black' : 'bg-slate-950 border border-white/5 text-slate-600 group-hover:text-sky-400'}`}>
-              <Icon size={16} />
+            <div className={cn(
+              "w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0",
+              isActive ? 'bg-black/5 text-black' : 'bg-slate-950 border border-white/5 text-slate-600 group-hover:text-sky-400',
+              disabled && "bg-slate-900/50 text-slate-700"
+            )}>
+              <Icon size={16} aria-hidden="true" />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] flex-grow truncate">{label}</span>
-            {count > 0 && (
+            <div className="flex flex-col min-w-0 flex-grow">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] truncate">{label}</span>
+              {isDev && (
+                <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest mt-0.5">In Development</span>
+              )}
+            </div>
+            {count > 0 && !isDev && (
               <span className={`px-2 py-0.5 rounded-md text-[8px] font-bold ${isActive ? 'bg-black text-white' : 'bg-sky-500/20 text-sky-400'}`}>
                 {count}
               </span>
@@ -119,7 +138,7 @@ const SideNavItem = ({ to, icon: Icon, label, count }) => {
             {isActive && (
               <div className="absolute -left-1 w-1.5 h-6 rounded-r-full bg-black shadow-lg" />
             )}
-          </Link>
+          </Comp>
         }
       />
     </SidebarMenuItem>
@@ -338,9 +357,6 @@ const LayoutContents = ({ children }) => {
 
   const isAdmin = ['admin', 'super_admin'].includes(user?.role);
   const isInventoryOrLost = location.pathname === '/admin' || location.pathname === '/admin/lost';
-  const shouldShowManualIntake = isAdmin && isInventoryOrLost;
-  const shouldShowFeedback = !isAdmin;
-  const showButton = shouldShowManualIntake || shouldShowFeedback;
 
   return (
     <div className="app-bg-main h-[100dvh] text-text-main flex overflow-hidden w-full relative">
@@ -428,7 +444,7 @@ const LayoutContents = ({ children }) => {
                    <SidebarMenu>
                      <SideNavItem to="/public-feed" icon={Search} label="Found Inventory" />
                      <SideNavItem to="/lost-reports" icon={HelpCircle} label="Lost Reports" />
-                     <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" />
+                     <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" disabled={true} isDev={true} />
                    </SidebarMenu>
                    <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Personal</SidebarGroupLabel>
                    <SidebarMenu>
