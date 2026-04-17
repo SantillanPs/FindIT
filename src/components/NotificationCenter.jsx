@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { CheckCircle2, AlertCircle, Info, BellRing, ChevronRight } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Info, BellRing, ChevronRight, X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const NotificationCenter = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +29,7 @@ const NotificationCenter = () => {
     refetchInterval: isOpen ? 10000 : 60000, 
   });
 
-  // 2. Optimized Mutation (Backend Standard 2.2)
+  // 2. Optimized Mutations (Backend Standard 2.2)
   const markReadMutation = useMutation({
     mutationFn: async (id) => {
       const { error } = await supabase
@@ -41,7 +43,42 @@ const NotificationCenter = () => {
     }
   });
 
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    }
+  });
+
   const markAsRead = (id) => markReadMutation.mutate(id);
+
+  // Auto-mark as read when opened
+  React.useEffect(() => {
+    if (isOpen && notifications.some(n => !n.is_read)) {
+      markAllAsReadMutation.mutate();
+    }
+  }, [isOpen]);
 
   const getNotificationStyle = (title) => {
     const t = title.toLowerCase();
@@ -173,8 +210,21 @@ const NotificationCenter = () => {
                           setIsOpen(false);
                         }}
                       >
-                        {!n.is_read && (
+                        {!n.is_read ? (
                           <div className={`absolute top-5 right-4 w-2 h-2 rounded-full ${style.dot}`}></div>
+                        ) : (
+                          <motion.button
+                            initial={{ opacity: 0 }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteMutation.mutate(n.id);
+                            }}
+                            className="absolute top-4 right-4 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 hover:text-rose-400 hover:border-rose-400/30 transition-all opacity-0 group-hover:opacity-100"
+                          >
+                            <X size={10} />
+                          </motion.button>
                         )}
                         
                         <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${style.iconBg} shadow-sm mt-0.5`}>
