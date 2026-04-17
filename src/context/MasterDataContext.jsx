@@ -48,10 +48,12 @@ const MasterDataProvider = ({ children }) => {
                 supabase
                     .from('v_public_leaderboard')
                     .select('*')
+                    .gt('integrity_points', 0)
                     .limit(10),
                 supabase
                     .from('v_public_dept_leaderboard')
                     .select('*')
+                    .gt('total_points', 0)
             ]);
             
             if (studentsRes.error) throw studentsRes.error;
@@ -65,6 +67,7 @@ const MasterDataProvider = ({ children }) => {
             };
         },
         staleTime: 1000 * 60 * 5, // 5 minutes
+        enabled: false, // Feature currently disabled per user request
     });
 
     // 2. Colleges Query (Keep separate as it's a different domain)
