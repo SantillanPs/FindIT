@@ -57,8 +57,9 @@ const Register = () => {
       sessionStorage.setItem('registration_in_progress', 'true');
       
       // 1. Auth Sign Up
+      const trimmedEmail = email.toLowerCase().trim();
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: trimmedEmail,
         password,
         options: {
           data: {
@@ -77,7 +78,7 @@ const Register = () => {
         .from('user_profiles_v1')
         .insert([{
           id: authData.user.id,
-          email,
+          email: trimmedEmail,
           role: 'student',
           first_name: firstName,
           last_name: lastName,
@@ -288,7 +289,12 @@ const Register = () => {
                     <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                      <Input placeholder="yourname@email.com" value={email} onChange={e => setEmail(e.target.value)} className="pl-10 h-12 bg-slate-950/50" />
+                      <Input 
+                        placeholder="yourname@email.com" 
+                        value={email} 
+                        onChange={e => setEmail(e.target.value.replace(/\s+/g, ''))} 
+                        className="pl-10 h-12 bg-slate-950/50" 
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -319,16 +325,16 @@ const Register = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">First Name</Label>
-                      <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} className="h-12 bg-slate-950/50" />
+                      <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value.trim())} className="h-12 bg-slate-950/50" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Last Name</Label>
-                      <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value)} className="h-12 bg-slate-950/50" />
+                      <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value.trim())} className="h-12 bg-slate-950/50" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Student ID</Label>
-                    <Input placeholder="2024-12345" value={studentId} onChange={e => setStudentId(e.target.value)} className="h-12 bg-slate-950/50" />
+                    <Input placeholder="2024-12345" value={studentId} onChange={e => setStudentId(e.target.value.toUpperCase().trim())} className="h-12 bg-slate-950/50" />
                   </div>
                 </div>
               )}
