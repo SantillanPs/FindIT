@@ -30,7 +30,15 @@ const AchievementBadge = ({ points, className = "" }) => {
       glow: 'border-orange-400/20',
       rank: 'Rising Contributor'
     };
-    return null;
+    return { 
+      label: 'Recruit Tier', 
+      icon: '✨', 
+      color: 'text-slate-500', 
+      bg: 'bg-slate-500/5', 
+      border: 'border-slate-500/10',
+      glow: 'border-transparent',
+      rank: 'Member Candidate'
+    };
   };
 
   const config = getBadgeConfig(points);

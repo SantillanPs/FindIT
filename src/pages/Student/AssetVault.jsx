@@ -1,14 +1,15 @@
-import React from 'react';
-/* eslint-disable no-unused-vars */
 import { motion } from 'framer-motion';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 
 const AssetVault = () => {
+  const { hasBetaAccess } = useFeatureFlags();
+
   return (
     <div className="relative min-h-[600px]">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-8 pb-10 blur-lg pointer-events-none select-none"
+        className={`space-y-8 pb-10 ${!hasBetaAccess ? 'blur-lg pointer-events-none select-none' : ''}`}
       >
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -34,29 +35,31 @@ const AssetVault = () => {
       </motion.div>
 
       {/* Development Overlay */}
-      <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm rounded-[3rem]">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="glass-panel p-12 max-w-xl w-full text-center border-brand-gold/30 bg-brand-gold/5 space-y-8"
-          >
-              <div className="w-20 h-20 bg-brand-gold/10 rounded-3xl flex items-center justify-center text-4xl mx-auto border border-brand-gold/20 animate-pulse">
-                🛡️
-              </div>
-              <div className="space-y-3">
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">Asset Vault <span className="text-brand-gold not-italic">Under Maintenance</span></h2>
-                  <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.2em] leading-relaxed">
-                    We are upgrading our institutional asset verification system. Your vaulted items remain secure and will be accessible again soon.
-                  </p>
-              </div>
-              <div className="pt-8 border-t border-white/5">
-                <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold">
-                  <span className="w-2 h-2 rounded-full bg-brand-gold animate-ping"></span>
-                  <span className="text-[9px] font-black uppercase tracking-[0.3em]">System Upgrade in Progress</span>
+      {!hasBetaAccess && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm rounded-[3rem]">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="glass-panel p-12 max-w-xl w-full text-center border-brand-gold/30 bg-brand-gold/5 space-y-8"
+            >
+                <div className="w-20 h-20 bg-brand-gold/10 rounded-3xl flex items-center justify-center text-4xl mx-auto border border-brand-gold/20 animate-pulse">
+                  🛡️
                 </div>
-              </div>
-          </motion.div>
-      </div>
+                <div className="space-y-3">
+                    <h2 className="text-2xl font-black text-white uppercase tracking-tighter italic">Asset Vault <span className="text-brand-gold not-italic">Under Maintenance</span></h2>
+                    <p className="text-slate-400 text-[11px] font-bold uppercase tracking-[0.2em] leading-relaxed">
+                      We are upgrading our institutional asset verification system. Your vaulted items remain secure and will be accessible again soon.
+                    </p>
+                </div>
+                <div className="pt-8 border-t border-white/5">
+                  <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold">
+                    <span className="w-2 h-2 rounded-full bg-brand-gold animate-ping"></span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em]">System Upgrade in Progress</span>
+                  </div>
+                </div>
+            </motion.div>
+        </div>
+      )}
     </div>
   );
 };

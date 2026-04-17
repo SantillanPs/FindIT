@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { cn } from '../../lib/utils';
 
 const StaffManagement = () => {
   const { user } = useAuth();
@@ -26,6 +27,20 @@ const StaffManagement = () => {
       const { error } = await supabase
         .from('user_profiles_v1')
         .update({ role: newRole })
+        .eq('id', userId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff-list'] });
+    }
+  });
+
+  const toggleBetaMutation = useMutation({
+    mutationFn: async ({ userId, isBeta }) => {
+      const { error } = await supabase
+        .from('user_profiles_v1')
+        .update({ is_beta_tester: isBeta })
         .eq('id', userId);
       
       if (error) throw error;
@@ -106,7 +121,14 @@ const StaffManagement = () => {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-white/5 flex items-center justify-center text-white font-display font-bold text-xl">
                   {user_row.full_name?.charAt(0) || user_row.email.charAt(0)}
                 </div>
-                {getRoleBadge(user_row.role)}
+                <div className="flex flex-col items-end gap-2">
+                  {getRoleBadge(user_row.role)}
+                  {user_row.is_beta_tester && (
+                    <span className="bg-amber-500/20 text-amber-500 border border-amber-500/30 px-2 py-0.5 rounded text-[7px] font-black uppercase tracking-widest flex items-center gap-1">
+                      <i className="fa-solid fa-flask text-[8px]"></i> Beta Access
+                    </span>
+                  )}
+                </div>
               </div>
               <h3 className="text-white font-bold text-lg mb-1 truncate">{user_row.full_name || 'Guest User'}</h3>
               <p className="text-slate-500 text-xs mb-4 truncate"><i className="fa-regular fa-envelope mr-2"></i>{user_row.email}</p>
@@ -147,6 +169,27 @@ const StaffManagement = () => {
                   Promote to Admin
                 </button>
               )}
+            </div>
+
+            {/* Beta Tester Toggle */}
+            <div className="mt-3">
+               <button 
+                  onClick={() => toggleBetaMutation.mutate({ userId: user_row.id, isBeta: !user_row.is_beta_tester })}
+                  disabled={toggleBetaMutation.isPending && toggleBetaMutation.variables?.userId === user_row.id}
+                  className={cn(
+                    "w-full py-2 rounded-lg border text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2",
+                    user_row.is_beta_tester 
+                      ? "bg-amber-500/10 border-amber-500/20 text-amber-500 hover:bg-amber-500/20" 
+                      : "bg-slate-900 text-slate-500 border-white/5 hover:border-white/10"
+                  )}
+               >
+                  {toggleBetaMutation.isPending && toggleBetaMutation.variables?.userId === user_row.id ? (
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                  ) : (
+                    <i className={cn("fa-solid", user_row.is_beta_tester ? "fa-flask-vial" : "fa-flask")}></i>
+                  )}
+                  {user_row.is_beta_tester ? "Revoke Beta Access" : "Grant Beta Access"}
+               </button>
             </div>
           </div>
         ))}

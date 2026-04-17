@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import { SidebarUser } from './SidebarUser';
 import HelpMenu from './HelpMenu';
 import TutorialOverlay from './TutorialOverlay';
+import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { cn } from "@/lib/utils";
 import { 
   Sidebar, 
@@ -75,6 +76,106 @@ const Logo = ({ className = "" }) => (
   </div>
 );
 
+const tourSteps = {
+  'tour-landing': [
+    {
+      target: '#tour-welcome',
+      content: 'Welcome to FindIT! This is your central hub for recovering lost property and reporting found items within the institution.',
+      title: 'Welcome to FindIT',
+      placement: 'center',
+    },
+    {
+      target: '#tour-report-missing',
+      content: 'If you\'ve lost an item, start here to file a report. Our AI matching system will immediately look for potentially matching found items.',
+      title: 'Report Your Loss',
+    },
+    {
+      target: '#tour-report-found',
+      content: 'Found someone else\'s property? Join our "Integrity" mission by registering it here for secure return to its owner.',
+      title: 'Register a Discovery',
+    },
+    {
+      target: '#tour-feed',
+      content: 'Browse the latest found items and active lost reports from across the campus.',
+      title: 'Public Feed',
+    },
+    {
+      target: '#tour-search',
+      content: 'Use our high-speed registry search to quickly filter through thousands of records by title or category.',
+      title: 'Registry Search',
+    },
+    {
+      target: '#tour-leaderboard',
+      content: 'Explore the community Honor Roll to see who leads in integrity points and successful returns!',
+      title: 'Community Honor Roll',
+    },
+  ],
+  'tour-dashboard': [
+    {
+      target: '#tour-mission-control',
+      content: 'Welcome to your Mission Control. Here you can track all your lost and found cases within the institution.',
+      title: 'Dashboard Overview',
+      placement: 'center',
+    },
+    {
+      target: '#tour-integrity-points',
+      content: 'These are your Integrity Points. Earn them by reporting found items and returning property to their rightful owners.',
+      title: 'Honesty Level',
+    },
+    {
+      target: '#tour-stats',
+      content: 'Your case statistics at a glance. Track how many items you\'ve reported, found, and matching statuses.',
+      title: 'Case Insights',
+    },
+    {
+      target: '#tour-live-feed',
+      content: 'The Discovery Feed shows the most recent found items reported by other students. Keep an eye out for yours!',
+      title: 'Real-time Discoveries',
+    },
+    {
+      target: '#tour-community-searches',
+      content: 'Check "Community Searches" to see what your peers have lost. You might have found exactly what they are looking for!',
+      title: 'Help Your Peers',
+    },
+    {
+      target: '#tour-honor-context',
+      content: 'See your standing within your department. Integrity points contribute to your college\'s overall reputation.',
+      title: 'Department Standing',
+    },
+    {
+      target: '#tour-case-queue',
+      content: 'Access your full history of lost and found cases here. Track matches and verify returns in real-time.',
+      title: 'The Queue',
+    },
+  ],
+  'tour-report-lost': [
+    {
+      target: '#tour-report-missing',
+      content: 'Clicking this button starts the missing property workflow.',
+      title: 'Start Process',
+    }
+  ],
+  'tour-report': [
+    {
+      target: '#tour-report-missing',
+      content: 'Start here if you have lost something. Our AI system will begin scanning the registry for matches.',
+      title: 'Report Lost Item',
+    },
+    {
+      target: '#tour-report-found',
+      content: 'Use this to register items you have recovered. This is the primary way to earn Integrity Points and improve your standing.',
+      title: 'Register Discovery',
+    }
+  ],
+  'tour-report-found': [
+    {
+      target: '#tour-report-found',
+      content: 'Clicking this button starts the found item registration.',
+      title: 'Secure Registry',
+    }
+  ]
+};
+
 // Helper components moved up for hoisting
 const BackgroundEffects = () => (
   <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -89,7 +190,7 @@ const BackgroundEffects = () => (
   </div>
 );
 
-const SideNavItem = ({ to, icon: Icon, label, count, disabled, isDev }) => {
+const SideNavItem = ({ id, to, icon: Icon, label, count, disabled, isDev }) => {
   const location = useLocation();
   const { setOpenMobile } = useSidebar();
   const isActive = !disabled && ((to === '/admin' || to === '/super' || to === '/')
@@ -110,6 +211,7 @@ const SideNavItem = ({ to, icon: Icon, label, count, disabled, isDev }) => {
         )}
         render={
           <Comp 
+            id={id}
             to={!disabled ? to : undefined} 
             onClick={!disabled ? (() => setOpenMobile(false)) : undefined}
             className={cn(
@@ -145,6 +247,8 @@ const SideNavItem = ({ to, icon: Icon, label, count, disabled, isDev }) => {
   );
 };
 
+
+
 const LayoutContents = ({ children }) => {
   const { user, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -154,14 +258,20 @@ const LayoutContents = ({ children }) => {
 
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [showManualIntake, setShowManualIntake] = useState(false);
+  const { showHallOfIntegrity, showAssetVault } = useFeatureFlags();
   
-  // Tutorial State
   const [activeTour, setActiveTour] = useState(null);
   const [tourRun, setTourRun] = useState(false);
+  const [tourKey, setTourKey] = useState(0);
 
   const startTour = (tourId) => {
-    setActiveTour(tourId);
-    setTourRun(true);
+    // Force a restart by incrementing key and resetting run state
+    setTourRun(false);
+    setTimeout(() => {
+      setActiveTour(tourId);
+      setTourRun(true);
+      setTourKey(prev => prev + 1);
+    }, 50);
   };
 
   useEffect(() => {
@@ -171,101 +281,6 @@ const LayoutContents = ({ children }) => {
     window.addEventListener('open-tutorial', handleOpenTutorial);
     return () => window.removeEventListener('open-tutorial', handleOpenTutorial);
   }, []);
-
-  const tourSteps = {
-    'tour-landing': [
-      {
-        target: '#tour-welcome',
-        content: 'Welcome to FindIT! This is your central hub for recovering lost property and reporting found items within the institution.',
-        title: 'Welcome to FindIT',
-        placement: 'center',
-      },
-      {
-        target: '#tour-report-missing',
-        content: 'If you\'ve lost an item, start here to file a report. Our AI matching system will immediately look for potentially matching found items.',
-        title: 'Report Your Loss',
-      },
-      {
-        target: '#tour-report-found',
-        content: 'Found someone else\'s property? Join our "Integrity" mission by registering it here for secure return to its owner.',
-        title: 'Register a Discovery',
-      },
-      {
-        target: '#tour-feed',
-        content: 'Browse the latest found items and active lost reports from across the campus.',
-        title: 'Public Feed',
-      },
-      {
-        target: '#tour-search',
-        content: 'Use our high-speed registry search to quickly filter through thousands of records by title or category.',
-        title: 'Registry Search',
-      },
-      {
-        target: '#tour-leaderboard',
-        content: 'Explore the community Honor Roll to see who leads in integrity points and successful returns!',
-        title: 'Community Honor Roll',
-      },
-    ],
-    'tour-dashboard': [
-      {
-        target: '#tour-mission-control',
-        content: 'Welcome to your Mission Control. Here you can track all your lost and found cases within the institution.',
-        title: 'Dashboard Overview',
-        placement: 'center',
-      },
-      {
-        target: '#tour-integrity-points',
-        content: 'These are your Integrity Points. Earn them by reporting found items and returning property to their rightful owners.',
-        title: 'Honesty Level',
-      },
-      {
-        target: '#tour-stats',
-        content: 'Your case statistics at a glance. Track how many items you\'ve reported, found, and matching statuses.',
-        title: 'Case Insights',
-      },
-      {
-        target: '#tour-live-feed',
-        content: 'The Discovery Feed shows the most recent found items reported by other students. Keep an eye out for yours!',
-        title: 'Real-time Discoveries',
-      },
-      {
-        target: '#tour-community-searches',
-        content: 'Check "Community Searches" to see what your peers have lost. You might have found exactly what they are looking for!',
-        title: 'Help Your Peers',
-      },
-      {
-        target: '#tour-honor-context',
-        content: 'See your standing within your department. Integrity points contribute to your college\'s overall reputation.',
-        title: 'Department Standing',
-      },
-      {
-        target: '#tour-case-queue',
-        content: 'Access your full history of lost and found cases here. Track matches and verify returns in real-time.',
-        title: 'The Queue',
-      },
-    ],
-    'tour-report-lost': [
-      {
-        target: '#tour-report-missing',
-        content: 'Clicking this button starts the missing property workflow.',
-        title: 'Start Process',
-      }
-    ],
-    'tour-report': [
-      {
-        target: '#tour-report-found',
-        content: 'Use this feature to register items you\'ve found. This is the primary way to earn Integrity Points.',
-        title: 'Report Discovery',
-      }
-    ],
-    'tour-report-found': [
-      {
-        target: '#tour-report-found',
-        content: 'Clicking this button starts the found item registration.',
-        title: 'Secure Registry',
-      }
-    ]
-  };
   
   const { toggleSidebar, setOpenMobile } = useSidebar();
   const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
@@ -444,13 +459,17 @@ const LayoutContents = ({ children }) => {
                    <SidebarMenu>
                      <SideNavItem to="/public-feed" icon={Search} label="Found Inventory" />
                      <SideNavItem to="/lost-reports" icon={HelpCircle} label="Lost Reports" />
-                     <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" disabled={true} isDev={true} />
+                     {showHallOfIntegrity && (
+                       <SideNavItem to="/hall-of-integrity" icon={Trophy} label="Hall of Integrity" disabled={false} isDev={true} />
+                     )}
                    </SidebarMenu>
                    <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Personal</SidebarGroupLabel>
                    <SidebarMenu>
                      <SideNavItem to="/report/lost" icon={AlertTriangle} label="Report Lost" />
                      <SideNavItem to="/report/found" icon={HeartHandshake} label="Report Found" />
-                     <SideNavItem to="/asset-vault" icon={Archive} label="Asset Vault" disabled={true} isDev={true} />
+                     {showAssetVault && (
+                       <SideNavItem to="/asset-vault" icon={Archive} label="Asset Vault" disabled={false} isDev={true} />
+                     )}
                    </SidebarMenu>
                  </SidebarGroup>
                )}
@@ -537,14 +556,16 @@ const LayoutContents = ({ children }) => {
               </div>
             </div>
           </header>
-          <main className="flex-grow w-full overflow-y-auto custom-scrollbar transition-all duration-500"><div key={location.pathname}>{children}</div></main>
-          {location.pathname === '/' && (
-            <footer className="py-6 border-t border-white/5 bg-slate-950/60 backdrop-blur-xl w-full text-center">
-                <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.4em] opacity-60">
-                  FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
-                </p>
-            </footer>
-          )}
+          <main className="flex-grow w-full overflow-y-auto custom-scrollbar transition-all duration-500">
+            <div key={location.pathname}>{children}</div>
+            {location.pathname === '/' && (
+              <footer className="py-12 border-t border-white/5 bg-slate-950/20 w-full text-center">
+                  <p className="text-slate-600 text-[9px] font-bold uppercase tracking-[0.4em] opacity-60">
+                    FindIT Registry &bull; Institutional Asset Recovery &bull; &copy; 2026
+                  </p>
+              </footer>
+            )}
+          </main>
         </div>
       )}
 
@@ -556,18 +577,18 @@ const LayoutContents = ({ children }) => {
       />
 
       <TutorialOverlay 
+        key={tourKey}
         run={tourRun}
         steps={activeTour ? tourSteps[activeTour] : []}
         onCallback={(data) => {
           if (['finished', 'skipped'].includes(data.status)) {
             const finishedTour = activeTour;
             setTourRun(false);
-            setActiveTour(null);
-            
-            // Notify specific components that the tutorial finished
+            // We keep activeTour briefly for the event, then clean it
             window.dispatchEvent(new CustomEvent('tutorial-finished', { 
               detail: { id: finishedTour, status: data.status } 
             }));
+            setTimeout(() => setActiveTour(null), 100);
           }
         }}
       />

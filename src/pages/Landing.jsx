@@ -483,25 +483,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Help Section */}
-      <section className="lt-divider max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20 text-center border-t border-white/5">
-         <div className="max-w-4xl mx-auto space-y-8 md:space-y-16">
-            <div className="lt-outline inline-flex items-center gap-4 py-2 px-6 rounded-full border border-white/10 bg-white/5 backdrop-blur-md">
-               <HelpCircle className="h-4 w-4 text-slate-500" />
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expert Support</span>
-            </div>
-            <h2 className="text-4xl md:text-8xl font-extrabold text-white tracking-tighter uppercase leading-none">Need Assistance?</h2>
-            <p className="text-slate-400 text-sm md:text-xl font-medium italic uppercase tracking-widest opacity-80 leading-relaxed max-w-2xl mx-auto">
-               Our staff is trained to facilitate efficient recovery. Reach out for institutional support.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-8 md:gap-12">
-               <a href={`mailto:${SUPPORT_EMAIL}`} className="lt-outline h-14 px-10 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md flex items-center justify-center gap-4 group hover:bg-white/10">
-                  <span className="lt text-xs font-bold text-white uppercase tracking-[0.2em]">Contact Staff</span>
-                  <ChevronRight className="h-4 w-4 text-slate-500 group-hover:translate-x-1 transition-transform" />
-               </a>
-            </div>
-         </div>
-      </section>
 
       {/* Premium Toast Container */}
       {toast.show && (

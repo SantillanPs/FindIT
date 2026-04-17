@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import AchievementBadge from '../../components/AchievementBadge';
 
 const StudentDashboard = () => {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+  const { showHallOfIntegrity, showAssetVault } = useFeatureFlags();
   const navigate = useNavigate();
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
 
@@ -20,11 +22,15 @@ const StudentDashboard = () => {
     }
 
     // Auto-launch tutorial for new students
-    if (user && !user.tutorial_completed && user.role === 'student') {
+    const hasLaunchedThisSession = sessionStorage.getItem('dashboard_tutorial_launched');
+    const hasCompletedTour = user?.tutorial_progress?.['tour-dashboard'];
+    
+    if (user && !hasCompletedTour && user.role === 'student' && !hasLaunchedThisSession) {
       // Small delay to ensure styles and IDs are rendered
       const timer = setTimeout(() => {
         const event = new CustomEvent('open-tutorial', { detail: { id: 'tour-dashboard' } });
         window.dispatchEvent(event);
+        sessionStorage.setItem('dashboard_tutorial_launched', 'true');
       }, 1000);
       return () => clearTimeout(timer);
     }
@@ -32,19 +38,27 @@ const StudentDashboard = () => {
 
   // Mark tutorial as completed in DB
   const markTutorialCompleted = async () => {
+    const tourId = 'tour-dashboard';
+    const newProgress = { ...(user?.tutorial_progress || {}), [tourId]: true };
+    
     const { error } = await supabase
       .from('user_profiles_v1')
-      .update({ tutorial_completed: true })
+      .update({ 
+        tutorial_progress: newProgress,
+        tutorial_completed: true // Legacy compatibility
+      })
       .eq('id', user.id);
+    
     if (!error) {
-      // Optionally update local context if needed
-      console.log('Tutorial marked as completed');
+      console.info(`[AUTH] Tutorial '${tourId}' persisted. Synchronizing profile...`);
+      await refreshUser(); // Force query invalidation so state updates
     }
   };
 
   useEffect(() => {
     const handleTutorialFinish = (e) => {
-      if (e.detail.id === 'tour-dashboard' && e.detail.status === 'finished') {
+      // Save progress if finished OR skipped
+      if (e.detail.id === 'tour-dashboard' && ['finished', 'skipped'].includes(e.detail.status)) {
         markTutorialCompleted();
       }
     };
@@ -146,7 +160,7 @@ const StudentDashboard = () => {
       }
       return null;
     },
-    enabled: !!user?.department
+    enabled: false // Feature currently in development
   });
 
   // 7. Fetch Notifications/Matches
@@ -247,7 +261,9 @@ const StudentDashboard = () => {
         <StatCard index={1} icon="fa-hand-holding-heart" label="Found" value={myClaims.length} color="green" variants={statVariants} />
         <StatCard index={2} icon="fa-award" label="Points" value={user?.integrity_points || 0} color="gold" variants={statVariants} />
         <StatCard index={3} icon="fa-bolt" label="Active" value={myClaims.filter(r => ['matched', 'approved'].includes(r.status)).length} color="blue" variants={statVariants} />
-        <StatCard index={4} icon="fa-box-archive" label="Vault" value={assets.length} color="purple" variants={statVariants} />
+        {showAssetVault && (
+          <StatCard index={4} icon="fa-box-archive" label="Vault" value={assets.length} color="purple" variants={statVariants} />
+        )}
       </section>
 
       {/* Hub */}
@@ -351,7 +367,10 @@ const StudentDashboard = () => {
                         <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">College Standing</p>
                         <div className="flex items-end justify-between">
                             <h4 className="text-xl font-black text-white uppercase tracking-tighter leading-none truncate max-w-[150px]">{user?.department || 'Unassigned'}</h4>
-                            <p className="text-2xl font-black text-brand-gold tracking-tighter italic leading-none">#{deptRank?.rank || '??'}</p>
+                            <div className="text-right">
+                                <p className="text-[7px] font-black text-slate-600 uppercase tracking-widest mb-1 leading-none">Registry Status</p>
+                                <p className="text-[10px] font-black text-brand-gold/60 tracking-widest uppercase leading-none">Syncing...</p>
+                            </div>
                         </div>
                         <div className="w-full h-1.5 bg-white/5 rounded-full mt-3 overflow-hidden">
                             <div className="h-full bg-brand-gold" style={{ width: deptRank ? `${(1 - (deptRank.rank - 1) / deptRank.total) * 100}%` : '0%' }}></div>
@@ -363,7 +382,11 @@ const StudentDashboard = () => {
                                 ? `Contribution recognized at Institutional Level ${Math.ceil(user.integrity_points/10)}. Keep climbing.`
                                 : 'Become a guardian of the university by surrendering found items.'}
                         </p>
-                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] block cursor-not-allowed">Hall of Integrity (In Development)</span>
+                        {showHallOfIntegrity ? (
+                          <Link to="/hall-of-integrity" className="text-[8px] font-black text-uni-400 hover:text-white uppercase tracking-[0.2em] block transition-colors">Enter Hall of Integrity →</Link>
+                        ) : (
+                          <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] block cursor-not-allowed">Hall of Integrity (In Development)</span>
+                        )}
                     </div>
                 </div>
             </div>
