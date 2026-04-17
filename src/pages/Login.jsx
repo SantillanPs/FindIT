@@ -60,8 +60,22 @@ const Login = () => {
       }
       // Otherwise GuestRoute auto-redirects to dashboard
     },
-    onError: (err) => {
-      setError(err.message || 'Invalid email or password.');
+    onError: async (err, variables) => {
+      if (err.message === 'Invalid login credentials') {
+        const { data: profile } = await supabase
+          .from('user_profiles_v1')
+          .select('id')
+          .eq('email', variables.email)
+          .maybeSingle();
+
+        if (profile) {
+          setError('Incorrect password. Please try again.');
+        } else {
+          setError("Account doesn't exist. Please check your email or create an account.");
+        }
+      } else {
+        setError(err.message || 'Invalid email or password.');
+      }
     }
   });
 
