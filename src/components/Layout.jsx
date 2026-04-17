@@ -450,7 +450,7 @@ const LayoutContents = ({ children }) => {
                    <SidebarMenu>
                      <SideNavItem to="/report/lost" icon={AlertTriangle} label="Report Lost" />
                      <SideNavItem to="/report/found" icon={HeartHandshake} label="Report Found" />
-                     <SideNavItem to="/asset-vault" icon={Archive} label="Asset Vault" />
+                     <SideNavItem to="/asset-vault" icon={Archive} label="Asset Vault" disabled={true} isDev={true} />
                    </SidebarMenu>
                  </SidebarGroup>
                )}
