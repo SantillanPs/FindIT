@@ -213,28 +213,61 @@ const ClaimReviewModal = ({
                        </div>
                   </div>
 
-                  {/* Authentication Check (The Q&A) */}
-                  <div className="space-y-2">
-                       <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Authentication Check</p>
-                       <div className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
-                           <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
-                               <div className="flex items-center justify-between">
-                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Verification Question</span>
-                                   <HelpCircle size={14} className="text-slate-500" />
+                  {/* Authentication Check (The Forensic Interview) */}
+                  <div className="space-y-3">
+                       <div className="flex items-center justify-between px-1">
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Forensic Interview</p>
+                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20">
+                             Mandatory Gate
+                          </Badge>
+                       </div>
+                       
+                       <div className="space-y-3">
+                            {selectedClaim.found_item_challenge_questions?.length > 0 ? (
+                               selectedClaim.found_item_challenge_questions.map((question, qIdx) => (
+                                  <div key={qIdx} className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
+                                      <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between">
+                                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Question #{qIdx + 1}</span>
+                                              <HelpCircle size={12} className="text-slate-500" />
+                                          </div>
+                                          <p className="text-[12px] font-bold text-slate-300 italic leading-snug">
+                                              "{question}"
+                                          </p>
+                                      </div>
+                                      <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between">
+                                              <span className="text-[8px] font-black text-uni-400 uppercase tracking-[0.2em]">Student Response</span>
+                                              <MessageSquare size={12} className="text-uni-400" />
+                                          </div>
+                                          <p className="text-[13px] font-medium text-white leading-relaxed">
+                                              {selectedClaim.challenge_answers_json?.[qIdx] || 'No response recorded.'}
+                                          </p>
+                                      </div>
+                                  </div>
+                               ))
+                            ) : (
+                               <div className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
+                                   <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
+                                       <div className="flex items-center justify-between">
+                                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Legacy Challenge Question</span>
+                                           <HelpCircle size={14} className="text-slate-500" />
+                                       </div>
+                                       <p className="text-[13px] font-bold text-slate-300">
+                                           {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
+                                       </p>
+                                   </div>
+                                   <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
+                                       <div className="flex items-center justify-between">
+                                           <span className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Claimant's Answer</span>
+                                           <MessageSquare size={14} className="text-uni-400" />
+                                       </div>
+                                       <p className="text-[13px] font-medium text-white italic">
+                                           "{selectedClaim.proof_description || 'No direct answer provided.'}"
+                                       </p>
+                                   </div>
                                </div>
-                               <p className="text-[13px] font-bold text-slate-300">
-                                   {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
-                               </p>
-                           </div>
-                           <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
-                               <div className="flex items-center justify-between">
-                                   <span className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Claimant's Answer</span>
-                                   <MessageSquare size={14} className="text-uni-400" />
-                               </div>
-                               <p className="text-[13px] font-medium text-white italic">
-                                   "{selectedClaim.proof_description || 'No direct answer provided.'}"
-                               </p>
-                           </div>
+                            )}
                        </div>
                   </div>
                   

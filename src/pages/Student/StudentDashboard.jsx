@@ -172,7 +172,7 @@ const StudentDashboard = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('is_read', false)
-        .ilike('title', '%Direct Match%');
+        .in('type', ['match', 'claim_update']); // Fetch both matches and forensic updates
       if (error) throw error;
       return data || [];
     },
@@ -231,25 +231,37 @@ const StudentDashboard = () => {
 
       {/* Action Alerts */}
       <AnimatePresence>
-        {pendingMatches.map(match => (
+        {pendingMatches.map(notif => (
           <motion.div
-            key={match.id}
+            key={notif.id}
             initial={{ opacity: 0, height: 0, y: -20 }}
             animate={{ opacity: 1, height: 'auto', y: 0 }}
             exit={{ opacity: 0, height: 0, y: -20 }}
-            onClick={() => navigate(`/match-review/${match.lost_item_id}/${match.found_item_id}`)}
-            className="bg-uni-600/10 border border-uni-500/30 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-uni-600/20 transition-all group overflow-hidden relative"
+            onClick={() => {
+              if (notif.type === 'claim_update') {
+                navigate('/my-claims');
+              } else {
+                navigate(`/match-review/${notif.lost_item_id}/${notif.found_item_id}`);
+              }
+            }}
+            className={`${notif.type === 'claim_update' ? 'bg-amber-600/10 border-amber-500/30' : 'bg-uni-600/10 border-uni-500/30'} p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-opacity-20 transition-all group overflow-hidden relative shadow-2xl`}
           >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-uni-500/5 -z-10 group-hover:scale-110 transition-transform duration-700"></div>
+            <div className={`absolute top-0 right-0 w-64 h-64 ${notif.type === 'claim_update' ? 'bg-amber-500/5' : 'bg-uni-500/5'} -z-10 group-hover:scale-110 transition-transform duration-700`}></div>
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl border border-white/5 group-hover:border-uni-500/30 transition-colors">🔍</div>
+              <div className={`w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center text-3xl border border-white/5 group-hover:border-opacity-30 transition-colors`}>
+                {notif.type === 'claim_update' ? '🔑' : '🔍'}
+              </div>
               <div className="text-left space-y-1">
-                <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Action Required: Potential Match</p>
-                <p className="text-sm font-bold text-white leading-relaxed">Someone found an item that might be yours. Please verify it now.</p>
+                <p className={`text-[10px] font-black uppercase tracking-widest italic ${notif.type === 'claim_update' ? 'text-amber-400' : 'text-uni-400'}`}>
+                  Action Required: {notif.type === 'claim_update' ? 'Security Barrier Update' : 'Potential Match'}
+                </p>
+                <p className="text-sm font-bold text-white leading-relaxed">
+                  {notif.message || 'Someone found an item that might be yours. Please verify it now.'}
+                </p>
               </div>
             </div>
-            <div className="px-8 py-3 bg-uni-600 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.3em] group-hover:bg-uni-500 transition-colors whitespace-nowrap">
-              Verify Match →
+            <div className={`px-8 py-3 rounded-xl text-[10px] font-black text-white uppercase tracking-[0.3em] transition-colors whitespace-nowrap ${notif.type === 'claim_update' ? 'bg-amber-600 group-hover:bg-amber-500' : 'bg-uni-600 group-hover:bg-uni-500'}`}>
+              {notif.type === 'claim_update' ? 'Update Answers →' : 'Verify Match →'}
             </div>
           </motion.div>
         ))}

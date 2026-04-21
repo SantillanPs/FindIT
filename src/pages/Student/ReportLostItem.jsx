@@ -6,21 +6,20 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useMasterData } from '../../context/MasterDataContext';
 
-// Shared Flow Components
+// New Components
 import ReportStepHeader from '../../components/ReportFlow/ReportStepHeader';
-import CategorySelection from '../../components/ReportFlow/CategorySelection';
-import ImageStep from '../../components/ReportFlow/ImageStep';
-import DetailsStep from '../../components/ReportFlow/DetailsStep';
-import SimpleInputStep from '../../components/ReportFlow/SimpleInputStep';
-import DateTimeStep from '../../components/ReportFlow/DateTimeStep';
+import NarrativeIntakeStep from '../../components/ReportFlow/NarrativeIntakeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
-import GuestInfoStep from '../../components/ReportFlow/GuestInfoStep';
+import ImageStep from '../../components/ReportFlow/ImageStep';
 import ReportSummary from '../../components/ReportFlow/ReportSummary';
+import DetailsStep from '../../components/ReportFlow/DetailsStep';
+import LocationModeStep from '../../components/ReportFlow/LocationModeStep';
 
 const ReportLostItem = () => {
   const [formData, setFormData] = useState({
     title: '',
-    description: '',
+    description: '', // Original narrative
+    synthesized_description: '', // Clean AI version
     location: '',
     zone_id: null,
     date_lost: new Date().toISOString().slice(0, 16),
@@ -31,19 +30,18 @@ const ReportLostItem = () => {
     guest_email: '',
     contact_info: '',
     potential_zone_ids: [],
+    location_mode: '', // 'certain' | 'trace'
+    location_hints: [], // Buildings mentioned in narrative
     attributes: {}
   });
   
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 6;
 
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
-  const { categoryStats } = useMasterData();
-  const [otherItemName, setOtherItemName] = useState('');
 
   // 1. Submit lost item using TanStack Mutation
   const submissionMutation = useMutation({
@@ -55,7 +53,6 @@ const ReportLostItem = () => {
       return data;
     },
     onSuccess: () => {
-      // Invalidate dashboard and list keys
       queryClient.invalidateQueries({ queryKey: ['lost_items'] });
       queryClient.invalidateQueries({ queryKey: ['student_dashboard'] });
       navigate('/student');
@@ -66,8 +63,6 @@ const ReportLostItem = () => {
   });
 
   useEffect(() => {
-
-    // Pre-fill contact info if user is logged in
     if (user) {
       setFormData(prev => ({
         ...prev,
@@ -78,6 +73,19 @@ const ReportLostItem = () => {
     }
   }, [user]);
 
+  const handleAnalysisComplete = (results) => {
+    setFormData(prev => ({
+      ...prev,
+      category: results.category,
+      attributes: results.attributes,
+      location_hints: results.location_hints,
+      synthesized_description: results.synthesized_description,
+      // If AI found a timeframe hint, we could try to parse it, 
+      // but for now we'll let them confirm the default or current date
+    }));
+    setStep(2);
+  };
+
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
 
@@ -85,16 +93,11 @@ const ReportLostItem = () => {
     if (e) e.preventDefault();
     setError('');
 
-    const finalData = { ...formData };
-    if (formData.category === 'Other') {
-      finalData.title = otherItemName;
-    } else {
-      finalData.title = formData.category;
-    }
-
     const reportPayload = {
-      title: formData.title || formData.category,
-      description: formData.description || `Student Reported ${formData.category}`,
+      title: formData.category || 'Lost Item',
+      description: formData.synthesized_description || formData.description,
+      original_description: formData.description, // Store original in table
+      synthesized_description: formData.synthesized_description,
       category: formData.category,
       location: formData.location,
       date_lost: formData.date_lost,
@@ -119,7 +122,7 @@ const ReportLostItem = () => {
     <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100dvh-var(--navbar-height)-4rem)] flex flex-col px-4">
       <ReportStepHeader 
         title="Report Lost Item"
-        label="Lost Item Report"
+        label="Narrative-First System"
         step={step}
         totalSteps={totalSteps}
         error={error}
@@ -137,87 +140,83 @@ const ReportLostItem = () => {
             className="flex-grow flex flex-col"
           >
             {step === 1 && (
-              <ImageStep 
-                stepLabel="Step 1: Visual Reference"
-                title="Do you have a photo of the item?"
-                description="A photo helps us identify your item faster. You can use a real photo or a reference image."
-                value={formData.photo_url}
-                onUpload={(url) => setFormData({...formData, photo_url: url})}
-                onNext={() => goToStep(2)}
+              <NarrativeIntakeStep 
+                stepLabel="Step 1: Your Narrative"
+                description={formData.description}
+                onChange={(val) => setFormData({...formData, description: val})}
+                onAnalysisComplete={handleAnalysisComplete}
               />
             )}
 
             {step === 2 && (
-              <CategorySelection 
-                formData={formData}
-                setFormData={setFormData}
-                otherItemName={otherItemName}
-                setOtherItemName={setOtherItemName}
-                onNext={() => goToStep(3)}
-              />
-            )}
-
-            {step === 3 && (
-              <ZoneSelectorStep
-                stepLabel="Step 3: Location"
-                title="Where was it last seen?"
-                description="Please select the specific building or area."
-                formData={formData}
-                setFormData={setFormData}
-                onNext={() => goToStep(4)}
-                multiSelect={true}
-              />
-            )}
-
-            {step === 4 && (
-              <DateTimeStep 
-                stepLabel="Step 4: Approximate Time"
-                title="When did it go missing?"
-                description="Select the date and time you last saw your item."
-                value={formData.date_lost}
-                onChange={(val) => setFormData({...formData, date_lost: val})}
-                onNext={() => goToStep(5)}
-              />
-            )}
-
-            {step === 5 && (
               <DetailsStep 
-                stepLabel="Step 5: Item Details"
-                title="Item Description"
-                description="Briefly describe the item's appearance, brand, or other details."
-                placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
-                value={formData.description}
+                stepLabel="Step 2: Smart Check"
+                title="What we understood"
+                description="We've parsed your story into these details. Please verify or adjust them."
+                value={formData.synthesized_description}
                 category={formData.category}
                 attributes={formData.attributes}
                 onAttributeChange={(field, val) => setFormData(prev => ({
                     ...prev,
                     attributes: { ...prev.attributes, [field]: val }
                 }))}
-                onChange={(val) => setFormData(prev => ({...prev, description: val}))}
-                onNext={() => goToStep(6)}
+                onChange={(val) => setFormData(prev => ({...prev, synthesized_description: val}))}
+                onNext={() => goToStep(3)}
+              >
+                <div className="bg-blue-500/5 p-6 rounded-2xl border border-blue-500/10 mb-8">
+                    <div className="flex items-center gap-3 mb-2">
+                        <i className="fas fa-magic text-blue-400"></i>
+                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic">AI Synthesis</span>
+                    </div>
+                    <p className="text-xs text-slate-400 italic">"Matches better with found items"</p>
+                </div>
+              </DetailsStep>
+            )}
+
+            {step === 3 && (
+              <LocationModeStep 
+                stepLabel="Step 3: Location Style"
+                title="How should we look?"
+                description="Help us match your item by choosing how you remember its location."
+                value={formData.location_mode}
+                onChange={(mode) => setFormData({...formData, location_mode: mode})}
+                onNext={() => goToStep(4)}
+              />
+            )}
+
+            {step === 4 && (
+              <ZoneSelectorStep
+                stepLabel="Step 4: Location"
+                title={formData.location_mode === 'certain' ? "Pinpoint the area" : "Confirm the path"}
+                description={formData.location_mode === 'certain' ? "Select the exact building or area where you left it." : "Select the areas you passed through. We've highlighted what your story mentioned."}
+                formData={formData}
+                setFormData={setFormData}
+                onNext={() => goToStep(5)}
+                multiSelect={formData.location_mode === 'trace'}
+                aiHints={formData.location_hints}
+              />
+            )}
+
+            {step === 5 && (
+              <ImageStep 
+                stepLabel="Step 5: Almost Done"
+                title="Reference Photo"
+                description="Optional: Adding a photo helps us verify the item if found."
+                value={formData.photo_url}
+                onUpload={(url) => setFormData({...formData, photo_url: url})}
+                onNext={() => goToStep(6)} 
               />
             )}
 
             {step === 6 && (
-              <GuestInfoStep 
-                stepLabel="Step 6: Contact Details"
-                firstName={formData.guest_first_name}
-                lastName={formData.guest_last_name}
-                email={formData.guest_email}
-                contactInfo={formData.contact_info}
-                onChange={(updates) => setFormData({...formData, ...updates})}
-                onNext={() => goToStep(7)}
-              />
-            )}
-
-            {step === 7 && (
-              <ReportSummary 
-                type="lost"
-                formData={formData}
-                otherItemName={otherItemName}
-                loading={submissionMutation.isPending}
-                onSubmit={handleSubmit}
-              />
+              <div className="pt-12">
+                 <ReportSummary 
+                  type="lost"
+                  formData={formData}
+                  loading={submissionMutation.isPending}
+                  onSubmit={handleSubmit}
+                />
+              </div>
             )}
           </motion.div>
         </AnimatePresence>
@@ -245,7 +244,7 @@ const ReportLostItem = () => {
           
           <div className="text-[10px] font-black text-slate-700 uppercase tracking-[0.4em] flex items-center gap-3 italic text-center md:text-right">
             <span className="w-1.5 h-1.5 rounded-full bg-slate-800"></span>
-            University Lost & Found Registry
+            Narrative-First Integration 2026
           </div>
         </motion.div>
       )}

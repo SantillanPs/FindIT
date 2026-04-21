@@ -1,24 +1,29 @@
-# docs/PLAN.md: UI Compaction Orchestration
+# PLAN: Friendly Narrative Voice Integration
 
-## Strategy
-Redesign the `ManualIntakeModal` footer to ensure compatibility with thin mobile devices (320px+) while maintaining "Pro Max" aesthetics.
+## Objective
+Shift the AI synthesis engine from formal forensic extraction to a "Friendly Narrative" persona. This makes the system more approachable for students and guests while maintaining forensic accuracy for matching.
 
-## Proposed Actions
-1. **Frontend Specialist**:
-   - Shorten labels: "Dismiss" -> "X" (Icon) or "Back", "Store & Add Next" -> "Next", "Store Record" -> "Store".
-   - Reduce height: `h-[60px]` -> `h-14`.
-   - Responsive Flex: Use `flex-row items-center justify-between` for standard screens, `flex-col` or `compact-horizontal` for mobile.
-2. **Mobile Developer**:
-   - Tweak touch targets (min 44px).
-   - Ensure `gap-4` is reduced to `gap-2` for horizontal fit.
-   - Implement "High-Density" mode for the loop footer.
-3. **Test Engineer**:
-   - Verify linting and logic.
-   - Audit mobile touch surfaces.
+## Phase 1: AI Prompt Refinement (Backend)
+- **Agent**: `backend-specialist`
+- **File**: `supabase/functions/analyze-lost-description/index.ts`
+- **Changes**:
+    - Rewrite `system_instruction` to adopt a helpful, friendly persona.
+    - Instruct the model to use simple, conversational English.
+    - Explicitly forbid jargon like "distinguishing features" or "referenced item."
+    - Ensure logical translation from non-English inputs into this "Friendly English" voice.
 
-## Verification
-- Lint check.
-- Manual verification of modal closing/loop logic.
+## Phase 2: User Experience Simplification (Frontend)
+- **Agent**: `frontend-specialist`
+- **Files**: 
+    - `src/components/ReportFlow/DetailsStep.jsx`
+    - `src/components/ReportFlow/NarrativeIntakeStep.jsx`
+- **Changes**:
+    - Update Step 2 headers: "What we understood" -> "How we'll describe it".
+    - Update sub-copy: "Parsed your story" -> "We've created a simple summary for you."
+    - Change branding from "AI Synthesis" to "Smart Summary" or "Friendly Help."
 
----
-*Orchestrated by Antigravity.*
+## Phase 3: Verification & Polish
+- **Agent**: `test-engineer`
+- **Task**: 
+    - Verify multilingual synthesis (e.g., Tagalog narrative results in friendly English).
+    - Ensure UI responsiveness with the new, potentially longer narrative text.

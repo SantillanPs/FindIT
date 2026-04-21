@@ -8,41 +8,35 @@ import { useMasterData } from '../context/MasterDataContext';
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
 import ReportSuccess from '../components/ReportFlow/ReportSuccess';
-import CategorySelection from '../components/ReportFlow/CategorySelection';
 import ImageStep from '../components/ReportFlow/ImageStep';
-import DetailsStep from '../components/ReportFlow/DetailsStep';
-import SimpleInputStep from '../components/ReportFlow/SimpleInputStep';
-import DateTimeStep from '../components/ReportFlow/DateTimeStep';
 import ZoneSelectorStep from '../components/ReportFlow/ZoneSelectorStep';
 import IdentificationStep from '../components/ReportFlow/IdentificationStep';
 import ReportSummary from '../components/ReportFlow/ReportSummary';
 import GuestInfoStep from '../components/ReportFlow/GuestInfoStep';
+import MultiImageStep from '../components/ReportFlow/MultiImageStep';
+
 
 const GuestReportFound = () => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    title: 'AI Processing...',
+    description: 'Analyzing Forensic Visuals...',
     location: '',
     zone_id: null,
-    date_found: new Date().toISOString().slice(0, 16),
+    date_found: new Date().toISOString(),
     photo_url: '',
-    guest_first_name: '',
-    guest_last_name: '',
+    guest_full_name: '',
     guest_email: '',
     contact_info: '',
-    identified_student_id: '',
-    identified_name: '',
-    category: '',
-    attributes: {}
+    category: 'other',
+    secondary_photos: [],
+    ai_draft: null
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 4;
 
   const queryClient = useQueryClient();
-  const [otherItemName, setOtherItemName] = useState('');
-  const [hasIdentification, setHasIdentification] = useState(false);
   const [reportData, setReportData] = useState(null);
   
   const [searchParams] = useSearchParams();
@@ -64,7 +58,7 @@ const GuestReportFound = () => {
     enabled: !!matchId
   });
 
-  // 2. Submit found item using TanStack Mutation
+  // 2. Submit found item
   const submissionMutation = useMutation({
     mutationFn: async (reportPayload) => {
       const { data, error } = await supabase.rpc('submit_found_item_v2', { 
@@ -85,7 +79,7 @@ const GuestReportFound = () => {
     }
   });
 
-  // Sync category if matchId is present
+  // Sync if matchId is present
   useEffect(() => {
     if (matchedReport) {
       setFormData(prev => ({
@@ -96,6 +90,7 @@ const GuestReportFound = () => {
     }
   }, [matchedReport, matchId]);
 
+
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
 
@@ -103,26 +98,24 @@ const GuestReportFound = () => {
     if (e) e.preventDefault();
     setError('');
 
-    const finalData = { ...formData };
-    if (formData.category === 'Other') {
-      finalData.title = otherItemName;
-    } else {
-      finalData.title = formData.category;
-    }
-
     const reportPayload = {
-      title: formData.title || formData.category,
-      description: formData.description || `Found ${formData.category}`,
-      category: formData.category,
+      title: 'Processing AI Report...',
+      description: 'Guest Find - Visual DNA pending analysis.',
+      category: formData.category || 'other',
       location: formData.location,
       date_found: formData.date_found,
       photo_url: formData.photo_url,
       photo_thumbnail_url: formData.photo_url,
-      guest_name: `${formData.guest_first_name} ${formData.guest_last_name}`,
+      guest_name: formData.guest_full_name,
       guest_email: formData.guest_email,
       guest_phone: formData.contact_info,
       status: 'reported',
-      registry_signal: { ...formData, reporter_type: 'guest' }
+      secondary_photos: formData.secondary_photos || [],
+      ai_draft: null, 
+      registry_signal: { 
+        ...formData, 
+        reporter_type: 'guest' 
+      }
     };
 
     submissionMutation.mutate(reportPayload);
@@ -142,11 +135,11 @@ const GuestReportFound = () => {
     <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100dvh-var(--navbar-height)-4rem)] flex flex-col px-4">
       <ReportStepHeader 
         title="Report Found Item"
-        label="Found Item Report"
+        label="AI Forensic Intake"
         step={step}
         totalSteps={totalSteps}
         error={error}
-        icon="fa-hand-holding-heart"
+        icon="fa-bolt"
       />
 
       <div className="flex-grow flex flex-col relative">
@@ -160,92 +153,48 @@ const GuestReportFound = () => {
             className="flex-grow flex flex-col"
           >
             {step === 1 && (
-              <ImageStep 
-                stepLabel="Step 1: Upload Photo"
-                title="First, upload a photo of the item."
-                description="Please upload an actual photo of the item you found."
-                value={formData.photo_url}
-                onUpload={(url) => {
+              <MultiImageStep 
+                stepLabel="Step 1: Forensic Capture"
+                title="snap photos of the item."
+                description="The AI will analyze these images to identify the item and its owner."
+                primaryImage={formData.photo_url}
+                onPrimaryUpload={(url) => {
                   setFormData({...formData, photo_url: url});
-                  setTimeout(() => goToStep(2), 800);
+                }}
+                secondaryPhotos={formData.secondary_photos}
+                onSecondaryUpload={(index, url) => {
+                  const newPhotos = [...formData.secondary_photos];
+                  newPhotos[index] = url;
+                  setFormData({...formData, secondary_photos: newPhotos});
                 }}
                 onNext={() => goToStep(2)}
-                optional={false}
               />
             )}
 
-
-
             {step === 2 && (
-              <CategorySelection 
+              <ZoneSelectorStep
+                stepLabel="Step 2: Location"
+                title="Where was it found?"
+                description="Select the building or area."
                 formData={formData}
                 setFormData={setFormData}
-                otherItemName={otherItemName}
-                setOtherItemName={setOtherItemName}
                 onNext={() => goToStep(3)}
               />
             )}
 
             {step === 3 && (
-              <ZoneSelectorStep
-                stepLabel="Step 3: Location"
-                title="Where was the item found?"
-                description="Please select the specific building or area."
-                formData={formData}
-                setFormData={setFormData}
+              <GuestInfoStep 
+                stepLabel="Step 3: Contact Details"
+                fullName={formData.guest_full_name}
+                email={formData.guest_email}
+                contactInfo={formData.contact_info}
+                onChange={(updates) => setFormData({...formData, ...updates})}
                 onNext={() => goToStep(4)}
               />
             )}
 
+            {/* FINAL STEP: SUMMARY */}
             {step === 4 && (
-              <DateTimeStep 
-                stepLabel="Step 4: Date & Time"
-                title="When was it found?"
-                description="Select the approximate date and time."
-                value={formData.date_found}
-                onChange={(val) => setFormData({...formData, date_found: val})}
-                onNext={() => goToStep(5)}
-              />
-            )}
-
-            {step === 5 && (
-                <DetailsStep 
-                  stepLabel="Step 5: Item Details"
-                  title="Item Description"
-                  description="Briefly describe the item's appearance, brand, or other details."
-                  placeholder="e.g. Blue case with a small scratch on the bottom right corner..."
-                  value={formData.description}
-                  category={formData.category}
-                  attributes={formData.attributes}
-                  onAttributeChange={(field, val) => setFormData(prev => ({
-                    ...prev,
-                    attributes: { ...prev.attributes, [field]: val }
-                  }))}
-                  onChange={(val) => setFormData(prev => ({...prev, description: val}))}
-                  onNext={() => goToStep(6)}
-                >
-                  <IdentificationStep 
-                    formData={formData}
-                    setFormData={setFormData}
-                    hasIdentification={hasIdentification}
-                    setHasIdentification={setHasIdentification}
-                  />
-                </DetailsStep>
-            )}
-
-            {step === 6 && (
-              <GuestInfoStep 
-                stepLabel="Step 6: Contact Details"
-                firstName={formData.guest_first_name}
-                lastName={formData.guest_last_name}
-                email={formData.guest_email}
-                contactInfo={formData.contact_info}
-                onChange={(updates) => setFormData({...formData, ...updates})}
-                onNext={() => goToStep(7)}
-              />
-            )}
-
-            {step === 7 && (
               <>
                 {matchedReport && (
                   <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">
@@ -260,7 +209,6 @@ const GuestReportFound = () => {
                 <ReportSummary 
                   type="found"
                   formData={formData}
-                  otherItemName={otherItemName}
                   loading={submissionMutation.isPending}
                   onSubmit={handleSubmit}
                 />

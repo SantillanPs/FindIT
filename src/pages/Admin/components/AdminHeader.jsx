@@ -27,16 +27,18 @@ const AdminHeader = ({
   // Map tab slugs to human-readable breadcrumbs
   const getTabLabel = (slug) => {
     const labels = {
-      'found': 'Inventory Registry',
-      'claims': 'Claim Verification',
-      'matches': 'Insight Matchmaker',
+      'found': 'All Items',
+      'review': 'New Reports',
+      'claims': 'Claims',
+      'matches': 'Matches',
       'lost': 'Lost Reports',
-      'witnesses': 'Witness Activity',
-      'history': 'Activity History',
-      'released': 'Fulfillment Archive',
-      'analytics': 'System Intelligence',
-      'users': 'Staff Leaderboard',
-      'registry': 'Member Directory'
+      'witnesses': 'Witness Reports',
+      'history': 'Activity',
+      'released': 'Finished Items',
+      'analytics': 'System Status',
+      'taxonomy': 'Categories',
+      'users': 'Staff',
+      'registry': 'Members'
     };
     return labels[slug] || 'Registry';
   };
@@ -92,7 +94,7 @@ const AdminHeader = ({
                 )}
               >
                 <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
-                <span className="hidden lg:inline">{isSyncing ? 'Syncing...' : 'Sync Registry'}</span>
+                <span className="hidden lg:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
                 <span className="lg:hidden">Sync</span>
               </button>
             </div>

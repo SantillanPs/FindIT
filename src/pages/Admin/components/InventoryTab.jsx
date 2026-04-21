@@ -22,13 +22,14 @@ const InventoryTab = ({
   handleStatusUpdate,
   setShowReleaseModal, 
   setReleaseForm, 
-  actionLoading
+  actionLoading,
+  onReviewItem
 }) => {
   const filters = [
     { id: 'all', label: 'All Items', icon: ListFilter, color: 'hover:bg-white/5 border-white/5' },
-    { id: 'pending', label: 'Pending Secure', icon: Clock, color: 'hover:bg-amber-500/10 border-amber-500/10 text-amber-500' },
-    { id: 'vault', label: 'In Inventory', icon: Vault, color: 'hover:bg-uni-500/10 border-uni-500/10 text-uni-400' },
-    { id: 'ready', label: 'Ready to Return', icon: HandHelping, color: 'hover:bg-green-500/10 border-green-500/10 text-green-400' }
+    { id: 'pending', label: 'Needs Review', icon: Clock, color: 'hover:bg-amber-500/10 border-amber-500/10 text-amber-500' },
+    { id: 'vault', label: 'In Storage', icon: Vault, color: 'hover:bg-uni-500/10 border-uni-500/10 text-uni-400' },
+    { id: 'ready', label: 'Ready to Give', icon: HandHelping, color: 'hover:bg-green-500/10 border-green-500/10 text-green-400' }
   ];
 
   return (
@@ -63,7 +64,7 @@ const InventoryTab = ({
            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-uni-500"></div>
               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                 {filteredItems.length} Total Items in View
+                 {filteredItems.length} Total
               </p>
            </div>
         </div>
@@ -92,8 +93,8 @@ const InventoryTab = ({
               <PackageSearch size={32} className="text-slate-800" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No Items Found</p>
-              <p className="text-[11px] text-slate-600 font-medium max-w-xs mx-auto">Try adjusting your filters or search query.</p>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nothing found</p>
+              <p className="text-[11px] text-slate-600 font-medium max-w-xs mx-auto">Try different filters or search terms.</p>
             </div>
         </div>
       ) : (
@@ -108,9 +109,9 @@ const InventoryTab = ({
                 navigate={navigate}
                 setSearchTerm={setSearchTerm}
                 handleStatusUpdate={handleStatusUpdate}
-                setShowReleaseModal={setShowReleaseModal}
                 setReleaseForm={setReleaseForm}
                 actionLoading={actionLoading}
+                onReviewItem={onReviewItem}
               />
             ))}
           </AnimatePresence>

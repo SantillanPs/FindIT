@@ -92,7 +92,7 @@ const AppContent = () => {
                  onClick={handleRescue}
                  className="mt-2 px-6 py-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-full text-[9px] font-bold text-sky-400 uppercase tracking-widest transition-all"
                >
-                 Clear Session & Retry
+                 Force Refresh Session
                </button>
              </div>
            )}
@@ -141,6 +141,7 @@ const AppContent = () => {
             {/* Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/review" element={<AdminDashboard />} />
               <Route path="/admin/lost" element={<AdminDashboard />} />
               <Route path="/admin/claims" element={<AdminDashboard />} />
               <Route path="/admin/witnesses" element={<AdminDashboard />} />
@@ -148,6 +149,7 @@ const AppContent = () => {
               <Route path="/admin/users" element={<AdminDashboard />} />
               <Route path="/admin/registry" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminDashboard />} />
+              <Route path="/admin/taxonomy" element={<AdminDashboard />} />
               <Route path="/admin/released" element={<AdminDashboard />} />
               <Route path="/admin/profile/:userId" element={<Profile />} />
             </Route>
@@ -167,6 +169,8 @@ const AppContent = () => {
 };
 
 
+import { Toaster } from 'sonner';
+
 function App() {
 
   return (
@@ -176,6 +180,22 @@ function App() {
           <MasterDataProvider>
             <MotionConfig transition={{ duration: 0 }} reducedMotion="always">
               <AppContent />
+              <Toaster 
+                position="bottom-right" 
+                expand={false} 
+                richColors 
+                closeButton
+                theme="dark"
+                toastOptions={{
+                  style: {
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    borderRadius: '1.25rem',
+                    fontFamily: 'inherit'
+                  }
+                }}
+              />
             </MotionConfig>
           </MasterDataProvider>
         </AuthProvider>

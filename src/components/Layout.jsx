@@ -12,6 +12,7 @@ import ManualIntakeModal from '../pages/Admin/components/ManualIntakeModal';
 import { useTheme } from '../context/ThemeContext';
 import { SidebarUser } from './SidebarUser';
 import HelpMenu from './HelpMenu';
+import ManualIntakeButton from './ManualIntakeButton';
 import TutorialOverlay from './TutorialOverlay';
 import { useFeatureFlags } from '../hooks/useFeatureFlags';
 import { cn } from "@/lib/utils";
@@ -283,32 +284,22 @@ const LayoutContents = ({ children }) => {
   }, []);
   
   const { toggleSidebar, setOpenMobile } = useSidebar();
-  const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0 } } = useQuery({
+  const { data: adminStats = { claims: 0, matches: 0, lost: 0, feedbacks: 0, review: 0 } } = useQuery({
     queryKey: ['admin', 'sidebar_stats', user?.id],
     queryFn: async () => {
-      console.info('[STATS] Synchronizing Sidebar Counters...');
-      const results = await Promise.allSettled([
-        supabase.from('claims').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.rpc('get_admin_matches', { match_threshold: 0.3, match_count: 5 }),
-        supabase.from('lost_items').select('id', { count: 'exact', head: true }).eq('status', 'reported'),
-        user?.role === 'super_admin' ? supabase.rpc('count_pending_feedbacks').then(res => ({ count: res.data || 0 })) : Promise.resolve({ count: 0 })
-      ]);
+      console.info('[STATS] Synchronizing Sidebar Counters (Consolidated Pulse)...');
+      const { data, error } = await supabase.rpc('get_admin_sidebar_counts');
+      
+      if (error) {
+        console.error('[STATS] Pulse failed:', error);
+        return { claims: 0, matches: 0, lost: 0, feedbacks: 0, review: 0 };
+      }
 
-      const [claimsRes, matchesRes, lostRes, feedbackRes] = results.map(r => 
-        r.status === 'fulfilled' ? r.value : { count: 0, data: [], error: r.reason }
-      );
-
-      // If the RPC specifically failed, we just show 0 or keep old count instead of crashing
-      return {
-        claims: claimsRes?.count || 0,
-        matches: matchesRes?.data?.length || 0,
-        lost: lostRes?.count || 0,
-        feedbacks: feedbackRes?.count || 0
-      };
+      return data || { claims: 0, matches: 0, lost: 0, feedbacks: 0, review: 0 };
     },
     enabled: !!user && (user.role === 'admin' || user.role === 'super_admin'),
-    refetchInterval: 60000, // Sync every 1m
-    staleTime: 1000 * 30,
+    refetchInterval: 300000, // Sync every 5m
+    staleTime: 1000 * 60, // 1m stale time
   });
 
 
@@ -428,6 +419,7 @@ const LayoutContents = ({ children }) => {
                    <SidebarGroupLabel className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6">Command Center</SidebarGroupLabel>
                    <SidebarMenu>
                      <SideNavItem to="/" icon={Globe} label="Landing Page" />
+                     <SideNavItem to="/admin/review" icon={ShieldCheck} label="Review Queue" count={adminStats.review || 0} />
                      <SideNavItem to="/admin" icon={Warehouse} label="Inventory" />
                      <SideNavItem to="/admin/lost" icon={HelpCircle} label="Lost Reports" count={adminStats.lost} />
                      <SideNavItem to="/admin/claims" icon={Stamp} label="Verify Claims" count={adminStats.claims} />
@@ -436,6 +428,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/admin/users" icon={Trophy} label="Leaderboard" />
                      <SideNavItem to="/admin/registry" icon={Shield} label="Account Approval" />
                      <SideNavItem to="/admin/analytics" icon={PieChart} label="System Insights" />
+                     <SideNavItem to="/admin/taxonomy" icon={LayoutGrid} label="Taxonomy Registry" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
                    <SidebarMenu>
@@ -570,11 +563,15 @@ const LayoutContents = ({ children }) => {
       )}
 
       {/* New Help & Tutorial System */}
-      <HelpMenu 
-        onStartTour={startTour} 
-        onOpenFeedback={() => setIsFeedbackOpen(true)}
-        isLanding={location.pathname === '/'} 
-      />
+      {(isAdmin && (location.pathname.startsWith('/admin') || location.pathname.startsWith('/super'))) ? (
+        <ManualIntakeButton onClick={() => setShowManualIntake(true)} />
+      ) : (
+        <HelpMenu 
+          onStartTour={startTour} 
+          onOpenFeedback={() => setIsFeedbackOpen(true)}
+          isLanding={location.pathname === '/'} 
+        />
+      )}
 
       <TutorialOverlay 
         key={tourKey}

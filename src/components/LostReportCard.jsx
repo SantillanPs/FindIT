@@ -9,6 +9,7 @@ const LostReportCard = ({ report, onWitness }) => {
   const navigate = useNavigate();
   const { categories: CATEGORIES } = useMasterData();
   const { user } = useAuth();
+  const [showOriginal, setShowOriginal] = useState(false);
   const [imgError, setImgError] = useState(imageCache.isFailed(report.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === report.category);
   
@@ -106,9 +107,19 @@ const LostReportCard = ({ report, onWitness }) => {
                 <div className="mt-1 w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 border border-violet-500/5">
                     <AlignLeft className="h-3 w-3 text-violet-400" />
                 </div>
-                <p className="text-[13px] text-slate-400 font-medium leading-relaxed line-clamp-3">
-                    {report.description}
-                </p>
+                <div className="flex flex-col gap-2">
+                    <p className="text-[13px] text-slate-400 font-medium leading-relaxed line-clamp-3">
+                        {showOriginal ? report.original_description : report.description}
+                    </p>
+                    {report.synthesized_description && report.original_description && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); setShowOriginal(!showOriginal); }}
+                            className="text-[9px] font-black text-blue-400 uppercase tracking-widest hover:text-white transition-colors w-fit italic"
+                        >
+                            {showOriginal ? '← See AI Synthesis' : 'View Original User Post →'}
+                        </button>
+                    )}
+                </div>
             </div>
             
             <div className="flex items-center gap-4">

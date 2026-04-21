@@ -20,30 +20,14 @@ const MatchResults = () => {
     try {
       setLoading(true);
       
-      // 1. Fetch the lost item's embedding
-      const { data: lostItem, error: fetchError } = await supabase
-        .from('lost_items')
-        .select('embedding')
-        .eq('id', reportId)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      if (!lostItem?.embedding) {
-        setMatches([]);
-        return;
-      }
-
-      // 2. Call RPC to match against found_items
-      const { data: matchedData, error: matchError } = await supabase.rpc('match_found_items', {
-        query_embedding: lostItem.embedding,
-        match_threshold: 0.1, // Adjusted for broader matching
-        match_count: 50
+      // 1. Invoke the Forensic Matching Engine Edge Function
+      const { data: matchedData, error: matchError } = await supabase.functions.invoke('match-forensics', {
+        body: { lost_item_id: reportId }
       });
 
       if (matchError) throw matchError;
 
-      // 3. Format matches to fit the UI expectation
-      // The UI expects { item: object, similarity_score: number }
+      // 2. Format matches with Forensic Reasoning
       const formattedMatches = (matchedData || []).map(m => ({
         item: {
           id: m.id,
@@ -54,12 +38,14 @@ const MatchResults = () => {
           date_found: m.date_found,
           photo_url: m.photo_url
         },
-        similarity_score: m.similarity
+        similarity_score: m.match_score / 100, // Normalize to 0-1
+        reasoning: m.match_reasoning || [],
+        is_high_confidence: m.is_high_confidence
       }));
 
       setMatches(formattedMatches);
     } catch (error) {
-      console.error('Failed to fetch matches from Supabase', error);
+      console.error('Forensic matching failed', error);
     } finally {
       setLoading(false);
     }
@@ -108,12 +94,12 @@ const MatchResults = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-8">
-            {matches.map(({ item, similarity_score }) => {
+            {matches.map(({ item, similarity_score, reasoning, is_high_confidence }) => {
               const tier = getConfidenceTier(similarity_score);
               return (
                 <Card 
                   key={item.id} 
-                  className="group overflow-hidden border-border/50 bg-card/60 hover:bg-card/80 transition-all duration-500 shadow-xl shadow-brand-primary/5"
+                  className={`group overflow-hidden border-border/50 bg-card/60 hover:bg-card/80 transition-all duration-500 shadow-xl ${is_high_confidence ? 'ring-2 ring-brand-primary ring-offset-4 ring-offset-black' : 'shadow-brand-primary/5'}`}
                 >
                   <div className="flex flex-col md:flex-row min-h-[320px]">
                     <div className="w-full md:w-80 h-64 md:h-auto bg-muted shrink-0 relative overflow-hidden">
@@ -122,7 +108,14 @@ const MatchResults = () => {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-6xl opacity-10">📦</div>
                       )}
-                      <div className="absolute top-4 left-4">
+                      
+                      {is_high_confidence && (
+                        <div className="absolute top-0 left-0 bg-brand-primary text-white text-[9px] font-black px-4 py-1.5 uppercase tracking-tighter shadow-lg z-10">
+                          Critical Alert Match
+                        </div>
+                      )}
+
+                      <div className="absolute bottom-4 left-4">
                          <Badge className="bg-black/60 backdrop-blur-md border border-white/10 text-[9px] py-1 px-3">
                             {item.location}
                          </Badge>
@@ -140,6 +133,15 @@ const MatchResults = () => {
                             <i className={`fa-solid ${tier.icon}`}></i>
                             {tier.label} ({Math.round(similarity_score * 100)}%)
                           </Badge>
+                        </div>
+
+                        {/* Forensic Reasoning Cloud */}
+                        <div className="flex flex-wrap gap-2">
+                           {reasoning.map((reason, idx) => (
+                             <Badge key={idx} variant="outline" className="text-[8px] font-bold border-brand-primary/20 bg-brand-primary/5 text-brand-primary/80 py-1 px-2 uppercase tracking-wide">
+                               {reason}
+                             </Badge>
+                           ))}
                         </div>
                         
                         <div className="space-y-2">

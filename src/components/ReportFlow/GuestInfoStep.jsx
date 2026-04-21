@@ -1,15 +1,14 @@
 import React from 'react';
 
 const GuestInfoStep = ({ 
-  firstName, 
-  lastName, 
+  fullName, 
   email,
   contactInfo,
   onChange, 
   onNext, 
   stepLabel 
 }) => {
-  const isComplete = firstName && lastName && email;
+  const isComplete = fullName && email;
 
   return (
     <div className="space-y-12 dy-10 flex-grow flex flex-col justify-center text-center">
@@ -26,41 +25,22 @@ const GuestInfoStep = ({
       </div>
 
       <div className="max-w-4xl mx-auto w-full space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="relative group">
-            <label 
-              htmlFor="guest-first-name"
-              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
-            >
-              First Name
-            </label>
-            <input 
-              id="guest-first-name"
-              name="first-name"
-              type="text"
-              placeholder="Juan"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
-              value={firstName}
-              onChange={(e) => onChange({ guest_first_name: e.target.value })}
-            />
-          </div>
-          <div className="relative group">
-            <label 
-              htmlFor="guest-last-name"
-              className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
-            >
-              Last Name
-            </label>
-            <input 
-              id="guest-last-name"
-              name="last-name"
-              type="text"
-              placeholder="Cruz"
-              className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
-              value={lastName}
-              onChange={(e) => onChange({ guest_last_name: e.target.value })}
-            />
-          </div>
+        <div className="relative group">
+          <label 
+            htmlFor="guest-full-name"
+            className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-4 text-left"
+          >
+            Full Name
+          </label>
+          <input 
+            id="guest-full-name"
+            name="full-name"
+            type="text"
+            placeholder="Juan Cruz"
+            className="w-full bg-white/5 border-2 border-white/10 rounded-[2rem] p-6 text-xl font-black text-white focus:border-uni-500 focus:bg-white/10 transition-all outline-none placeholder:text-slate-700 shadow-none"
+            value={fullName}
+            onChange={(e) => onChange({ guest_full_name: e.target.value })}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

@@ -25,7 +25,9 @@ import MatchmakerTab from './components/MatchmakerTab';
 import LostReportsTab from './components/LostReportsTab';
 import ActivityFeed from './components/ActivityFeed';
 import WitnessReportsTab from './components/WitnessReportsTab';
+import ReviewQueueTab from './components/ReviewQueueTab';
 import AdminHeader from './components/AdminHeader';
+import TaxonomyTab from './components/TaxonomyTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
 import MemberRegistry from './MemberRegistry';
@@ -37,6 +39,7 @@ import ReleaseItemModal from './components/ReleaseItemModal';
 import ClaimReviewModal from './components/ClaimReviewModal';
 import MatchComparisonModal from './components/MatchComparisonModal';
 import ImagePreviewOverlay from './components/ImagePreviewOverlay';
+import ReportReviewModal from './components/ReportReviewModal';
 
 /**
  * AdminDashboard - Premium Professional (Pro Max)
@@ -65,6 +68,7 @@ const AdminDashboard = () => {
   const [claimReviewStep, setClaimReviewStep] = useState(1);
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
   const [showIntakeModal, setShowIntakeModal] = useState(null);
+  const [selectedReviewItem, setSelectedReviewItem] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
   // Global event listeners for sidebar actions
@@ -87,6 +91,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: currentTab === 'found',
     placeholderData: keepPreviousData,
     refetchInterval: 60000,
   });
@@ -98,8 +103,9 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: currentTab === 'claims',
     placeholderData: keepPreviousData,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // Reduced to 2m for networking room
   });
 
   // 1. Core Data Queries
@@ -116,6 +122,7 @@ const AdminDashboard = () => {
       };
       return data || [];
     },
+    enabled: currentTab === 'matches',
     placeholderData: keepPreviousData,
     refetchInterval: 300000, // Reduced frequency to 5m to avoid server strain
     staleTime: 1000 * 60 * 2, // 2m stale time
@@ -129,8 +136,9 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: currentTab === 'lost',
     placeholderData: keepPreviousData,
-    refetchInterval: 60000,
+    refetchInterval: 120000, // Reduced to 2m for networking room
   });
 
   const { data: historyItems = [], isLoading: historyLoading } = useQuery({
@@ -146,6 +154,7 @@ const AdminDashboard = () => {
       if (error) throw error;
       return data || [];
     },
+    enabled: currentTab === 'history' || currentTab === 'released',
     placeholderData: keepPreviousData,
     refetchInterval: 60000,
   });
@@ -159,7 +168,25 @@ const AdminDashboard = () => {
     }
   }, [recentFound]);
 
-  const isSyncing = inventoryFetching;
+  const { data: reviewQueue = [], isFetching: reviewFetching } = useQuery({
+    queryKey: ['admin_review_queue'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('v_admin_review_queue').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: currentTab === 'review',
+    refetchInterval: 60000,
+  });
+
+  // Dynamic Sync State: Watch the fetching status of the ACTIVE tab only
+  const isSyncing = (currentTab === 'found' && inventoryFetching) || 
+                    (currentTab === 'review' && reviewFetching) ||
+                    (currentTab === 'claims' && queryClient.isFetching({ queryKey: ['admin_claims'] }) > 0) ||
+                    (currentTab === 'lost' && queryClient.isFetching({ queryKey: ['admin_lost'] }) > 0) ||
+                    (currentTab === 'matches' && queryClient.isFetching({ queryKey: ['admin_matches'] }) > 0) ||
+                    (currentTab === 'history' && queryClient.isFetching({ queryKey: ['admin_history'] }) > 0);
+
   const loading = (currentTab === 'found' && inventoryLoading) || 
                   (currentTab === 'claims' && claimsLoading) || 
                   (currentTab === 'matches' && matchesLoading) || 
@@ -168,11 +195,27 @@ const AdminDashboard = () => {
 
   // Mutations (Standardized)
   const foundItemUpdateMutation = useMutation({
-    mutationFn: async ({ id, updates }) => {
-      const { error } = await supabase.from('found_items').update(updates).eq('id', id);
+    mutationFn: async ({ id, updates, questionsChanged }) => {
+      // Use the forensic secure RPC to handle transaction + logging + claim flagging
+      const { data, error } = await supabase.rpc('rpc_secure_found_item_v1', {
+        p_item_id: id,
+        p_updates: updates,
+        p_questions_changed: questionsChanged || false,
+        p_admin_id: user.id
+      });
+      
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_inventory'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["found_items"] });
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_review_queue'] });
+      setSelectedReviewItem(null);
+    },
+    onError: (error) => {
+      console.error("Forensic secure failed:", error);
+    }
   });
 
   const foundItemBulkUpdateMutation = useMutation({
@@ -237,29 +280,33 @@ const AdminDashboard = () => {
     }
   });
 
-
+ 
+  const taxonomyMutation = useMutation({
+    mutationFn: async ({ action, data }) => {
+      if (action === 'add_type') {
+        const { error } = await supabase.from('master_types').insert([data]);
+        if (error) throw error;
+      } else if (action === 'delete_type') {
+        const { error } = await supabase.from('master_types').delete().eq('id', data.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master_types'] })
+  });
+ 
   const refreshActiveTab = () => {
-    queryClient.invalidateQueries({ queryKey: [`admin_${currentTab === 'history' || currentTab === 'released' ? 'history' : currentTab === 'found' ? 'inventory' : currentTab}`] });
+    let key = `admin_${currentTab}`;
+    if (currentTab === 'history' || currentTab === 'released') key = 'admin_history';
+    if (currentTab === 'found') key = 'admin_inventory';
+    if (currentTab === 'review') key = 'admin_review_queue';
+    if (currentTab === 'taxonomy') key = 'master_types';
+    
+    queryClient.invalidateQueries({ queryKey: [key] });
   };
 
   const handleStatusUpdate = async (item, status) => {
     if (status === 'in_custody') {
-      setShowIntakeModal({ 
-        item, 
-        title: item.title || '',
-        description: item.description || '',
-        location: item.location || '',
-        date_found: item.date_found ? new Date(item.date_found).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16),
-        verification_note: item.verification_note || '', 
-        challenge_question: item.challenge_question || '',
-        attributes: { ...(item.attributes || {}) },
-        visibility_config: item.visibility_config || {
-          location: true,
-          date_found: true,
-          description: true,
-          hidden_attributes: []
-        }
-      });
+      setSelectedReviewItem(item);
       return;
     }
     
@@ -273,31 +320,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleIntakeSubmit = async () => {
-    const { item, title, description, location, date_found, verification_note, challenge_question, attributes } = showIntakeModal;
-    setActionLoading(item.id);
-    try {
-      await foundItemUpdateMutation.mutateAsync({ 
-        id: item.id, 
-        updates: { 
-          status: 'in_custody',
-          title,
-          description,
-          location,
-          date_found,
-          verification_note,
-          challenge_question,
-          attributes,
-          visibility_config: showIntakeModal.visibility_config
-        }
-      });
-      setShowIntakeModal(null);
-    } catch (err) {
-      console.error('Intake failed', err);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const handleBulkStatusUpdate = async (itemIds, status) => {
     setActionLoading('bulk');
@@ -414,7 +436,7 @@ const AdminDashboard = () => {
         <Tabs value={currentTab} onValueChange={(val) => navigate(`/admin/${val === 'found' ? '' : val}`)} className="w-full">
           <div className="bg-slate-900/30 rounded-[2.5rem] border border-white/5 backdrop-blur-3xl shadow-3xl overflow-hidden min-h-[700px] w-full">
             <div className="p-4 md:p-8 lg:p-10 w-full">
-              <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm}} /></TabsContent>
+              <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm, onReviewItem: setSelectedReviewItem}} /></TabsContent>
               <TabsContent value="claims" className="m-0 focus-visible:outline-none"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
               <TabsContent value="matches" className="m-0 focus-visible:outline-none">
                 <MatchmakerTab {...{
@@ -428,6 +450,12 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
+              <TabsContent value="review" className="m-0 focus-visible:outline-none">
+                <ReviewQueueTab 
+                  onReviewItem={setSelectedReviewItem} 
+                  setPreviewImage={setPreviewImage} 
+                />
+              </TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none">
                 <ActivityFeed 
                   activities={historyFiltered} 
@@ -445,6 +473,7 @@ const AdminDashboard = () => {
                 />
               </TabsContent>
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
+              <TabsContent value="taxonomy" className="m-0 focus-visible:outline-none"><TaxonomyTab mutation={taxonomyMutation} /></TabsContent>
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
               <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry}} /></TabsContent>
             </div>
@@ -459,207 +488,14 @@ const AdminDashboard = () => {
           {previewImage && <ImagePreviewOverlay key="image-preview" {...{previewImage, setPreviewImage}} />}
           
 
-          {showIntakeModal && (
-            <div key="intake-overlay" className="fixed inset-0 z-[600] flex items-center justify-center p-4 md:p-6 isolate">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowIntakeModal(null)} className="absolute inset-0 bg-slate-950/20 backdrop-blur-sm" />
-              <motion.div 
-                initial={{ scale: 0.95, opacity: 0, y: 20 }} 
-                animate={{ scale: 1, opacity: 1, y: 0 }} 
-                exit={{ scale: 0.95, opacity: 0, y: 20 }} 
-                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="w-full max-w-xl bg-slate-900 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] relative z-10 shadow-3xl max-h-[80vh] flex flex-col overflow-hidden"
-              >
-                {/* Header — compact and centered text mobile-first */}
-                <div className="flex items-center gap-3 px-5 pt-5 pb-4 md:px-8 md:pt-8 md:pb-6 border-b border-white/5 shrink-0">
-                  <div className="w-9 h-9 md:w-12 md:h-12 bg-uni-500/10 rounded-xl md:rounded-2xl flex items-center justify-center border border-uni-500/20 text-uni-400 shrink-0">
-                    <ShieldCheck className="w-[18px] h-[18px] md:w-6 md:h-6" />
-                  </div>
-                  <div className="min-w-0 flex-grow">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base md:text-xl font-bold text-white tracking-tight truncate">Process Intake</h3>
-                      <span className="text-[8px] md:text-[10px] font-black text-white/30 tracking-widest bg-white/5 px-1.5 py-0.5 md:px-2 md:py-1 rounded-md shrink-0">#{showIntakeModal.item.id.slice(-4).toUpperCase()}</span>
-                    </div>
-                    <p className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">Security Protocol</p>
-                  </div>
-                  <button 
-                    onClick={() => setShowIntakeModal(null)}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/5 hover:bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all shrink-0"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-
-                {/* Context Strip (Backlog Item #97) */}
-                <div className="px-5 py-4 md:px-8 md:py-5 bg-white/[0.02] border-b border-white/5 flex items-center gap-4">
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-slate-800 border border-white/10 shrink-0">
-                    {showIntakeModal.item.photo_url ? (
-                      <img src={showIntakeModal.item.photo_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-700">
-                        <ImageIcon size={24} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-grow py-1">
-                      <div className="flex items-center gap-2 mb-1.5 min-w-0">
-                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20 px-2 py-0.5 rounded-md shrink-0">
-                          {showIntakeModal.item.category}
-                        </Badge>
-                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest truncate">Review Reported Content</p>
-                      </div>
-                    <h4 className="text-sm font-bold text-white truncate mb-1">Editing Student Submission</h4>
-                    <p className="text-[10px] text-slate-500 font-medium italic">Refine fields below to match physical inventory</p>
-                  </div>
-                </div>
-
-                {/* Scrollable content */}
-                <div className="flex-grow overflow-y-auto custom-scrollbar px-5 py-5 md:px-8 md:py-6 space-y-6">
-                   {/* Core Information (Vetting) */}
-                   <div className="bg-white/[0.02] p-4 md:p-5 rounded-xl md:rounded-[1.5rem] border border-white/5 space-y-5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1 h-3 rounded-full bg-amber-500"></div>
-                        <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] md:tracking-[0.2em]">Core Information</p>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Title / Identifier</label>
-                          <input 
-                            type="text" 
-                            className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"
-                            value={showIntakeModal.title}
-                            onChange={(e) => setShowIntakeModal({...showIntakeModal, title: e.target.value})}
-                            placeholder="e.g. Blue HydroFlask"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Location Found</label>
-                            <input 
-                              type="text" 
-                              className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"
-                              value={showIntakeModal.location}
-                              onChange={(e) => setShowIntakeModal({...showIntakeModal, location: e.target.value})}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Date Found</label>
-                            <input 
-                              type="datetime-local" 
-                              className="w-full h-11 md:h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all [color-scheme:dark]"
-                              value={showIntakeModal.date_found}
-                              onChange={(e) => setShowIntakeModal({...showIntakeModal, date_found: e.target.value})}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">Public Description</label>
-                          <textarea 
-                            className="w-full min-h-[80px] bg-white/[0.03] border border-white/5 rounded-xl p-4 text-xs font-medium text-slate-300 focus:border-uni-500/50 outline-none transition-all resize-none"
-                            value={showIntakeModal.description}
-                            onChange={(e) => setShowIntakeModal({...showIntakeModal, description: e.target.value})}
-                            placeholder="Add specifics that help identify the item..."
-                          />
-                        </div>
-                      </div>
-                   </div>
-                   <div className="bg-white/[0.02] p-4 md:p-5 rounded-xl md:rounded-[1.5rem] border border-white/5 space-y-4 md:space-y-5">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-                        <p className="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] md:tracking-[0.2em]">Verification Grid</p>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                        {(ITEM_ATTRIBUTES[showIntakeModal.item.category] || []).map(field => {
-                          const isHidden = showIntakeModal.visibility_config.hidden_attributes.includes(field);
-                          return (
-                            <div key={field} className="space-y-1.5">
-                              <div className="flex items-center justify-between px-0.5">
-                                <label className="block text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest">{field}</label>
-                                <button 
-                                  onClick={() => {
-                                    const hidden = showIntakeModal.visibility_config.hidden_attributes;
-                                    const nextHidden = isHidden 
-                                      ? hidden.filter(h => h !== field)
-                                      : [...hidden, field];
-                                    setShowIntakeModal({
-                                      ...showIntakeModal,
-                                      visibility_config: { ...showIntakeModal.visibility_config, hidden_attributes: nextHidden }
-                                    });
-                                  }}
-                                  className={`p-1 rounded-md transition-colors ${isHidden ? 'text-amber-500 bg-amber-500/10' : 'text-slate-600 hover:text-slate-400'}`}
-                                  title={isHidden ? "Hidden from Students" : "Visible to Students"}
-                                >
-                                  {isHidden ? <EyeOff size={10} /> : <Eye size={10} />}
-                                </button>
-                              </div>
-                              {field.includes('Color') ? (
-                                <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
-                                  <option value="" className="text-slate-500">Select {field}</option>{COLOR_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                              ) : field === 'Condition' ? (
-                                <select className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white focus:border-uni-500/50 focus:bg-white/[0.06] outline-none appearance-none transition-all cursor-pointer [&>option]:text-slate-900" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})}>
-                                  <option value="" className="text-slate-500">Select Condition</option>{CONDITION_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                              ) : (
-                                <input type="text" className="w-full h-10 md:h-12 bg-white/[0.03] border border-white/5 rounded-lg md:rounded-xl px-3 md:px-4 text-[11px] md:text-xs font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all" value={showIntakeModal.attributes[field] || ''} onChange={(e) => setShowIntakeModal({...showIntakeModal, attributes: {...showIntakeModal.attributes, [field]: e.target.value}})} placeholder={`Value`} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                   </div>
-
-                   {/* Global Visibility Controls */}
-                   <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { key: 'location', label: 'Location', icon: <i className="fa-solid fa-map-pin" /> },
-                        { key: 'date_found', label: 'Date', icon: <i className="fa-solid fa-calendar" /> },
-                        { key: 'description', label: 'Description', icon: <i className="fa-solid fa-align-left" /> }
-                      ].map(cfg => {
-                        const isVisible = showIntakeModal.visibility_config[cfg.key] !== false;
-                        return (
-                          <button
-                            key={cfg.key}
-                            onClick={() => setShowIntakeModal({
-                              ...showIntakeModal,
-                              visibility_config: { ...showIntakeModal.visibility_config, [cfg.key]: !isVisible }
-                            })}
-                            className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all gap-2 ${
-                              isVisible 
-                                ? 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10' 
-                                : 'bg-amber-500/5 border-amber-500/20 text-amber-500'
-                            }`}
-                          >
-                            <div className="text-[10px]">{isVisible ? <Eye size={12} /> : <EyeOff size={12} />}</div>
-                            <span className="text-[8px] font-black uppercase tracking-widest">{cfg.label}</span>
-                          </button>
-                        );
-                      })}
-                   </div>
-
-                   <div className="space-y-2 md:space-y-3">
-                      <label className="text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1">Internal Notes</label>
-                      <textarea className="w-full bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl p-4 md:p-5 text-[13px] md:text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none min-h-[80px] md:min-h-[100px] transition-all resize-none shadow-inner" placeholder="Staff-only specific details..." value={showIntakeModal.verification_note} onChange={(e) => setShowIntakeModal({...showIntakeModal, verification_note: e.target.value})} />
-                   </div>
-
-                   <div className="space-y-2 md:space-y-3">
-                      <label className="text-[9px] md:text-[10px] font-medium text-slate-500 uppercase tracking-widest ml-1 text-left">Challenge Question</label>
-                      <input type="text" className="w-full h-11 md:h-14 bg-white/[0.03] border border-white/5 rounded-xl md:rounded-2xl px-5 md:px-6 text-[13px] md:text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner" placeholder="Ask student something unique..." value={showIntakeModal.challenge_question} onChange={(e) => setShowIntakeModal({...showIntakeModal, challenge_question: e.target.value})} />
-                   </div>
-                </div>
-
-                {/* Sticky bottom action bar — now always visible and centered container */}
-                <div className="shrink-0 px-5 py-4 md:px-8 md:py-6 border-t border-white/5 bg-slate-900/95 backdrop-blur-sm flex flex-row items-center gap-3 md:gap-4">
-                   <button onClick={() => setShowIntakeModal(null)} className="px-5 md:px-8 py-4 md:py-5 text-[9px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-xl md:rounded-2xl hover:bg-white/10">Discard</button>
-                   <button onClick={handleIntakeSubmit} disabled={actionLoading === showIntakeModal.item.id} className="flex-1 bg-white hover:bg-uni-600 hover:text-white text-slate-950 py-4 md:py-5 rounded-xl md:rounded-2xl font-black text-[10px] md:text-[11px] uppercase tracking-[0.15em] md:tracking-[0.2em] shadow-2xl transition-all disabled:opacity-20 flex items-center justify-center gap-2 md:gap-3 active:scale-[0.98]">
-                     {actionLoading === showIntakeModal.item.id ? <RefreshCw size={16} className="animate-spin" /> : <PackageCheck size={16} />}
-                     {actionLoading === showIntakeModal.item.id ? 'Securing...' : 'Verify & Secure'}
-                   </button>
-                </div>
-              </motion.div>
-            </div>
+          {selectedReviewItem && (
+            <ReportReviewModal 
+              key="report-review"
+              item={selectedReviewItem}
+              onClose={() => setSelectedReviewItem(null)}
+              onSubmit={foundItemUpdateMutation.mutate}
+              isSubmitting={foundItemUpdateMutation.isPending}
+            />
           )}
         </AnimatePresence>
       </div>

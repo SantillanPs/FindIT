@@ -6,7 +6,10 @@ const ImageStep = ({
   description, 
   value, 
   onUpload, 
+  secondaryPhotos = [],
+  onSecondaryUpload,
   onNext, 
+  onManualEntry,
   stepLabel,
   optional = true 
 }) => {
@@ -20,24 +23,41 @@ const ImageStep = ({
          </p>
       </div>
       
-      <div className="max-w-xl mx-auto w-full space-y-10">
+      <div className="max-w-xl mx-auto w-full space-y-8">
           <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5">
-              <ImageUpload 
-                  value={value}
-                  onUploadSuccess={onUpload}
-              />
-              {optional && (
-                <div className="mt-8 p-6 bg-white/5 border border-white/5 border-dashed rounded-3xl text-left">
-                    <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
-                        <i className="fa-solid fa-camera-rotate"></i>
-                        Reference Photos
-                    </p>
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed">
-                        If you don't have a photo of your specific item, searching for the exact model or brand online and uploading a screenshot works great too!
-                    </p>
+              <div className="space-y-2 mb-6">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Identification Photo</p>
+                <ImageUpload 
+                    value={value}
+                    onUploadSuccess={onUpload}
+                />
+              </div>
+
+              {value && (
+                <div className="pt-8 border-t border-white/5 space-y-4">
+                  <div className="flex justify-between items-end px-2">
+                    <div className="text-left">
+                      <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic mb-1">Forensic Angles (Optional)</p>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Add labels, serial numbers, or unique marks</p>
+                    </div>
+                    <span className="text-[10px] font-black text-slate-600">{secondaryPhotos.length}/3</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4">
+                    {[0, 1, 2].map((idx) => (
+                      <div key={idx} className="aspect-square">
+                        <ImageUpload 
+                          value={secondaryPhotos[idx]}
+                          onUploadSuccess={(url) => onSecondaryUpload(url, idx)}
+                          compact
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
-              {!optional && !value && (
+
+               {!optional && !value && (
                 <div className="mt-8 p-6 bg-uni-500/5 border border-uni-400/30 rounded-3xl text-left">
                     <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic flex items-center gap-3 mb-2">
                         <i className="fa-solid fa-circle-info"></i>
@@ -50,17 +70,20 @@ const ImageStep = ({
               )}
           </div>
           
-          <button 
-            onClick={onNext} 
-            disabled={!optional && !value}
-            className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all border border-black/5 active:scale-95 flex items-center justify-center gap-4 ${
-              (!optional && !value) 
-                ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5' 
-                : 'bg-uni-600 text-white hover:bg-white hover:text-black'
-            }`}
-          >
-            {value ? 'Next Step →' : (optional ? 'Skip & Continue →' : 'Upload Required →')}
-          </button>
+          <div className="space-y-4">
+            <button 
+                onClick={onNext} 
+                disabled={!optional && !value}
+                className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all border border-black/5 active:scale-95 flex items-center justify-center gap-4 ${
+                (!optional && !value) 
+                    ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5' 
+                    : 'bg-uni-600 text-white hover:bg-white hover:text-black'
+                }`}
+            >
+                {value ? 'Review Report →' : (optional ? 'Skip & Continue →' : 'Upload Required →')}
+            </button>
+
+          </div>
       </div>
     </div>
   );

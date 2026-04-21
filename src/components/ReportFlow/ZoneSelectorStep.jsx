@@ -9,7 +9,8 @@ const ZoneSelectorStep = ({
   formData, 
   setFormData, 
   onNext,
-  multiSelect = false
+  multiSelect = false,
+  aiHints = []
 }) => {
   const [zonesTree, setZonesTree] = useState([]);
   const [zoneStats, setZoneStats] = useState([]);
@@ -184,7 +185,7 @@ const ZoneSelectorStep = ({
             zone_id: zone.id,
             potential_zone_ids: [zone.id] // Keep array for backend consistency
         });
-        onNext();
+        setTimeout(onNext, 400); // Slight delay for feedback
     } else {
         // Lost Report flow (Multi-selection / Tracing steps):
         if (!selectedZones.find(z => z.id === zone.id)) {
@@ -201,6 +202,53 @@ const ZoneSelectorStep = ({
             });
         }
         // Reset navigation to root for potentially adding another "step"
+        setNavigationPath([]);
+    }
+  };
+
+  const handleSelectCurrentArea = () => {
+    const parent = navigationPath[navigationPath.length - 1];
+    if (!parent) return;
+
+    const fullName = navigationPath.map(p => p.name).join(' - ');
+    
+    // Resolve all child IDs for matching engine coverage (including parent itself)
+    const getAllChildIds = (node) => {
+        let ids = [node.id];
+        if (node.children) {
+            node.children.forEach(child => {
+                ids = [...ids, ...getAllChildIds(child)];
+            });
+        }
+        return ids;
+    };
+    const allRelevantIds = getAllChildIds(parent);
+
+    if (!multiSelect) {
+        setFormData({
+            ...formData,
+            location: fullName,
+            zone_id: parent.id,
+            potential_zone_ids: allRelevantIds
+        });
+        setTimeout(onNext, 400);
+    } else {
+        if (!selectedZones.find(z => z.id === parent.id)) {
+            const newSelected = [...selectedZones, { id: parent.id, name: fullName }];
+            setSelectedZones(newSelected);
+            
+            // Sync to formData with expanded IDs for the entire area
+            setFormData({
+                ...formData,
+                // We flatten all potential zones from all selected steps
+                potential_zone_ids: Array.from(new Set([
+                    ...formData.potential_zone_ids, 
+                    ...allRelevantIds
+                ])),
+                location: newSelected.map(z => z.name).join(', '),
+                zone_id: newSelected[0]?.id || parent.id
+            });
+        }
         setNavigationPath([]);
     }
   };
@@ -330,21 +378,37 @@ const ZoneSelectorStep = ({
             {/* Navigation Breadcrumbs / Back button */}
             {(navigationPath.length > 0 || showOtherInput) && (
             <div className="flex items-center justify-between px-4">
-                <button 
-                onClick={goBack}
-                className="px-6 py-2 rounded-full bg-white/5 text-[10px] font-black text-uni-400 uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 group"
-                >
-                <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                Back
-                </button>
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                {navigationPath.map((z, idx) => (
-                    <React.Fragment key={z.id}>
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest whitespace-nowrap">{z.name}</span>
-                    {idx < navigationPath.length - 1 && <span className="text-slate-700 text-[10px]">/</span>}
-                    </React.Fragment>
-                ))}
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={goBack}
+                        className="px-6 py-2 rounded-full bg-white/5 text-[10px] font-black text-uni-400 uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 group"
+                    >
+                        <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                        Back
+                    </button>
+
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar max-w-[200px] md:max-w-md">
+                        {navigationPath.map((z, idx) => (
+                            <React.Fragment key={z.id}>
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest whitespace-nowrap">{z.name}</span>
+                            {idx < navigationPath.length - 1 && <span className="text-slate-700 text-[10px]">/</span>}
+                            </React.Fragment>
+                        ))}
+                    </div>
                 </div>
+
+                {/* Option B: Fast-Path Parent Selection */}
+                {navigationPath.length > 0 && !showOtherInput && (
+                    <motion.button
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        onClick={handleSelectCurrentArea}
+                        className="px-6 py-2 rounded-full bg-uni-500 text-[10px] font-black text-white uppercase tracking-widest hover:bg-uni-400 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--uni-500-rgb),0.3)]"
+                    >
+                        <i className="fa-solid fa-check"></i>
+                        Confirm {navigationPath[navigationPath.length - 1].name}
+                    </motion.button>
+                )}
             </div>
             )}
 
@@ -361,6 +425,10 @@ const ZoneSelectorStep = ({
                     {featuredZones.map((zone) => {
                     const theme = getZoneTheme(zone);
                     const isPicked = selectedZones.find(s => s.id === zone.id);
+                    const isHinted = aiHints.some(hint => 
+                        zone.name.toLowerCase().includes(hint.toLowerCase()) || 
+                        hint.toLowerCase().includes(zone.name.toLowerCase())
+                    );
                     
                     return (
                         <button
@@ -369,6 +437,8 @@ const ZoneSelectorStep = ({
                         className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group relative overflow-hidden h-[180px] ${
                             isPicked 
                             ? `border-uni-500/50 bg-uni-500/10 text-white` 
+                            : isHinted
+                            ? `border-blue-500/30 bg-blue-500/5 shadow-[0_0_20px_rgba(59,130,246,0.15)] text-slate-400 hover:border-blue-500/50 hover:scale-[1.02]`
                             : `bg-white/5 border-white/5 text-slate-400 hover:border-white/10 hover:scale-[1.02] active:scale-95 ${theme.bg}`
                         } ${theme.glow}`}
                         >
@@ -377,15 +447,23 @@ const ZoneSelectorStep = ({
                                 <i className="fa-solid fa-circle-check"></i>
                             </div>
                         )}
-                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${theme.bg.replace('/10', '/5')}`}></div>
+                        {isHinted && !isPicked && (
+                            <div className="absolute top-4 right-4 text-blue-400 animate-pulse">
+                                <i className="fa-solid fa-sparkles"></i>
+                            </div>
+                        )}
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${isHinted ? 'bg-blue-500/5' : theme.bg.replace('/10', '/5')}`}></div>
                         
-                        <div className={`text-5xl transition-all duration-500 group-hover:scale-110 ${isPicked ? 'scale-110 text-uni-400' : theme.color}`}>
+                        <div className={`text-5xl transition-all duration-500 group-hover:scale-110 ${isPicked ? 'scale-110 text-uni-400' : isHinted ? 'text-blue-400' : theme.color}`}>
                             <i className={`fa-solid ${theme.icon}`}></i>
                         </div>
                         <div className="space-y-1">
                             <span className="text-[11px] font-black uppercase tracking-[0.2em] text-center block px-2 leading-tight group-hover:text-white transition-colors">{zone.name}</span>
-                            {zone.children?.length > 0 && (
-                            <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest block">{zone.children.length} sub-areas</span>
+                            {isHinted && !isPicked && (
+                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-widest block italic animate-pulse">Story Hint</span>
+                            )}
+                            {zone.children?.length > 0 && !isHinted && (
+                                <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest block">{zone.children.length} sub-areas</span>
                             )}
                         </div>
                         </button>

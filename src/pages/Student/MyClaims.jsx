@@ -36,17 +36,19 @@ const PROCESS_STEPS = [
 
 const StatusBadge = ({ status }) => {
   const config = {
-    approved: { color: 'green', icon: 'fa-circle-check', label: 'Approved' },
-    rejected: { color: 'red', icon: 'fa-circle-xmark', label: 'Rejected' },
-    pending: { color: 'uni', icon: 'fa-clock', label: 'Under Review' },
+    approved:     { color: 'green', icon: 'fa-circle-check', label: 'Approved' },
+    rejected:     { color: 'red',   icon: 'fa-circle-xmark', label: 'Rejected' },
+    pending:      { color: 'uni',   icon: 'fa-clock',        label: 'Under Review' },
+    needs_update: { color: 'amber', icon: 'fa-triangle-exclamation', label: 'Action Required' },
   };
   const c = config[status] || config.pending;
 
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border
-      ${c.color === 'green' ? 'bg-green-500/10 text-green-400 border-green-500/20' : ''}
-      ${c.color === 'red' ? 'bg-red-500/10 text-red-400 border-red-500/20' : ''}
-      ${c.color === 'uni' ? 'bg-uni-500/10 text-uni-400 border-uni-500/20' : ''}
+      ${c.color === 'green' ? 'bg-green-500/10 text-green-400 border-green-500/20 shadow-[0_0_10px_rgba(34,197,94,0.1)]' : ''}
+      ${c.color === 'red'   ? 'bg-red-500/10 text-red-400 border-red-500/20'   : ''}
+      ${c.color === 'uni'   ? 'bg-uni-500/10 text-uni-400 border-uni-500/20'   : ''}
+      ${c.color === 'amber' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse' : ''}
     `}>
       <i className={`fa-solid ${c.icon} text-[8px]`}></i>
       {c.label}
@@ -56,7 +58,7 @@ const StatusBadge = ({ status }) => {
 
 // ─── Sub-Components ──────────────────────────────────────────
 
-const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
+const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule, onUpdateAnswers }) => {
   const [imgError, setImgError] = useState(imageCache.isFailed(claim.found_item_photo));
 
   const hasSchedule = claim.status === 'approved' && claim.scheduled_pickup_time;
@@ -215,6 +217,54 @@ const ClaimItem = ({ claim, isExpanded, onToggle, onSchedule }) => {
             className="overflow-hidden"
           >
             <div className="px-5 md:px-6 pb-6 pl-6 md:pl-8 space-y-6 border-t border-white/5 pt-5">
+              
+              {/* ⚠️ Action Required Block */}
+              {claim.status === 'needs_update' && (
+                <div className="p-5 bg-amber-500/10 border border-amber-500/20 rounded-[1.5rem] space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+                      <i className="fa-solid fa-fingerprint text-lg"></i>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-white uppercase tracking-tight">Identity Update Required</h4>
+                      <p className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest mt-1 leading-relaxed">
+                        The security barriers for this item have been updated by the custodian. 
+                        Please answer the new questions to maintain your claim's integrity.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 pt-2">
+                    {Array.isArray(claim.found_item_challenge_questions) && claim.found_item_challenge_questions.map((q, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 ml-1">
+                           Barricade #{idx + 1}: {q}
+                        </label>
+                        <textarea 
+                          id={`answer-${claim.id}-${idx}`}
+                          className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-bold text-white focus:border-amber-500/50 outline-none transition-all placeholder:text-slate-700 min-h-[60px]"
+                          placeholder="Your updated forensic answer..."
+                          defaultValue={claim.challenge_answers_json?.[idx] || ''}
+                        />
+                      </div>
+                    ))}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Implementation for updating answers will be wired into MyClaims parent
+                        const answers = claim.found_item_challenge_questions.map((_, i) => 
+                          document.getElementById(`answer-${claim.id}-${i}`)?.value || ''
+                        );
+                        onUpdateAnswers(claim.id, answers);
+                      }}
+                      className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl shadow-amber-500/10"
+                    >
+                      Resubmit Forensic Profile
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Timeline */}
               <ResolutionTimeline
                 status={claim.status}
@@ -344,6 +394,27 @@ const MyClaims = () => {
     },
     onError: (error) => {
       console.error('Failed to schedule pickup', error);
+    }
+  });
+  
+  // 3. Update Answers Mutation
+  const updateAnswersMutation = useMutation({
+    mutationFn: async ({ claimId, answers }) => {
+      const { error } = await supabase
+        .from('claims')
+        .update({
+          challenge_answers_json: answers,
+          status: 'pending', // Revert to pending after resubmission
+        })
+        .eq('id', claimId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-claims'] });
+    },
+    onError: (error) => {
+        console.error('Resubmission failed', error);
     }
   });
 
@@ -550,6 +621,7 @@ const MyClaims = () => {
                 isExpanded={expandedClaim === claim.id}
                 onToggle={() => setExpandedClaim(expandedClaim === claim.id ? null : claim.id)}
                 onSchedule={setSchedulingClaim}
+                onUpdateAnswers={(id, answers) => updateAnswersMutation.mutate({ claimId: id, answers })}
               />
             ))}
           </div>

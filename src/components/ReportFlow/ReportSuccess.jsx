@@ -88,51 +88,52 @@ const ReportSuccess = ({
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-uni-500/20 blur-[80px] rounded-full"></div>
             <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-brand-gold/10 blur-[80px] rounded-full"></div>
 
-            <div className="p-10 md:p-16 space-y-12 text-center relative z-10">
-              <div className="space-y-4">
-                <div className="w-24 h-24 bg-uni-500 rounded-3xl flex items-center justify-center mx-auto text-5xl rotate-12 group-hover:rotate-0 transition-transform duration-500">
+            <div className="p-8 md:p-14 space-y-10 text-center relative z-10">
+              <div className="space-y-6">
+                <div className="w-20 h-20 bg-uni-500 rounded-3xl flex items-center justify-center mx-auto text-4xl rotate-12 shadow-2xl shadow-uni-500/20">
                   ✨
                 </div>
-                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none pt-4">
-                  Wait! Before you go...
-                </h2>
-                <p className="text-sm font-black text-uni-400 uppercase tracking-[0.3em]">Unlock Institutional Benefits</p>
+                <div className="space-y-3 px-4">
+                  <h2 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tighter italic leading-none">
+                    Wait! Before you go...
+                  </h2>
+                  <p className="text-[10px] font-black text-uni-400 uppercase tracking-[0.4em] italic leading-tight">Secure your item's return</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
-                    <div className="text-3xl">🛡️</div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Safety Net</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Instant alerts via Student ID matches</p>
+              <div className="space-y-4 px-2">
+                 <div className="p-6 bg-white/5 rounded-[2.5rem] border border-white/5 flex items-center gap-6 text-left group hover:bg-white/10 transition-colors">
+                    <div className="w-14 h-14 shrink-0 bg-uni-500/10 rounded-2xl flex items-center justify-center text-2xl text-uni-400 border border-uni-500/20">🛡️</div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-black text-white uppercase tracking-widest">Instant Auto-Relink</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed font-mono">If found, your item finds you instantly.</p>
+                    </div>
                  </div>
-                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
-                    <div className="text-3xl">🏛️</div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest">College Honor</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Earn points for your department rankings</p>
-                 </div>
-                 <div className="p-6 bg-white/5 rounded-3xl border border-white/5 space-y-3">
-                    <div className="text-3xl">🏆</div>
-                    <p className="text-[10px] font-black text-white uppercase tracking-widest">Official Merit</p>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase leading-tight">Get an Official Univ. Certificate</p>
+                 
+                 <div className="p-6 bg-white/5 rounded-[2.5rem] border border-white/5 flex items-center gap-6 text-left group hover:bg-white/10 transition-colors">
+                    <div className="w-14 h-14 shrink-0 bg-brand-gold/10 rounded-2xl flex items-center justify-center text-2xl text-brand-gold border border-brand-gold/20">🏛️</div>
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-black text-white uppercase tracking-widest">Official Campus Honor</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed font-mono">Earn Integrity Points & Certificates.</p>
+                    </div>
                  </div>
               </div>
 
-
-              <div className="flex flex-col gap-4">
+              <div className="space-y-6 pt-4">
                 <button 
                   onClick={() => {
                     setShowIncentiveModal(false);
                     setShowAccountForm(true);
                   }}
-                  className="w-full bg-white text-black py-8 rounded-[2rem] font-black text-sm uppercase tracking-[0.6em] border border-black/5 hover:bg-uni-500 hover:text-white transition-all active:scale-95"
+                  className="w-full bg-white text-black py-8 rounded-[2.5rem] font-black text-xs uppercase tracking-[0.5em] border border-black/5 hover:bg-uni-500 hover:text-white transition-all active:scale-95 shadow-xl shadow-white/5"
                 >
-                  Awesome! Create My Account
+                  Create My Account
                 </button>
                 <button 
                   onClick={() => setShowIncentiveModal(false)}
-                  className="text-[10px] font-black text-slate-600 uppercase tracking-[0.4em] hover:text-white transition-colors"
+                  className="block mx-auto text-[9px] font-black text-slate-600 uppercase tracking-[0.4em] hover:text-white transition-colors"
                 >
-                  Skip these benefits for now
+                  Skip Benefits
                 </button>
               </div>
             </div>

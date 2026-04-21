@@ -1,4 +1,5 @@
 import React from 'react';
+import { Badge } from "@/components/ui/badge";
 
 const ReportSummary = ({ 
   type = 'lost', 
@@ -94,16 +95,31 @@ const ReportSummary = ({
                 )}
             </div>
 
-            <div className="relative group rounded-[3rem] overflow-hidden border-2 border-white/5 aspect-video lg:aspect-auto">
-                {formData.photo_url ? (
-                    <img src={formData.photo_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Item Preview" />
-                ) : (
-                    <div className="w-full h-full bg-white/5 flex flex-col items-center justify-center space-y-4 opacity-50 italic text-center p-10">
-                        <span className="text-5xl">📷</span>
-                        <p className="text-[10px] font-black uppercase tracking-widest">No visual preview attached</p>
+            <div className="space-y-4">
+                <div className="relative group rounded-[3rem] overflow-hidden border-2 border-white/5 aspect-video w-full">
+                    {formData.photo_url ? (
+                        <img src={formData.photo_url} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="Item Preview" />
+                    ) : (
+                        <div className="w-full h-full bg-white/5 flex flex-col items-center justify-center space-y-4 opacity-50 italic text-center p-10">
+                            <span className="text-5xl">📷</span>
+                            <p className="text-[10px] font-black uppercase tracking-widest">No visual preview attached</p>
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6">
+                         <Badge className="bg-uni-500 text-white text-[9px] uppercase font-black tracking-widest px-3 py-1">Primary View</Badge>
+                    </div>
+                </div>
+
+                {formData.secondary_photos?.filter(Boolean).length > 0 && (
+                    <div className="flex gap-4 overflow-x-auto pb-2 custom-scrollbar">
+                        {formData.secondary_photos.filter(Boolean).map((photo, i) => (
+                            <div key={i} className="w-24 h-24 rounded-2xl border border-white/10 overflow-hidden shrink-0">
+                                <img src={photo} className="w-full h-full object-cover" alt={`Secondary ${i+1}`} />
+                            </div>
+                        ))}
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             </div>
         </div>
 

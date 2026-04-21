@@ -49,6 +49,7 @@ const SubmitClaim = () => {
   const [contactMethod, setContactMethod] = useState(initialDraft?.contactMethod || 'Email');
   const [contactInfo, setContactInfo] = useState(initialDraft?.contactInfo || '');
   const [courseDepartment, setCourseDepartment] = useState(initialDraft?.courseDepartment || '');
+  const [challengeAnswers, setChallengeAnswers] = useState(initialDraft?.challengeAnswers || {});
 
   const [trackingId, setTrackingId] = useState('');
   const [copied, setCopied] = useState(false);
@@ -67,10 +68,11 @@ const SubmitClaim = () => {
       guestEmail,
       contactMethod,
       contactInfo,
-      courseDepartment
+      courseDepartment,
+      challengeAnswers
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [DRAFT_KEY, proof, proofPhotoUrl, attributes, step, completedSteps, guestFirstName, guestLastName, guestEmail, contactMethod, contactInfo, courseDepartment]);
+  }, [DRAFT_KEY, proof, proofPhotoUrl, attributes, step, completedSteps, guestFirstName, guestLastName, guestEmail, contactMethod, contactInfo, courseDepartment, challengeAnswers]);
 
   // 3. Data Fetching (TanStack Query) — compliant with Section 2.1
   const { data: item, isLoading: itemLoading } = useQuery({
@@ -168,6 +170,7 @@ const SubmitClaim = () => {
       contact_info: contactInfo,
       course_department: courseDepartment,
       attributes_json: attributes,
+      challenge_answers_json: challengeAnswers,
       user_id: user?.id || null, // Standardized column name is user_id
       status: 'pending',
       tracking_id: genTrackingId,
@@ -403,7 +406,33 @@ const SubmitClaim = () => {
                     <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">
                       {item?.challenge_question ? <>Answer the<br/>Challenge</> : <>Why is this<br/>yours?</>}
                     </h2>
-                    {item?.challenge_question ? (
+                    {item?.challenge_questions?.length > 0 ? (
+                       <div className="max-w-xl mx-auto space-y-4">
+                          <div className="flex items-center gap-3 px-1 py-1">
+                             <div className="w-1 h-3 rounded-full bg-uni-500"></div>
+                             <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">Mandatory Forensic Challenge</p>
+                          </div>
+                          {item.challenge_questions.map((q, qIdx) => (
+                             <div key={qIdx} className="p-5 bg-uni-500/5 border border-uni-400/20 rounded-2xl text-left space-y-4">
+                                <div className="space-y-1">
+                                   <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Question #{qIdx + 1}</p>
+                                   <p className="text-sm font-black text-white italic tracking-tight leading-snug">"{q}"</p>
+                                </div>
+                                <div className="space-y-2">
+                                   <label className="text-[10px] font-black text-uni-400/60 tracking-widest ml-2 uppercase">Your Response</label>
+                                   <textarea 
+                                       rows="3"
+                                       required
+                                       placeholder="Provide specific proof for this question..."
+                                       className="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-wide text-[11px] resize-none leading-relaxed"
+                                       value={challengeAnswers[qIdx] || ''}
+                                       onChange={(e) => setChallengeAnswers({...challengeAnswers, [qIdx]: e.target.value})}
+                                   />
+                                </div>
+                             </div>
+                          ))}
+                       </div>
+                    ) : item?.challenge_question ? (
                        <div className="max-w-xl mx-auto p-5 bg-uni-500/5 border border-uni-400/20 rounded-2xl">
                           <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em] mb-2">Question from Administrator</p>
                           <p className="text-base font-black text-white italic tracking-tight">"{item.challenge_question}"</p>
@@ -460,24 +489,28 @@ const SubmitClaim = () => {
                         </div>
                      )}
 
-                     {/* Narrative Proof */}
-                     <div className="space-y-3 text-left">
-                        <label className="text-[9px] font-black text-slate-500 tracking-widest ml-6 flex items-center gap-2 uppercase">
-                           <i className="fa-solid fa-pen-nib text-[8px] text-uni-400"></i>
-                           {item?.challenge_question ? "Your Answer" : "Describe proof only the owner would know"}
-                        </label>
-                        <textarea 
-                            rows="5"
-                            required
-                            placeholder={item?.challenge_question ? "Type your answer to the question above..." : "e.g. There's a scratch on the top-left corner, my wallpaper is a sunset photo, the case has a sticker..."}
-                            className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-wide text-[12px] min-h-[120px] resize-none leading-relaxed"
-                            value={proof}
-                            onChange={(e) => setProof(e.target.value)}
-                        />
-                     </div>
+                     {(!item?.challenge_questions || item.challenge_questions.length === 0) && (
+                       <div className="space-y-3 text-left">
+                          <label className="text-[9px] font-black text-slate-500 tracking-widest ml-6 flex items-center gap-2 uppercase">
+                             <i className="fa-solid fa-pen-nib text-[8px] text-uni-400"></i>
+                             {item?.challenge_question ? "Your Answer" : "Describe proof only the owner would know"}
+                          </label>
+                          <textarea 
+                              rows="5"
+                              required
+                              placeholder={item?.challenge_question ? "Type your answer to the question above..." : "e.g. There's a scratch on the top-left corner, my wallpaper is a sunset photo, the case has a sticker..."}
+                              className="w-full bg-white/[0.03] border border-white/10 rounded-2xl p-6 text-white font-bold outline-none focus:border-uni-500 transition-all tracking-wide text-[12px] min-h-[120px] resize-none leading-relaxed"
+                              value={proof}
+                              onChange={(e) => setProof(e.target.value)}
+                          />
+                       </div>
+                     )}
 
                     <button
-                      disabled={proof.length < 5}
+                      disabled={
+                        (item?.challenge_questions?.length > 0 && item.challenge_questions.some((_, i) => !challengeAnswers[i] || challengeAnswers[i].length < 3)) ||
+                        (proof.length < 5 && (!item?.challenge_questions || item.challenge_questions.length === 0))
+                      }
                       onClick={() => goToStep(2)}
                       className="w-full bg-uni-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all active:scale-[0.98] disabled:opacity-20 min-h-[56px] flex items-center justify-center gap-3"
                     >
@@ -719,7 +752,18 @@ const SubmitClaim = () => {
                             <i className="fa-solid fa-pen text-[7px]"></i> Edit
                           </button>
                        </div>
-                       <p className="text-[11px] font-bold text-slate-400 leading-relaxed">"{proof}"</p>
+                       {item?.challenge_questions?.length > 0 ? (
+                          <div className="space-y-4">
+                             {item.challenge_questions.map((q, idx) => (
+                               <div key={idx} className="p-4 bg-uni-500/5 rounded-xl border border-uni-500/10 space-y-1">
+                                  <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Q: {q}</p>
+                                  <p className="text-[11px] font-bold text-slate-400 leading-relaxed italic">"{challengeAnswers[idx]}"</p>
+                               </div>
+                             ))}
+                          </div>
+                       ) : (
+                          <p className="text-[11px] font-bold text-slate-400 leading-relaxed">"{proof}"</p>
+                       )}
 
                        {Object.keys(attributes).filter(k => attributes[k]).length > 0 && (
                          <div className="pt-3 border-t border-white/5 grid grid-cols-2 gap-x-4 gap-y-2">

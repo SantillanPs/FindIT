@@ -6,80 +6,42 @@ import { CATEGORY_METADATA, DEFAULT_CATEGORY_META } from '../constants/categoryM
 const MasterDataContext = createContext();
 
 const MasterDataProvider = ({ children }) => {
-    // 1. Categories Query
-    const { data: categories = [], isLoading: categoriesLoading, error: categoriesError } = useQuery({
-        queryKey: ['categories'],
+    // 1. Consolidated Master Data Bootstrap
+    const { data: bootstrapData = { categories: [], colleges: [], types: [] }, isLoading: bootstrapLoading, error: bootstrapError } = useQuery({
+        queryKey: ['master_bootstrap'],
         queryFn: async () => {
-            const { data, error } = await supabase
-                .from('v_public_categories')
-                .select('*');
-                
+            const { data, error } = await supabase.rpc('rpc_bootstrap_master_data');
             if (error) throw error;
             
-            // Merge hardcoded metadata (icons/emojis) with pre-sorted DB labels
-            return (data || []).map(cat => ({
+            // Post-process categories with hardcoded metadata
+            const processedCategories = (data.categories || []).map(cat => ({
                 ...cat,
                 hit_count: cat.hit_count || 0,
                 ...(CATEGORY_METADATA[cat.id?.trim()?.toLowerCase()] || DEFAULT_CATEGORY_META)
             }));
-        },
-        staleTime: 1000 * 60 * 60, // 1 hour
-    });
- 
-    // 2. Colleges Query
-    const { data: colleges = [], isLoading: collegesLoading, error: collegesError } = useQuery({
-        queryKey: ['colleges'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('v_public_colleges')
-                .select('*');
-            if (error) throw error;
-            console.info(`[Context] Colleges [Source: Standardized View]:`, data?.length || 0, 'items');
-            return data || [];
-        },
-        staleTime: 1000 * 60 * 60, // 1 hour
-    });
-
-    // 3. Leaderboard Query
-    const { data: leaderboard = { students: [], departments: [] } } = useQuery({
-        queryKey: ['leaderboard'],
-        queryFn: async () => {
-            const [studentsRes, deptsRes] = await Promise.all([
-                supabase
-                    .from('v_public_leaderboard')
-                    .select('*')
-                    .gt('integrity_points', 0)
-                    .limit(10),
-                supabase
-                    .from('v_public_dept_leaderboard')
-                    .select('*')
-                    .gt('total_points', 0)
-            ]);
-            
-            if (studentsRes.error) throw studentsRes.error;
-            if (deptsRes.error) throw deptsRes.error;
-
-            console.info(`[Context] Leaderboard [Source: Standardized View]:`, studentsRes.data?.length || 0, 'students');
 
             return {
-                students: studentsRes.data || [],
-                departments: deptsRes.data || []
+                categories: processedCategories,
+                colleges: data.colleges || [],
+                types: data.types || []
             };
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        enabled: false, // Feature currently disabled per user request
+        staleTime: 1000 * 60 * 60, // 1 hour cached
     });
 
-    // 2. Colleges Query (Keep separate as it's a different domain)
-    const sortedCategories = useMemo(() => {
-        return categories;
-    }, [categories]);
+    const categories = bootstrapData.categories;
+    const colleges = bootstrapData.colleges;
+    const itemTypes = bootstrapData.types;
 
-    const loading = categoriesLoading || collegesLoading;
-    const error = categoriesError || collegesError;
+    // Maintain backward compatibility for existing consumers
+    const sortedCategories = useMemo(() => categories, [categories]);
+    const leaderboard = { students: [], departments: [] }; // Placeholder for disabled feature
+
+    const loading = bootstrapLoading;
+    const error = bootstrapError;
 
     return (
-        <MasterDataContext.Provider value={{ categories, colleges, leaderboard, sortedCategories, loading, error }}>
+        <MasterDataContext.Provider value={{ categories, colleges, leaderboard, sortedCategories, itemTypes, loading, error }}>
             {children}
         </MasterDataContext.Provider>
     );
