@@ -7,28 +7,28 @@ import { useAuth } from '../../context/AuthContext';
 
 // Shared Flow Components
 import ReportStepHeader from '../../components/ReportFlow/ReportStepHeader';
-import ReportSuccess from '../../components/ReportFlow/ReportSuccess';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import ReportSummary from '../../components/ReportFlow/ReportSummary';
 import MultiImageStep from '../../components/ReportFlow/MultiImageStep';
-
+import DetailsStep from '../../components/ReportFlow/DetailsStep';
 
 const ReportFoundItem = () => {
   const [formData, setFormData] = useState({
-    title: 'AI Processing...',
-    description: 'Analyzing Forensic Visuals...',
+    title: '',
+    description: '',
     location: '',
     zone_id: null,
     date_found: new Date().toISOString(),
     photo_url: '',
     secondary_photos: [],
     category: 'other',
-    ai_draft: null
+    ai_draft: null,
+    attributes: {}
   });
   
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 4;
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -91,8 +91,8 @@ const ReportFoundItem = () => {
     setError('');
 
     const reportPayload = {
-      title: 'Processing AI Report...',
-      description: 'Found Item - Visual DNA pending analysis.',
+      title: formData.title || 'Found Item',
+      description: formData.description || 'No description provided.',
       category: formData.category || 'other',
       location: formData.location,
       date_found: formData.date_found,
@@ -103,6 +103,7 @@ const ReportFoundItem = () => {
       status: 'reported',
       is_verified: true,
       ai_draft: null, 
+      attributes: formData.attributes || {},
       registry_signal: { 
         ...formData, 
         reporter_type: 'student',
@@ -160,18 +161,37 @@ const ReportFoundItem = () => {
             )}
 
             {step === 2 && (
-              <ZoneSelectorStep
-                stepLabel="Step 2: Location"
-                title="Where was it found?"
-                description="Select the building or area."
-                formData={formData}
-                setFormData={setFormData}
+              <DetailsStep 
+                stepLabel="Step 2: Details"
+                title="Basic Info"
+                description="Give the item a name and a short description to help identify it."
+                titleValue={formData.title}
+                onTitleChange={(val) => setFormData({...formData, title: val})}
+                value={formData.description}
+                onChange={(val) => setFormData({...formData, description: val})}
+                category={formData.category}
+                attributes={formData.attributes}
+                onAttributeChange={(field, val) => setFormData(prev => ({
+                    ...prev,
+                    attributes: { ...prev.attributes, [field]: val }
+                }))}
                 onNext={() => goToStep(3)}
               />
             )}
 
-            {/* FINAL STEP: SUMMARY */}
             {step === 3 && (
+              <ZoneSelectorStep
+                stepLabel="Step 3: Location"
+                title="Where was it found?"
+                description="Select the building or area."
+                formData={formData}
+                setFormData={setFormData}
+                onNext={() => goToStep(4)}
+              />
+            )}
+
+            {/* FINAL STEP: SUMMARY */}
+            {step === 4 && (
               <>
                 {matchedReport && (
                   <div className="mb-10 p-6 bg-uni-600/10 border border-uni-500/20 rounded-3xl flex items-center gap-6 max-w-2xl mx-auto">

@@ -5,6 +5,8 @@ const DetailsStep = ({
   title, 
   description, 
   value, 
+  titleValue,
+  onTitleChange,
   onChange, 
   onNext, 
   placeholder, 
@@ -30,8 +32,33 @@ const DetailsStep = ({
           <div className="space-y-6">
             <div className="flex items-center gap-4 ml-6">
               <div className="flex -space-x-2">
-                <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">1</div>
-                <div className="w-6 h-6 rounded-full bg-cyan-500 border-2 border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">2</div>
+                <div className="w-6 h-6 rounded-full bg-indigo-500 border-2 border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">1</div>
+              </div>
+              <label 
+                htmlFor="item-title"
+                className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic"
+              >
+                Item Name / Title
+              </label>
+            </div>
+            
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600/30 to-blue-600/30 rounded-3xl blur opacity-25 group-focus-within:opacity-50 transition duration-1000"></div>
+              <input 
+                  id="item-title"
+                  type="text"
+                  placeholder="Give it a simple name (e.g. Blue Hydro Flask)"
+                  className="relative w-full bg-slate-900/50 backdrop-blur-xl border-2 border-white/10 rounded-3xl p-6 text-xl font-black text-white focus:border-uni-500 transition-all outline-none placeholder:text-slate-700 italic uppercase"
+                  value={titleValue}
+                  onChange={(e) => onTitleChange(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 ml-6">
+              <div className="flex -space-x-2">
+                <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-slate-900 flex items-center justify-center text-[8px] font-bold text-white">2</div>
               </div>
               <label 
                 htmlFor="item-description"
@@ -48,7 +75,7 @@ const DetailsStep = ({
                   name="description"
                   rows="6"
                   placeholder="This is the simple story we've created. You can adjust it if you like!"
-                  className="relative w-full bg-slate-900/50 backdrop-blur-xl border-2 border-white/10 rounded-[2.5rem] p-10 text-xl font-bold text-white focus:border-uni-500 transition-all outline-none placeholder:text-slate-700 resize-none leading-relaxed shadow-2xl"
+                  className="relative w-full bg-slate-900/50 backdrop-blur-xl border-2 border-white/10 rounded-[2.5rem] p-10 text-lg font-bold text-white focus:border-uni-500 transition-all outline-none placeholder:text-slate-700 resize-none leading-relaxed shadow-2xl"
                   value={value}
                   onChange={(e) => onChange(e.target.value)}
               />

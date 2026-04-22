@@ -131,17 +131,11 @@ const AppContent = () => {
               <Route path="/asset-vault" element={<AssetVault />} />
               <Route path="/report/found" element={<ReportFoundItem />} />
               <Route path="/match-review/:lostId/:foundId" element={<MatchReviewPage />} />
-            </Route>
-
-            {/* Verified-Only Student Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['student']} requireVerification={true} />}>
               <Route path="/lost/:reportId/matches" element={<MatchResults />} />
             </Route>
 
-            {/* Admin Routes */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/review" element={<AdminDashboard />} />
               <Route path="/admin/lost" element={<AdminDashboard />} />
               <Route path="/admin/claims" element={<AdminDashboard />} />
               <Route path="/admin/witnesses" element={<AdminDashboard />} />

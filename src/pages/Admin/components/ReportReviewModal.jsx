@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useVisionAnalysis } from "../../../hooks/useVisionAnalysis";
+import { useMasterData } from '../../../context/MasterDataContext';
 import CameraCapture from "./CameraCapture";
 import ImageUpload from "../../../components/ImageUpload";
 
@@ -29,8 +30,13 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
     challenge_questions: Array.isArray(item.challenge_questions) ? item.challenge_questions : [item.challenge_question].filter(Boolean),
     found_date: item.date_found ? new Date(item.date_found).toISOString().split('T')[0] : '',
     found_time: item.date_found ? new Date(item.date_found).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : '',
-    location: item.location || ''
+    location: item.location || '',
+    brand: item.brand || '',
+    model: item.model || '',
+    category: item.category || ''
   });
+  const { categories: CATEGORIES } = useMasterData();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [isCapturing, setIsCapturing] = useState(false);
   const [captureTarget, setCaptureTarget] = useState(null); // 'main' or index
@@ -77,7 +83,7 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
         challenge_question: formData.challenge_questions[0] || null, // Sync legacy column to prevent ghost data
         date_found: dateFound, 
         review_status: 'reviewed', 
-        status: 'available',
+        status: item.status === 'reported' ? 'available' : item.status,
         photo_url: formData.main_photo_url // Ensure primary photo is synced back to photo_url
       },
       questionsChanged 
@@ -103,6 +109,9 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
         ...prev,
         public_title: !prev.public_title || prev.public_title === item.title ? (aiDraft.suggested_title || prev.public_title) : prev.public_title,
         public_description: !prev.public_description || prev.public_description === item.description ? (aiDraft.skeptical_summary || aiDraft.suggested_description || prev.public_description) : prev.public_description,
+        brand: !prev.brand ? (aiDraft.brand !== 'Generic' ? aiDraft.brand : prev.brand) : prev.brand,
+        model: !prev.model ? (aiDraft.model !== 'Generic' ? aiDraft.model : prev.model) : prev.model,
+        category: !prev.category ? (aiDraft.category || prev.category) : prev.category,
         challenge_questions: prev.challenge_questions.length === 0 && aiDraft.security_questions 
           ? aiDraft.security_questions 
           : prev.challenge_questions
@@ -123,6 +132,8 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
         public_title: analysis.suggested_title || prev.public_title,
         public_description: analysis.skeptical_summary || analysis.suggested_description || prev.public_description,
         brand: analysis.brand !== 'Generic' ? analysis.brand : prev.brand,
+        model: analysis.model !== 'Generic' ? analysis.model : prev.model,
+        category: analysis.category || prev.category,
         
         // Append Questions (merging with existing)
         challenge_questions: analysis.security_questions 
@@ -409,24 +420,66 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
                         />
                       </div>
 
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Category</label>
+                          <select 
+                            value={formData.category} 
+                            onChange={e => setFormData({...formData, category: e.target.value})} 
+                            className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-4 text-sm font-bold text-white outline-none focus:border-uni-500/50 appearance-none"
+                          >
+                            <option value="">Select Category</option>
+                            {CATEGORIES.map(c => (
+                              <option key={c.id} value={c.id}>{c.emoji} {c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Found Location</label>
+                          <input 
+                            type="text" 
+                            value={formData.location} 
+                            onChange={e => setFormData({...formData, location: e.target.value})} 
+                            className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-5 text-sm font-bold text-white outline-none focus:border-uni-500/50" 
+                            placeholder="Building / Room / Zone" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Brand</label>
+                          <input 
+                            type="text" 
+                            value={formData.brand} 
+                            onChange={e => setFormData({...formData, brand: e.target.value})} 
+                            className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-5 text-sm font-bold text-white outline-none focus:border-uni-500/50" 
+                            placeholder="e.g. Apple, Hydro Flask" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Model / Color</label>
+                          <input 
+                            type="text" 
+                            value={formData.model} 
+                            onChange={e => setFormData({...formData, model: e.target.value})} 
+                            className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-5 text-sm font-bold text-white outline-none focus:border-uni-500/50" 
+                            placeholder="e.g. iPhone 15, Blue" 
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Found Location</label>
-                          <button 
-                            onClick={() => setFormData({...formData, is_location_public: !formData.is_location_public})} 
-                            className={`text-[8px] font-black uppercase px-2 py-1 rounded-lg border transition-all ${formData.is_location_public ? 'bg-uni-400/10 text-uni-300 border-uni-400/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}
-                          >
-                            {formData.is_location_public ? 'Public Location' : 'Secret Location'}
-                          </button>
+                          <label className="text-[9px] text-slate-600 uppercase font-bold ml-1">Public Description</label>
+                          <span className="text-[8px] font-black text-slate-700 uppercase italic">Shown to Students</span>
                         </div>
-                        <input 
-                          type="text" 
-                          value={formData.location} 
-                          onChange={e => setFormData({...formData, location: e.target.value})} 
-                          className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl px-5 text-sm font-bold text-white outline-none focus:border-uni-500/50" 
-                          placeholder="Building / Room / Zone" 
+                        <textarea 
+                          value={formData.public_description} 
+                          onChange={e => setFormData({...formData, public_description: e.target.value})} 
+                          className="w-full min-h-[100px] bg-white/[0.03] border border-white/5 rounded-xl p-5 text-sm font-medium text-slate-300 outline-none focus:border-uni-500/50" 
+                          placeholder="What should the owner see?" 
                         />
-                        <p className="text-[8px] font-bold text-slate-600 uppercase tracking-widest ml-1 italic">Hidden location helps filter legitimate claimers.</p>
                       </div>
                     </div>
                   </div>

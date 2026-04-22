@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -25,12 +25,10 @@ import MatchmakerTab from './components/MatchmakerTab';
 import LostReportsTab from './components/LostReportsTab';
 import ActivityFeed from './components/ActivityFeed';
 import WitnessReportsTab from './components/WitnessReportsTab';
-import ReviewQueueTab from './components/ReviewQueueTab';
 import AdminHeader from './components/AdminHeader';
 import TaxonomyTab from './components/TaxonomyTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
-import MemberRegistry from './MemberRegistry';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
 import { imageCache } from '../../lib/imageCache';
 
@@ -67,21 +65,9 @@ const AdminDashboard = () => {
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [claimReviewStep, setClaimReviewStep] = useState(1);
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
-  const [showIntakeModal, setShowIntakeModal] = useState(null);
   const [selectedReviewItem, setSelectedReviewItem] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // Global event listeners for sidebar actions
-  useEffect(() => {
-    if (showIntakeModal) {
-      document.body.classList.add('modal-open');
-    } else {
-      document.body.classList.remove('modal-open');
-    }
-    return () => {
-      document.body.classList.remove('modal-open');
-    };
-  }, [showIntakeModal]);
 
   // Queries
   const { data: recentFound = [], isLoading: inventoryLoading, isFetching: inventoryFetching } = useQuery({
@@ -168,20 +154,9 @@ const AdminDashboard = () => {
     }
   }, [recentFound]);
 
-  const { data: reviewQueue = [], isFetching: reviewFetching } = useQuery({
-    queryKey: ['admin_review_queue'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('v_admin_review_queue').select('*');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: currentTab === 'review',
-    refetchInterval: 60000,
-  });
 
   // Dynamic Sync State: Watch the fetching status of the ACTIVE tab only
   const isSyncing = (currentTab === 'found' && inventoryFetching) || 
-                    (currentTab === 'review' && reviewFetching) ||
                     (currentTab === 'claims' && queryClient.isFetching({ queryKey: ['admin_claims'] }) > 0) ||
                     (currentTab === 'lost' && queryClient.isFetching({ queryKey: ['admin_lost'] }) > 0) ||
                     (currentTab === 'matches' && queryClient.isFetching({ queryKey: ['admin_matches'] }) > 0) ||
@@ -259,7 +234,12 @@ const AdminDashboard = () => {
 
   const lostItemStatusMutation = useMutation({
     mutationFn: async ({ id, status, admin_notes }) => {
-      const { error } = await supabase.from('lost_items').update({ status, admin_notes }).eq('id', id);
+      const { error } = await supabase.rpc('rpc_secure_lost_item_update', {
+        p_item_id: id,
+        p_status: status,
+        p_admin_notes: admin_notes,
+        p_admin_id: user.id
+      });
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_lost'] })
@@ -298,7 +278,6 @@ const AdminDashboard = () => {
     let key = `admin_${currentTab}`;
     if (currentTab === 'history' || currentTab === 'released') key = 'admin_history';
     if (currentTab === 'found') key = 'admin_inventory';
-    if (currentTab === 'review') key = 'admin_review_queue';
     if (currentTab === 'taxonomy') key = 'master_types';
     
     queryClient.invalidateQueries({ queryKey: [key] });
@@ -450,12 +429,6 @@ const AdminDashboard = () => {
               </TabsContent>
               <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
-              <TabsContent value="review" className="m-0 focus-visible:outline-none">
-                <ReviewQueueTab 
-                  onReviewItem={setSelectedReviewItem} 
-                  setPreviewImage={setPreviewImage} 
-                />
-              </TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none">
                 <ActivityFeed 
                   activities={historyFiltered} 
@@ -473,9 +446,10 @@ const AdminDashboard = () => {
                 />
               </TabsContent>
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
-              <TabsContent value="taxonomy" className="m-0 focus-visible:outline-none"><TaxonomyTab mutation={taxonomyMutation} /></TabsContent>
+              {user?.role === 'super_admin' && (
+                <TabsContent value="taxonomy" className="m-0 focus-visible:outline-none"><TaxonomyTab mutation={taxonomyMutation} /></TabsContent>
+              )}
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
-              <TabsContent value="registry" className="m-0 focus-visible:outline-none"><MemberRegistry {...{refreshTrigger: syncTriggers.registry}} /></TabsContent>
             </div>
           </div>
         </Tabs>

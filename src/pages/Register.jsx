@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { logSupabaseError, useAuth } from '../context/AuthContext';
-import ImageUpload from '../components/ImageUpload';
 import { useMasterData } from '../context/MasterDataContext';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, IdCard, Building, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, AlertCircle, ChevronRight, ChevronLeft, User, Mail, Key, Building, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 const Register = () => {
   const { colleges: COLLEGES } = useMasterData();
@@ -39,9 +38,8 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [studentId, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
-  const [proofUrl, setProofUrl] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   // UI State
   const [error, setError] = useState('');
@@ -49,7 +47,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
-  const totalSteps = 5;
+  const totalSteps = 2;
 
   // Tanstack Mutation
   const { mutate: handleRegister, isPending: loading } = useMutation({
@@ -63,9 +61,8 @@ const Register = () => {
         password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
-            student_id_number: studentId,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
             department: department
           }
         }
@@ -80,13 +77,11 @@ const Register = () => {
           id: authData.user.id,
           email: trimmedEmail,
           role: 'student',
-          first_name: firstName,
-          last_name: lastName,
-          student_id_number: studentId,
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
           department: department,
-          verification_proof_url: proofUrl,
           integrity_points: 0,
-          is_verified: false,
+          is_verified: true,
           show_full_name: false
         }]);
 
@@ -143,8 +138,9 @@ const Register = () => {
     setError('');
     
     if (step === 1) {
-      if (!email || !password) return setError({ message: "Email and password are required." });
+      if (!email || !password || !confirmPassword) return setError({ message: "Email and passwords are required." });
       if (password.length < 6) return setError({ message: "Password must be at least 6 characters." });
+      if (password !== confirmPassword) return setError({ message: "Passwords do not match." });
 
       // Security check: Verify if email exists
       setIsCheckingEmail(true);
@@ -175,11 +171,8 @@ const Register = () => {
     }
 
     if (step === 2) {
-      if (!firstName || !lastName || !studentId) return setError({ message: "All profile fields are required." });
+      if (!firstName || !lastName || !department) return setError({ message: "All profile fields and college selection are required." });
     }
-
-    if (step === 3 && !department) return setError({ message: "Please select your college." });
-    if (step === 4 && !proofUrl) return setError({ message: "Verification proof is required." });
 
     setStep(s => Math.min(s + 1, totalSteps));
   };
@@ -191,6 +184,9 @@ const Register = () => {
 
   const handleSubmit = () => {
     setError('');
+    if (!firstName || !lastName || !department) {
+      return setError({ message: "All profile fields and college selection are required." });
+    }
     handleRegister();
   };
 
@@ -222,9 +218,9 @@ const Register = () => {
             </CardHeader>
             <CardContent className="space-y-8">
               <div className="p-4 bg-emerald-500/5 rounded-2xl border border-emerald-500/10 text-left">
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 italic leading-none">Security Note</p>
+                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1 italic leading-none">Authorization Note</p>
                 <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                  You are now automatically logged in. Your registration is pending account approval, but you can start using the dashboard immediately.
+                  You are now automatically authorized. You can access all student features immediately.
                 </p>
               </div>
               <Button 
@@ -317,77 +313,59 @@ const Register = () => {
                       </button>
                     </div>
                   </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Confirm Password</Label>
+                    <div className="relative">
+                      <Key className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Input 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="••••••••" 
+                        value={confirmPassword} 
+                        onChange={e => setConfirmPassword(e.target.value)} 
+                        className="pl-10 h-12 bg-slate-950/50" 
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
               {step === 2 && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">First Name</Label>
-                      <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value.trim())} className="h-12 bg-slate-950/50" />
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Input placeholder="Juan" value={firstName} onChange={e => setFirstName(e.target.value)} className="h-12 bg-slate-950/50 pl-10" />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Last Name</Label>
-                      <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value.trim())} className="h-12 bg-slate-950/50" />
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value.trim())} className="h-12 bg-slate-950/50 pl-10" />
+                      </div>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Student ID</Label>
-                    <Input placeholder="2024-12345" value={studentId} onChange={e => setStudentId(e.target.value.toUpperCase().trim())} className="h-12 bg-slate-950/50" />
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Select College</Label>
+                    <div className="relative">
+                      <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 z-10" />
+                      <Select value={department} onValueChange={setDepartment}>
+                        <SelectTrigger className="h-12 bg-slate-950/50 pl-10">
+                          <SelectValue placeholder="Select your college" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-white/10 text-white">
+                          {COLLEGES.map(c => <SelectItem key={c.id} value={c.label} className="focus:bg-sky-500 italic uppercase text-[10px] font-black">{c.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {step === 3 && (
-                <div className="space-y-4">
-                  <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Select College</Label>
-                  <Select value={department} onValueChange={setDepartment}>
-                    <SelectTrigger className="h-12 bg-slate-950/50">
-                      <SelectValue placeholder="Select your college" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-900 border-white/10 text-white">
-                      {COLLEGES.map(c => <SelectItem key={c.id} value={c.label} className="focus:bg-sky-500 italic uppercase text-[10px] font-black">{c.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
 
-              {step === 4 && (
-                <div className="space-y-6 text-center">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest italic leading-none">Member Authorization</p>
-                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest opacity-60">Verification Proof Required</p>
-                  </div>
-                  <div className="relative z-20">
-                    <ImageUpload 
-                      description="Student ID or COR (JPG/PNG)" 
-                      value={proofUrl} 
-                      onUploadSuccess={setProofUrl} 
-                    />
-                  </div>
-                  <p className="text-[9px] text-slate-500 font-medium italic leading-tight px-4 opacity-80">
-                    Please ensure your name and ID number are clearly visible for faster account approval.
-                  </p>
-                </div>
-              )}
 
-              {step === 5 && (
-                <div className="space-y-4 bg-white/5 p-6 rounded-3xl border border-white/5">
-                  <div className="flex justify-between py-2 border-b border-white/5">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">User</span>
-                    <span className="text-sm font-black text-white italic">{firstName} {lastName}</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-white/5">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">ID</span>
-                    <span className="text-sm font-black text-white italic">{studentId}</span>
-                  </div>
-                  <div className="flex justify-between py-2">
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">COLLEGE</span>
-                    <span className="text-sm font-black text-sky-500 italic text-right">{department}</span>
-                  </div>
-                </div>
-              )}
             </motion.div>
           </AnimatePresence>
         </CardContent>

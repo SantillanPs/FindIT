@@ -28,7 +28,6 @@ const AdminHeader = ({
   const getTabLabel = (slug) => {
     const labels = {
       'found': 'All Items',
-      'review': 'New Reports',
       'claims': 'Claims',
       'matches': 'Matches',
       'lost': 'Lost Reports',

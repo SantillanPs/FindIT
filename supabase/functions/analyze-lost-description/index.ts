@@ -37,6 +37,7 @@ Guidelines:
 Return ONLY a JSON object with:
 {
   "category": "One of: smartphone, laptop, tablet, electronics, audio, bags, wallets, eyewear, accessories, identification, documents, keys, umbrella, gear, money, clothing, other",
+  "suggested_title": "A short, descriptive title (e.g. 'Blue Hydro Flask with Stickers', 'Lost Black Leather Wallet')",
   "attributes": {
     "color": "Primary color(s)",
     "brand": "Detected brand or 'Generic'",

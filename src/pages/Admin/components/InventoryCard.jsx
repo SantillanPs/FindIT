@@ -76,16 +76,6 @@ const InventoryCard = React.memo(({
             <h3 className="text-xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors duration-500 truncate capitalize">
               {item.title || categoryData?.name || 'Unnamed Item'}
             </h3>
-            
-            {item.status !== 'reported' && (
-              <button 
-                onClick={() => onReviewItem(item)}
-                className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/5 flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/10 transition-all shrink-0 active:scale-90"
-                title="Edit Forensic Details"
-              >
-                <Settings size={16} />
-              </button>
-            )}
           </div>
 
           <div className="grid grid-cols-2 gap-y-4 pt-1">
@@ -118,12 +108,21 @@ const InventoryCard = React.memo(({
           </div>
 
           {/* Action Button (Functional requirement) */}
-          <div className="pt-2">
+          <div className="flex gap-3 pt-2">
+            <Button
+              onClick={() => onReviewItem(item)}
+              variant="outline"
+              className="flex-grow h-14 rounded-2xl bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10 font-black text-[10px] uppercase tracking-[0.2em] transition-all"
+            >
+              <Settings size={18} className="mr-2" />
+              Edit
+            </Button>
+
             {item.status === 'reported' ? (
               <Button
                 onClick={() => handleStatusUpdate(item, 'in_custody')}
                 disabled={actionLoading === item.id}
-                className="w-full h-14 rounded-2xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95"
+                className="flex-[2] h-14 rounded-2xl bg-white text-slate-950 hover:bg-uni-600 hover:text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95"
               >
                 {actionLoading === item.id
                   ? <RefreshCw size={18} className="animate-spin" />
@@ -136,7 +135,7 @@ const InventoryCard = React.memo(({
                   setShowReleaseModal(item);
                   setReleaseForm({ name: item.identified_name || '', id_number: item.identified_student_id || '', photo_url: '' });
                 }}
-                className={`w-full h-14 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 border ${
+                className={`flex-[2] h-14 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 border ${
                   item.status === 'claimed'
                     ? 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-600 hover:text-white'
                     : 'border-green-500/20 bg-green-500/10 text-green-400 hover:bg-green-600 hover:text-white'

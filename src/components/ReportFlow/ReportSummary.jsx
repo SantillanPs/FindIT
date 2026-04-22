@@ -42,6 +42,9 @@ const ReportSummary = ({
                         <i className="fa-solid fa-quote-left"></i>
                     </div>
                     <div className="space-y-1">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Item Title</p>
+                        <p className="text-2xl font-black text-white italic leading-snug uppercase mb-4">{formData.title}</p>
+                        
                         <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em]">Item Description</p>
                         <p className="text-xl font-bold text-white italic leading-snug uppercase">"{formData.description}"</p>
                     </div>

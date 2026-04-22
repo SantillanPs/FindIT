@@ -76,6 +76,7 @@ const ReportLostItem = () => {
   const handleAnalysisComplete = (results) => {
     setFormData(prev => ({
       ...prev,
+      title: results.suggested_title || prev.title,
       category: results.category,
       attributes: results.attributes,
       location_hints: results.location_hints,
@@ -94,7 +95,7 @@ const ReportLostItem = () => {
     setError('');
 
     const reportPayload = {
-      title: formData.category || 'Lost Item',
+      title: formData.title || formData.category || 'Lost Item',
       description: formData.synthesized_description || formData.description,
       original_description: formData.description, // Store original in table
       synthesized_description: formData.synthesized_description,
@@ -153,6 +154,8 @@ const ReportLostItem = () => {
                 stepLabel="Step 2: Smart Check"
                 title="What we understood"
                 description="We've parsed your story into these details. Please verify or adjust them."
+                titleValue={formData.title}
+                onTitleChange={(val) => setFormData({...formData, title: val})}
                 value={formData.synthesized_description}
                 category={formData.category}
                 attributes={formData.attributes}

@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    const { id, photo_url, secondary_photos = [] } = record
+    const { id, photo_url, secondary_photos = [], title: currentTitle } = record
     
     // 1. Multi-Key Setup (Quota Resilience V5)
     let primaryKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY')
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const prompt = `Analyze these forensic images for a lost and found system.
 Return ONLY a JSON object with:
 {
-  "suggested_title": "[Brand] [Category] format",
+  "suggested_title": "A short, descriptive title (e.g. 'Blue Hydro Flask with Stickers', 'Black Leather Wallet')",
   "skeptical_summary": "Summary admitting visual ambiguity",
   "category": "One of: smartphone, laptop, tablet, electronics, audio, bags, wallets, eyewear, accessories, identification, documents, keys, umbrella, gear, money, clothing, other",
   "brand": "Detected brand or 'Generic'",
@@ -123,12 +123,23 @@ Return ONLY a JSON object with:
     if (!aiResult) throw new Error("AI reached maximum failover attempts.");
 
     // 4. Database Sync
-    const anonymizedTitle = `${aiResult.brand} ${aiResult.category}`
+    // Only overwrite title if it's a generic placeholder
+    const genericTitles = [
+      'AI Processing...',
+      'Processing AI Report...',
+      'Found Item',
+      'Found Item - Visual DNA pending analysis.',
+      'Analyzing Forensic Visuals...'
+    ];
+    
+    const shouldUpdateTitle = !currentTitle || genericTitles.includes(currentTitle);
+    const finalTitle = shouldUpdateTitle ? aiResult.suggested_title : currentTitle;
+
     await supabaseClient
       .from('found_items')
       .update({ 
-        title: anonymizedTitle,
-        ai_draft: { ...aiResult, suggested_title: anonymizedTitle },
+        title: finalTitle,
+        ai_draft: { ...aiResult, suggested_title: aiResult.suggested_title },
         brand: aiResult.brand !== 'Generic' ? aiResult.brand : record.brand,
         model: aiResult.model !== 'Generic' ? aiResult.model : record.model,
         category: aiResult.category
