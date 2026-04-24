@@ -243,7 +243,7 @@ const ReleaseItemModal = ({
                 </div>
               </div>
 
-              <div className="max-w-[280px] md:max-w-xs mx-auto">
+              <div className="max-w-[280px] md:max-w-xs mx-auto flex items-center justify-center min-h-[220px]">
                 <ImageUpload 
                   value={releaseForm.photo_url}
                   onUploadSuccess={(url) => setReleaseForm({...releaseForm, photo_url: url})}

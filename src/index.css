@@ -395,6 +395,15 @@
     background: rgba(148, 163, 184, 0.4);
   }
 
+  .animate-spin-slow {
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
   /* ═══════════════════════════════════════════════════
      Landing Page — Light Theme Overrides
      Dark theme: lt-* classes are inert (no-op).

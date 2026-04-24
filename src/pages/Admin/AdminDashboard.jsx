@@ -26,7 +26,6 @@ import LostReportsTab from './components/LostReportsTab';
 import ActivityFeed from './components/ActivityFeed';
 import WitnessReportsTab from './components/WitnessReportsTab';
 import AdminHeader from './components/AdminHeader';
-import TaxonomyTab from './components/TaxonomyTab';
 import Analytics from './Analytics';
 import Leaderboard from './Leaderboard';
 import { ITEM_ATTRIBUTES, COLOR_OPTIONS, CONDITION_OPTIONS } from '../../constants/attributes';
@@ -261,24 +260,10 @@ const AdminDashboard = () => {
   });
 
  
-  const taxonomyMutation = useMutation({
-    mutationFn: async ({ action, data }) => {
-      if (action === 'add_type') {
-        const { error } = await supabase.from('master_types').insert([data]);
-        if (error) throw error;
-      } else if (action === 'delete_type') {
-        const { error } = await supabase.from('master_types').delete().eq('id', data.id);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['master_types'] })
-  });
- 
   const refreshActiveTab = () => {
     let key = `admin_${currentTab}`;
     if (currentTab === 'history' || currentTab === 'released') key = 'admin_history';
     if (currentTab === 'found') key = 'admin_inventory';
-    if (currentTab === 'taxonomy') key = 'master_types';
     
     queryClient.invalidateQueries({ queryKey: [key] });
   };
@@ -446,9 +431,6 @@ const AdminDashboard = () => {
                 />
               </TabsContent>
               <TabsContent value="analytics" className="m-0 focus-visible:outline-none"><Analytics {...{onNavigateToTab: (tab) => navigate(`/admin/${tab}`), onSetSearchTerm: setSearchTerm, refreshTrigger: syncTriggers.analytics}} /></TabsContent>
-              {user?.role === 'super_admin' && (
-                <TabsContent value="taxonomy" className="m-0 focus-visible:outline-none"><TaxonomyTab mutation={taxonomyMutation} /></TabsContent>
-              )}
               <TabsContent value="users" className="m-0 focus-visible:outline-none"><Leaderboard {...{refreshTrigger: syncTriggers.leaderboard}} /></TabsContent>
             </div>
           </div>

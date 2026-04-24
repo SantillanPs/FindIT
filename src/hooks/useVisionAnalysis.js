@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -63,21 +63,22 @@ export const useVisionAnalysis = (item = null) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [item?.id, queryClient]);
+  }, [item?.id, queryClient, queryKey]);
 
   // 3. Manual Trigger (Mutation)
   const mutation = useMutation({
     mutationFn: async (customPhotos) => {
-      if (!item?.id) throw new Error('No item selected');
+      // For pre-intake, we might not have an item ID
+      const photosToAnalyze = customPhotos || (item ? [item.photo_url, ...(item.secondary_photos || [])].filter(Boolean) : []);
       
-      const photosToAnalyze = customPhotos || [item.photo_url, ...(item.secondary_photos || [])].filter(Boolean);
-      
+      if (photosToAnalyze.length === 0) throw new Error('No assets to analyze');
+
       console.log('[useVisionAnalysis] Triggering manual analysis...');
       const { data, error } = await supabase.functions.invoke('process-vision-ai', {
         body: { 
           trigger_source: 'admin_manual',
           record: { 
-            id: item.id, 
+            id: item?.id || null, 
             photo_url: photosToAnalyze[0],
             secondary_photos: photosToAnalyze.slice(1)
           } 
@@ -87,6 +88,11 @@ export const useVisionAnalysis = (item = null) => {
       if (error) {
         console.error('[useVisionAnalysis] Invoke Error:', error);
         throw error;
+      }
+
+      if (data?.error) {
+        console.error('[useVisionAnalysis] AI Stabilizer Error:', data.error, data.details);
+        throw new Error(data.details || data.error);
       }
 
       if (!data?.analysis) {

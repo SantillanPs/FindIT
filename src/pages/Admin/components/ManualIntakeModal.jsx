@@ -1,94 +1,182 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, 
-  X, 
-  Search, 
-  Calendar, 
-  User, 
-  Clock, 
-  ShieldCheck, 
-  Save,
-  AlertCircle,
-  Archive,
-  Camera,
-  Plus
-} from 'lucide-react';
-import ImageUpload from '../../../components/ImageUpload';
-import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
+import { Sparkles } from 'lucide-react';
+import { supabase } from '../../../lib/supabase';
+import { useVisionAnalysis } from '../../../hooks/useVisionAnalysis';
+
+// Modular Components
+import IntakeHeader from './ManualIntake/IntakeHeader';
+import IntakeFooter from './ManualIntake/IntakeFooter';
+import Step1Visuals from './ManualIntake/Step1Visuals';
+import Step2Identity from './ManualIntake/Step2Identity';
+import Step3Location from './ManualIntake/Step3Location';
+import Step4Review from './ManualIntake/Step4Review';
 
 /**
- * ManualIntakeModal - Premium Professional (Pro Max)
- * - Allows admins to archive physical lost/found reports.
- * - Bridges paper-trail with digital registry.
- * - Clean, high-impact form design.
+ * ManualIntakeModal - Modular Edition
+ * - 4-Step Wizard Flow mirroring the Found Item Report.
+ * - Decomposed into sub-components for maintainability.
  */
 const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
-  const [type, setType] = useState('found'); // 'found' or 'lost'
+  const [step, setStep] = useState(1);
+  const [type] = useState('found');
   const [showPulse, setShowPulse] = useState(false);
-  const titleInputRef = useRef(null);
+  const scrollRef = useRef(null);
+  
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: '',
+    category: 'other',
     location: '',
+    zone_id: null,
     date: new Date().toISOString().split('T')[0],
     time: '',
     reporter_name: '',
     assisted_by: '',
     photo_url: '',
+    secondary_photos: ['', ''],
+    attributes: {
+      material: '',
+      condition: 'good',
+      brand: '',
+      model: '',
+      color: ''
+    },
+    identified_name: '',
+    identified_id_number: '',
+    identified_user_id: null,
+    is_public: true
   });
+
+  const [isIdentified, setIsIdentified] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
+  const [memberResults, setMemberResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const stepLabels = [
+    "Visual Evidence",
+    "Identity & Attributes",
+    "Time & Location",
+    "Administrative Metadata"
+  ];
+
+  const stepSubtitles = [
+    "Capture multi-angle photos for AI extraction.",
+    "Refine owner details and item characteristics.",
+    "Pinpoint where and when the asset was recovered.",
+    "Finalize record with intake officer credentials."
+  ];
+
+  // AI Vision Integration
+  const { isAnalysing, aiDraft, triggerAnalysis, error: aiError } = useVisionAnalysis();
+  const lastAnalyzedRef = useRef(null);
 
   useEffect(() => {
     if (showPulse) {
-      const timer = setTimeout(() => setShowPulse(false), 600);
+      const timer = setTimeout(() => setShowPulse(false), 3000);
       return () => clearTimeout(timer);
     }
   }, [showPulse]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo(0, 0);
+    }
+  }, [step]);
 
-  const resetForm = () => {
-    setForm({
-      title: '',
-      description: '',
-      category: '',
-      location: '',
-      date: new Date().toISOString().split('T')[0],
-      time: '',
-      reporter_name: '',
-      assisted_by: '',
-      photo_url: '',
-    });
+  // Manual Trigger for AI Analysis
+  const handleManualScan = async () => {
+    const photos = [form.photo_url, ...form.secondary_photos].filter(Boolean);
+    const primaryPhoto = form.photo_url;
+
+    if (!primaryPhoto || isAnalysing) return;
+
+    console.log("[AI-INTAKE] Manual trigger initiated by admin...");
+    
+    try {
+      const result = await triggerAnalysis(photos);
+      if (result) {
+      setForm(prev => ({
+        ...prev,
+        title: prev.title || result.suggested_title,
+        description: prev.description || result.skeptical_summary,
+        category: result.category || prev.category,
+        attributes: {
+          ...prev.attributes,
+          brand: prev.attributes.brand || result.brand,
+          model: prev.attributes.model || result.model,
+          color: prev.attributes.color || result.color,
+        }
+      }));
+
+      if (result.detected_owner_info?.id_number || result.detected_owner_info?.name) {
+        setIsIdentified(true);
+        setForm(prev => ({
+          ...prev,
+          identified_name: prev.identified_name || result.detected_owner_info.name || '',
+          identified_id_number: prev.identified_id_number || result.detected_owner_info.id_number || ''
+        }));
+
+        const { data: matchedUsers } = await supabase
+          .from('user_profiles_v1')
+          .select('id, first_name, last_name, student_id_number')
+          .or(`student_id_number.eq."${result.detected_owner_info.id_number}",first_name.ilike.%${result.detected_owner_info.name}%,last_name.ilike.%${result.detected_owner_info.name}%`)
+          .limit(1);
+
+        if (matchedUsers && matchedUsers.length > 0) {
+          const member = matchedUsers[0];
+          setForm(prev => ({
+            ...prev,
+            identified_name: `${member.first_name} ${member.last_name}`,
+            identified_id_number: member.student_id_number,
+            identified_user_id: member.id
+          }));
+          setShowPulse(true);
+        }
+      }
+    }
+    } catch (err) {
+      console.error("[AI-INTAKE] Manual scan failed:", err);
+    }
   };
 
-  const handleSubmit = (e, isNext = false) => {
+  if (!isOpen) return null;
+
+  const handleNext = () => step < 4 ? setStep(s => s + 1) : null;
+  const handleBack = () => step > 1 ? setStep(s => s - 1) : null;
+
+  const handleSubmit = (e) => {
     if (e) e.preventDefault();
-    onSubmit({
-      ...form,
-      type,
-      // Metadata for manual entry
-      is_manual_entry: true,
-      status: type === 'found' ? 'in_custody' : 'open',
-      isNext
-    });
-    if (isNext) {
-      resetForm();
-      setShowPulse(true);
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 100);
-    }
+    const payload = {
+      p_type: type,
+      p_title: form.title || 'Found Item',
+      p_description: form.description,
+      p_category: form.category,
+      p_location: form.location,
+      p_date: form.date,
+      p_reporter_name: form.reporter_name,
+      p_status: 'in_custody',
+      p_assisted_by: form.assisted_by,
+      p_time: form.time,
+      p_photo_url: form.photo_url,
+      p_zone_id: form.zone_id,
+      p_attributes: form.attributes,
+      p_secondary_photos: form.secondary_photos.filter(url => !!url),
+      p_brand: form.attributes.brand,
+      p_model: form.attributes.model,
+      p_identified_name: isIdentified ? form.identified_name : null,
+      p_identified_id_number: isIdentified ? form.identified_id_number : null,
+      p_identified_user_id: isIdentified ? form.identified_user_id : null,
+      p_is_public: form.is_public
+    };
+    onSubmit(payload);
   };
 
   return (
     <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 isolate">
       <motion.div 
-        initial={{ opacity: 0 }} 
-        animate={{ opacity: 1 }} 
-        exit={{ opacity: 0 }} 
-        onClick={onClose} 
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+        onClick={onClose} className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" 
       />
       <motion.div 
         initial={{ scale: 0.95, opacity: 0, y: 20 }} 
@@ -102,235 +190,55 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
             "0 0 0 40px rgba(59, 130, 246, 0)"
           ] : "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
         }} 
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }} 
-        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] relative z-10 shadow-3xl flex flex-col overflow-hidden max-h-[80vh]"
+        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] relative z-10 shadow-3xl flex flex-col overflow-hidden max-h-[85vh]"
       >
-        {/* Header */}
-        <div className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/[0.01]">
-          <div className="flex items-center gap-5">
-            <div className="w-12 h-12 rounded-2xl bg-uni-500/10 flex items-center justify-center border border-uni-500/20 text-uni-400">
-              <Archive size={24} />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">Manual Archive Intake</h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Physical Record Bridge</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center p-1 bg-black/40 rounded-xl border border-white/10 w-fit">
-            <button 
-              onClick={() => setType('found')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${type === 'found' ? 'bg-uni-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-            >
-              Found
-            </button>
-            <button 
-              onClick={() => setType('lost')}
-              className={`px-6 py-2 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${type === 'lost' ? 'bg-uni-500 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
-            >
-              Lost
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Form */}
-        <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto no-scrollbar p-8 md:p-10 space-y-10">
-          
-          {/* Identity Section */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Reporter Identification</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{type === 'found' ? 'Found By' : 'Reported By'}</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="Physical form name..."
-                    className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner"
-                    value={form.reporter_name}
-                    onChange={e => setForm({...form, reporter_name: e.target.value})}
-                  />
+        <AnimatePresence>
+          {isAnalysing && (
+            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="bg-uni-500 overflow-hidden">
+              <div className="px-6 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-white rounded-full animate-ping" />
+                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Neural Forensic Scan in Progress...</span>
                 </div>
+                <Sparkles className="text-white/50 animate-spin-slow" size={14} />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assisted By (Admin)</label>
-                <div className="relative">
-                  <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-uni-400" size={16} />
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="Staff on paper..."
-                    className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 text-sm font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner"
-                    value={form.assisted_by}
-                    onChange={e => setForm({...form, assisted_by: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-          {/* Item Details */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Asset Details</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Item Title / Headline</label>
-                <input 
-                  ref={titleInputRef}
-                  required
-                  type="text" 
-                  placeholder="e.g. Black Leather Wallet"
-                  className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl px-6 text-sm font-bold text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner"
-                  value={form.title}
-                  onChange={e => setForm({...form, title: e.target.value})}
+        <IntakeHeader 
+          step={step} stepLabels={stepLabels} stepSubtitles={stepSubtitles} 
+          isAnalysing={isAnalysing} onClose={onClose} 
+          aiError={aiError}
+        />
+
+        <div ref={scrollRef} className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8">
+          <AnimatePresence mode="wait">
+            <motion.div key={step} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-8">
+              {step === 1 && <Step1Visuals form={form} setForm={setForm} isAnalysing={isAnalysing} />}
+              {step === 2 && (
+                <Step2Identity 
+                  form={form} setForm={setForm} isIdentified={isIdentified} setIsIdentified={setIsIdentified}
+                  memberSearchQuery={memberSearchQuery} setMemberSearchQuery={setMemberSearchQuery}
+                  memberResults={memberResults} setMemberResults={setMemberResults}
+                  isSearching={isSearching} isAnalysing={isAnalysing} aiDraft={aiDraft}
+                  showPulse={showPulse} setShowPulse={setShowPulse}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Category</label>
-                <select 
-                  required
-                  className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl px-6 text-sm font-bold text-white focus:border-uni-500/50 outline-none appearance-none cursor-pointer [&>option]:text-slate-900"
-                  value={form.category}
-                  onChange={e => setForm({...form, category: e.target.value})}
-                >
-                  <option value="" className="text-slate-500">Select Category</option>
-                  {Object.keys(ITEM_ATTRIBUTES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">{type === 'found' ? 'Location Found' : 'Last Seen At'}</label>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
-                  <input 
-                    required
-                    type="text" 
-                    placeholder="Building / Room..."
-                    className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all shadow-inner"
-                    value={form.location}
-                    onChange={e => setForm({...form, location: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Detailed Description</label>
-              <textarea 
-                required
-                placeholder="Transcribe the physical description here..."
-                className="w-full bg-white/[0.03] border border-white/5 rounded-[2rem] p-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none min-h-[120px] transition-all resize-none shadow-inner"
-                value={form.description}
-                onChange={e => setForm({...form, description: e.target.value})}
-              />
-            </div>
-
-            {/* Visual Evidence Section */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  Visual Evidence {type === 'found' && <span className="text-red-500 ml-1 italic">*Required</span>}
-                </p>
-              </div>
-              <div className="p-4 bg-white/[0.02] border border-white/5 rounded-[2rem]">
-                <ImageUpload
-                  value={form.photo_url}
-                  onUploadSuccess={(url) => setForm({ ...form, photo_url: url })}
-                  description={type === 'found' ? "Upload actual photo of the found item" : "Reference photo (optional)"}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Temporal Data */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-3 rounded-full bg-uni-500"></div>
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Historical Timing</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Report Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-uni-400" size={16} />
-                  <input 
-                    required
-                    type="date" 
-                    className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 text-sm font-bold text-white focus:border-uni-500/50 outline-none transition-all [color-scheme:dark]"
-                    value={form.date}
-                    onChange={e => setForm({...form, date: e.target.value})}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Time Noted (Optional)</label>
-                <div className="relative">
-                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
-                  <input 
-                    type="text" 
-                    placeholder="e.g. 2:30 PM"
-                    className="w-full h-14 bg-white/[0.03] border border-white/5 rounded-2xl pl-12 pr-6 text-sm font-medium text-white placeholder:text-slate-700 focus:border-uni-500/50 focus:bg-white/[0.06] outline-none transition-all"
-                    value={form.time}
-                    onChange={e => setForm({...form, time: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex gap-4 items-start">
-            <AlertCircle className="text-amber-500 shrink-0 mt-0.5" size={18} />
-            <div className="space-y-1">
-              <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.1em]">Verification Notice</p>
-              <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                This record will bypass the standard review protocol and go straight to <span className="text-white font-bold uppercase">{type === 'found' ? 'IN CUSTODY' : 'ACTIVE LOST'}</span>. Ensure physical form data is transcribed accurately.
-              </p>
-            </div>
-          </div>
-        </form>
-
-        {/* Footer - Optimized for High-Density Mobile (Pro Max) */}
-        <div className="p-4 md:p-8 border-t border-white/5 bg-slate-900/80 backdrop-blur-sm flex flex-row items-center gap-2">
-           <button 
-            type="button"
-            onClick={onClose} 
-            className="px-4 h-12 text-slate-500 hover:text-white hover:bg-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
-          >
-            Discard
-          </button>
-
-          <div className="flex-1 flex items-center gap-2">
-            <button 
-              type="button"
-              onClick={() => handleSubmit(null, true)}
-              disabled={actionLoading || (type === 'found' && !form.photo_url)}
-              className="flex-1 h-12 text-[10px] font-bold text-uni-400 bg-uni-500/10 hover:bg-uni-500/20 rounded-xl uppercase tracking-widest transition-all border border-uni-500/20 disabled:opacity-50"
-            >
-              Next
-            </button>
-
-            <button 
-              onClick={handleSubmit}
-              disabled={actionLoading || (type === 'found' && !form.photo_url)}
-              className="flex-[1.5] h-12 bg-uni-500 hover:bg-uni-600 disabled:bg-slate-800 disabled:text-slate-500 rounded-xl text-white text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-uni-500/20 transition-all flex items-center justify-center gap-2"
-            >
-              {actionLoading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <Save size={14} />
               )}
-              Store
-            </button>
-          </div>
+              {step === 3 && <Step3Location form={form} setForm={setForm} />}
+              {step === 4 && <Step4Review form={form} setForm={setForm} />}
+            </motion.div>
+          </AnimatePresence>
         </div>
+
+        <IntakeFooter 
+          step={step} onClose={onClose} handleBack={handleBack} 
+          handleNext={handleNext} handleSubmit={handleSubmit} 
+          isAnalysing={isAnalysing} actionLoading={actionLoading} form={form} 
+          handleManualScan={handleManualScan} aiDraft={aiDraft}
+        />
       </motion.div>
     </div>
   );

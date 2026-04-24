@@ -143,7 +143,6 @@ const AppContent = () => {
               <Route path="/admin/users" element={<AdminDashboard />} />
               <Route path="/admin/registry" element={<AdminDashboard />} />
               <Route path="/admin/analytics" element={<AdminDashboard />} />
-              <Route path="/admin/taxonomy" element={<AdminDashboard />} />
               <Route path="/admin/released" element={<AdminDashboard />} />
               <Route path="/admin/profile/:userId" element={<Profile />} />
             </Route>
@@ -154,6 +153,7 @@ const AppContent = () => {
               <Route path="/super/staff" element={<SuperAdminDashboard />} />
               <Route path="/super/audit" element={<SuperAdminDashboard />} />
               <Route path="/super/feedback" element={<SuperAdminDashboard />} />
+              <Route path="/super/taxonomy" element={<SuperAdminDashboard />} />
             </Route>
           </Route>
         </Routes>

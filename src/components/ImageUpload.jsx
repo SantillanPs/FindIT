@@ -57,7 +57,7 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 w-full h-full flex flex-col">
       <input 
         type="file" 
         className="hidden" 
@@ -68,9 +68,10 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
       
       <div 
         onClick={triggerFileInput}
-        className={`upload-zone relative overflow-hidden group transition-all aspect-video flex items-center justify-center p-0 ${
+        className={`upload-zone relative overflow-hidden group transition-all flex-grow flex items-center justify-center p-0 w-full ${
           preview ? 'border-uni-500/50' : 'border-white/10'
         } ${uploading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
+        style={{ minHeight: !preview ? '140px' : 'auto' }}
       >
         {preview ? (
             <div 

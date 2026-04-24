@@ -532,7 +532,7 @@ const SubmitClaim = () => {
                  </div>
 
                  <div className="max-w-xl mx-auto w-full space-y-8">
-                    <div className="p-6 bg-white/[0.02] rounded-[2.5rem] border border-white/5">
+                    <div className="p-6 bg-white/[0.02] rounded-[2.5rem] border border-white/5 flex items-center justify-center min-h-[220px]">
                         <ImageUpload
                             value={proofPhotoUrl}
                             onUploadSuccess={(url) => setProofPhotoUrl(url)}

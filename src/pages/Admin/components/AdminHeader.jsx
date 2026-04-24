@@ -35,7 +35,6 @@ const AdminHeader = ({
       'history': 'Activity',
       'released': 'Finished Items',
       'analytics': 'System Status',
-      'taxonomy': 'Categories',
       'users': 'Staff',
       'registry': 'Members'
     };

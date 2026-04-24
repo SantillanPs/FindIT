@@ -320,22 +320,31 @@ const LayoutContents = ({ children }) => {
   const manualIntakeMutation = useMutation({
     mutationFn: async (data) => {
       const { error } = await supabase.rpc('rpc_manual_intake', {
-        p_type: data.type,
-        p_title: data.title,
-        p_description: data.description,
-        p_category: data.category,
-        p_location: data.location,
-        p_date: `${data.date}T12:00:00Z`,
-        p_reporter_name: data.reporter_name,
-        p_status: data.status,
-        p_assisted_by: data.assisted_by,
-        p_time: data.time,
-        p_photo_url: data.photo_url
+        p_type: data.p_type,
+        p_title: data.p_title,
+        p_description: data.p_description,
+        p_category: data.p_category,
+        p_location: data.p_location,
+        p_date: `${data.p_date}T12:00:00Z`,
+        p_reporter_name: data.p_reporter_name,
+        p_status: data.p_status,
+        p_assisted_by: data.p_assisted_by,
+        p_time: data.p_time,
+        p_photo_url: data.p_photo_url,
+        p_zone_id: data.p_zone_id,
+        p_attributes: data.p_attributes,
+        p_secondary_photos: data.p_secondary_photos,
+        p_brand: data.p_brand,
+        p_model: data.p_model,
+        p_identified_name: data.p_identified_name,
+        p_identified_id_number: data.p_identified_id_number,
+        p_identified_user_id: data.p_identified_user_id,
+        p_is_public: data.p_is_public
       });
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [variables.type === 'found' ? 'admin_inventory' : 'admin_lost'] });
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
       // Only close if it's NOT a sequential "Next" operation
       if (!variables.isNext) {
         setShowManualIntake(false);
@@ -408,6 +417,7 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/super/feedback" icon={MessageSquare} label="Feedback Hub" count={adminStats.feedbacks} />
                      <SideNavItem to="/super/staff" icon={Users} label="Staff Management" />
                      <SideNavItem to="/super/audit" icon={ShieldCheck} label="Security Audit Logs" />
+                     <SideNavItem to="/super/taxonomy" icon={LayoutGrid} label="Taxonomy Registry" />
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
                    <SidebarMenu>
@@ -426,9 +436,6 @@ const LayoutContents = ({ children }) => {
                      <SideNavItem to="/admin/matches" icon={Sparkles} label="Matchmaker" count={adminStats.matches} />
                      <SideNavItem to="/admin/users" icon={Trophy} label="Leaderboard" />
                      <SideNavItem to="/admin/analytics" icon={PieChart} label="System Insights" />
-                     {user.role === 'super_admin' && (
-                       <SideNavItem to="/admin/taxonomy" icon={LayoutGrid} label="Taxonomy Registry" />
-                     )}
                    </SidebarMenu>
                    <SidebarSeparator className="my-4 bg-white/5 mx-2" />
                    <SidebarMenu>

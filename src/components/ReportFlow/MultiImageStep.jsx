@@ -32,7 +32,7 @@ const MultiImageStep = ({
                       <span className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">1. Front View</span>
                       <Badge className="bg-uni-500 text-white text-[9px] uppercase">Required</Badge>
                   </div>
-                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden">
+                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden flex items-center justify-center min-h-[220px]">
                       <ImageUpload 
                           value={primaryImage}
                           onUploadSuccess={onPrimaryUpload}
@@ -47,7 +47,7 @@ const MultiImageStep = ({
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">2. Back View</span>
                       <Badge variant="outline" className="border-white/10 text-slate-500 text-[9px] uppercase">Optional</Badge>
                   </div>
-                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden">
+                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden flex items-center justify-center min-h-[220px]">
                       <ImageUpload 
                           value={secondaryPhotos[0]}
                           onUploadSuccess={(url) => onSecondaryUpload(0, url)}
@@ -62,7 +62,7 @@ const MultiImageStep = ({
                       <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">3. Precision View</span>
                       <Badge variant="outline" className="border-white/10 text-slate-500 text-[9px] uppercase">Optional</Badge>
                   </div>
-                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden">
+                  <div className="glass-panel rounded-[2.5rem] border border-white/5 p-4 overflow-hidden flex items-center justify-center min-h-[220px]">
                       <ImageUpload 
                           value={secondaryPhotos[1]}
                           onUploadSuccess={(url) => onSecondaryUpload(1, url)}

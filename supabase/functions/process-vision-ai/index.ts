@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
           }
         });
       } catch (e) {
-        console.error(`[RETRIEVAL-ERROR] ${e.message}`);
+        console.error('[RETRIEVAL-ERROR] ' + e.message);
       }
     }
 
@@ -60,31 +60,41 @@ Deno.serve(async (req) => {
 
     // 3. Resilient Exchange with Key Failover
     let aiResult = null
-    const maxRetries = 4 // Increased for key rotation
+    const maxRetries = 2
+    const keyLogs = []
     const prompt = `Analyze these forensic images for a lost and found system.
 Return ONLY a JSON object with:
 {
-  "suggested_title": "A short, descriptive title (e.g. 'Blue Hydro Flask with Stickers', 'Black Leather Wallet')",
+  "suggested_title": "A short, descriptive title",
   "skeptical_summary": "Summary admitting visual ambiguity",
-  "category": "One of: smartphone, laptop, tablet, electronics, audio, bags, wallets, eyewear, accessories, identification, documents, keys, umbrella, gear, money, clothing, other",
-  "brand": "Detected brand or 'Generic'",
-  "model": "Detected model or 'Generic'",
+  "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Other",
+  "brand": "Detected brand or 'Generic' (For ID cards, put the University name)",
+  "model": "Detected model or 'Generic' (For ID cards, put 'Student ID' or 'Staff ID')",
+  "color": "Primary color detected (e.g. 'Blue', 'Black', 'Silver')",
+  "detected_owner_info": {
+    "is_id_card": true,
+    "name": "Full name if clearly visible (e.g. 'JANIEL T. LAMELA')",
+    "id_number": "Student/Staff ID number (e.g. '24-00591')",
+    "confidence": 0-100
+  },
   "forensic_details": [{"observation": "...", "qualifier": "...", "reasoning": "..."}],
-  "security_questions": ["As many deep owner questions as possible based on the visual evidence (aim for 5-10 unique questions). Use VERY simple English - keep it student-friendly and casual (e.g. 'What is on the phone case?')."],
+  "security_questions": ["As many deep owner questions as possible based on the visual evidence."],
   "is_blurry": false,
   "is_generic": false,
   "confidence": 0-100
 }`
 
     for (let attempt = 0; attempt < maxRetries; attempt++) {
-      // Rotate key on every retry to maximize success
-      const currentKey = (attempt % 2 === 0 || !secondaryKey) ? primaryKey : secondaryKey;
+      const isPrimary = (attempt % 2 === 0 || !secondaryKey);
+      const currentKey = isPrimary ? primaryKey : secondaryKey;
+      const keyAlias = isPrimary ? "PRIMARY" : "SECONDARY";
+      const maskedKey = '***' + (currentKey ? currentKey.slice(-4) : 'NONE');
       
       try {
-        console.log(`[AI-STABILIZER-V5] Attempt ${attempt + 1}/${maxRetries} using ${attempt % 2 === 0 ? 'Primary' : 'Secondary'} Key`);
+        console.log('[AI-STABILIZER-V5] Attempt ' + (attempt + 1) + '/' + maxRetries + ' using ' + keyAlias + ' (' + maskedKey + ')');
         
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${currentKey}`,
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + currentKey,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -96,15 +106,18 @@ Return ONLY a JSON object with:
         )
 
         if (response.status === 429) {
+          keyLogs.push({ key: keyAlias, masked: maskedKey, status: 429, error: "Quota Exhausted" });
           const waitTime = (attempt + 1) * 2000;
-          console.warn(`[QUOTA-429] Swapping keys or waiting ${waitTime}ms...`);
+          console.warn('[QUOTA-429] ' + keyAlias + ' exhausted. Swapping...');
           await new Promise(resolve => setTimeout(resolve, waitTime));
           continue;
         }
 
         if (!response.ok) {
           const errJson = await response.json().catch(() => ({}));
-          throw new Error(`Google API ${response.status}: ${errJson.error?.message || response.statusText}`);
+          const errMsg = errJson.error?.message || response.statusText;
+          keyLogs.push({ key: keyAlias, masked: maskedKey, status: response.status, error: errMsg });
+          throw new Error('Google API ' + response.status + ': ' + errMsg);
         }
 
         const resJson = await response.json();
@@ -114,8 +127,8 @@ Return ONLY a JSON object with:
         aiResult = JSON.parse(text);
         break; 
       } catch (e) {
+        keyLogs.push({ key: keyAlias, masked: maskedKey, error: e.message });
         if (attempt === maxRetries - 1) throw e;
-        console.warn(`[RETRYABLE-V5] ${e.message}. Rotating...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -123,28 +136,26 @@ Return ONLY a JSON object with:
     if (!aiResult) throw new Error("AI reached maximum failover attempts.");
 
     // 4. Database Sync
-    // Only overwrite title if it's a generic placeholder
-    const genericTitles = [
-      'AI Processing...',
-      'Processing AI Report...',
-      'Found Item',
-      'Found Item - Visual DNA pending analysis.',
-      'Analyzing Forensic Visuals...'
-    ];
-    
-    const shouldUpdateTitle = !currentTitle || genericTitles.includes(currentTitle);
-    const finalTitle = shouldUpdateTitle ? aiResult.suggested_title : currentTitle;
+    if (id) {
+      const genericTitles = [
+        'AI Processing...', 'Processing AI Report...', 'Found Item',
+        'Found Item - Visual DNA pending analysis.', 'Analyzing Forensic Visuals...'
+      ];
+      
+      const shouldUpdateTitle = !currentTitle || genericTitles.includes(currentTitle);
+      const finalTitle = shouldUpdateTitle ? aiResult.suggested_title : currentTitle;
 
-    await supabaseClient
-      .from('found_items')
-      .update({ 
-        title: finalTitle,
-        ai_draft: { ...aiResult, suggested_title: aiResult.suggested_title },
-        brand: aiResult.brand !== 'Generic' ? aiResult.brand : record.brand,
-        model: aiResult.model !== 'Generic' ? aiResult.model : record.model,
-        category: aiResult.category
-      })
-      .eq('id', id)
+      await supabaseClient
+        .from('found_items')
+        .update({ 
+          title: finalTitle,
+          ai_draft: { ...aiResult, suggested_title: aiResult.suggested_title },
+          brand: aiResult.brand !== 'Generic' ? aiResult.brand : record.brand,
+          model: aiResult.model !== 'Generic' ? aiResult.model : record.model,
+          category: aiResult.category
+        })
+        .eq('id', id);
+    }
 
     return new Response(JSON.stringify({ success: true, analysis: aiResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -154,14 +165,15 @@ Return ONLY a JSON object with:
   } catch (error) {
     const primaryKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY')
     const secondaryKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY_EXTRA')
-    const keyCount = [primaryKey, secondaryKey].filter(Boolean).length
-
-    console.error('[CRITICAL-FAILURE-V5]', error.message)
+    
     return new Response(JSON.stringify({ 
       error: "[STABILIZER-V5-PURITY]", 
       details: error.message,
       diagnostics: {
-        keys_found: keyCount,
+        keys_found: [primaryKey, secondaryKey].filter(Boolean).length,
+        primary_masked: primaryKey ? '***' + primaryKey.slice(-4) : 'MISSING',
+        secondary_masked: secondaryKey ? '***' + secondaryKey.slice(-4) : 'MISSING',
+        failover_logs: error.message === "AI reached maximum failover attempts." ? "View server logs for full retry chain" : error.message,
         purity_confirmed: true
       }
     }), {
