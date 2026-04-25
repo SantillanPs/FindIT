@@ -12,11 +12,10 @@ const Step4Review = ({ form, setForm }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Reporter Identity</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Reporter Identity (Optional)</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={16} />
               <input 
-                required
                 type="text" 
                 placeholder="Physical form name..."
                 className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl pl-12 pr-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"
@@ -26,11 +25,10 @@ const Step4Review = ({ form, setForm }) => {
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assisted By (Staff)</label>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assisted By (Staff - Optional)</label>
             <div className="relative">
               <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-uni-400" size={16} />
               <input 
-                required
                 type="text" 
                 placeholder="Your name / ID..."
                 className="w-full h-12 bg-white/[0.03] border border-white/5 rounded-xl pl-12 pr-4 text-xs font-bold text-white focus:border-uni-500/50 outline-none transition-all"

@@ -62,7 +62,7 @@ const IntakeFooter = ({
           <button 
             type="button"
             onClick={handleSubmit}
-            disabled={actionLoading || !form.reporter_name || !form.assisted_by}
+            disabled={actionLoading}
             className="w-full md:px-12 h-14 md:h-14 bg-uni-500 text-white hover:bg-uni-400 disabled:bg-slate-800 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 group shadow-2xl shadow-uni-500/20"
           >
             {actionLoading ? (

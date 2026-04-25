@@ -2,12 +2,30 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import ZoneSelectorStep from '../../../../components/ReportFlow/ZoneSelectorStep';
 
-const Step3Location = ({ form, setForm }) => {
+const Step3Location = ({ form, setForm, onNext }) => {
+  const handleSkip = () => {
+    setForm({
+      ...form, 
+      location: 'Legacy Intake - No Location Record',
+      zone_id: null
+    });
+    if (onNext) onNext();
+  };
+
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">3. Precise Location</p>
-        <p className="text-xs text-slate-500 font-medium leading-relaxed">Map the item to the digital campus zones for smart discovery.</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <p className="text-[10px] font-black text-uni-400 uppercase tracking-widest italic">3. Precise Location</p>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">Map the item to the digital campus zones for smart discovery.</p>
+        </div>
+        <button 
+          onClick={handleSkip}
+          className="px-6 py-2 bg-white/5 border border-white/10 rounded-xl text-[9px] font-black text-slate-400 hover:text-white hover:bg-white/10 transition-all uppercase tracking-widest flex items-center gap-2 group"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-600 group-hover:bg-amber-500 transition-colors" />
+          No Record (Skip)
+        </button>
       </div>
 
       <div className="space-y-6">
@@ -18,10 +36,11 @@ const Step3Location = ({ form, setForm }) => {
             description=""
             formData={form}
             setFormData={setForm}
-            onNext={() => {}} // Not used as standalone
+            onNext={onNext}
             hideHeader={true}
           />
         </div>
+...
 
         <div className="space-y-2">
           <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Specific Room / Area Hint</label>

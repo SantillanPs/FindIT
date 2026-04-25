@@ -227,7 +227,7 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
                   showPulse={showPulse} setShowPulse={setShowPulse}
                 />
               )}
-              {step === 3 && <Step3Location form={form} setForm={setForm} />}
+              {step === 3 && <Step3Location form={form} setForm={setForm} onNext={handleNext} />}
               {step === 4 && <Step4Review form={form} setForm={setForm} />}
             </motion.div>
           </AnimatePresence>
