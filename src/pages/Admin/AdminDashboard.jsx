@@ -376,7 +376,10 @@ const AdminDashboard = () => {
   const historyFiltered = historyItems.filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (item.released_to_name && item.released_to_name.toLowerCase().includes(searchTerm.toLowerCase())) || item.id.toString().includes(searchTerm));
   const filteredClaims = pendingClaims.filter(claim => (claim.owner_name && claim.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || (claim.item_category && claim.item_category.toLowerCase().includes(searchTerm.toLowerCase())) || claim.student_id?.toString().includes(searchTerm));
   const filteredMatches = matches.filter(group => group.found_item?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || group.found_item?.category?.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredLostReports = lostReports.filter(report => report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.owner_name && report.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || report.id.toString().includes(searchTerm));
+  const filteredLostReports = lostReports.filter(report => {
+    if (report.status === 'dismissed' || report.status === 'resolved') return false;
+    return report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.owner_name && report.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || report.id.toString().includes(searchTerm);
+  });
 
   if (loading) return (
     <div className="flex justify-center py-32">
