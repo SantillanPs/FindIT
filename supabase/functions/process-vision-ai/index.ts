@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       const maskedKey = '***' + (currentKey ? currentKey.slice(-4) : 'NONE');
       
       try {
-        console.log(`[AI-STABILIZER-V5] Attempt ${attempt + 1}/${maxRetries} using ${keyAlias} (${maskedKey}) Model: ${aiModel}`);
+        console.log(`[AI-STABILIZER-V5-DIAGNOSTIC] Attempt ${attempt + 1}/${maxRetries} | Key: ${keyAlias} | Target Model: "${aiModel}"`);
         
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${currentKey}`,

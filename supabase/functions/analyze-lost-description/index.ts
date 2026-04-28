@@ -102,7 +102,7 @@ Input Narrative: "${description}"`
       synthesized_description: description, // Fallback to original narrative
       debug: {
         timestamp: new Date().toISOString(),
-        model: "gemini-2.5-flash",
+        model: Deno.env.get('GOOGLE_MODEL') || 'unknown',
         status: "failed"
       }
     }), {

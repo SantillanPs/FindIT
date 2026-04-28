@@ -15,6 +15,7 @@ const Register = lazy(() => import('./pages/Register'));
 const GuestReportItem = lazy(() => import('./pages/GuestReportItem'));
 const GuestReportFound = lazy(() => import('./pages/GuestReportFound'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Announcements = lazy(() => import('./pages/Announcements'));
 
 // Student Pages
 const StudentDashboard = lazy(() => import('./pages/Student/StudentDashboard'));
@@ -113,6 +114,7 @@ const AppContent = () => {
           <Route path="/report/lost" element={<ReportLostItem />} />
           <Route path="/lost-report-status/:trackingId" element={<LostReportStatus />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/announcements" element={<Announcements />} />
 
           <Route element={<GuestRoute />}>
             <Route path="/login" element={<Login />} />
