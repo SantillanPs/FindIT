@@ -133,7 +133,7 @@ const InventoryCard = React.memo(({
               <Button
                 onClick={() => {
                   setShowReleaseModal(item);
-                  setReleaseForm({ name: item.identified_name || '', id_number: item.identified_student_id || '', photo_url: '' });
+                  setReleaseForm({ name: item.identified_name || '', id_number: item.identified_id_number || '', photo_url: '' });
                 }}
                 className={`flex-[2] h-14 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl active:scale-95 border ${
                   item.status === 'claimed'

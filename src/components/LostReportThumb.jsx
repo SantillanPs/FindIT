@@ -20,6 +20,7 @@ const LostReportThumb = ({ report, onClick }) => {
           alt={report.title} 
           className="w-full h-full object-cover" 
           loading="lazy"
+          decoding="async"
           onError={() => { imageCache.markFailed(report.photo_url); setImgError(true); }}
         />
       ) : (

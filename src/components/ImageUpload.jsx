@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { compressImage } from '../lib/imageUtils';
 
 const ImageUpload = ({ onUploadSuccess, value, description }) => {
   const [uploading, setUploading] = useState(false);
@@ -13,10 +14,13 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
   }, [value]);
 
   const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+    let file = e.target.files[0];
     if (!file) return;
 
-    // Local Preview
+    // Reset error
+    setError('');
+
+    // Local Preview (Immediate feedback)
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreview(reader.result);
@@ -25,9 +29,16 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
 
     // Upload
     setUploading(true);
-    setError('');
 
     try {
+      // COMPRESSION: Reduce size before upload
+      if (file.size > 200 * 1024) { // Only compress if > 200KB
+        try {
+          file = await compressImage(file, { maxWidth: 1200, quality: 0.7 });
+        } catch (compErr) {
+          console.warn('Compression failed, using original', compErr);
+        }
+      }
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;

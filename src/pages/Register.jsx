@@ -40,6 +40,7 @@ const Register = () => {
   const [lastName, setLastName] = useState('');
   const [department, setDepartment] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [studentId, setStudentId] = useState('');
   
   // UI State
   const [error, setError] = useState('');
@@ -63,7 +64,8 @@ const Register = () => {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
-            department: department
+            department: department,
+            student_id_number: studentId.trim()
           }
         }
       });
@@ -80,9 +82,10 @@ const Register = () => {
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           department: department,
+          student_id_number: studentId.trim(),
           integrity_points: 0,
           is_verified: true,
-          show_full_name: false
+          show_full_name: true
         }]);
 
       if (dbError) throw dbError;
@@ -171,7 +174,9 @@ const Register = () => {
     }
 
     if (step === 2) {
-      if (!firstName || !lastName || !department) return setError({ message: "All profile fields and college selection are required." });
+      if (!firstName || !lastName || !department || !studentId) {
+        return setError({ message: "All profile fields, Student ID, and college selection are required." });
+      }
     }
 
     setStep(s => Math.min(s + 1, totalSteps));
@@ -184,8 +189,8 @@ const Register = () => {
 
   const handleSubmit = () => {
     setError('');
-    if (!firstName || !lastName || !department) {
-      return setError({ message: "All profile fields and college selection are required." });
+    if (!firstName || !lastName || !department || !studentId) {
+      return setError({ message: "All profile fields, Student ID, and college selection are required." });
     }
     handleRegister();
   };
@@ -345,6 +350,18 @@ const Register = () => {
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <Input placeholder="Cruz" value={lastName} onChange={e => setLastName(e.target.value.trim())} className="h-12 bg-slate-950/50 pl-10" />
                       </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 italic">Student ID Number</Label>
+                    <div className="relative">
+                      <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                      <Input 
+                        placeholder="24-00000" 
+                        value={studentId} 
+                        onChange={e => setStudentId(e.target.value.toUpperCase())} 
+                        className="h-12 bg-slate-950/50 pl-10" 
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">

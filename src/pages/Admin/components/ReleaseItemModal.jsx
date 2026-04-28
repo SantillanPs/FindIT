@@ -96,7 +96,7 @@ const ReleaseItemModal = ({
                   <p className="text-base md:text-lg font-bold text-white tracking-tight">{showReleaseModal.identified_name || 'Registered Member'}</p>
                   <div className="flex items-center gap-2 text-uni-400">
                     <CreditCard size={12} />
-                    <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{showReleaseModal.identified_student_id || 'Institutional ID'}</p>
+                    <p className="text-[10px] md:text-[11px] font-bold uppercase tracking-widest">{showReleaseModal.identified_id_number || 'Institutional ID'}</p>
                   </div>
                 </div>
                 

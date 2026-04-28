@@ -29,7 +29,7 @@ const IntakeFooter = ({
         {step < 4 ? (
           <div className="flex items-center gap-3 w-full md:w-auto">
             {/* Conditional "Run AI Scan" button in Step 1 */}
-            {step === 1 && form.photo_url && !aiDraft && !isAnalysing && (
+            {step === 1 && form.photo_url && !isAnalysing && (
               <button 
                 type="button"
                 onClick={handleManualScan}

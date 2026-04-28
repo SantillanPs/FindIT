@@ -21,6 +21,7 @@ const ItemThumb = ({ item, onClick }) => {
           alt={item.title} 
           className="w-full h-full object-cover" 
           loading="lazy"
+          decoding="async"
           onError={() => { imageCache.markFailed(item.photo_thumbnail_url || item.photo_url); setImgError(true); }}
         />
       ) : (

@@ -73,23 +73,24 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     setSaveLoading(true);
     try {
-      const { data, error } = await supabase
+      if (!editForm.student_id_number || editForm.student_id_number.trim() === '') {
+        throw new Error('Student ID is mandatory');
+      }
+
+      const { error } = await supabase
         .from('user_profiles_v1')
         .update({
           first_name: editForm.first_name,
           last_name: editForm.last_name,
-          student_id_number: editForm.student_id_number,
-          department: editForm.department
+          student_id_number: editForm.student_id_number.trim(),
+          department: editForm.department,
+          show_full_name: true
         })
-        .eq('id', currentUser.id)
-        .select()
-        .single();
+        .eq('id', currentUser.id);
 
       if (error) throw error;
       
-      // Standard: Invalidate queries after mutation
       await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
-      
       setIsEditing(false);
       refreshUser();
     } catch (err) {
@@ -224,15 +225,19 @@ const Profile = () => {
             icon={Hash} 
             label="ID Number" 
             value={profileUser.student_id_number} 
-            accent="violet"
+            accent="sky"
             isEditing={isEditing}
+            valueColor={!profileUser.student_id_number ? 'text-rose-400 font-black' : 'text-slate-300'}
             editContent={
-              <input 
-                value={editForm.student_id_number} 
-                onChange={e => setEditForm({...editForm, student_id_number: e.target.value})}
-                className="w-full h-11 px-4 bg-slate-950/50 border border-white/10 rounded-xl text-sm font-medium text-white focus:border-uni-500 focus:outline-none transition-colors"
-                placeholder="Student/Staff ID"
-              />
+              <div className="space-y-1">
+                <input 
+                  value={editForm.student_id_number} 
+                  onChange={e => setEditForm({...editForm, student_id_number: e.target.value.toUpperCase()})}
+                  className={`w-full h-11 px-4 bg-slate-950/50 border ${!editForm.student_id_number ? 'border-rose-500/50' : 'border-white/10'} rounded-xl text-sm font-medium text-white focus:border-uni-500 focus:outline-none transition-colors`}
+                  placeholder="24-00000"
+                />
+                {!editForm.student_id_number && <p className="text-[9px] text-rose-400 font-black uppercase tracking-widest pl-1">ID is Required</p>}
+              </div>
             }
           />
           <SettingsRow 
@@ -254,71 +259,7 @@ const Profile = () => {
           />
         </SettingsGroup>
 
-        {/* Group 2: Platform Standing */}
-        <SettingsGroup title="Platform Standing">
-          <SettingsRow 
-            icon={Trophy} 
-            label="Integrity Score" 
-            value={`${profileUser.integrity_points || 0} Points`} 
-            accent="emerald" 
-          />
-          <SettingsRow 
-            icon={AlertCircle} 
-            label="Account Strikes" 
-            value={`${profileUser.fraud_strikes || 0} Infractions`} 
-            accent="rose" 
-            valueColor={profileUser.fraud_strikes > 0 ? 'text-rose-400' : 'text-slate-300'}
-          />
-          <SettingsRow 
-            icon={CheckCircle2} 
-            label="Honor Standing" 
-            value={profileUser.is_certificate_eligible ? 'Excellent' : 'Needs Review'} 
-            accent={profileUser.is_certificate_eligible ? 'emerald' : 'amber'}
-            valueColor={profileUser.is_certificate_eligible ? 'text-emerald-400 font-bold' : 'text-amber-400'}
-          />
-        </SettingsGroup>
 
-        {/* Group 3: Verification Details */}
-        <SettingsGroup title="Verification Credentials">
-          <SettingsRow 
-            icon={ShieldCheck} 
-            label="Clearance Status" 
-            value={profileUser.verification_status?.toUpperCase() || 'UNKNOWN'} 
-            accent="sky" 
-          />
-          <SettingsRow 
-            icon={Clock} 
-            label="Last Updated" 
-            value={new Date(profileUser.updated_at).toLocaleDateString()} 
-            accent="slate" 
-          />
-          
-          {isOwnProfile && (
-            <div className="p-5 sm:p-6 bg-transparent border-t border-white/10">
-              {(profileUser.verification_status === 'rejected' || !profileUser.verification_proof_url) ? (
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-rose-500/5 rounded-2xl border border-rose-500/20">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-widest text-rose-400 mb-1 flex items-center gap-1.5"><AlertCircle size={14} /> Action Required</p>
-                    <p className="text-xs text-rose-300 font-medium">{profileUser.verification_status === 'rejected' ? 'Your verification was denied.' : 'Please upload a valid institutional ID to get verified.'}</p>
-                  </div>
-                  <button onClick={() => setIsVerificationModalOpen(true)} className="px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold text-xs tracking-wide rounded-xl transition-all whitespace-nowrap shadow-lg shadow-rose-500/20 active:scale-95">
-                    Resolve Issue
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/10 shadow-inner">
-                  <div className="mt-0.5 p-1.5 bg-sky-500/10 rounded-lg">
-                     <ShieldCheck size={16} className="text-sky-400" />
-                  </div>
-                  <div>
-                     <p className="text-xs font-bold text-white tracking-wide">Document Secured</p>
-                     <p className="text-[11px] text-slate-400 mt-0.5">Your identity proof is stored securely and is not publicly visible.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </SettingsGroup>
         
       </div>
 
@@ -371,63 +312,6 @@ const Profile = () => {
         </AnimatePresence>
       )}
 
-      {/* Verification Resolution Modal */}
-      <AnimatePresence>
-        {isVerificationModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
-              onClick={() => setIsVerificationModalOpen(false)}
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col"
-            >
-              <div className="p-5 border-b border-white/5 flex justify-between items-center bg-slate-950/50">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <ShieldCheck className="text-uni-400" size={18} /> Verification Center
-                </h3>
-                <button onClick={() => setIsVerificationModalOpen(false)} className="text-slate-500 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 w-7 h-7 rounded-full flex items-center justify-center">
-                  <X size={14} />
-                </button>
-              </div>
-              
-              <div className="p-6">
-                {profileUser.verification_status === 'rejected' && profileUser.verification_feedback && (
-                  <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl shadow-inner">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-rose-400 mb-2 flex items-center gap-1.5"><AlertCircle size={14} /> Admin Feedback</p>
-                    <p className="text-[13px] text-rose-200 leading-relaxed italic font-medium">"{profileUser.verification_feedback}"</p>
-                  </div>
-                )}
-                
-                <div className="space-y-3">
-                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Upload New ID Proof</p>
-                  <ImageUpload 
-                    label="Select Official ID"
-                    onUploadSuccess={async (url) => {
-                      const { error } = await supabase
-                        .from('user_profiles_v1')
-                        .update({ verification_proof_url: url, verification_status: 'pending' })
-                        .eq('id', currentUser.id);
-                      if (!error) {
-                         await queryClient.invalidateQueries({ queryKey: ['profile', targetId] });
-                         refreshUser();
-                         setIsVerificationModalOpen(false);
-                      }
-                    }}
-                  />
-                  <p className="text-[10px] text-slate-500 text-center mt-2 px-4 leading-relaxed">Ensure all details are clearly visible. Blurry or cropped images will be rejected.</p>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -446,7 +330,7 @@ const SettingsGroup = ({ title, children }) => (
 const SettingsRow = ({ icon: Icon, label, value, isEditing, editContent, accent = 'slate', valueColor = 'text-slate-300' }) => {
   const accentColors = {
     sky: 'text-sky-400 bg-sky-400/10',
-    violet: 'text-violet-400 bg-violet-400/10',
+    blue: 'text-blue-400 bg-blue-400/10',
     emerald: 'text-emerald-400 bg-emerald-400/10',
     rose: 'text-rose-400 bg-rose-400/10',
     amber: 'text-amber-400 bg-amber-400/10',

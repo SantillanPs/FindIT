@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useVisionAnalysis } from '../../../hooks/useVisionAnalysis';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Modular Components
 import IntakeHeader from './ManualIntake/IntakeHeader';
@@ -83,6 +84,43 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
       scrollRef.current.scrollTo(0, 0);
     }
   }, [step]);
+
+  // Cleanup on mount to prevent data leakage from previous sessions
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (isOpen) {
+      // Clear AI cache for new manual intake
+      queryClient.setQueryData(['ai_analysis', undefined], null);
+      
+      // Reset local state
+      setStep(1);
+      setIsIdentified(false);
+      setForm({
+        title: '',
+        description: '',
+        category: 'other',
+        location: '',
+        zone_id: null,
+        date: new Date().toISOString().split('T')[0],
+        time: '',
+        reporter_name: '',
+        assisted_by: '',
+        photo_url: '',
+        secondary_photos: ['', ''],
+        attributes: {
+          material: '',
+          condition: 'good',
+          brand: '',
+          model: '',
+          color: ''
+        },
+        identified_name: '',
+        identified_id_number: '',
+        identified_user_id: null,
+        is_public: true
+      });
+    }
+  }, [isOpen, queryClient]);
 
   // Manual Trigger for AI Analysis
   const handleManualScan = async () => {

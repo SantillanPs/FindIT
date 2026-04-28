@@ -65,16 +65,16 @@ Deno.serve(async (req) => {
     const prompt = `Analyze these forensic images for a lost and found system.
 Return ONLY a JSON object with:
 {
-  "suggested_title": "A short, descriptive title",
+  "suggested_title": "Concise title. Use abbreviations for institutions (e.g. NEMSU, SDSSU, SSCT). ABSOLUTELY NO personal names in title. Format for ID cards: '[Abbreviation] [Type]' (e.g. 'NEMSU Student ID'). For other items, just the item name (e.g. 'Black Backpack').",
   "skeptical_summary": "Summary admitting visual ambiguity",
   "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Other",
-  "brand": "Detected brand or 'Generic' (For ID cards, put the University name)",
+  "brand": "Detected brand or 'Generic' (For ID cards, put the University abbreviation like NEMSU, SDSSU)",
   "model": "Detected model or 'Generic' (For ID cards, put 'Student ID' or 'Staff ID')",
   "color": "Primary color detected (e.g. 'Blue', 'Black', 'Silver')",
   "detected_owner_info": {
     "is_id_card": true,
-    "name": "Full name if clearly visible (e.g. 'JANIEL T. LAMELA')",
-    "id_number": "Student/Staff ID number (e.g. '24-00591')",
+    "name": "Full name if clearly visible (KEEP THIS INTERNAL, DO NOT PUT IN SUGGESTED_TITLE)",
+    "id_number": "Student/Staff ID number",
     "confidence": 0-100
   },
   "forensic_details": [{"observation": "...", "qualifier": "...", "reasoning": "..."}],
@@ -94,7 +94,7 @@ Return ONLY a JSON object with:
         console.log('[AI-STABILIZER-V5] Attempt ' + (attempt + 1) + '/' + maxRetries + ' using ' + keyAlias + ' (' + maskedKey + ')');
         
         const response = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + currentKey,
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + currentKey,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

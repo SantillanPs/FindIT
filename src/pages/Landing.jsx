@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+/* eslint-disable no-unused-vars */
 import { motion, AnimatePresence } from 'framer-motion';
+/* eslint-enable no-unused-vars */
 import { useAuth } from '../context/AuthContext';
 import { useMasterData } from '../context/MasterDataContext';
 import { 
@@ -18,8 +20,19 @@ import {
   Trophy,
   GraduationCap,
   Building2,
-  X
+  X,
+  AlertCircle,
+  Bell,
+  ChevronLeft
 } from 'lucide-react';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../components/ui/carousel";
+import AutoScroll from "embla-carousel-auto-scroll";
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 
@@ -121,17 +134,89 @@ const Landing = () => {
         
         data = (resData || []).map(item => ({
           ...item,
-          identified_student_id: item.identified_student_id_masked
+          identified_student_id: item.identified_student_id
         }));
         error = resError;
       }
       
       if (error) throw error;
-      console.info(`[Query] Found Items [Source: Standardized View]:`, data?.length || 0, 'records');
-      return data || [];
+      
+      const processedData = (data || []).map(item => ({
+        ...item,
+        identified_student_id: item.identified_student_id
+      }));
+
+      console.info(`[Query] Found Items [Source: Standardized View]:`, processedData.length, 'records');
+      return processedData;
     },
     placeholderData: keepPreviousData,
   });
+
+  // Derived state for Urgent Matches
+  const identifiedItems = items.filter(item => item.is_owner_identified);
+  const generalItems = items.filter(item => !item.is_owner_identified);
+
+  // ═══════════════════════════════════════════════
+  // INFINITE CAROUSEL LOGIC
+  // ═══════════════════════════════════════════════
+  useEffect(() => {
+    const carousel = document.getElementById('urgent-carousel');
+    if (!carousel || identifiedItems.length === 0) return;
+
+    let animationFrameId;
+    let lastTime = 0;
+    const speed = 0.5; // Pixels per frame
+
+    const animate = (time) => {
+      if (lastTime !== 0) {
+        const isHovered = carousel.matches(':hover');
+        const isManual = carousel.dataset.isScrollingManual === 'true';
+        
+        if (!isHovered && !isManual) {
+          carousel.scrollLeft += speed;
+          
+          const maxScroll = carousel.scrollWidth / 3;
+          
+          // Reset for Right-to-Left movement
+          if (carousel.scrollLeft >= maxScroll * 2) {
+            carousel.scrollLeft -= maxScroll;
+          }
+          // Reset for Left-to-Right movement (manual)
+          if (carousel.scrollLeft <= maxScroll * 0.5) {
+            carousel.scrollLeft += maxScroll;
+          }
+        }
+      }
+      lastTime = time;
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    const initTimeout = setTimeout(() => {
+      carousel.scrollLeft = (carousel.scrollWidth - carousel.clientWidth) / 3;
+      animationFrameId = requestAnimationFrame(animate);
+    }, 500);
+
+    const handleManualScrollStart = () => { carousel.dataset.isScrollingManual = 'true'; };
+    const handleManualScrollEnd = () => { 
+      setTimeout(() => {
+        delete carousel.dataset.isScrollingManual; 
+      }, 1000);
+    };
+
+    carousel.addEventListener('touchstart', handleManualScrollStart);
+    carousel.addEventListener('touchend', handleManualScrollEnd);
+    carousel.addEventListener('mousedown', handleManualScrollStart);
+    carousel.addEventListener('mouseup', handleManualScrollEnd);
+
+    return () => {
+      clearTimeout(initTimeout);
+      cancelAnimationFrame(animationFrameId);
+      carousel.removeEventListener('touchstart', handleManualScrollStart);
+      carousel.removeEventListener('touchend', handleManualScrollEnd);
+      carousel.removeEventListener('mousedown', handleManualScrollStart);
+      carousel.removeEventListener('mouseup', handleManualScrollEnd);
+    };
+  }, [identifiedItems.length]);
 
   // Lost Reports Query
   const { data: lostReports = [], isLoading: reportsLoading } = useQuery({
@@ -167,7 +252,7 @@ const Landing = () => {
     }
   };
 
-  const filteredItems = items;
+  const filteredItems = generalItems;
   const filteredLostReports = lostReports;
   const isLoading = activeTab === 'found' ? itemsLoading : reportsLoading;
   const currentItems = activeTab === 'found' ? filteredItems : filteredLostReports;
@@ -323,6 +408,117 @@ const Landing = () => {
           ═══════════════════════════════════════════════ */}
       <section id="browse" className="lt-divider py-4 md:py-12 border-t border-white/5 relative">
         <div className="max-w-7xl mx-auto px-4 md:px-12 space-y-4 md:space-y-10">
+
+          {/* ═══════════════════════════════════════════════
+              URGENT MATCHES SECTION
+              High-priority horizontal scroll for identified items
+              ═══════════════════════════════════════════════ */}
+          <AnimatePresence>
+            {identifiedItems.length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4 mb-8"
+              >
+                <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
+                      <AlertCircle className="h-5 w-5 text-emerald-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-black text-emerald-400 uppercase tracking-[0.3em] italic">
+                        Registry Spotlight: Owner Identified
+                      </h2>
+                      <div className="h-px w-32 bg-gradient-to-r from-emerald-500/30 to-transparent mt-1"></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
+                      {identifiedItems.length} {identifiedItems.length === 1 ? 'Match' : 'Matches'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Professional shadcn Carousel */}
+                <Carousel 
+                  opts={{ align: "start", loop: true }}
+                  plugins={[
+                    AutoScroll({
+                      speed: 1,
+                      startDelay: 500,
+                      direction: "forward",
+                      stopOnInteraction: false,
+                    })
+                  ]}
+                  className="w-full relative group"
+                >
+                  <CarouselContent className="-ml-4">
+                    {identifiedItems.map((item, idx) => (
+                      <CarouselItem key={`${item.id}-${idx}`} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
+                        <div className="relative group cursor-pointer h-full" onClick={() => navigate(`/submit-claim/${item.id}`)}>
+                          {/* Announcement Glow Effect */}
+                          <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                          
+                          <div className="relative lt-surface flex items-center gap-4 p-4 rounded-2xl border border-emerald-500/30 bg-slate-900/60 backdrop-blur-xl h-full">
+                            {/* Small Image */}
+                            <div className="h-24 w-24 rounded-xl overflow-hidden shrink-0 border border-white/5 bg-slate-950 shadow-2xl">
+                              <img 
+                                src={item.photo_thumbnail_url || item.photo_url} 
+                                alt={item.title}
+                                loading="lazy"
+                                className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              />
+                            </div>
+                            
+                             {/* Info */}
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`flex h-2 w-2 rounded-full ${item.category === 'ID Card' ? 'bg-emerald-400 animate-pulse' : 'bg-sky-400'}`}></span>
+                                <span className={`text-[9px] font-black uppercase tracking-widest truncate ${item.category === 'ID Card' ? 'text-emerald-400' : 'text-sky-400'}`}>
+                                  {item.category === 'ID Card' ? 'Public Announcement' : 'Owner Identified'}
+                                </span>
+                              </div>
+                              <h3 className="text-sm md:text-base font-black text-white truncate leading-tight uppercase tracking-tight italic">
+                                {item.identified_name ? (
+                                  <><span className={item.category === 'ID Card' ? 'text-emerald-400' : 'text-sky-400'}>{item.identified_name}</span>, claim this!</>
+                                ) : (
+                                  item.title || item.category
+                                ) || 'Identified Asset'}
+                              </h3>
+                              <div className="flex flex-col gap-0.5">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight truncate">
+                                  {item.title}
+                                </p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <GraduationCap className="h-3 w-3 text-sky-400 shrink-0" />
+                                  <p className="text-[10px] font-bold text-sky-400/90 tracking-tighter uppercase truncate">
+                                    ID: <span className="text-white font-black text-xs">{item.identified_student_id_masked || 'Matched'}</span>
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Action Cue */}
+                            <div className="shrink-0 text-emerald-500/30 group-hover:text-emerald-400 transition-colors">
+                              <ChevronRight size={20} />
+                            </div>
+                          </div>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  
+                  {/* Strategic Controls */}
+                  <div className="absolute top-1/2 -left-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <CarouselPrevious className="h-10 w-10 bg-slate-950/80 border-white/10 text-white hover:bg-emerald-500 hover:text-white rounded-xl shadow-2xl" />
+                  </div>
+                  <div className="absolute top-1/2 -right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <CarouselNext className="h-10 w-10 bg-slate-950/80 border-white/10 text-white hover:bg-emerald-500 hover:text-white rounded-xl shadow-2xl" />
+                  </div>
+                </Carousel>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Tab Switcher + Desktop Search */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-8">

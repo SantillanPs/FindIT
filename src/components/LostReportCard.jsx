@@ -33,7 +33,8 @@ const LostReportCard = ({ report, onWitness }) => {
           <img 
             src={report.photo_url} 
             alt={report.title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" 
+            loading="lazy"
+            decoding="async"
             onError={() => { imageCache.markFailed(report.photo_url); setImgError(true); }}
           />
         ) : (
@@ -51,8 +52,8 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Category Overlay (Top Left) */}
         <div className="absolute top-4 left-4 z-20">
-            <div className="bg-violet-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-violet-500/20 flex items-center gap-2">
-                <span className="text-[11px] font-bold text-violet-400 uppercase tracking-wider">
+            <div className="bg-sky-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-500/20 flex items-center gap-2">
+                <span className="text-[11px] font-bold text-sky-400 uppercase tracking-wider">
                     {categoryData?.label || 'General'}
                 </span>
             </div>
@@ -104,8 +105,8 @@ const LostReportCard = ({ report, onWitness }) => {
         {/* Description List */}
         <div className="px-5 space-y-3 mb-6 flex-grow mt-4">
             <div className="flex items-start gap-4">
-                <div className="mt-1 w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center shrink-0 border border-violet-500/5">
-                    <AlignLeft className="h-3 w-3 text-violet-400" />
+                <div className="mt-1 w-5 h-5 rounded-full bg-sky-500/10 flex items-center justify-center shrink-0 border border-sky-500/5">
+                    <AlignLeft className="h-3 w-3 text-sky-400" />
                 </div>
                 <div className="flex flex-col gap-2">
                     <p className="text-[13px] text-slate-400 font-medium leading-relaxed line-clamp-3">
