@@ -52,6 +52,9 @@ Return ONLY a JSON object with:
 
 Input Narrative: "${description}"`
 
+    const aiModel = Deno.env.get('GOOGLE_MODEL')
+    if (!aiModel) throw new Error("GOOGLE_MODEL environment variable is required")
+
     let aiResult = null
     const maxRetries = 2
 
@@ -60,7 +63,7 @@ Input Narrative: "${description}"`
       
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${currentKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${currentKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

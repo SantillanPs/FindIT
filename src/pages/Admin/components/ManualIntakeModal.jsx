@@ -35,7 +35,8 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
     reporter_name: '',
     assisted_by: '',
     photo_url: '',
-    secondary_photos: ['', ''],
+    secondary_photos: [],
+    photos: [], // { url, is_landing_page, is_ai_scan }
     attributes: {
       material: '',
       condition: 'good',
@@ -106,7 +107,8 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
         reporter_name: '',
         assisted_by: '',
         photo_url: '',
-        secondary_photos: ['', ''],
+        secondary_photos: [],
+        photos: [],
         attributes: {
           material: '',
           condition: 'good',
@@ -124,15 +126,18 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
 
   // Manual Trigger for AI Analysis
   const handleManualScan = async () => {
-    const photos = [form.photo_url, ...form.secondary_photos].filter(Boolean);
-    const primaryPhoto = form.photo_url;
+    const mainPhoto = form.photos.find(p => p.is_landing_page)?.url || (form.photos.length > 0 ? form.photos[0].url : '');
+    const forensicPhotos = form.photos.filter(p => p.is_ai_scan).map(p => p.url);
 
-    if (!primaryPhoto || isAnalysing) return;
+    if (forensicPhotos.length === 0 || isAnalysing) return;
 
-    console.log("[AI-INTAKE] Manual trigger initiated by admin...");
+    console.log("[AI-INTAKE] Manual trigger initiated by admin with role-based visuals...");
     
     try {
-      const result = await triggerAnalysis(photos);
+      const result = await triggerAnalysis({ 
+        main_photo: mainPhoto, 
+        forensic_photos: forensicPhotos 
+      });
       if (result) {
       setForm(prev => ({
         ...prev,
@@ -196,10 +201,10 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
       p_status: 'in_custody',
       p_assisted_by: form.assisted_by,
       p_time: form.time,
-      p_photo_url: form.photo_url,
+      p_photo_url: form.photos.find(p => p.is_landing_page)?.url || (form.photos.length > 0 ? form.photos[0].url : ''),
       p_zone_id: form.zone_id,
       p_attributes: form.attributes,
-      p_secondary_photos: form.secondary_photos.filter(url => !!url),
+      p_secondary_photos: form.photos.filter(p => !p.is_landing_page).map(p => p.url),
       p_brand: form.attributes.brand,
       p_model: form.attributes.model,
       p_identified_name: isIdentified ? form.identified_name : null,
@@ -230,17 +235,17 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
         }} 
         transition={{ duration: 0.6 }}
         exit={{ scale: 0.95, opacity: 0, y: 20 }} 
-        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] relative z-10 shadow-3xl flex flex-col overflow-hidden max-h-[85vh]"
+        className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-2xl relative z-10 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
       >
         <AnimatePresence>
           {isAnalysing && (
             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="bg-uni-500 overflow-hidden">
-              <div className="px-6 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Neural Forensic Scan in Progress...</span>
+              <div className="px-4 py-1.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                  <span className="text-[9px] font-bold text-white uppercase tracking-wider">AI Scan in Progress...</span>
                 </div>
-                <Sparkles className="text-white/50 animate-spin-slow" size={14} />
+                <Sparkles className="text-white/50 animate-spin-slow" size={12} />
               </div>
             </motion.div>
           )}
@@ -252,9 +257,9 @@ const ManualIntakeModal = ({ isOpen, onClose, onSubmit, actionLoading }) => {
           aiError={aiError}
         />
 
-        <div ref={scrollRef} className="flex-grow overflow-y-auto custom-scrollbar p-6 md:p-8">
+        <div ref={scrollRef} className="flex-grow overflow-y-auto custom-scrollbar p-4 md:p-6">
           <AnimatePresence mode="wait">
-            <motion.div key={step} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-8">
+            <motion.div key={step} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-5">
               {step === 1 && <Step1Visuals form={form} setForm={setForm} isAnalysing={isAnalysing} />}
               {step === 2 && (
                 <Step2Identity 

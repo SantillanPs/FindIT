@@ -67,20 +67,31 @@ export const useVisionAnalysis = (item = null) => {
 
   // 3. Manual Trigger (Mutation)
   const mutation = useMutation({
-    mutationFn: async (customPhotos) => {
-      // For pre-intake, we might not have an item ID
-      const photosToAnalyze = customPhotos || (item ? [item.photo_url, ...(item.secondary_photos || [])].filter(Boolean) : []);
-      
-      if (photosToAnalyze.length === 0) throw new Error('No assets to analyze');
+    mutationFn: async (payload) => {
+      // payload can be: { main_photo: string, forensic_photos: string[] } or legacy flat array
+      let mainPhoto = '';
+      let forensicPhotos = [];
 
-      console.log('[useVisionAnalysis] Triggering manual analysis...');
+      if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+        mainPhoto = payload.main_photo;
+        forensicPhotos = payload.forensic_photos;
+      } else {
+        // Fallback for legacy calls
+        const photos = payload || (item ? [item.photo_url, ...(item.secondary_photos || [])].filter(Boolean) : []);
+        mainPhoto = photos[0] || '';
+        forensicPhotos = photos;
+      }
+      
+      if (!mainPhoto && forensicPhotos.length === 0) throw new Error('No assets to analyze');
+
+      console.log('[useVisionAnalysis] Triggering Role-Based Forensic Analysis...');
       const { data, error } = await supabase.functions.invoke('process-vision-ai', {
         body: { 
           trigger_source: 'admin_manual',
           record: { 
             id: item?.id || null, 
-            photo_url: photosToAnalyze[0],
-            secondary_photos: photosToAnalyze.slice(1)
+            photo_url: mainPhoto,
+            secondary_photos: forensicPhotos.filter(p => p !== mainPhoto) // Prevent duplication
           } 
         }
       });

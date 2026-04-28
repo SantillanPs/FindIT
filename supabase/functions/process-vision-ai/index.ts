@@ -35,12 +35,12 @@ Deno.serve(async (req) => {
     
     console.log('[AI-STABILIZER-V5] Starting Multi-Key Purity Engine.');
 
-    // 2. Sequential Image Retrieval
+    // 2. Role-Based Image Retrieval
     let validImages = []
-    const allPhotoUrls = [photo_url, ...(Array.isArray(secondary_photos) ? secondary_photos.slice(0, 3) : [])]
+    // Ensure photo_url (Main) is processed first, followed by secondary (Forensic)
+    const allPhotoUrls = [photo_url, ...(Array.isArray(secondary_photos) ? secondary_photos : [])].filter(Boolean)
     
     for (const url of allPhotoUrls) {
-      if (!url) continue;
       try {
         const resp = await fetch(url);
         if (!resp.ok) continue;
@@ -62,28 +62,42 @@ Deno.serve(async (req) => {
     let aiResult = null
     const maxRetries = 2
     const keyLogs = []
+    
+    // Explicit Role-Aware Prompt
     const prompt = `Analyze these forensic images for a lost and found system.
-Return ONLY a JSON object with:
-{
-  "suggested_title": "Concise title. Use abbreviations for institutions (e.g. NEMSU, SDSSU, SSCT). ABSOLUTELY NO personal names in title. Format for ID cards: '[Abbreviation] [Type]' (e.g. 'NEMSU Student ID'). For other items, just the item name (e.g. 'Black Backpack').",
-  "skeptical_summary": "Summary admitting visual ambiguity",
-  "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Other",
-  "brand": "Detected brand or 'Generic' (For ID cards, put the University abbreviation like NEMSU, SDSSU)",
-  "model": "Detected model or 'Generic' (For ID cards, put 'Student ID' or 'Staff ID')",
-  "color": "Primary color detected (e.g. 'Blue', 'Black', 'Silver')",
-  "detected_owner_info": {
-    "is_id_card": true,
-    "name": "Full name if clearly visible (KEEP THIS INTERNAL, DO NOT PUT IN SUGGESTED_TITLE)",
-    "id_number": "Student/Staff ID number",
-    "confidence": 0-100
-  },
-  "forensic_details": [{"observation": "...", "qualifier": "...", "reasoning": "..."}],
-  "security_questions": ["As many deep owner questions as possible based on the visual evidence."],
-  "is_blurry": false,
-  "is_generic": false,
-  "confidence": 0-100
-}`
+    
+    IMPORTANT - IMAGE ROLES:
+    1. THE FIRST IMAGE is the PUBLIC MAIN IMAGE. Use this for general attributes (title, category, brand, model). 
+    2. THE SUBSEQUENT IMAGES are FORENSIC REFERENCE ASSETS (may contain ID cards, sensitive info). Use these ONLY for owner identification.
+    
+    CRITICAL PRIVACY RULE: 
+    - NEVER put a person's name in the "suggested_title".
+    - Even if the item is an ID card, the title should be "NEMSU Student ID", NOT "Juan Dela Cruz ID".
+    
+    Return ONLY a JSON object with:
+    {
+      "suggested_title": "Concise public title. Use institution abbreviations (NEMSU, etc). Format: '[Abbreviation] [Type]' or '[Item Name]'.",
+      "skeptical_summary": "Concise summary of the item based on the MAIN image.",
+      "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Other",
+      "brand": "Detected brand from visuals.",
+      "model": "Detected model from visuals.",
+      "color": "Primary color from visuals.",
+      "detected_owner_info": {
+        "is_id_card": true/false,
+        "name": "Full name ONLY from FORENSIC images (keep internal).",
+        "id_number": "ID number ONLY from FORENSIC images.",
+        "confidence": 0-100
+      },
+      "forensic_details": [{"observation": "...", "qualifier": "...", "reasoning": "..."}],
+      "security_questions": ["Deep verification questions based on visual evidence."],
+      "is_blurry": false,
+      "is_generic": false,
+      "confidence": 0-100
+    }`
 
+    const aiModel = Deno.env.get('GOOGLE_MODEL')
+    if (!aiModel) throw new Error("GOOGLE_MODEL environment variable is required")
+    
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const isPrimary = (attempt % 2 === 0 || !secondaryKey);
       const currentKey = isPrimary ? primaryKey : secondaryKey;
@@ -91,10 +105,10 @@ Return ONLY a JSON object with:
       const maskedKey = '***' + (currentKey ? currentKey.slice(-4) : 'NONE');
       
       try {
-        console.log('[AI-STABILIZER-V5] Attempt ' + (attempt + 1) + '/' + maxRetries + ' using ' + keyAlias + ' (' + maskedKey + ')');
+        console.log(`[AI-STABILIZER-V5] Attempt ${attempt + 1}/${maxRetries} using ${keyAlias} (${maskedKey}) Model: ${aiModel}`);
         
         const response = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + currentKey,
+          `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${currentKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
