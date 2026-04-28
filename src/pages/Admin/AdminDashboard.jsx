@@ -236,7 +236,7 @@ const AdminDashboard = () => {
       const { error } = await supabase.rpc('rpc_secure_lost_item_update', {
         p_item_id: id,
         p_status: status,
-        p_admin_notes: admin_notes,
+        p_admin_notes: admin_notes || null,
         p_admin_id: user.id
       });
       if (error) throw error;
