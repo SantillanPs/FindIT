@@ -1,29 +1,40 @@
-# PLAN: Friendly Narrative Voice Integration
+# Redesign LostReportCard for Mobile-First Minimalism
 
-## Objective
-Shift the AI synthesis engine from formal forensic extraction to a "Friendly Narrative" persona. This makes the system more approachable for students and guests while maintaining forensic accuracy for matching.
+## 🎼 Orchestration Mode: Planning Phase
+**Agent Invoked:** `project-planner`
 
-## Phase 1: AI Prompt Refinement (Backend)
-- **Agent**: `backend-specialist`
-- **File**: `supabase/functions/analyze-lost-description/index.ts`
-- **Changes**:
-    - Rewrite `system_instruction` to adopt a helpful, friendly persona.
-    - Instruct the model to use simple, conversational English.
-    - Explicitly forbid jargon like "distinguishing features" or "referenced item."
-    - Ensure logical translation from non-English inputs into this "Friendly English" voice.
+### Goal
+Redesign the `LostReportCard` to be minimalistic, functional, and perfectly fitted for thin phone screens while retaining all necessary forensic and AI data.
 
-## Phase 2: User Experience Simplification (Frontend)
-- **Agent**: `frontend-specialist`
-- **Files**: 
-    - `src/components/ReportFlow/DetailsStep.jsx`
-    - `src/components/ReportFlow/NarrativeIntakeStep.jsx`
-- **Changes**:
-    - Update Step 2 headers: "What we understood" -> "How we'll describe it".
-    - Update sub-copy: "Parsed your story" -> "We've created a simple summary for you."
-    - Change branding from "AI Synthesis" to "Smart Summary" or "Friendly Help."
+### Analysis of Current Issues
+- The current card uses dense grids and large paddings (`p-4 sm:p-5 lg:p-8`), taking up too much vertical space.
+- The narrative block has heavy borders and backgrounds.
+- The action buttons are bulky (`h-14`) and stacked in a way that requires scrolling.
+- Information like "Owner" and "Reported On" take up two columns which feels disconnected on thin screens.
 
-## Phase 3: Verification & Polish
-- **Agent**: `test-engineer`
-- **Task**: 
-    - Verify multilingual synthesis (e.g., Tagalog narrative results in friendly English).
-    - Ensure UI responsiveness with the new, potentially longer narrative text.
+### Proposed Implementation Plan
+
+#### 1. Condensed Layout & Spacing
+- Reduce overall padding (e.g., `p-3` or `p-4`).
+- Remove heavy glassmorphism borders inside the card (e.g., around the narrative).
+- Stack essential information tighter to prevent vertical sprawl.
+
+#### 2. Header & Title Adjustments
+- Make the image aspect ratio slightly wider on mobile to save vertical space.
+- Move badges (Category, Matches) closer to the title to form a compact header cluster.
+
+#### 3. Narrative & Forensic Info
+- Strip the background box from the narrative to make it feel like inline text.
+- Condense the "AI Synthesized" label into a small inline badge next to the text.
+- Render the forensic attributes as a tight flex wrap of small tags (`h-4`, `text-[9px]`).
+
+#### 4. Metadata (Owner & Date)
+- Combine "Owner" and "Reported On" into a single horizontal flex row with dots `•` separating them, rather than a bulky grid.
+
+#### 5. Admin Notes
+- Transform the "Internal Admin Notes" into a single-line input with an edit icon, expanding only when focused.
+
+#### 6. Action Buttons
+- Reduce button heights from `h-14` to `h-10` or `h-11`.
+- For primary actions (Review/Find Matches), keep full width.
+- For secondary actions (Resolve/Dismiss), use equal width side-by-side buttons with concise icons.

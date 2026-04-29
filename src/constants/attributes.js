@@ -17,6 +17,7 @@ export const ITEM_ATTRIBUTES = {
   'Accessories': ['Type', 'Material', 'Color'],
   'Electronics Accessories': ['Type', 'Brand', 'Color'],
   'Computer Peripheral': ['Type', 'Brand', 'Model'],
+  'Umbrella': ['Color', 'Size', 'Pattern'],
   'Other': ['Primary Color', 'Material', 'Brand/Logo']
 };
 

@@ -82,7 +82,7 @@ const ImageUpload = ({ onUploadSuccess, value, description }) => {
         className={`upload-zone relative overflow-hidden group transition-all flex-grow flex items-center justify-center p-0 w-full ${
           preview ? 'border-uni-500/50' : 'border-white/10'
         } ${uploading ? 'opacity-50 cursor-wait' : 'cursor-pointer'}`}
-        style={{ minHeight: !preview ? '140px' : 'auto' }}
+        style={{ minHeight: '140px' }}
       >
         {preview ? (
             <div 

@@ -37,6 +37,7 @@ import ClaimReviewModal from './components/ClaimReviewModal';
 import MatchComparisonModal from './components/MatchComparisonModal';
 import ImagePreviewOverlay from './components/ImagePreviewOverlay';
 import ReportReviewModal from './components/ReportReviewModal';
+import LostReviewModal from './components/LostReviewModal';
 
 /**
  * AdminDashboard - Premium Professional (Pro Max)
@@ -66,6 +67,7 @@ const AdminDashboard = () => {
   const [selectedMatchPair, setSelectedMatchPair] = useState(null); 
   const [selectedReviewItem, setSelectedReviewItem] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [selectedLostReview, setSelectedLostReview] = useState(null);
 
 
   // Queries
@@ -84,13 +86,58 @@ const AdminDashboard = () => {
   const { data: pendingClaims = [], isLoading: claimsLoading } = useQuery({
     queryKey: ['admin_claims'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('v_admin_claims').select('*').eq('status', 'pending');
+      // 1. Fetch base claims from the reliable view
+      const { data: claims, error } = await supabase
+        .from('v_admin_claims')
+        .select('*')
+        .eq('status', 'pending');
+
       if (error) throw error;
-      return data || [];
+      if (!claims || claims.length === 0) return [];
+
+      // 2. Extract valid item IDs to fetch missing identified details
+      const itemIds = [...new Set(claims.map(c => c.found_item_id || c.item_id))].filter(Boolean);
+      
+      if (itemIds.length === 0) return claims;
+
+      // 3. Fetch missing identified fields directly from found_items
+      const { data: items, error: itemsError } = await supabase
+        .from('found_items')
+        .select('id, identified_id_number, identified_name')
+        .in('id', itemIds);
+
+      if (itemsError) {
+        console.warn("Could not enrich claims with identified details:", itemsError);
+        return claims.map(c => ({
+          ...c,
+          is_identified_claim: c.is_identified_claim || !!c.found_item_identified_id
+        }));
+      }
+
+      // 4. Merge the data (Enrichment)
+      const itemMap = items.reduce((acc, item) => {
+        acc[item.id] = item;
+        return acc;
+      }, {});
+
+      return claims.map(claim => {
+        const itemId = claim.found_item_id || claim.item_id;
+        const itemDetails = itemMap[itemId];
+        return {
+          ...claim,
+          // Use view's owner_name or derive from guest fields
+          owner_name: claim.owner_name || `${claim.guest_first_name || ''} ${claim.guest_last_name || ''}`.trim() || 'Guest Claimant',
+          owner_email: claim.owner_email || claim.guest_email,
+          // Add the missing identified info
+          item_identified_id: itemDetails?.identified_id_number,
+          item_identified_name: itemDetails?.identified_name,
+          is_identified_claim: claim.is_identified_claim || !!itemDetails?.identified_id_number || !!itemDetails?.identified_name
+        };
+      });
     },
     enabled: currentTab === 'claims',
     placeholderData: keepPreviousData,
-    refetchInterval: 120000, // Reduced to 2m for networking room
+    refetchInterval: 120000,
   });
 
   // 1. Core Data Queries
@@ -231,14 +278,27 @@ const AdminDashboard = () => {
     }
   });
 
+  // All lost item updates use direct table writes — avoids PostgREST schema cache issues
   const lostItemStatusMutation = useMutation({
-    mutationFn: async ({ id, status, admin_notes }) => {
-      const { error } = await supabase.rpc('rpc_secure_lost_item_update', {
-        p_item_id: id,
-        p_status: status,
-        p_admin_notes: admin_notes || null,
-        p_admin_id: user.id
-      });
+    mutationFn: async ({ id, status, admin_notes, title, category, synthesized_description, attributes }) => {
+      const updates = {};
+      if (status !== undefined) updates.status = status;
+      if (admin_notes !== undefined) updates.admin_notes = admin_notes;
+      if (title !== undefined) updates.title = title;
+      if (category !== undefined) updates.category = category;
+      if (synthesized_description !== undefined) updates.synthesized_description = synthesized_description;
+      
+      if (attributes !== undefined) {
+        updates.attributes = attributes;
+        // Sync top-level brand/model columns if they exist in the attributes blob
+        if (attributes.brand) updates.brand = attributes.brand;
+        if (attributes.model) updates.model = attributes.model;
+      }
+
+      const { error } = await supabase
+        .from('lost_items')
+        .update(updates)
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_lost'] })
@@ -351,10 +411,19 @@ const AdminDashboard = () => {
 
   const handleLostReportUpdate = async (reportId, updates) => {
     setActionLoading(`lost-${reportId}`);
+
+    console.group('%c🗄️ [Dashboard] LOST ITEM UPDATE', 'background: #1e3a5f; color: #60a5fa; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
+    console.log('Report ID:', reportId);
+    console.log('Updates to DB:', updates);
+    console.groupEnd();
+
     try {
       await lostItemStatusMutation.mutateAsync({ id: reportId, ...updates });
+      console.log('%c✅ [Dashboard] Lost item update SUCCESS', 'color: #34d399; font-weight: bold;');
+      setSelectedLostReview(null);
     } catch (err) {
-      console.error('Lost report update failed', err);
+      console.error('%c❌ [Dashboard] Lost report update FAILED:', 'color: #f87171; font-weight: bold;', err);
+      throw err; // Re-throw so the modal can show the error
     } finally {
       setActionLoading(null);
     }
@@ -376,10 +445,16 @@ const AdminDashboard = () => {
   const historyFiltered = historyItems.filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (item.released_to_name && item.released_to_name.toLowerCase().includes(searchTerm.toLowerCase())) || item.id.toString().includes(searchTerm));
   const filteredClaims = pendingClaims.filter(claim => (claim.owner_name && claim.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || (claim.item_category && claim.item_category.toLowerCase().includes(searchTerm.toLowerCase())) || claim.student_id?.toString().includes(searchTerm));
   const filteredMatches = matches.filter(group => group.found_item?.title?.toLowerCase().includes(searchTerm.toLowerCase()) || group.found_item?.category?.toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredLostReports = lostReports.filter(report => {
-    if (report.status === 'dismissed' || report.status === 'resolved') return false;
-    return report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.owner_name && report.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || report.id.toString().includes(searchTerm);
-  });
+  const filteredLostReports = lostReports
+    .filter(report => {
+      if (report.status === 'dismissed' || report.status === 'resolved') return false;
+      return report.title?.toLowerCase().includes(searchTerm.toLowerCase()) || (report.owner_name && report.owner_name.toLowerCase().includes(searchTerm.toLowerCase())) || report.id.toString().includes(searchTerm);
+    })
+    .sort((a, b) => {
+      if (a.status === 'pending_review' && b.status !== 'pending_review') return -1;
+      if (a.status !== 'pending_review' && b.status === 'pending_review') return 1;
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
   if (loading) return (
     <div className="flex justify-center py-32">
@@ -415,7 +490,7 @@ const AdminDashboard = () => {
                   isError: matchesError
                 }} />
               </TabsContent>
-              <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
+              <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, onReviewReport: setSelectedLostReview, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none">
                 <ActivityFeed 
@@ -454,6 +529,16 @@ const AdminDashboard = () => {
               onClose={() => setSelectedReviewItem(null)}
               onSubmit={foundItemUpdateMutation.mutate}
               isSubmitting={foundItemUpdateMutation.isPending}
+            />
+          )}
+
+          {selectedLostReview && (
+            <LostReviewModal 
+              key="lost-review"
+              report={selectedLostReview}
+              onClose={() => setSelectedLostReview(null)}
+              onPublish={handleLostReportUpdate}
+              isSubmitting={actionLoading === `lost-${selectedLostReview.id}`}
             />
           )}
         </AnimatePresence>

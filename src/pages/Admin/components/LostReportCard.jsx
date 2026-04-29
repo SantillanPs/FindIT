@@ -31,7 +31,7 @@ import {
  * - Human-centric labels (No more "Tactical Actions").
  * - High-legibility typography.
  */
-const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, isUpdating, onPreview }) => {
+const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, onReview, isUpdating, onPreview }) => {
   const { categories: CATEGORIES } = useMasterData();
   const [notes, setNotes] = useState(report.admin_notes || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -114,151 +114,157 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, is
         </div>
         </div>
       {/* 2. Main Content */}
-      <CardContent className="p-4 sm:p-5 lg:p-8 flex flex-col flex-grow gap-5 sm:gap-6">
+      <CardContent className="p-3 sm:p-4 flex flex-col flex-grow gap-4 sm:gap-5">
         
         {/* Title & Info Block */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-3">
             <div className="space-y-1 text-left min-w-0 flex-grow">
-                 <div className="flex items-center gap-2 flex-wrap">
-                     <Badge className="bg-uni-500/10 text-uni-400 border border-uni-500/20 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1">
-                        <span className="text-xs">{categoryInfo.emoji}</span>
+                 <div className="flex items-center gap-1.5 flex-wrap">
+                     <Badge className="bg-uni-500/10 text-uni-400 border-none px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide flex items-center gap-1">
+                        <span>{categoryInfo.emoji}</span>
                         {report.category || 'General'}
                      </Badge>
                      {report.is_manual_entry && (
-                        <Badge className="bg-uni-500/20 text-uni-400 border-uni-500/30 px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest flex items-center gap-1 shadow-xl">
+                        <Badge className="bg-uni-500/20 text-uni-400 border-none px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide flex items-center gap-1">
                            <Archive size={10} />
                            Archive
                         </Badge>
                      )}
-                     <span className="text-[10px] font-bold text-slate-500 tracking-wider">#{report.id.toString().slice(-4)}</span>
                  </div>
-                 <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors truncate">
-                     {report.title}
-                 </h3>
+                 <div className="flex items-center gap-2">
+                     <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight group-hover:text-uni-400 transition-colors truncate">
+                         {report.title}
+                     </h3>
+                     <span className="text-[10px] font-medium text-slate-500 shrink-0">#{report.id.toString().slice(-4)}</span>
+                 </div>
             </div>
-            <Badge className={`px-2.5 py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border shrink-0 shadow-lg ${
-                report.status === 'resolved' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
-                report.status === 'dismissed' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-amber-500/5'
+            <Badge className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-widest border-none shrink-0 ${
+                report.status === 'resolved' ? 'bg-green-500/10 text-green-400' : 
+                report.status === 'dismissed' ? 'bg-red-500/10 text-red-400' : 
+                'bg-amber-500/10 text-amber-500'
             }`}>
-               {report.status === 'reported' ? 'Awaiting Match' : report.status}
+               {report.status === 'reported' ? 'Awaiting Match' : 
+                report.status === 'pending_review' ? 'Needs Vetting' : 
+                report.status}
             </Badge>
         </div>
 
         {/* Data Grid */}
-        <div className="space-y-4 pt-4 border-t border-white/5">
-            <div className="space-y-1.5 text-left">
-                 <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Student Narrative</p>
+        <div className="space-y-3 pt-3 border-t border-white/5">
+            <div className="space-y-1 text-left">
+                 <div className="flex items-center justify-between mb-1">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1">
+                        {report.synthesized_description ? <><span className="text-uni-400">✨</span> AI Synthesized</> : <><FileText size={10} /> Student Narrative</>}
+                    </p>
+                 </div>
                  <div 
                     onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                    className={`bg-white/5 p-3 rounded-lg border border-white/5 transition-all cursor-pointer group/desc hover:bg-white/10 ${isDescriptionExpanded ? 'ring-1 ring-uni-500/30' : ''}`}
+                    className="cursor-pointer group/desc"
                  >
-                    <p className={`text-xs text-slate-200 leading-relaxed font-semibold transition-all ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}>
-                        "{report.description || 'No detailed description provided.'}"
+                    <p className={`text-[12px] text-slate-300 leading-snug transition-all ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}>
+                        {report.synthesized_description || report.description || 'No detailed description provided.'}
                     </p>
-                    <div className="mt-1.5 flex items-center gap-1 text-[9px] font-bold text-uni-400/60 uppercase tracking-wide group-hover/desc:text-uni-400">
-                        {isDescriptionExpanded ? <RotateCcw size={10} /> : <Info size={10} />}
-                        {isDescriptionExpanded ? 'Collapse' : 'Show More'}
-                    </div>
                  </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1 text-left">
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Owner</p>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-uni-400 shadow-[0_0_8px_rgba(56,189,248,0.5)]"></div>
-                        <p className="text-sm font-bold text-white truncate capitalize">{report.owner_name}</p>
-                    </div>
+            {/* AI Attributes Quick Look */}
+            {report.attributes && Object.keys(report.attributes).length > 0 && (
+                <div className="flex flex-wrap gap-1.5 py-0.5">
+                    {[
+                        ...(report.brand ? [['brand', report.brand]] : []),
+                        ...(report.model ? [['model', report.model]] : []),
+                        ...Object.entries(report.attributes).filter(([k, v]) => !['brand', 'model'].includes(k) && v && v !== 'Unknown')
+                    ].map(([key, value]) => (
+                        <div key={key} className="flex items-center gap-1 px-1.5 py-0.5 bg-white/5 rounded text-[9px]">
+                            <span className="text-slate-500 uppercase font-bold">{key}:</span>
+                            <span className="text-slate-200 font-bold">{value}</span>
+                        </div>
+                    ))}
                 </div>
+            )}
 
-                <div className="space-y-1 text-left">
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Reported On</p>
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]"></div>
-                        <p className="text-sm font-bold text-white truncate">
-                            {new Date(report.date_lost || report.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </p>
-                    </div>
+            <div className="flex items-center gap-4 text-[11px] text-slate-400 pt-1">
+                <div className="flex items-center gap-1.5">
+                    <User size={12} className="text-uni-400" />
+                    <span className="font-medium text-white capitalize truncate max-w-[100px]">{report.owner_name}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <Calendar size={12} className="text-emerald-400" />
+                    <span className="font-medium text-white">
+                        {new Date(report.date_lost || report.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </span>
                 </div>
             </div>
         </div>
 
-                <div className="space-y-2">
-                     <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
-                         <PenLine size={12} className="text-uni-400" /> Internal Admin Notes
-                     </div>
-                    <div className="relative">
-                        {isEditingNotes ? (
-                           <Input 
-                              autoFocus
-                              className="h-12 bg-black border-uni-500/30 rounded-xl px-4 text-xs font-bold text-white focus-visible:ring-uni-500/20 transition-all"
-                              value={notes}
-                              onChange={(e) => setNotes(e.target.value)}
-                              onBlur={handleNotesBlur}
-                              onKeyDown={(e) => e.key === 'Enter' && handleNotesBlur()}
-                              placeholder="Add internal notes..."
-                           />
-                        ) : (
-                           <div 
-                                onClick={() => setIsEditingNotes(true)}
-                                className={`p-4 rounded-xl border border-white/5 transition-all min-h-[50px] flex items-center cursor-pointer hover:bg-white/5 ${notes ? 'bg-white/[0.02]' : 'border-dashed'}`}
-                           >
-                             <p className={`text-[11px] font-medium ${notes ? 'text-slate-300' : 'text-slate-600'}`}>
-                                 {notes || "Click to document vetting notes..."}
-                             </p>
-                           </div>
-                        )}
-                    </div>
+        {/* Admin Notes Inline */}
+        <div className="group/notes pt-3 border-t border-white/5">
+            {isEditingNotes ? (
+                <Input 
+                    autoFocus
+                    className="h-8 bg-black/50 border-uni-500/30 rounded px-2 text-[11px] text-white focus-visible:ring-uni-500/20 transition-all"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    onBlur={handleNotesBlur}
+                    onKeyDown={(e) => e.key === 'Enter' && handleNotesBlur()}
+                    placeholder="Add internal notes..."
+                />
+            ) : (
+                <div 
+                    onClick={() => setIsEditingNotes(true)}
+                    className="flex items-center gap-1.5 cursor-pointer text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                    <PenLine size={10} className={notes ? 'text-uni-400' : ''} />
+                    <p className={`text-[10px] font-medium truncate ${notes ? 'text-slate-300' : ''}`}>
+                        {notes || "Add internal note..."}
+                    </p>
                 </div>
+            )}
+        </div>
 
         {/* Action Controls */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-6 mt-auto border-t border-white/5">
-            <Button 
-                onClick={() => {
-                    navigate('/admin/matches');
-                    setSearchTerm(`#${report.id.toString().slice(-4)}`);
-                }}
-                className={`flex-grow h-14 rounded-xl text-[11px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-2xl ${
-                    bestScore > 0.8 && report.status === 'reported'
-                    ? 'bg-uni-600 text-white hover:bg-uni-700' 
-                    : 'bg-white text-slate-950 hover:bg-uni-600 hover:text-white'
-                }`}
-            >
-                {reportMatches.length > 0 ? <ClipboardCheck size={18} /> : <Search size={18} />}
-                {reportMatches.length > 0 ? `Analyze Matches` : 'Find Matches'}
-                <ChevronRight size={14} className="ml-1 opacity-50" />
-            </Button>
+        <div className="flex flex-col gap-2 pt-3 mt-auto">
+            {report.status === 'pending_review' && (
+                <Button 
+                    onClick={() => onReview(report)}
+                    className="w-full h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-xl bg-blue-600 text-white hover:bg-blue-500"
+                >
+                    <Zap size={14} className="fill-current" />
+                    Review Narrative
+                </Button>
+            )}
 
-            {report.status === 'reported' ? (
-                <div className="flex gap-2 w-full sm:w-auto">
+            {report.status === 'reported' && (
+                <div className="flex gap-2 w-full">
                     <Button 
                         variant="outline"
                         disabled={isUpdating}
                         onClick={() => onUpdate(report.id, { status: 'resolved' })}
-                        className="flex-grow sm:w-36 h-14 border-green-500/20 bg-green-500/5 text-green-500 font-bold text-[11px] uppercase tracking-widest hover:bg-green-600 hover:text-white rounded-xl"
+                        className="flex-1 h-9 border-green-500/20 bg-green-500/5 text-green-500 font-bold text-[9px] uppercase tracking-widest hover:bg-green-600 hover:text-white rounded-lg"
                     >
-                        {isUpdating ? <RotateCcw size={14} className="animate-spin" /> : <CheckCircle2 size={16} className="mr-2" />}
+                        {isUpdating ? <RotateCcw size={12} className="animate-spin" /> : <CheckCircle2 size={12} className="mr-1.5" />}
                         Resolve
                     </Button>
                     <Button 
                         variant="outline"
                         disabled={isUpdating}
                         onClick={() => onUpdate(report.id, { status: 'dismissed' })}
-                        className="flex-grow sm:w-36 h-14 border-red-500/20 bg-red-500/5 text-red-500 font-bold text-[11px] uppercase tracking-widest hover:bg-red-600 hover:text-white rounded-xl"
+                        className="flex-1 h-9 border-red-500/20 bg-red-500/5 text-red-500 font-bold text-[9px] uppercase tracking-widest hover:bg-red-600 hover:text-white rounded-lg"
                     >
-                        {isUpdating ? <RotateCcw size={14} className="animate-spin" /> : <AlertCircle size={16} className="mr-2" />}
+                        {isUpdating ? <RotateCcw size={12} className="animate-spin" /> : <AlertCircle size={12} className="mr-1.5" />}
                         Dismiss
                     </Button>
                 </div>
-            ) : (
+            )}
+            
+            {report.status !== 'reported' && report.status !== 'pending_review' && (
                 <Button 
                     variant="ghost"
                     disabled={isUpdating}
                     onClick={() => onUpdate(report.id, { status: 'reported' })}
-                    className="flex-grow sm:w-auto px-6 h-14 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-xl text-[11px] font-bold uppercase tracking-widest border border-white/5"
+                    className="w-full h-9 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg text-[9px] font-bold uppercase tracking-widest border border-white/5"
                 >
-                    <RotateCcw size={14} className="mr-2" />
+                    <RotateCcw size={12} className="mr-1.5" />
                     Reset Status
                 </Button>
             )}

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
-import { useMasterData } from '../context/MasterDataContext';
 
 // Shared Flow Components
 import ReportStepHeader from '../components/ReportFlow/ReportStepHeader';
@@ -16,15 +15,16 @@ import GuestInfoStep from '../components/ReportFlow/GuestInfoStep';
 import ImageStep from '../components/ReportFlow/ImageStep';
 import ReportSummary from '../components/ReportFlow/ReportSummary';
 
+import TimeIntakeStep from '../components/ReportFlow/TimeIntakeStep';
+
 const GuestReportItem = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '', // Original narrative
-    synthesized_description: '', // Clean AI version
     location: '',
     zone_id: null,
     date_lost: new Date().toISOString().slice(0, 16),
-    category: '',
+    category: 'Miscellaneous', // Default until admin reviews
     photo_url: '',
     guest_first_name: '',
     guest_last_name: '',
@@ -32,15 +32,14 @@ const GuestReportItem = () => {
     guest_email: '',
     contact_info: '',
     potential_zone_ids: [],
-    location_mode: '', // 'certain' | 'trace'
-    location_hints: [], // Buildings mentioned in narrative
+    locationMode: 'certain',
     attributes: {}
   });
   
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [step, setStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 6;
 
   const queryClient = useQueryClient();
 
@@ -64,17 +63,6 @@ const GuestReportItem = () => {
     }
   });
 
-  const handleAnalysisComplete = (results) => {
-    setFormData(prev => ({
-      ...prev,
-      category: results.category,
-      attributes: results.attributes,
-      location_hints: results.location_hints,
-      synthesized_description: results.synthesized_description,
-    }));
-    setStep(2);
-  };
-
   const goToStep = (target) => setStep(target);
   const prevStep = () => setStep(s => s - 1);
 
@@ -83,10 +71,10 @@ const GuestReportItem = () => {
     setError('');
 
     const reportPayload = {
-      title: formData.category || 'Lost Item',
-      description: formData.synthesized_description || formData.description,
+      title: formData.title || 'Lost Item Report (Guest)',
+      description: formData.description,
       original_description: formData.description,
-      synthesized_description: formData.synthesized_description,
+      synthesized_description: '', // Will be filled by admin
       category: formData.category,
       location: formData.location,
       date_lost: formData.date_lost,
@@ -95,7 +83,7 @@ const GuestReportItem = () => {
       guest_phone: formData.contact_info,
       photo_url: formData.photo_url,
       photo_thumbnail_url: formData.photo_url,
-      status: 'reported',
+      status: 'pending_review', // REQUIRED: Admin must approve
       is_verified: false,
       registry_signal: { ...formData, reporter_type: 'guest' }
     };
@@ -117,7 +105,7 @@ const GuestReportItem = () => {
     <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100dvh-var(--navbar-height)-4rem)] flex flex-col px-4">
       <ReportStepHeader 
         title="Report Lost Item"
-        label="Narrative-First System (Guest)"
+        label="Guest Intake Mode"
         step={step}
         totalSteps={totalSteps}
         error={error}
@@ -136,59 +124,43 @@ const GuestReportItem = () => {
           >
             {step === 1 && (
               <NarrativeIntakeStep 
-                stepLabel="Step 1: Your Narrative"
+                stepLabel="Step 1: Your Story"
                 description={formData.description}
                 onChange={(val) => setFormData({...formData, description: val})}
-                onAnalysisComplete={handleAnalysisComplete}
+                onNext={() => goToStep(2)}
+                showAI={false}
               />
             )}
 
             {step === 2 && (
-              <DetailsStep 
-                stepLabel="Step 2: Smart Check"
-                title="What we understood"
-                description="We've parsed your story into these details. Please verify or adjust them."
-                value={formData.synthesized_description}
-                category={formData.category}
-                attributes={formData.attributes}
-                onAttributeChange={(field, val) => setFormData(prev => ({
-                    ...prev,
-                    attributes: { ...prev.attributes, [field]: val }
-                }))}
-                onChange={(val) => setFormData(prev => ({...prev, synthesized_description: val}))}
+              <LocationModeStep
+                stepLabel="Step 2: Method"
+                title="How sure are you?"
+                description="Do you know exactly where you left it, or should we trace your steps?"
+                value={formData.locationMode}
+                onChange={(val) => setFormData({...formData, locationMode: val})}
                 onNext={() => goToStep(3)}
-              >
-                <div className="bg-blue-500/5 p-6 rounded-2xl border border-blue-500/10 mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <i className="fas fa-magic text-blue-400"></i>
-                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest italic">AI Synthesis</span>
-                    </div>
-                    <p className="text-xs text-slate-400 italic">"Helping you match faster"</p>
-                </div>
-              </DetailsStep>
+              />
             )}
 
             {step === 3 && (
-              <LocationModeStep 
-                stepLabel="Step 3: Location Style"
-                title="How should we look?"
-                description="Help us match your item by choosing how you remember its location."
-                value={formData.location_mode}
-                onChange={(mode) => setFormData({...formData, location_mode: mode})}
+              <ZoneSelectorStep
+                stepLabel="Step 3: Where"
+                title={formData.locationMode === 'trace' ? "Trace your path" : "Pinpoint the area"}
+                description={formData.locationMode === 'trace' ? "Select all the buildings or areas you passed through." : "Select the specific building or area where you left your item."}
+                formData={formData}
+                setFormData={setFormData}
                 onNext={() => goToStep(4)}
+                multiSelect={formData.locationMode === 'trace'}
               />
             )}
 
             {step === 4 && (
-              <ZoneSelectorStep
-                stepLabel="Step 4: Location"
-                title={formData.location_mode === 'certain' ? "Pinpoint the area" : "Confirm the path"}
-                description={formData.location_mode === 'certain' ? "Select the exact building or area where you left it." : "Select the areas you passed through. We've highlighted what your story mentioned."}
-                formData={formData}
-                setFormData={setFormData}
+              <TimeIntakeStep
+                stepLabel="Step 4: When"
+                value={formData.date_lost}
+                onChange={(val) => setFormData({...formData, date_lost: val})}
                 onNext={() => goToStep(5)}
-                multiSelect={formData.location_mode === 'trace'}
-                aiHints={formData.location_hints}
               />
             )}
 
@@ -218,24 +190,14 @@ const GuestReportItem = () => {
 
             {step === 6 && (
               <ImageStep 
-                stepLabel="Step 6: Reference Photo"
-                title="Final Polish"
-                description="Optional: Adding a photo helps us verify the item if found."
+                stepLabel="Step 6: Your Item"
+                title="Got a Photo?"
+                description="Upload a photo of the item you lost — from your gallery, a screenshot, or a similar image. This will appear on the public listing to help others identify it."
                 value={formData.photo_url}
                 onUpload={(url) => setFormData({...formData, photo_url: url})}
-                onNext={() => goToStep(7)} 
+                onNext={handleSubmit} 
+                isSubmitting={submissionMutation.isPending}
               />
-            )}
-
-            {step === 7 && (
-              <div className="pt-12">
-                 <ReportSummary 
-                  type="lost"
-                  formData={formData}
-                  loading={submissionMutation.isPending}
-                  onSubmit={handleSubmit}
-                />
-              </div>
             )}
           </motion.div>
         </AnimatePresence>

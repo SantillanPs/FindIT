@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
     {
       "suggested_title": "Concise public title. Use institution abbreviations (NEMSU, etc). Format: '[Abbreviation] [Type]' or '[Item Name]'.",
       "skeptical_summary": "Concise summary of the item based on the MAIN image.",
-      "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Other",
+      "category": "One of: Cellphone, Laptop, Tablet, ID Card, Wallet, Bag / Backpack, Keys, Headphones / Earbuds, Watch / Wearable, Water Bottle, Eyewear, Book, Notebook, Stationery, Clothing, Accessories, Electronics Accessories, Computer Peripheral, Umbrella, Other",
       "brand": "Detected brand from visuals.",
       "model": "Detected model from visuals.",
       "color": "Primary color from visuals.",

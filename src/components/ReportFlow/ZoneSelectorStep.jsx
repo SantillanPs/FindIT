@@ -9,13 +9,14 @@ const ZoneSelectorStep = ({
   formData, 
   setFormData, 
   onNext,
-  multiSelect = false,
-  aiHints = []
+  multiSelect = false
 }) => {
   const [zonesTree, setZonesTree] = useState([]);
+  const [allZonesFlat, setAllZonesFlat] = useState([]);
   const [zoneStats, setZoneStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Navigation State
   const [navigationPath, setNavigationPath] = useState([]); // Array of selected zone objects for navigation/drilling down
@@ -32,6 +33,7 @@ const ZoneSelectorStep = ({
           .select('*');
         
         if (zonesError) throw zonesError;
+        setAllZonesFlat(allZones || []);
 
         // 2. Fetch zone stats (hit counts from found_items)
         const { data: statsData, error: statsError } = await supabase
@@ -87,7 +89,36 @@ const ZoneSelectorStep = ({
   }, []);
 
   // Determine current display list based on navigation path and sort by stats
-  const sortedCurrentZones = useMemo(() => {
+  const displayZones = useMemo(() => {
+    const statsMap = zoneStats.reduce((acc, curr) => ({
+      ...acc, [curr.zone_id]: curr.hit_count
+    }), {});
+
+    // Case 1: Searching
+    if (searchQuery.trim().length > 0) {
+      const query = searchQuery.toLowerCase();
+      return allZonesFlat
+        .filter(z => z.name.toLowerCase().includes(query))
+        .map(z => {
+          // If searching globally, we need to know the full path for the label
+          const buildPath = (id) => {
+            const current = allZonesFlat.find(node => node.id === id);
+            if (!current) return [];
+            if (!current.parent_zone_id) return [current.name];
+            return [...buildPath(current.parent_zone_id), current.name];
+          };
+          
+          const path = buildPath(z.id);
+          return {
+            ...z,
+            displayName: z.name,
+            subLabel: path.length > 1 ? path.slice(0, -1).join(' > ') : 'Building'
+          };
+        })
+        .sort((a, b) => (statsMap[b.id] || 0) - (statsMap[a.id] || 0));
+    }
+
+    // Case 2: Standard Drilling
     let baseZones = [];
     if (navigationPath.length === 0) {
       baseZones = zonesTree;
@@ -96,15 +127,13 @@ const ZoneSelectorStep = ({
       baseZones = current.children || [];
     }
 
-    const statsMap = zoneStats.reduce((acc, curr) => ({
-      ...acc, [curr.zone_id]: curr.hit_count
-    }), {});
+    return [...baseZones]
+      .map(z => ({ ...z, displayName: z.name, subLabel: z.children?.length > 0 ? `${z.children.length} sub-areas` : '' }))
+      .sort((a, b) => (statsMap[b.id] || 0) - (statsMap[a.id] || 0));
+  }, [navigationPath, zonesTree, zoneStats, searchQuery, allZonesFlat]);
 
-    return [...baseZones].sort((a, b) => (statsMap[b.id] || 0) - (statsMap[a.id] || 0));
-  }, [navigationPath, zonesTree, zoneStats]);
-
-  const featuredZones = useMemo(() => sortedCurrentZones.slice(0, 6), [sortedCurrentZones]);
-  const hiddenZones = useMemo(() => sortedCurrentZones.slice(6), [sortedCurrentZones]);
+  const featuredZones = useMemo(() => displayZones.slice(0, 4), [displayZones]);
+  const hiddenZones = useMemo(() => displayZones.slice(4), [displayZones]);
 
   const getZoneTheme = (zone) => {
     const name = zone.name.toLowerCase();
@@ -168,17 +197,35 @@ const ZoneSelectorStep = ({
   };
 
   const handleZoneSelect = (zone) => {
-    // 1. If it has children, just drill down (same for both modes)
-    if (zone.children && zone.children.length > 0) {
-        setNavigationPath([...navigationPath, zone]);
+    // 1. Check if it has children (either already attached or by checking the flat list)
+    const hasChildren = (zone.children && zone.children.length > 0) || 
+                       allZonesFlat.some(z => z.parent_zone_id === zone.id);
+
+    if (hasChildren) {
+        // If drilling down from a search result, we should build the navigation path correctly
+        if (searchQuery) {
+            const buildPath = (id) => {
+                const current = allZonesFlat.find(node => node.id === id);
+                if (!current) return [];
+                if (!current.parent_zone_id) return [current];
+                return [...buildPath(current.parent_zone_id), current];
+            };
+            setNavigationPath(buildPath(zone.id));
+            setSearchQuery(''); // Clear search when drilling
+        } else {
+            setNavigationPath([...navigationPath, zone]);
+        }
         return;
     }
 
     // 2. Behavioral split based on multiSelect
     if (!multiSelect) {
-        // Found Item flow (or single select mode): 
-        // Just set the data and move to the next step
-        const fullName = [...navigationPath.map(p => p.name), zone.name].join(' - ');
+        // Single Select (Found Item flow): 
+        const pathPrefix = searchQuery 
+            ? zone.subLabel === 'Building' ? '' : zone.subLabel + ' > '
+            : navigationPath.length > 0 ? navigationPath.map(p => p.name).join(' > ') + ' > ' : '';
+        
+        const fullName = pathPrefix + zone.name;
         setFormData({
             ...formData,
             location: fullName,
@@ -189,7 +236,11 @@ const ZoneSelectorStep = ({
     } else {
         // Lost Report flow (Multi-selection / Tracing steps):
         if (!selectedZones.find(z => z.id === zone.id)) {
-            const fullName = [...navigationPath.map(p => p.name), zone.name].join(' - ');
+            const pathPrefix = searchQuery 
+                ? zone.subLabel === 'Building' ? '' : zone.subLabel + ' > '
+                : navigationPath.length > 0 ? navigationPath.map(p => p.name).join(' > ') + ' > ' : '';
+            
+            const fullName = pathPrefix + zone.name;
             const newSelected = [...selectedZones, { id: zone.id, name: fullName }];
             setSelectedZones(newSelected);
             
@@ -203,6 +254,7 @@ const ZoneSelectorStep = ({
         }
         // Reset navigation to root for potentially adding another "step"
         setNavigationPath([]);
+        setSearchQuery('');
     }
   };
 
@@ -376,16 +428,17 @@ const ZoneSelectorStep = ({
         {/* Main Selection Area */}
         <div className="flex-grow w-full space-y-8">
             {/* Navigation Breadcrumbs / Back button */}
-            {(navigationPath.length > 0 || showOtherInput) && (
-            <div className="flex items-center justify-between px-4">
-                <div className="flex items-center gap-4">
-                    <button 
-                        onClick={goBack}
-                        className="px-6 py-2 rounded-full bg-white/5 text-[10px] font-black text-uni-400 uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 group"
-                    >
-                        <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
-                        Back
-                    </button>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    {(navigationPath.length > 0 || showOtherInput) && (
+                        <button 
+                            onClick={goBack}
+                            className="px-6 py-2.5 rounded-full bg-white/5 text-[10px] font-black text-uni-400 uppercase tracking-widest border border-white/10 hover:bg-white/10 transition-all flex items-center gap-2 group shrink-0"
+                        >
+                            <i className="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+                            Back
+                        </button>
+                    )}
 
                     <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar max-w-[200px] md:max-w-md">
                         {navigationPath.map((z, idx) => (
@@ -397,20 +450,41 @@ const ZoneSelectorStep = ({
                     </div>
                 </div>
 
+                {/* Search Bar */}
+                <div className="relative w-full md:w-72 group">
+                    <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
+                        <i className={`fa-solid ${searchQuery ? 'fa-spinner fa-spin text-uni-400' : 'fa-magnifying-glass text-slate-600'} text-[10px]`}></i>
+                    </div>
+                    <input 
+                        type="text"
+                        placeholder="Search locations..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-full py-3 pl-12 pr-6 text-[10px] font-bold text-white uppercase tracking-widest focus:border-uni-500/50 focus:bg-white/10 outline-none transition-all placeholder:text-slate-700"
+                    />
+                    {searchQuery && (
+                        <button 
+                            onClick={() => setSearchQuery('')}
+                            className="absolute inset-y-0 right-5 flex items-center text-slate-600 hover:text-white"
+                        >
+                            <i className="fa-solid fa-xmark text-[10px]"></i>
+                        </button>
+                    )}
+                </div>
+
                 {/* Option B: Fast-Path Parent Selection */}
-                {navigationPath.length > 0 && !showOtherInput && (
+                {navigationPath.length > 0 && !showOtherInput && !searchQuery && (
                     <motion.button
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         onClick={handleSelectCurrentArea}
-                        className="px-6 py-2 rounded-full bg-uni-500 text-[10px] font-black text-white uppercase tracking-widest hover:bg-uni-400 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--uni-500-rgb),0.3)]"
+                        className="px-6 py-2.5 rounded-full bg-uni-500 text-[10px] font-black text-white uppercase tracking-widest hover:bg-uni-400 transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(var(--uni-500-rgb),0.3)] shrink-0"
                     >
                         <i className="fa-solid fa-check"></i>
                         Confirm {navigationPath[navigationPath.length - 1].name}
                     </motion.button>
                 )}
             </div>
-            )}
 
             <AnimatePresence mode="wait">
             {!showOtherInput ? (
@@ -422,53 +496,50 @@ const ZoneSelectorStep = ({
                 transition={{ duration: 0.2 }}
                 >
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {featuredZones.map((zone) => {
-                    const theme = getZoneTheme(zone);
-                    const isPicked = selectedZones.find(s => s.id === zone.id);
-                    const isHinted = aiHints.some(hint => 
-                        zone.name.toLowerCase().includes(hint.toLowerCase()) || 
-                        hint.toLowerCase().includes(zone.name.toLowerCase())
-                    );
-                    
-                    return (
-                        <button
-                        key={zone.id}
-                        onClick={() => handleZoneSelect(zone)}
-                        className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group relative overflow-hidden h-[180px] ${
-                            isPicked 
-                            ? `border-uni-500/50 bg-uni-500/10 text-white` 
-                            : isHinted
-                            ? `border-blue-500/30 bg-blue-500/5 shadow-[0_0_20px_rgba(59,130,246,0.15)] text-slate-400 hover:border-blue-500/50 hover:scale-[1.02]`
-                            : `bg-white/5 border-white/5 text-slate-400 hover:border-white/10 hover:scale-[1.02] active:scale-95 ${theme.bg}`
-                        } ${theme.glow}`}
-                        >
-                        {isPicked && (
-                            <div className="absolute top-4 right-4 text-uni-400">
-                                <i className="fa-solid fa-circle-check"></i>
+                    {featuredZones.length > 0 ? (
+                        featuredZones.map((zone) => {
+                            const theme = getZoneTheme(zone);
+                            const isPicked = selectedZones.find(s => s.id === zone.id);
+                            
+                            return (
+                                <button
+                                key={zone.id}
+                                onClick={() => handleZoneSelect(zone)}
+                                className={`p-10 rounded-[2.5rem] border-2 transition-all flex flex-col items-center justify-center gap-4 group relative overflow-hidden min-h-[180px] ${
+                                    isPicked 
+                                    ? `border-uni-500/50 bg-uni-500/10 text-white` 
+                                    : `bg-white/5 border-white/5 text-slate-400 hover:border-white/10 hover:scale-[1.02] active:scale-95 ${theme.bg}`
+                                } ${theme.glow}`}
+                                >
+                                {isPicked && (
+                                    <div className="absolute top-4 right-4 text-uni-400">
+                                        <i className="fa-solid fa-circle-check"></i>
+                                    </div>
+                                )}
+                                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${theme.bg.replace('/10', '/5')}`}></div>
+                                
+                                <div className={`text-4xl transition-all duration-500 group-hover:scale-110 ${isPicked ? 'scale-110 text-uni-400' : theme.color}`}>
+                                    <i className={`fa-solid ${theme.icon}`}></i>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-center block px-2 leading-tight group-hover:text-white transition-colors">{zone.displayName}</span>
+                                    {zone.subLabel && (
+                                        <span className={`text-[8px] font-black uppercase tracking-widest block italic opacity-40 group-hover:opacity-100 transition-opacity`}>
+                                            {zone.subLabel}
+                                        </span>
+                                    )}
+                                </div>
+                                </button>
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-full py-20 bg-white/5 border border-dashed border-white/10 rounded-[3rem] text-center space-y-4">
+                            <div className="text-4xl text-slate-800">
+                                <i className="fa-solid fa-map-location-dot"></i>
                             </div>
-                        )}
-                        {isHinted && !isPicked && (
-                            <div className="absolute top-4 right-4 text-blue-400 animate-pulse">
-                                <i className="fa-solid fa-sparkles"></i>
-                            </div>
-                        )}
-                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity -z-10 ${isHinted ? 'bg-blue-500/5' : theme.bg.replace('/10', '/5')}`}></div>
-                        
-                        <div className={`text-5xl transition-all duration-500 group-hover:scale-110 ${isPicked ? 'scale-110 text-uni-400' : isHinted ? 'text-blue-400' : theme.color}`}>
-                            <i className={`fa-solid ${theme.icon}`}></i>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">No locations found matching "{searchQuery}"</p>
                         </div>
-                        <div className="space-y-1">
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-center block px-2 leading-tight group-hover:text-white transition-colors">{zone.name}</span>
-                            {isHinted && !isPicked && (
-                                <span className="text-[8px] font-black text-blue-400/60 uppercase tracking-widest block italic animate-pulse">Story Hint</span>
-                            )}
-                            {zone.children?.length > 0 && !isHinted && (
-                                <span className="text-[8px] font-bold opacity-40 uppercase tracking-widest block">{zone.children.length} sub-areas</span>
-                            )}
-                        </div>
-                        </button>
-                    );
-                    })}
+                    )}
                 </div>
 
                 {hiddenZones.length > 0 && (

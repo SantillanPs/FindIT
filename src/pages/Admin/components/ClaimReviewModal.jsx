@@ -41,6 +41,10 @@ const ClaimReviewModal = ({
   const [itemImgError, setItemImgError] = useState(selectedClaim ? imageCache.isFailed(selectedClaim.item_photo_url) : false);
   const [proofImgError, setProofImgError] = useState(selectedClaim ? imageCache.isFailed(selectedClaim.proof_photo_url) : false);
   
+  const isIdentifiedClaim = selectedClaim?.is_identified_claim || (selectedClaim?.found_item_identified_id && selectedClaim?.student_id);
+  const isGuestRegistryClaim = selectedClaim?.metadata?.source === 'Institutional Registry';
+  const isAutoVerified = selectedClaim?.is_auto_match || (selectedClaim?.metadata?.auto_verified);
+  
   // Schedule state for step 2
   const [showScheduleStep, setShowScheduleStep] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
@@ -54,7 +58,13 @@ const ClaimReviewModal = ({
   };
 
   const handleApproveClick = () => {
-    setShowScheduleStep(true);
+    if (isIdentifiedClaim) {
+      // Identified claims skip scheduling for maximum speed
+      handleClaimReview(selectedClaim, 'approved', null);
+      setSelectedClaim(null);
+    } else {
+      setShowScheduleStep(true);
+    }
   };
 
   const handleConfirmSchedule = () => {
@@ -109,7 +119,7 @@ const ClaimReviewModal = ({
             
             <div className="flex-1 space-y-1 sm:space-y-1.5 min-w-0">
                 <h3 className="text-lg sm:text-xl font-black text-white tracking-tight truncate pr-10">
-                  {showScheduleStep ? 'Schedule Pickup' : 'Review Claim'}
+                  {showScheduleStep ? 'Schedule Pickup' : (isIdentifiedClaim ? 'Verify Identity Claim' : 'Review Claim')}
                 </h3>
                 
                 <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -123,9 +133,9 @@ const ClaimReviewModal = ({
                         </span>
                     </div>
                     
-                    <span className="text-[9px] sm:text-[10px] text-uni-400 font-black uppercase tracking-[0.15em] flex items-center gap-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${showScheduleStep ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-uni-400 shadow-[0_0_8px_rgba(14,165,233,0.6)]'} animate-pulse`} />
-                        {showScheduleStep ? 'APPROVED — SET SCHEDULE' : 'PENDING RESOLUTION'}
+                    <span className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] flex items-center gap-1.5 ${isIdentifiedClaim ? 'text-sky-400' : 'text-uni-400'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${showScheduleStep ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : (isIdentifiedClaim ? 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.6)]' : 'bg-uni-400 shadow-[0_0_8px_rgba(14,165,233,0.6)]')} animate-pulse`} />
+                        {showScheduleStep ? 'APPROVED — SET SCHEDULE' : (isIdentifiedClaim ? 'INSTITUTIONAL REGISTRY MATCH' : 'PENDING RESOLUTION')}
                     </span>
                 </div>
             </div>
@@ -198,78 +208,105 @@ const ClaimReviewModal = ({
                            </div>
                            {/* Proof Item */}
                            <div className="bg-slate-900 relative aspect-video sm:aspect-[21/9]">
-                                <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-uni-500/20 backdrop-blur-md rounded-md border border-uni-500/30 text-[8px] font-black text-uni-400 uppercase tracking-widest shadow-md">
-                                     Claimant Proof
-                                </div>
-                                {selectedClaim.proof_photo_url && !proofImgError ? (
-                                      <img src={selectedClaim.proof_photo_url} alt="Claim proof" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }} />
-                                ) : (
-                                      <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
-                                          <XCircle size={24} className="text-slate-800" />
-                                          <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No Proof Uploaded</p>
-                                      </div>
-                                )}
-                           </div>
+                                 <div className={`absolute top-2 left-2 z-10 px-2 py-0.5 backdrop-blur-md rounded-md border text-[8px] font-black uppercase tracking-widest shadow-md ${isIdentifiedClaim ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-uni-500/20 border-uni-500/30 text-uni-400'}`}>
+                                      {isIdentifiedClaim ? 'Institutional ID Card' : 'Claimant Proof'}
+                                 </div>
+                                 {selectedClaim.proof_photo_url && !proofImgError ? (
+                                       <img src={selectedClaim.proof_photo_url} alt="Claim proof" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }} />
+                                 ) : (
+                                       <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
+                                           <XCircle size={24} className="text-slate-800" />
+                                           <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No ID/Proof Uploaded</p>
+                                       </div>
+                                 )}
+                            </div>
                        </div>
                   </div>
 
-                  {/* Authentication Check (The Forensic Interview) */}
-                  <div className="space-y-3">
-                       <div className="flex items-center justify-between px-1">
-                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Forensic Interview</p>
-                          <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest bg-uni-500/5 text-uni-400 border-uni-500/20">
-                             Mandatory Gate
-                          </Badge>
-                       </div>
-                       
-                       <div className="space-y-3">
-                            {selectedClaim.found_item_challenge_questions?.length > 0 ? (
-                               selectedClaim.found_item_challenge_questions.map((question, qIdx) => (
-                                  <div key={qIdx} className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
-                                      <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
-                                          <div className="flex items-center justify-between">
-                                              <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Question #{qIdx + 1}</span>
-                                              <HelpCircle size={12} className="text-slate-500" />
-                                          </div>
-                                          <p className="text-[12px] font-bold text-slate-300 italic leading-snug">
-                                              "{question}"
-                                          </p>
-                                      </div>
-                                      <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
-                                          <div className="flex items-center justify-between">
-                                              <span className="text-[8px] font-black text-uni-400 uppercase tracking-[0.2em]">Student Response</span>
-                                              <MessageSquare size={12} className="text-uni-400" />
-                                          </div>
-                                          <p className="text-[13px] font-medium text-white leading-relaxed">
-                                              {selectedClaim.challenge_answers_json?.[qIdx] || 'No response recorded.'}
-                                          </p>
-                                      </div>
-                                  </div>
-                               ))
-                            ) : (
-                               <div className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
-                                   <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
-                                       <div className="flex items-center justify-between">
-                                           <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Legacy Challenge Question</span>
-                                           <HelpCircle size={14} className="text-slate-500" />
+                   {/* Authentication Check (Forensic Interview OR Identity Gate) */}
+                   <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+                                {isIdentifiedClaim ? 'Identity Verification Gate' : 'Forensic Interview'}
+                           </p>
+                           <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-widest border ${isIdentifiedClaim ? 'bg-sky-500/5 text-sky-400 border-sky-500/20' : 'bg-uni-500/5 text-uni-400 border-uni-500/20'}`}>
+                              {isIdentifiedClaim ? 'Registry Match' : 'Mandatory Gate'}
+                           </Badge>
+                        </div>
+                        
+                        <div className="space-y-3">
+                             {isIdentifiedClaim ? (
+                                <div className="rounded-xl border border-sky-500/20 bg-sky-500/[0.02] p-4 space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 shrink-0">
+                                            <ShieldCheck size={16} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Official Owner Match</p>
+                                            <p className="text-[12px] font-bold text-white leading-snug">
+                                                The item was logged with the name: <span className="text-sky-400">{selectedClaim.item_identified_name || selectedClaim.owner_name}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="p-3 bg-black/20 rounded-lg border border-white/5 space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Verification Strategy</p>
+                                            <Lock size={10} className="text-slate-600" />
+                                        </div>
+                                        <p className="text-[11px] text-slate-300 font-medium leading-relaxed">
+                                            {isAutoVerified 
+                                              ? "System auto-matched the Student ID. Claimant was logged in and identity is confirmed." 
+                                              : "Institutional Registry Claim. Admin must manually verify that the uploaded ID card matches the identified owner's name above."}
+                                        </p>
+                                    </div>
+                                </div>
+                             ) : selectedClaim.found_item_challenge_questions?.length > 0 ? (
+                                selectedClaim.found_item_challenge_questions.map((question, qIdx) => (
+                                   <div key={qIdx} className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
+                                       <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
+                                           <div className="flex items-center justify-between">
+                                               <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Question #{qIdx + 1}</span>
+                                               <HelpCircle size={12} className="text-slate-500" />
+                                           </div>
+                                           <p className="text-[12px] font-bold text-slate-300 italic leading-snug">
+                                               "{question}"
+                                           </p>
                                        </div>
-                                       <p className="text-[13px] font-bold text-slate-300">
-                                           {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
-                                       </p>
-                                   </div>
-                                   <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
-                                       <div className="flex items-center justify-between">
-                                           <span className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Claimant's Answer</span>
-                                           <MessageSquare size={14} className="text-uni-400" />
+                                       <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
+                                           <div className="flex items-center justify-between">
+                                               <span className="text-[8px] font-black text-uni-400 uppercase tracking-[0.2em]">Student Response</span>
+                                               <MessageSquare size={12} className="text-uni-400" />
+                                           </div>
+                                           <p className="text-[13px] font-medium text-white leading-relaxed">
+                                               {selectedClaim.challenge_answers_json?.[qIdx] || 'No response recorded.'}
+                                           </p>
                                        </div>
-                                       <p className="text-[13px] font-medium text-white italic">
-                                           "{selectedClaim.proof_description || 'No direct answer provided.'}"
-                                       </p>
                                    </div>
-                               </div>
-                            )}
-                       </div>
-                  </div>
+                                ))
+                             ) : (
+                                <div className="rounded-xl border border-white/10 bg-slate-800/40 divide-y divide-white/5 overflow-hidden">
+                                    <div className="p-3 bg-[#0F172A] flex flex-col gap-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Legacy Challenge Question</span>
+                                            <HelpCircle size={14} className="text-slate-500" />
+                                        </div>
+                                        <p className="text-[13px] font-bold text-slate-300">
+                                            {selectedClaim.found_item_challenge_question || "Ask for unique markings."}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 pl-4 border-l-4 border-l-uni-400 bg-uni-500/[0.02] flex flex-col gap-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-black text-uni-400 uppercase tracking-[0.2em]">Claimant's Answer</span>
+                                            <MessageSquare size={14} className="text-uni-400" />
+                                        </div>
+                                        <p className="text-[13px] font-medium text-white italic">
+                                            "{selectedClaim.proof_description || 'No direct answer provided.'}"
+                                        </p>
+                                    </div>
+                                </div>
+                             )}
+                        </div>
+                   </div>
                   
                   {/* Claimant Identity & Staff Alerts */}
                   <div className="flex flex-col gap-3">
@@ -320,7 +357,7 @@ const ClaimReviewModal = ({
                           disabled={actionLoading}
                           className="flex-[1.5] bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[11px] uppercase tracking-[0.2em] py-3.5 sm:py-4 rounded-xl transition-all shadow-[0_10px_20px_-5px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 disabled:opacity-50"
                       >
-                          <CheckCircle2 size={16} /> Approve & Schedule
+                          <CheckCircle2 size={16} /> {isIdentifiedClaim ? 'Confirm & Release' : 'Approve & Schedule'}
                       </button>
                   </div>
               </div>

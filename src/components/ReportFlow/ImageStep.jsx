@@ -11,7 +11,8 @@ const ImageStep = ({
   onNext, 
   onManualEntry,
   stepLabel,
-  optional = true 
+  optional = true,
+  isSubmitting = false
 }) => {
   return (
     <div className="space-y-12 py-10 flex-grow flex flex-col justify-center text-center">
@@ -19,14 +20,19 @@ const ImageStep = ({
          <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest mb-2 italic">{stepLabel}</span>
          <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">{title}</h2>
          <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">
-           {description} {optional && <span>(This step is <span className="text-uni-400">optional</span>)</span>}
+            {description} {optional && <span>(This step is <span className="text-uni-400">optional</span>)</span>}
          </p>
       </div>
       
       <div className="max-w-xl mx-auto w-full space-y-8">
           <div className="p-8 glass-panel rounded-[3.5rem] border border-white/5">
-              <div className="space-y-2 mb-6">
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Primary Identification Photo</p>
+              <div className="space-y-4 mb-6">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Item Photo</p>
+                  <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest leading-relaxed max-w-sm mx-auto">
+                    Upload a photo of <span className="text-uni-400">your item</span> — from your gallery, a screenshot, or even a picture of a similar one. This will be shown on the public listing.
+                  </p>
+                </div>
                 <ImageUpload 
                     value={value}
                     onUploadSuccess={onUpload}
@@ -73,16 +79,24 @@ const ImageStep = ({
           <div className="space-y-4">
             <button 
                 onClick={onNext} 
-                disabled={!optional && !value}
+                disabled={(!optional && !value) || isSubmitting}
                 className={`w-full py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all border border-black/5 active:scale-95 flex items-center justify-center gap-4 ${
-                (!optional && !value) 
+                ((!optional && !value) || isSubmitting)
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed border border-white/5' 
                     : 'bg-uni-600 text-white hover:bg-white hover:text-black'
                 }`}
             >
-                {value ? 'Review Report →' : (optional ? 'Skip & Continue →' : 'Upload Required →')}
+                {isSubmitting ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Submitting Report...
+                  </>
+                ) : value ? (
+                  'Submit Report →'
+                ) : (
+                  optional ? 'Skip & Submit →' : 'Upload Required →'
+                )}
             </button>
-
           </div>
       </div>
     </div>

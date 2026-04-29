@@ -143,19 +143,35 @@ const ClaimCard = React.memo(({ claim, onReview }) => {
           {/* AI Score / Identity badges — top right */}
           {(aiScore != null || (claim.student_id && claim.found_item_identified_id) || claim.is_identified_claim) && (
             <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-              {claim.student_id && claim.found_item_identified_id && 
-               String(claim.student_id).replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === 
-               String(claim.found_item_identified_id).replace(/[^a-zA-Z0-9]/g, '').toLowerCase() ? (
-                <Badge className="bg-emerald-500 text-black border-emerald-400/30 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-2xl">
-                  <ShieldCheck size={11} />
-                  ID Verified Match
-                </Badge>
-              ) : claim.is_identified_claim ? (
-                <Badge className="bg-sky-500 text-white border-sky-400/30 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-2xl">
-                  <Fingerprint size={11} />
-                  ID Verification Required
-                </Badge>
-              ) : null}
+              {(() => {
+                const normalize = (val) => String(val || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                const idMatch = (claim.student_id && claim.found_item_identified_id) && 
+                                normalize(claim.student_id) === normalize(claim.found_item_identified_id);
+                
+                const userName = claim.owner_name;
+                const identifiedName = claim.item_identified_name;
+                const nameMatch = (userName && identifiedName) && 
+                                  normalize(userName) === normalize(identifiedName);
+
+                if (idMatch || nameMatch) {
+                  return (
+                    <Badge className="bg-emerald-500 text-black border-emerald-400/30 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-2xl">
+                      <ShieldCheck size={11} />
+                      ID/Name Verified Match
+                    </Badge>
+                  );
+                }
+                
+                if (claim.is_identified_claim) {
+                  return (
+                    <Badge className="bg-sky-500 text-white border-sky-400/30 px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-2xl">
+                      <Fingerprint size={11} />
+                      ID Verification Required
+                    </Badge>
+                  );
+                }
+                return null;
+              })()}
               {aiScore != null && (
                 <Badge className={`backdrop-blur-2xl px-3 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-1.5 shadow-2xl border ${
                   aiScore >= 70

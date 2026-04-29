@@ -7,7 +7,9 @@ const NarrativeIntakeStep = ({
     description, 
     onChange, 
     onAnalysisComplete, 
-    stepLabel 
+    onNext,
+    stepLabel,
+    showAI = true
 }) => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [error, setError] = useState(null);
@@ -34,6 +36,14 @@ const NarrativeIntakeStep = ({
         } finally {
             setIsAnalyzing(false);
         }
+    };
+
+    const handleSimpleNext = () => {
+        if (description.length < 10) {
+            setError('Please provide a bit more detail about what happened!');
+            return;
+        }
+        onNext();
     };
 
     return (
@@ -88,37 +98,52 @@ const NarrativeIntakeStep = ({
                     )}
                 </AnimatePresence>
 
-                <button 
-                    onClick={handleAnalyze}
-                    disabled={isAnalyzing || description.length < 10}
-                    className="w-full relative group overflow-hidden bg-white text-black py-6 rounded-[2.2rem] font-black text-xs uppercase tracking-[0.5em] transition-all hover:bg-clear border border-black/5 active:scale-[0.98] disabled:opacity-30 disabled:grayscale"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
-                    <span className="relative z-10 flex items-center justify-center gap-4 group-hover:text-white transition-colors">
-                        {isAnalyzing ? (
-                            <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Analyzing Story...
-                            </>
-                        ) : (
-                            <>
-                                <Sparkles className="h-4 w-4" />
-                                Create My Simple Story
-                                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                            </>
-                        )}
-                    </span>
-                </button>
+                {showAI ? (
+                    <button 
+                        onClick={handleAnalyze}
+                        disabled={isAnalyzing || description.length < 10}
+                        className="w-full relative group overflow-hidden bg-white text-black py-6 rounded-[2.2rem] font-black text-xs uppercase tracking-[0.5em] transition-all hover:bg-clear border border-black/5 active:scale-[0.98] disabled:opacity-30 disabled:grayscale"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
+                        <span className="relative z-10 flex items-center justify-center gap-4 group-hover:text-white transition-colors">
+                            {isAnalyzing ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Analyzing Story...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="h-4 w-4" />
+                                    Create My Simple Story
+                                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </span>
+                    </button>
+                ) : (
+                    <button 
+                        onClick={handleSimpleNext}
+                        className="w-full relative group overflow-hidden bg-white text-black py-6 rounded-[2.2rem] font-black text-xs uppercase tracking-[0.5em] transition-all hover:bg-clear border border-black/5 active:scale-[0.98]"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
+                        <span className="relative z-10 flex items-center justify-center gap-4 group-hover:text-white transition-colors">
+                            Next Step
+                            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                    </button>
+                )}
 
-                <div className="pt-4 flex items-center justify-center gap-6 grayscale opacity-40">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
-                        Powered by Gemini 2.5 Flash
-                    </p>
-                    <div className="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
-                        Multilingual Support
-                    </p>
-                </div>
+                {showAI && (
+                    <div className="pt-4 flex items-center justify-center gap-6 grayscale opacity-40">
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
+                            Powered by Gemini 2.5 Flash
+                        </p>
+                        <div className="w-1.5 h-1.5 rounded-full bg-slate-800"></div>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest italic">
+                            Multilingual Support
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

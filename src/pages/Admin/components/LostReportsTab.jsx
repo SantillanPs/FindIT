@@ -9,6 +9,7 @@ const LostReportsTab = ({
   navigate, 
   setSearchTerm,
   onUpdateReport,
+  onReviewReport,
   actionLoading,
   setPreviewImage,
   activeFilter
@@ -60,6 +61,7 @@ const LostReportsTab = ({
                navigate={navigate}
                setSearchTerm={setSearchTerm}
                onUpdate={onUpdateReport}
+               onReview={onReviewReport}
                isUpdating={actionLoading === `lost-${report.id}`}
                onPreview={setPreviewImage}
              />

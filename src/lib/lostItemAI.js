@@ -41,8 +41,39 @@ export const analyzeLostNarrative = async (description) => {
 
         if (error && !data) throw error; // Real network error
 
+        // Normalization Helper to map AI variations to strict master list
+        const normalizeCategory = (cat) => {
+            if (!cat) return 'Other';
+            const masterList = [
+                'Cellphone', 'Laptop', 'Tablet', 'ID Card', 'Wallet', 
+                'Bag / Backpack', 'Keys', 'Headphones / Earbuds', 'Watch / Wearable', 
+                'Water Bottle', 'Eyewear', 'Book', 'Notebook', 'Stationery', 
+                'Clothing', 'Accessories', 'Electronics Accessories', 
+                'Computer Peripheral', 'Umbrella', 'Other'
+            ];
+            
+            const lowerCat = cat.toLowerCase();
+            
+            // Direct matches
+            const match = masterList.find(m => m.toLowerCase() === lowerCat);
+            if (match) return match;
+
+            // Common variations
+            if (lowerCat.includes('bag')) return 'Bag / Backpack';
+            if (lowerCat.includes('phone') || lowerCat.includes('mobile')) return 'Cellphone';
+            if (lowerCat.includes('headphone') || lowerCat.includes('earbud')) return 'Headphones / Earbuds';
+            if (lowerCat.includes('id') || lowerCat.includes('identification')) return 'ID Card';
+            if (lowerCat.includes('glass') || lowerCat.includes('eye')) return 'Eyewear';
+            if (lowerCat.includes('watch') || lowerCat.includes('wearable')) return 'Watch / Wearable';
+            if (lowerCat.includes('computer') || lowerCat.includes('peripheral')) return 'Computer Peripheral';
+            if (lowerCat.includes('electronics')) return 'Electronics Accessories';
+            
+            return 'Other';
+        };
+
         return {
-            category: data?.category || 'Other',
+            category: normalizeCategory(data?.category),
+            suggested_title: data?.suggested_title || null,
             attributes: data?.attributes || {},
             location_hints: data?.location_hints || [],
             timeframe_hint: data?.timeframe_hint || null,

@@ -132,13 +132,22 @@ const SubmitClaim = () => {
     }
   }, [user]); // Only trigger when user loads
 
-  // 5. AUTO-MATCH LOGIC: If Student ID matches, skip to review
+  // 5. AUTO-MATCH LOGIC: If ID OR Full Name matches, skip to review
   const isAutoMatched = useMemo(() => {
-    if (!user || !item || !user.student_id_number || !item.identified_id_number) return false;
+    if (!user || !item) return false;
     
-    // Normalize IDs for comparison (remove spaces/dashes, lowercase)
-    const normalize = (id) => String(id).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    return normalize(user.student_id_number) === normalize(item.identified_id_number);
+    const normalize = (val) => String(val || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    
+    // Check ID Match
+    const idMatch = (user.student_id_number && item.identified_id_number) && 
+                    normalize(user.student_id_number) === normalize(item.identified_id_number);
+    
+    // Check Name Match
+    const userName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+    const nameMatch = (userName && item.identified_name) && 
+                      normalize(userName) === normalize(item.identified_name);
+
+    return idMatch || nameMatch;
   }, [user, item]);
 
   // 6. IDENTIFIED ITEM CHECK: Has the item been pre-identified?
@@ -147,9 +156,10 @@ const SubmitClaim = () => {
   }, [item]);
 
   // 7. DIRECT PICKUP CHECK: Is this a sensitive ID that should be claimed immediately?
+  // Only allowed if user is logged in AND is an exact match (Auto-Matched)
   const isDirectPickup = useMemo(() => {
-    return isIdentifiedItem && (item?.category === 'ID Card' || item?.category === 'Institutional ID');
-  }, [isIdentifiedItem, item]);
+    return isAutoMatched && (item?.category === 'ID Card' || item?.category === 'Institutional ID');
+  }, [isAutoMatched, item]);
 
   // 8. SECURITY GATE: Is the current user allowed to claim this identified item?
   const isWrongUser = useMemo(() => {
@@ -212,11 +222,11 @@ const SubmitClaim = () => {
       found_item_id: itemId,
       proof_description: isDirectPickup ? `Direct Pickup Announcement for ${item.category} (${item.identified_name})` : proof,
       proof_photo_url: proofPhotoUrl,
-      guest_first_name: isDirectPickup ? (item.identified_name?.split(' ')[0] || 'Direct') : guestFirstName,
-      guest_last_name: isDirectPickup ? (item.identified_name?.split(' ').slice(1).join(' ') || 'Pickup') : guestLastName,
-      guest_email: user?.email || guestEmail || 'direct-pickup@system.local',
-      contact_method: user ? 'Account' : (isDirectPickup ? 'Direct Pickup' : contactMethod),
-      contact_info: isDirectPickup ? 'Announcement Path' : contactInfo,
+      guest_first_name: isIdentifiedItem ? (item.identified_name?.split(' ')[0] || 'Member') : guestFirstName,
+      guest_last_name: isIdentifiedItem ? (item.identified_name?.split(' ').slice(1).join(' ') || 'User') : guestLastName,
+      guest_email: user?.email || guestEmail || 'claimant@registry.local',
+      contact_method: user ? 'Account' : 'Email',
+      contact_info: user ? 'Account' : guestEmail,
       course_department: courseDepartment,
       attributes_json: isDirectPickup ? {} : attributes,
       challenge_answers_json: isDirectPickup ? {} : challengeAnswers,
@@ -228,7 +238,7 @@ const SubmitClaim = () => {
       metadata: {
         is_direct_pickup: isDirectPickup,
         auto_verified: isAutoMatched,
-        source: 'Announcement Path'
+        source: isIdentifiedItem ? 'Institutional Registry' : 'Standard Claim'
       }
     };
 
@@ -242,6 +252,92 @@ const SubmitClaim = () => {
   };
 
   const actualStep = getActualStep(step);
+
+  // ── Minimalist Claim Screen for Identified Items (Guest) ──
+  if (isIdentifiedItem && !isAutoMatched && !trackingId && !itemLoading) {
+    const canSubmit = proofPhotoUrl && guestEmail;
+
+    return (
+      <div className="max-w-lg mx-auto min-h-[80vh] flex flex-col justify-center py-12 px-4 space-y-10">
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-3"
+        >
+          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.4em]">Identified Item • Claim Verification</p>
+          <h2 className="text-3xl md:text-4xl font-black text-white uppercase italic tracking-tight leading-none">
+            {item.identified_name || 'Owner Verified'}
+          </h2>
+          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+            {item.category} • {item.location || 'USG Office'}
+          </p>
+        </motion.div>
+
+        {/* Form */}
+        <motion.div 
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 }}
+          className="space-y-6"
+        >
+          {/* Upload Zone */}
+          <div className="space-y-3">
+            <label className="text-[9px] font-black text-slate-500 tracking-widest uppercase ml-1 flex items-center gap-2">
+              <i className="fa-solid fa-id-card text-uni-400 text-[8px]"></i>
+              Upload your School or Government ID
+            </label>
+            <div className="rounded-2xl border border-white/10 overflow-hidden bg-white/[0.02]">
+              <ImageUpload 
+                value={proofPhotoUrl}
+                onUploadSuccess={(url) => setProofPhotoUrl(url)}
+                description="Clear photo of your ID card"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="space-y-3">
+            <label className="text-[9px] font-black text-slate-500 tracking-widest uppercase ml-1 flex items-center gap-2">
+              <i className="fa-solid fa-envelope text-uni-400 text-[8px]"></i>
+              Contact Email
+            </label>
+            <input 
+              type="email"
+              value={guestEmail}
+              onChange={(e) => setGuestEmail(e.target.value)}
+              placeholder="your@email.com"
+              className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-4 text-sm font-bold text-white focus:border-uni-500 outline-none transition-all placeholder:text-slate-600"
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-[10px] font-black text-red-400 uppercase tracking-widest text-center">
+              <i className="fa-solid fa-circle-exclamation mr-2"></i>{error}
+            </p>
+          )}
+
+          {/* Submit */}
+          <button 
+            disabled={!canSubmit || claimMutation.isPending}
+            onClick={() => handleSubmit()}
+            className="w-full bg-white text-black py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] hover:bg-emerald-500 hover:text-white transition-all disabled:opacity-20 flex items-center justify-center gap-3"
+          >
+            {claimMutation.isPending ? (
+              <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+            ) : (
+              <>Submit Claim <i className="fa-solid fa-arrow-right text-[10px]"></i></>
+            )}
+          </button>
+        </motion.div>
+
+        <Link to="/" className="text-slate-500 hover:text-white text-[9px] font-black uppercase tracking-[0.3em] transition-colors text-center block">
+          ← Back
+        </Link>
+      </div>
+    );
+  }
 
   if (itemLoading) return (
     <div className="flex justify-center py-32">
@@ -635,9 +731,17 @@ const SubmitClaim = () => {
                              <h3 className="text-2xl font-black text-white uppercase italic tracking-tight">{item.identified_name || 'Registered Member'}</h3>
                              <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest italic">Institutional ID: {item.identified_id_number}</p>
                           </div>
-                          <div className="flex items-center gap-3 justify-center text-emerald-400 bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/20">
-                             <i className="fa-solid fa-shield-check text-xs"></i>
-                             <span className="text-[10px] font-black uppercase tracking-widest">Matched Assets Detected</span>
+                          <div className="flex flex-col gap-3">
+                             <div className="flex items-center gap-3 justify-center text-emerald-400 bg-emerald-500/10 py-3 rounded-xl border border-emerald-500/20">
+                                <i className="fa-solid fa-shield-check text-xs"></i>
+                                <span className="text-[10px] font-black uppercase tracking-widest">Matched Assets Detected</span>
+                             </div>
+                             {!user && (
+                               <div className="flex items-center gap-3 justify-center text-uni-400 bg-uni-500/10 py-3 rounded-xl border border-uni-500/20">
+                                  <i className="fa-solid fa-id-card text-xs"></i>
+                                  <span className="text-[10px] font-black uppercase tracking-widest">Credential Check Required</span>
+                               </div>
+                             )}
                           </div>
                        </div>
                     ) : item?.challenge_questions?.length > 0 ? (
@@ -677,8 +781,8 @@ const SubmitClaim = () => {
                  </div>
 
                   <div className="max-w-2xl mx-auto w-full space-y-8">
-                     {/* Structured Physical Characteristics Audit */}
-                     {item && ITEM_ATTRIBUTES[item.category] && (
+                      {/* Structured Physical Characteristics Audit */}
+                     {item && ITEM_ATTRIBUTES[item.category] && !isIdentifiedItem && (
                         <div className="bg-white/[0.03] p-6 md:p-8 rounded-[2rem] border border-white/5 space-y-6 text-left">
                            <p className="text-[9px] font-black text-uni-400 uppercase tracking-[0.3em] flex items-center gap-2">
                               <i className="fa-solid fa-list-check"></i>
@@ -723,7 +827,7 @@ const SubmitClaim = () => {
                         </div>
                      )}
 
-                     {(!item?.challenge_questions || item.challenge_questions.length === 0) && (
+                     {(!item?.challenge_questions || item.challenge_questions.length === 0) && !isIdentifiedItem && (
                        <div className="space-y-3 text-left">
                           <label className="text-[9px] font-black text-slate-500 tracking-widest ml-6 flex items-center gap-2 uppercase">
                              <i className="fa-solid fa-pen-nib text-[8px] text-uni-400"></i>
@@ -743,7 +847,7 @@ const SubmitClaim = () => {
                     <button
                       disabled={
                         (item?.challenge_questions?.length > 0 && item.challenge_questions.some((_, i) => !challengeAnswers[i] || challengeAnswers[i].length < 3)) ||
-                        (proof.length < 5 && (!item?.challenge_questions || item.challenge_questions.length === 0))
+                        (proof.length < 5 && (!item?.challenge_questions || item.challenge_questions.length === 0) && !isIdentifiedItem)
                       }
                       onClick={() => goToStep(2)}
                       className="w-full bg-uni-600 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all active:scale-[0.98] disabled:opacity-20 min-h-[56px] flex items-center justify-center gap-3"
@@ -761,13 +865,15 @@ const SubmitClaim = () => {
                <div className="space-y-10 flex-grow flex flex-col justify-center py-8 text-center">
                  <div className="space-y-4">
                     <span className="inline-block px-4 py-1.5 rounded-full bg-uni-500/10 border border-uni-500/20 text-[10px] font-black text-uni-400 uppercase tracking-widest italic">
-                        {isIdentifiedItem ? 'Step 2: Security Verification' : 'Step 2: Photo Evidence (Optional)'}
+                        {isIdentifiedItem ? (user ? 'Step 2: Security Verification' : 'Step 2: Credential Verification') : 'Step 2: Photo Evidence (Optional)'}
                     </span>
                     <h2 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tight leading-none italic">
-                        {isIdentifiedItem ? <>Upload your<br/>Student ID</> : <>"Got a photo<br/>of the item?"</>}
+                        {isIdentifiedItem ? (user ? <>Confirm your<br/>Student ID</> : <>Upload your<br/>Credentials</>) : <>"Got a photo<br/>of the item?"</>}
                     </h2>
                     <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">
-                        {isIdentifiedItem ? 'Take a clear photo of your ID card to match the system record.' : 'A photo of you with the item, its receipt, or a screenshot of a unique mark.'}
+                        {isIdentifiedItem 
+                          ? (user ? 'Match your school ID for rapid verification.' : 'Upload a photo of your school ID or any government ID to verify your identity.')
+                          : 'A photo of you with the item, its receipt, or a screenshot of a unique mark.'}
                     </p>
                  </div>
 
