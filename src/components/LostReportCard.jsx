@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterData } from '../context/MasterDataContext';
 import { useAuth } from '../context/AuthContext';
-import { AlignLeft, Calendar, Heart, Eye, Search } from 'lucide-react';
+import { AlignLeft, Calendar, Heart, Eye, Search, Sparkles } from 'lucide-react';
 import { imageCache } from '../lib/imageCache';
 
 const LostReportCard = ({ report, onWitness }) => {
@@ -75,6 +75,14 @@ const LostReportCard = ({ report, onWitness }) => {
 
         {/* Header Row */}
         <div className="flex-grow">
+            <div className="flex items-center gap-2 mb-1">
+                {report.synthesized_description && (
+                   <div className="flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
+                      <Sparkles size={10} className="text-blue-400 fill-blue-400" />
+                      <span className="text-[8px] font-black text-blue-400 uppercase tracking-[0.2em]">AI Synthesized</span>
+                   </div>
+                )}
+            </div>
             <h3 className="text-xl font-bold text-white leading-tight group-hover:text-rose-400 line-clamp-1 mb-1">
                 {report.title}
             </h3>
@@ -83,8 +91,23 @@ const LostReportCard = ({ report, onWitness }) => {
                <p className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">{report.location}</p>
             </div>
             
-            {report.potential_zone_names && report.potential_zone_names.length > 0 && (
+            {/* Quick Attributes */}
+            {report.attributes && Object.keys(report.attributes).length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-2">
+                    {Object.entries(report.attributes).map(([key, val]) => {
+                        if (!val || val === 'Unknown' || val === 'None') return null;
+                        return (
+                            <div key={key} className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-md border border-white/10">
+                                <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{key}:</span>
+                                <span className="text-[10px] font-bold text-white capitalize">{val}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+            
+            {report.potential_zone_names && report.potential_zone_names.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2 mt-2">
                     {report.potential_zone_names.slice(0, 2).map((name, i) => (
                         <span 
                             key={i}
@@ -110,7 +133,7 @@ const LostReportCard = ({ report, onWitness }) => {
                 </div>
                 <div className="flex flex-col gap-2">
                     <p className="text-[13px] text-slate-400 font-medium leading-relaxed line-clamp-3">
-                        {showOriginal ? report.original_description : report.description}
+                        {showOriginal ? report.original_description : (report.synthesized_description || report.description)}
                     </p>
                     {report.synthesized_description && report.original_description && (
                         <button 
