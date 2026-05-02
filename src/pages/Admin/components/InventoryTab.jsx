@@ -23,7 +23,8 @@ const InventoryTab = ({
   setShowReleaseModal, 
   setReleaseForm, 
   actionLoading,
-  onReviewItem
+  onReviewItem,
+  onToggleVisibility
 }) => {
   const filters = [
     { id: 'all', label: 'All Items', icon: ListFilter, color: 'hover:bg-white/5 border-white/5' },
@@ -113,6 +114,7 @@ const InventoryTab = ({
                 setReleaseForm={setReleaseForm}
                 actionLoading={actionLoading}
                 onReviewItem={onReviewItem}
+                onToggleVisibility={onToggleVisibility}
               />
             ))}
           </AnimatePresence>

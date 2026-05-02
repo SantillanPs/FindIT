@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText, Activity, Settings } from "lucide-react";
+import { MapPin, BadgeCheck, Vault, RefreshCw, User, FileText, Activity, Settings, Clock, Eye, EyeOff } from "lucide-react";
 import { imageCache } from '../../../lib/imageCache';
 
 const InventoryCard = React.memo(({ 
@@ -14,7 +14,8 @@ const InventoryCard = React.memo(({
   setShowReleaseModal, 
   setReleaseForm, 
   actionLoading,
-  onReviewItem
+  onReviewItem,
+  onToggleVisibility
 }) => {
   const { categories: CATEGORIES } = useMasterData();
   const [imgLoaded, setImgLoaded] = useState(imageCache.isLoaded(item.photo_url));
@@ -24,6 +25,10 @@ const InventoryCard = React.memo(({
   const formattedDate = new Date(item.created_at || item.date_found).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric'
   }).toUpperCase();
+
+  const dateFound = new Date(item.date_found || item.created_at);
+  const diffDays = Math.ceil(Math.abs(new Date() - dateFound) / (1000 * 60 * 60 * 24));
+  const isStale = diffDays >= 30 && !item.identified_name && item.status !== 'claimed';
 
   const reporterFullName = item.guest_name || [item.guest_first_name, item.guest_last_name].filter(Boolean).join(' ');
   const displayReporter = reporterFullName || item.owner_name || 'Anonymous Finder';
@@ -62,11 +67,41 @@ const InventoryCard = React.memo(({
           )}
 
           {/* 2. Category */}
-          <div className="absolute top-6 left-6 z-20">
+          <div className="absolute top-6 left-6 z-20 flex flex-col gap-2">
             <Badge className="bg-black/60 backdrop-blur-xl text-white border-white/10 px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2">
               <span className="text-sm">{categoryData?.emoji || '📦'}</span>
               {categoryData?.name || item.category || 'Asset'}
             </Badge>
+
+            {isStale && (
+              <Badge className="bg-amber-500/20 backdrop-blur-xl text-amber-400 border-amber-500/20 px-4 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 border animate-pulse">
+                <Clock size={12} className="text-amber-400" />
+                Archive Candidate
+              </Badge>
+            )}
+          </div>
+
+          {/* 3. Visibility Toggle (Top Right) */}
+          <div className="absolute top-6 right-6 z-20">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleVisibility(item);
+              }}
+              disabled={actionLoading === `visibility-${item.id}`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 border ${
+                item.is_public 
+                  ? 'bg-uni-500/20 text-uni-400 border-uni-500/20 hover:bg-uni-500/30' 
+                  : 'bg-red-500/20 text-red-400 border-red-500/20 hover:bg-red-500/30'
+              }`}
+              title={item.is_public ? "Public: Visible on Landing" : "Private: Hidden from Landing"}
+            >
+              {actionLoading === `visibility-${item.id}` ? (
+                <RefreshCw size={18} className="animate-spin" />
+              ) : (
+                item.is_public ? <Eye size={18} /> : <EyeOff size={18} />
+              )}
+            </button>
           </div>
         </div>
 

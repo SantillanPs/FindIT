@@ -247,6 +247,17 @@ const AdminDashboard = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_inventory'] })
   });
 
+  const foundItemVisibilityMutation = useMutation({
+    mutationFn: async ({ id, is_public }) => {
+      const { error } = await supabase.from('found_items').update({ is_public }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['found_items'] });
+    }
+  });
+
   const claimReviewMutation = useMutation({
     mutationFn: async ({ claimId, status, adminNotes, scheduledPickupTime }) => {
       const { error } = await supabase.rpc('rpc_handle_claim_review', {
@@ -353,6 +364,20 @@ const AdminDashboard = () => {
       await foundItemBulkUpdateMutation.mutateAsync({ ids: itemIds, status });
     } catch (err) {
       console.error('Bulk update failed', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleVisibility = async (item) => {
+    setActionLoading(`visibility-${item.id}`);
+    try {
+      await foundItemVisibilityMutation.mutateAsync({ 
+        id: item.id, 
+        is_public: !item.is_public 
+      });
+    } catch (err) {
+      console.error('Visibility toggle failed', err);
     } finally {
       setActionLoading(null);
     }
@@ -480,7 +505,7 @@ const AdminDashboard = () => {
         <Tabs value={currentTab} onValueChange={(val) => navigate(`/admin/${val === 'found' ? '' : val}`)} className="w-full">
           <div className="bg-slate-900/30 rounded-[2.5rem] border border-white/5 backdrop-blur-3xl shadow-3xl overflow-hidden min-h-[700px] w-full">
             <div className="p-4 md:p-8 lg:p-10 w-full">
-              <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm, onReviewItem: setSelectedReviewItem}} /></TabsContent>
+              <TabsContent value="found" className="m-0 focus-visible:outline-none"><InventoryTab {...{inventoryFilter, setInventoryFilter, filteredItems, matches, pendingClaims, navigate, setSearchTerm, handleStatusUpdate, handleBulkStatusUpdate, setShowReleaseModal, setReleaseForm, actionLoading, activeFilter: searchTerm, onReviewItem: setSelectedReviewItem, onToggleVisibility: handleToggleVisibility}} /></TabsContent>
               <TabsContent value="claims" className="m-0 focus-visible:outline-none"><ClaimsTab {...{filteredClaims, setSelectedClaim, setClaimReviewStep}} /></TabsContent>
               <TabsContent value="matches" className="m-0 focus-visible:outline-none">
                 <MatchmakerTab {...{

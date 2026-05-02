@@ -33,7 +33,8 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
     location: item.location || '',
     brand: item.brand || '',
     model: item.model || '',
-    category: item.category || ''
+    category: item.category || '',
+    is_public: item.is_public ?? true
   });
   const { categories: CATEGORIES } = useMasterData();
 
@@ -397,7 +398,21 @@ const ReportReviewModal = ({ item, onClose, onSubmit, isSubmitting }) => {
                   <div className="space-y-6">
                     <div className="p-6 rounded-3xl bg-blue-600/10 border border-blue-500/20 flex gap-4 items-center">
                       <ImageIcon size={24} className="text-blue-400" />
-                      <div><p className="text-[10px] font-black text-white uppercase mb-0.5">Step 3: Listing Details</p><p className="text-[11px] text-slate-400">Decide what students will see in the list.</p></div>
+                      <div className="flex-grow">
+                        <p className="text-[10px] font-black text-white uppercase mb-0.5">Step 3: Listing Details</p>
+                        <p className="text-[11px] text-slate-400">Decide what students will see in the list.</p>
+                      </div>
+                      <button 
+                        onClick={() => setFormData({...formData, is_public: !formData.is_public})} 
+                        className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all flex items-center gap-2 ${
+                          formData.is_public 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20' 
+                            : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                        }`}
+                      >
+                        {formData.is_public ? <Eye size={14} /> : <EyeOff size={14} />}
+                        {formData.is_public ? 'Global: Public' : 'Global: Hidden'}
+                      </button>
                     </div>
 
                     <div className="space-y-6">

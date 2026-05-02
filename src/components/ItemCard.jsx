@@ -20,6 +20,10 @@ const ItemCard = ({ item, onClick, onShare }) => {
     hour12: true
   }).toUpperCase() : null;
 
+  const dateFound = new Date(item.date_found || item.created_at);
+  const diffDays = Math.ceil(Math.abs(new Date() - dateFound) / (1000 * 60 * 60 * 24));
+  const isStale = diffDays >= 30 && !item.identified_name && item.status !== 'claimed';
+
   return (
     <div 
       onClick={onClick}
@@ -45,12 +49,20 @@ const ItemCard = ({ item, onClick, onShare }) => {
         )}
 
         {/* Category Overlay (Top Left) */}
-        <div className="absolute top-4 left-4 z-20">
+        <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
             <div className="bg-sky-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-500/20 flex items-center gap-2">
                 <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider">
                     {categoryData?.label || 'General'}
                 </span>
             </div>
+            {isStale && (
+              <div className="bg-amber-500/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-amber-500/20 flex items-center gap-2 animate-pulse">
+                  <Clock className="h-3 w-3 text-amber-400" />
+                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+                      Long Unclaimed
+                  </span>
+              </div>
+            )}
         </div>
 
         {/* Gradient Bottom Fade */}
