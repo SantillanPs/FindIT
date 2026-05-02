@@ -23,7 +23,8 @@ import {
   X,
   AlertCircle,
   Bell,
-  ChevronLeft
+  ChevronLeft,
+  Share2
 } from 'lucide-react';
 import {
   Carousel,
@@ -87,7 +88,24 @@ const Landing = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Found Items Query (Includes AI Search)
+  // Identified Items Query (Separate from general items)
+  const { data: identifiedItems = [], isLoading: identifiedLoading } = useQuery({
+    queryKey: ['identified_items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('v_public_found_items')
+        .select('*')
+        .eq('is_owner_identified', true)
+        .order('date_found', { ascending: false })
+        .limit(12);
+
+      if (error) throw error;
+      return data || [];
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  // Found Items Query (Focus on General Items)
   const { data: items = [], isLoading: itemsLoading } = useQuery({
     queryKey: ['found_items', selectedCategory, searchQuery],
     queryFn: async () => {
@@ -103,6 +121,7 @@ const Landing = () => {
           const query = supabase
             .from('v_public_found_items')
             .select('*')
+            .eq('is_owner_identified', false)
             .ilike('title', `%${searchQuery}%`)
             .order('date_found', { ascending: false })
             .limit(12);
@@ -116,7 +135,8 @@ const Landing = () => {
             match_threshold: 0.2,
             match_count: 24
           });
-          data = searchData?.filter(item => item.status === 'in_custody').slice(0, 12);
+          // Filter out identified items from search results
+          data = searchData?.filter(item => item.status === 'in_custody' && !item.is_owner_identified).slice(0, 12);
           error = searchError;
         }
       } else {
@@ -124,6 +144,7 @@ const Landing = () => {
         let query = supabase
           .from('v_public_found_items')
           .select('*')
+          .eq('is_owner_identified', false)
           .order('date_found', { ascending: false });
 
         if (selectedCategory && selectedCategory !== 'all') {
@@ -132,29 +153,18 @@ const Landing = () => {
 
         const { data: resData, error: resError } = await query.limit(12);
         
-        data = (resData || []).map(item => ({
-          ...item,
-          identified_student_id: item.identified_student_id
-        }));
+        data = resData;
         error = resError;
       }
       
       if (error) throw error;
-      
-      const processedData = (data || []).map(item => ({
-        ...item,
-        identified_student_id: item.identified_student_id
-      }));
-
-      console.info(`[Query] Found Items [Source: Standardized View]:`, processedData.length, 'records');
-      return processedData;
+      return data || [];
     },
     placeholderData: keepPreviousData,
   });
 
-  // Derived state for Urgent Matches
-  const identifiedItems = items.filter(item => item.is_owner_identified);
-  const generalItems = items.filter(item => !item.is_owner_identified);
+  // Simplified derived state
+  const generalItems = items;
 
   // ═══════════════════════════════════════════════
   // INFINITE CAROUSEL LOGIC
@@ -478,7 +488,7 @@ const Landing = () => {
 
                       return (
                         <CarouselItem key={`${item.id}-${idx}`} className="pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                          <div className="relative group/card cursor-pointer h-full" onClick={() => navigate(`/submit-claim/${item.id}`)}>
+                          <div className="relative group/card cursor-pointer h-full" onClick={() => setPeekItem(item)}>
                             {/* Glow */}
                             <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-2xl blur opacity-20 group-hover/card:opacity-40 transition duration-500"></div>
                             
@@ -530,8 +540,20 @@ const Landing = () => {
                                   <AlertCircle className="h-3 w-3 text-emerald-500/60" />
                                   <span className="text-[8px] font-bold uppercase tracking-widest">Claim at USG Office</span>
                                 </div>
-                                <div className="text-emerald-500/30 group-hover/card:text-emerald-400 transition-colors">
-                                  <ChevronRight size={16} />
+                                <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleShare(item);
+                                    }}
+                                    className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                                    title="Share Announcement"
+                                  >
+                                    <Share2 className="h-3.5 w-3.5" />
+                                  </button>
+                                  <div className="text-emerald-500/30 group-hover/card:text-emerald-400 transition-colors">
+                                    <ChevronRight size={16} />
+                                  </div>
                                 </div>
                               </div>
 
@@ -678,7 +700,7 @@ const Landing = () => {
                   <ItemCard 
                     key={item.id} 
                     item={item} 
-                    onClick={() => navigate(`/submit-claim/${item.id}`)}
+                    onClick={() => setPeekItem(item)}
                     onShare={handleShare}
                   />
                 ))}

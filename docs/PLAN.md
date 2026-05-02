@@ -1,40 +1,48 @@
-# Redesign LostReportCard for Mobile-First Minimalism
+# ItemDetailsPeek Redesign Plan (Orchestration Phase 1)
 
-## 🎼 Orchestration Mode: Planning Phase
-**Agent Invoked:** `project-planner`
+## 🎼 Orchestration Report (Phase 1)
 
-### Goal
-Redesign the `LostReportCard` to be minimalistic, functional, and perfectly fitted for thin phone screens while retaining all necessary forensic and AI data.
+### Task
+Redesign `ItemDetailsPeek.jsx` to be minimalistic, functional, compact, and optimized for thin phone screens.
 
-### Analysis of Current Issues
-- The current card uses dense grids and large paddings (`p-4 sm:p-5 lg:p-8`), taking up too much vertical space.
-- The narrative block has heavy borders and backgrounds.
-- The action buttons are bulky (`h-14`) and stacked in a way that requires scrolling.
-- Information like "Owner" and "Reported On" take up two columns which feels disconnected on thin screens.
+### Mode
+plan
 
-### Proposed Implementation Plan
+### Agents Involved in Planning
+| # | Agent | Focus Area | Status |
+|---|-------|------------|--------|
+| 1 | `project-planner` | Task breakdown & layout strategy | ✅ |
+| 2 | `frontend-specialist` | UI/UX component analysis | ✅ |
+| 3 | `mobile-developer` | Mobile-first viewport optimization | ✅ |
 
-#### 1. Condensed Layout & Spacing
-- Reduce overall padding (e.g., `p-3` or `p-4`).
-- Remove heavy glassmorphism borders inside the card (e.g., around the narrative).
-- Stack essential information tighter to prevent vertical sprawl.
+### Key Findings
+1. **[project-planner]**: The current modal (`w-full max-w-4xl h-fit max-h-[90vh]`) with a 50/50 split works for desktop but takes up too much vertical space on mobile due to the `aspect-square` image and large paddings.
+2. **[frontend-specialist]**: The text sizing (`text-2xl`) and paddings (`p-5`, `py-4` for buttons) are too bulky for thin phones. The design needs tighter spacing, smaller typography, and a "bottom sheet" aesthetic for mobile.
+3. **[mobile-developer]**: For thin screens, the image should act as a header banner rather than a full square, and the action buttons should be pinned to the bottom or made more compact to ensure critical information is visible without scrolling.
 
-#### 2. Header & Title Adjustments
-- Make the image aspect ratio slightly wider on mobile to save vertical space.
-- Move badges (Category, Matches) closer to the title to form a compact header cluster.
+## Proposed Changes
 
-#### 3. Narrative & Forensic Info
-- Strip the background box from the narrative to make it feel like inline text.
-- Condense the "AI Synthesized" label into a small inline badge next to the text.
-- Render the forensic attributes as a tight flex wrap of small tags (`h-4`, `text-[9px]`).
+### [MODIFY] `src/components/ItemDetailsPeek.jsx`
 
-#### 4. Metadata (Owner & Date)
-- Combine "Owner" and "Reported On" into a single horizontal flex row with dots `•` separating them, rather than a bulky grid.
+#### 1. Layout & Sizing Optimizations (Mobile-First)
+- Adjust the modal positioning on mobile to sit flush with the bottom (`bottom-0`, `rounded-t-3xl`, `rounded-b-none`) to act as a bottom sheet.
+- Change the image aspect ratio from `aspect-square` to `aspect-video` (16:9) or a fixed height (e.g., `h-48`) on mobile to save vertical space.
+- Reduce inner paddings from `p-5` to `p-4` or `p-3` on mobile.
 
-#### 5. Admin Notes
-- Transform the "Internal Admin Notes" into a single-line input with an edit icon, expanding only when focused.
+#### 2. Typography Adjustments
+- Scale down the title from `text-2xl` to `text-xl` or `text-lg` on mobile.
+- Adjust line heights to be tighter (`leading-tight`).
 
-#### 6. Action Buttons
-- Reduce button heights from `h-14` to `h-10` or `h-11`.
-- For primary actions (Review/Find Matches), keep full width.
-- For secondary actions (Resolve/Dismiss), use equal width side-by-side buttons with concise icons.
+#### 3. Action Button Refinement
+- Reduce the button padding (`py-4` to `py-3`).
+- Make the "Initiate Process" text more concise (e.g., "Claim Item") to save horizontal space.
+
+## Verification Plan
+- Run standard UI verification.
+- Manually review on mobile viewports.
+
+---
+
+**Do you approve this plan? (Y/N)**
+- **Y**: I will orchestrate the implementation using `frontend-specialist`, `mobile-developer`, and `test-engineer`.
+- **N**: Let me know what to change in the design approach.

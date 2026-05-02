@@ -280,13 +280,14 @@ const AdminDashboard = () => {
 
   // All lost item updates use direct table writes — avoids PostgREST schema cache issues
   const lostItemStatusMutation = useMutation({
-    mutationFn: async ({ id, status, admin_notes, title, category, synthesized_description, attributes }) => {
+    mutationFn: async ({ id, status, admin_notes, title, category, synthesized_description, attributes, ai_matching_dna }) => {
       const updates = {};
       if (status !== undefined) updates.status = status;
       if (admin_notes !== undefined) updates.admin_notes = admin_notes;
       if (title !== undefined) updates.title = title;
       if (category !== undefined) updates.category = category;
       if (synthesized_description !== undefined) updates.synthesized_description = synthesized_description;
+      if (ai_matching_dna !== undefined) updates.ai_matching_dna = ai_matching_dna;
       
       if (attributes !== undefined) {
         updates.attributes = attributes;
@@ -294,6 +295,7 @@ const AdminDashboard = () => {
         if (attributes.brand) updates.brand = attributes.brand;
         if (attributes.model) updates.model = attributes.model;
       }
+
 
       const { error } = await supabase
         .from('lost_items')

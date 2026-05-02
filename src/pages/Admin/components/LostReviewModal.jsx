@@ -30,19 +30,26 @@ const LostReviewModal = ({
     title: report.title || 'Lost Item Report',
     category: report.category || 'Miscellaneous',
     synthesized_description: report.synthesized_description || '',
-    attributes: report.attributes || {}
+    attributes: report.attributes || {},
+    ai_matching_dna: report.ai_matching_dna || { tags: [] }
   });
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     setError(null);
     try {
-      const results = await analyzeLostNarrative(report.description);
+      const results = await analyzeLostNarrative(
+        report.description, 
+        report.photo_url, 
+        report.secondary_photos
+      );
+      
       setFormData({
         title: results.suggested_title || formData.title,
         category: results.category,
         synthesized_description: results.synthesized_description,
-        attributes: results.attributes || {}
+        attributes: results.attributes || {},
+        ai_matching_dna: results.ai_matching_dna || { tags: [] }
       });
     } catch (err) {
       setError('AI Analysis failed. Please manually fill in the details.');
@@ -71,6 +78,7 @@ const LostReviewModal = ({
       setError('Failed to publish. Please try again.');
     }
   };
+
 
   const attributeFields = ITEM_ATTRIBUTES[formData.category] || [];
 

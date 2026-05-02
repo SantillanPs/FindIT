@@ -13,12 +13,15 @@ import {
   Megaphone,
   GraduationCap,
   ChevronRight,
-  Package
+  Package,
+  Share2,
+  CheckCircle2
 } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { imageCache } from '../lib/imageCache';
 import { useMasterData } from '../context/MasterDataContext';
+import ItemDetailsPeek from '../components/ItemDetailsPeek';
 
 // ═══════════════════════════════════════════════
 // RELATIVE TIME HELPER
@@ -44,7 +47,7 @@ const getRelativeTime = (dateString) => {
 // ═══════════════════════════════════════════════
 // ANNOUNCEMENT CARD COMPONENT
 // ═══════════════════════════════════════════════
-const AnnouncementCard = ({ item, onClick }) => {
+const AnnouncementCard = ({ item, onClick, onShare }) => {
   const { categories: CATEGORIES } = useMasterData();
   const [imgError, setImgError] = React.useState(imageCache.isFailed(item.photo_thumbnail_url || item.photo_url));
   const categoryData = CATEGORIES.find(c => c.id === item.category);
@@ -145,9 +148,21 @@ const AnnouncementCard = ({ item, onClick }) => {
               <MapPin className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Claim at USG Office</span>
             </div>
-            <div className="flex items-center gap-1 text-emerald-400 group-hover:text-emerald-300 transition-colors">
-              <span className="text-[10px] font-black uppercase tracking-widest">Claim</span>
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onShare(item);
+                }}
+                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                title="Share Announcement"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </button>
+              <div className="flex items-center gap-1 text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                <span className="text-[10px] font-black uppercase tracking-widest">Details</span>
+                <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+              </div>
             </div>
           </div>
 
@@ -168,6 +183,25 @@ const AnnouncementCard = ({ item, onClick }) => {
 const Announcements = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [peekItem, setPeekItem] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '' });
+
+  const showToast = (message) => {
+    setToast({ show: true, message });
+    setTimeout(() => setToast({ show: false, message: '' }), 3000);
+  };
+
+  const handleShare = (item) => {
+    const text = `I found a ${item.title} on FindIT! If this is yours, you can claim it here.`;
+    const url = window.location.origin + `/submit-claim/${item.id}`;
+    
+    if (navigator.share) {
+      navigator.share({ title: 'FindIT | Item Found', text, url });
+    } else {
+      navigator.clipboard.writeText(`${text} ${url}`);
+      showToast('Link copied to clipboard');
+    }
+  };
 
   // Fetch identified items from public view
   const { data: items = [], isLoading } = useQuery({
@@ -302,13 +336,36 @@ const Announcements = () => {
                 <AnnouncementCard 
                   key={item.id} 
                   item={item}
-                  onClick={() => navigate(`/submit-claim/${item.id}`)}
+                  onClick={() => setPeekItem(item)}
+                  onShare={handleShare}
                 />
               ))}
             </div>
           )}
         </div>
       </section>
+
+      {/* Item Detail Peek */}
+      <AnimatePresence>
+        {peekItem && (
+          <ItemDetailsPeek 
+            item={peekItem}
+            isOpen={!!peekItem}
+            onClose={() => setPeekItem(null)}
+            onShare={handleShare}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Toast Container */}
+      {toast.show && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-5 duration-500">
+          <div className="border border-white/10 bg-slate-900/90 backdrop-blur-xl text-white px-8 py-4 rounded-full flex items-center space-x-4 shadow-2xl">
+            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{toast.message}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

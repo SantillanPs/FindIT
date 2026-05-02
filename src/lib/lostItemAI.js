@@ -8,9 +8,11 @@ import { supabase } from './supabase';
 /**
  * Analyzes a raw narrative description to extract metadata and generate a clean synthesis.
  * @param {string} description The raw narrative from the student.
+ * @param {string} photoUrl Primary photo URL.
+ * @param {Array} secondaryPhotos List of secondary photo URLs.
  * @returns {Promise<Object>} The analysis result including extracted fields and synthesis.
  */
-export const analyzeLostNarrative = async (description) => {
+export const analyzeLostNarrative = async (description, photoUrl = null, secondaryPhotos = []) => {
     if (!description || description.length < 10) {
         throw new Error('Description is too short to analyze.');
     }
@@ -19,9 +21,14 @@ export const analyzeLostNarrative = async (description) => {
         console.group('%c🚀 [Narrative-First] AI INTAKE INITIATED', 'background: #1e293b; color: #38bdf8; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
         console.log('%cStory Analysis starting...', 'color: #94a3b8; font-style: italic;');
         console.log('Payload Length:', description.length);
+        console.log('Has Image:', !!photoUrl);
         
         const { data, error } = await supabase.functions.invoke('analyze-lost-description', {
-            body: { description }
+            body: { 
+                description,
+                photo_url: photoUrl,
+                secondary_photos: secondaryPhotos
+            }
         });
 
         if (error || data?.error) {
@@ -34,6 +41,7 @@ export const analyzeLostNarrative = async (description) => {
             console.group('%c✨ SYNTHESIS SUCCESSFUL', 'color: #22c55e; font-weight: bold;');
             console.log('Detected Category:', data.category);
             console.log('Attributes Found:', data.attributes);
+            console.log('Matching DNA:', data.ai_matching_dna);
             console.groupEnd();
         }
         
@@ -75,6 +83,7 @@ export const analyzeLostNarrative = async (description) => {
             category: normalizeCategory(data?.category),
             suggested_title: data?.suggested_title || null,
             attributes: data?.attributes || {},
+            ai_matching_dna: data?.ai_matching_dna || { tags: [] },
             location_hints: data?.location_hints || [],
             timeframe_hint: data?.timeframe_hint || null,
             synthesized_description: data?.synthesized_description || description,
@@ -85,6 +94,7 @@ export const analyzeLostNarrative = async (description) => {
         return {
             category: 'Other',
             attributes: {},
+            ai_matching_dna: { tags: [] },
             location_hints: [],
             timeframe_hint: null,
             synthesized_description: description,
@@ -93,3 +103,4 @@ export const analyzeLostNarrative = async (description) => {
         };
     }
 };
+

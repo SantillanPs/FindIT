@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import * as base64 from "https://deno.land/std@0.207.0/encoding/base64.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,25 +15,49 @@ Deno.serve(async (req) => {
   try {
     const payload = await req.json()
     const description = payload.description 
+    const photoUrl = payload.photo_url
+    const secondaryPhotos = payload.secondary_photos || []
     
     if (!description) throw new Error("No description provided")
+
+    console.log('[LOST-AI] Starting Multi-Modal Narrative Synthesis.');
 
     // 1. Setup API Keys (Multi-Key Resilience)
     let primaryKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY')
     let secondaryKey = Deno.env.get('GOOGLE_GENERATIVE_AI_API_KEY_EXTRA')
-    
-    console.log('[LOST-AI] Starting Narrative Synthesis Flow.');
 
-    const prompt = `You are a direct and helpful university assistant. 
-Your task is to take a lost item story and turn it into a simple, matter-of-fact English narrative.
+    // 2. Image Retrieval (Vision Support)
+    let validImages = []
+    const allPhotoUrls = [photoUrl, ...(Array.isArray(secondaryPhotos) ? secondaryPhotos : [])].filter(Boolean)
+    
+    for (const url of allPhotoUrls) {
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) continue;
+        const buffer = await resp.arrayBuffer();
+        validImages.push({
+          inlineData: {
+            mimeType: 'image/jpeg',
+            data: base64.encode(new Uint8Array(buffer))
+          }
+        });
+      } catch (e) {
+        console.error('[RETRIEVAL-ERROR] ' + e.message);
+      }
+    }
+
+    const hasImages = validImages.length > 0;
+
+    const prompt = `You are a direct and helpful university assistant specializing in lost and found forensics.
+Your task is to take a lost item story ${hasImages ? 'and its images ' : ''}and turn it into a simple, matter-of-fact English narrative and structured metadata.
 
 Guidelines:
-- translate multi-lingual inputs (Tagalog, etc.) into simple English.
+- Translate multi-lingual inputs (Tagalog, etc.) into simple English.
 - Use a direct, first-person tone ("I lost my...", "My item is...").
-- Use common, localized vocabulary (e.g., use "husband" or "wife" instead of "spouse").
+- ${hasImages ? 'CRITICALLY: Analyze the provided images to extract accurate brand, model, color, and distinguishing features.' : 'Use common, localized vocabulary.'}
 - DO NOT use emotional filler like "Oh no!", "Unfortunately", or "Please help".
-- DO NOT use jargon like "distinguishing features".
-- Keep it short, honest, and easy to read.
+- DO NOT use jargon like "distinguishing features" in the narrative.
+- Keep the synthesized description short, honest, and easy to read.
 
 Return ONLY a JSON object with:
 {
@@ -44,7 +69,10 @@ Return ONLY a JSON object with:
     "model": "Detected model or 'Unknown'",
     "details": "Simple description of key details (e.g. stickers, case color, cracks)"
   },
-  "location_hints": ["List of buildings or rooms mentioned"],
+  "ai_matching_dna": {
+    "tags": ["List of 3-5 visual forensic anchors for matching: e.g. 'green sticker', 'cracked screen', 'blue case', 'braided strap'"]
+  },
+  "location_hints": ["List of buildings or rooms mentioned in text"],
   "timeframe_hint": "Simple time (e.g. 'Monday Lunchtime')",
   "synthesized_description": "A friendly, simple English story of what happened.",
   "confidence": 0-100
@@ -62,13 +90,20 @@ Input Narrative: "${description}"`
       const currentKey = (attempt === 0 || !secondaryKey) ? primaryKey : secondaryKey;
       
       try {
+        const contents = [{ 
+          parts: [
+            { text: prompt },
+            ...validImages
+          ] 
+        }]
+
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${currentKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
+              contents,
               generationConfig: { responseMimeType: "application/json" }
             })
           }
@@ -99,7 +134,7 @@ Input Narrative: "${description}"`
     console.error('[CRITICAL-FAILURE]', error.message)
     return new Response(JSON.stringify({ 
       error: `Google API Error: ${error.message}`,
-      synthesized_description: description, // Fallback to original narrative
+      synthesized_description: typeof description === 'string' ? description : "Error processing report", 
       debug: {
         timestamp: new Date().toISOString(),
         model: Deno.env.get('GOOGLE_MODEL') || 'unknown',
@@ -111,3 +146,4 @@ Input Narrative: "${description}"`
     })
   }
 })
+
