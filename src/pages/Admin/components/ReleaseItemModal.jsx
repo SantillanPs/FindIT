@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserCheck, 
@@ -32,6 +32,12 @@ const ReleaseItemModal = ({
   handleDirectRelease, 
   actionLoading 
 }) => {
+  useEffect(() => {
+    if (showReleaseModal && showReleaseModal.status === 'claimed' && releaseStep < 2) {
+      setReleaseStep(2);
+    }
+  }, [showReleaseModal, releaseStep, setReleaseStep]);
+
   if (!showReleaseModal) return null;
 
   return (
@@ -55,15 +61,19 @@ const ReleaseItemModal = ({
         >
           <X size={18} />
         </button>
+
         <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
           <div className="space-y-1.5">
             <h3 className="text-xl md:text-2xl font-bold text-white tracking-tight">Item Release</h3>
             <p className="text-[9px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-              Step {Math.floor(releaseStep)} of 4 • Item #{showReleaseModal.id}
+              {showReleaseModal.status === 'claimed' 
+                ? `Step ${releaseStep - 1} of 3` 
+                : `Step ${Math.floor(releaseStep)} of 4`
+              } • Item #{showReleaseModal.id}
             </p>
           </div>
           <div className="flex gap-1.5 pt-2">
-            {[1, 2, 3, 4].map(s => (
+            {(showReleaseModal.status === 'claimed' ? [2, 3, 4] : [1, 2, 3, 4]).map(s => (
               <div key={s} className={`w-6 h-1 md:w-8 md:h-1.5 rounded-full transition-all duration-500 ${releaseStep >= s ? 'bg-uni-500 shadow-[0_0_8px_rgba(var(--uni-500-rgb),0.5)]' : 'bg-white/10'}`} />
             ))}
           </div>
@@ -200,7 +210,7 @@ const ReleaseItemModal = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 tracking-widest ml-1 uppercase">ID / Reference Number</label>
+                  <label className="block text-[10px] font-bold text-slate-500 tracking-widest ml-1 uppercase">ID / Reference Number <span className="text-slate-600 font-medium">(Optional)</span></label>
                   <input 
                     type="text"
                     className="w-full h-14 md:h-16 bg-slate-950 border border-white/5 rounded-2xl px-6 text-sm font-bold text-white focus:border-uni-500 outline-none transition-all placeholder:text-slate-700"
@@ -211,9 +221,11 @@ const ReleaseItemModal = ({
                 </div>
               </div>
               <div className="flex items-center gap-3 pt-2">
-                <button onClick={() => setReleaseStep(1.5)} className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-xl">Back</button>
+                {showReleaseModal.status !== 'claimed' && (
+                  <button onClick={() => setReleaseStep(1.5)} className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-all bg-white/5 rounded-xl">Back</button>
+                )}
                 <button 
-                  disabled={!releaseForm.name || !releaseForm.id_number}
+                  disabled={!releaseForm.name}
                   onClick={() => setReleaseStep(3)} 
                   className="flex-grow bg-white text-slate-950 py-4 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-uni-600 hover:text-white disabled:opacity-20 transition-all shadow-xl"
                 >

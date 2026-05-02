@@ -109,6 +109,7 @@ const InventoryTab = ({
                 navigate={navigate}
                 setSearchTerm={setSearchTerm}
                 handleStatusUpdate={handleStatusUpdate}
+                setShowReleaseModal={setShowReleaseModal}
                 setReleaseForm={setReleaseForm}
                 actionLoading={actionLoading}
                 onReviewItem={onReviewItem}
