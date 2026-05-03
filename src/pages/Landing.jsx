@@ -88,6 +88,7 @@ const Landing = () => {
     return () => observer.disconnect();
   }, []);
 
+
   // Identified Items Query (Separate from general items)
   const { data: identifiedItems = [], isLoading: identifiedLoading } = useQuery({
     queryKey: ['identified_items'],
@@ -165,6 +166,33 @@ const Landing = () => {
 
   // Simplified derived state
   const generalItems = items;
+
+  // Handle URL item parameter for deep linking
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const itemId = params.get('item');
+    if (itemId) {
+      // First check if it's already in our loaded items
+      const existingItem = [...items, ...identifiedItems].find(i => i.id.toString() === itemId);
+      if (existingItem) {
+        setPeekItem(existingItem);
+      } else {
+        // Fetch specific item if not in memory
+        const fetchItem = async () => {
+          const { data, error } = await supabase
+            .from('v_public_found_items')
+            .select('*')
+            .eq('id', itemId)
+            .single();
+          
+          if (!error && data) {
+            setPeekItem(data);
+          }
+        };
+        fetchItem();
+      }
+    }
+  }, [items, identifiedItems]);
 
   // ═══════════════════════════════════════════════
   // INFINITE CAROUSEL LOGIC
@@ -252,7 +280,7 @@ const Landing = () => {
 
   const handleShare = (item) => {
     const text = `I found a ${item.title} on FindIT! If this is yours, you can claim it here.`;
-    const url = window.location.origin + `/submit-claim/${item.id}`;
+    const url = window.location.origin + `/?item=${item.id}`;
     
     if (navigator.share) {
       navigator.share({ title: 'FindIT | Item Found', text, url });
@@ -764,7 +792,13 @@ const Landing = () => {
           <ItemDetailsPeek 
             item={peekItem}
             isOpen={!!peekItem}
-            onClose={() => setPeekItem(null)}
+            onClose={() => {
+              setPeekItem(null);
+              // Clear the item parameter from URL
+              const url = new URL(window.location);
+              url.searchParams.delete('item');
+              window.history.replaceState({}, '', url);
+            }}
             onShare={handleShare}
           />
         )}
