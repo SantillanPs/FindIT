@@ -22,7 +22,10 @@ import {
   Zap,
   Clock,
   Info,
-  Archive
+  Archive,
+  Eye,
+  EyeOff,
+  RefreshCw
 } from "lucide-react";
 
 /**
@@ -31,7 +34,7 @@ import {
  * - Human-centric labels (No more "Tactical Actions").
  * - High-legibility typography.
  */
-const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, onReview, isUpdating, onPreview }) => {
+const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, onReview, onToggleVisibility, isUpdating, isTogglingVisibility, onPreview }) => {
   const { categories: CATEGORIES } = useMasterData();
   const [notes, setNotes] = useState(report.admin_notes || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
@@ -111,6 +114,28 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, on
                    {reportMatches.length} Matches
                 </Badge>
             )}
+        </div>
+
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleVisibility(report);
+                }}
+                disabled={isTogglingVisibility}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-all duration-300 border shadow-lg ${
+                    report.is_public 
+                        ? 'bg-uni-500/20 text-uni-400 border-uni-500/20 hover:bg-uni-500/30' 
+                        : 'bg-red-500/20 text-red-400 border-red-500/20 hover:bg-red-500/30'
+                }`}
+                title={report.is_public ? "Public: Visible on Landing" : "Private: Hidden from Landing"}
+            >
+                {isTogglingVisibility ? (
+                    <RefreshCw size={16} className="animate-spin opacity-50" />
+                ) : (
+                    report.is_public ? <Eye size={18} /> : <EyeOff size={18} />
+                )}
+            </button>
         </div>
         </div>
       {/* 2. Main Content */}
@@ -222,17 +247,14 @@ const LostReportCard = ({ report, matches, navigate, setSearchTerm, onUpdate, on
             )}
         </div>
 
-        {/* Action Controls */}
         <div className="flex flex-col gap-2 pt-3 mt-auto">
-            {report.status === 'pending_review' && (
-                <Button 
-                    onClick={() => onReview(report)}
-                    className="w-full h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-xl bg-blue-600 text-white hover:bg-blue-500"
-                >
-                    <Zap size={14} className="fill-current" />
-                    Review Narrative
-                </Button>
-            )}
+            <Button 
+                onClick={() => onReview(report)}
+                className="w-full h-10 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-xl bg-uni-600 text-white hover:bg-uni-500"
+            >
+                <PenLine size={14} />
+                {report.status === 'pending_review' ? 'Review & Publish' : 'Edit Report'}
+            </Button>
 
             {report.status === 'reported' && (
                 <div className="flex gap-2 w-full">

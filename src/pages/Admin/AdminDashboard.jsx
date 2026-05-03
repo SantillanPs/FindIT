@@ -291,7 +291,7 @@ const AdminDashboard = () => {
 
   // All lost item updates use direct table writes — avoids PostgREST schema cache issues
   const lostItemStatusMutation = useMutation({
-    mutationFn: async ({ id, status, admin_notes, title, category, synthesized_description, attributes, ai_matching_dna }) => {
+    mutationFn: async ({ id, status, admin_notes, title, category, synthesized_description, attributes, ai_matching_dna, is_public }) => {
       const updates = {};
       if (status !== undefined) updates.status = status;
       if (admin_notes !== undefined) updates.admin_notes = admin_notes;
@@ -299,6 +299,7 @@ const AdminDashboard = () => {
       if (category !== undefined) updates.category = category;
       if (synthesized_description !== undefined) updates.synthesized_description = synthesized_description;
       if (ai_matching_dna !== undefined) updates.ai_matching_dna = ai_matching_dna;
+      if (is_public !== undefined) updates.is_public = is_public;
       
       if (attributes !== undefined) {
         updates.attributes = attributes;
@@ -308,13 +309,18 @@ const AdminDashboard = () => {
       }
 
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('lost_items')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .select();
       if (error) throw error;
+      console.log('%c✅ [Mutation] Lost item update response:', 'color: #10b981;', data);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin_lost'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin_lost'] });
+      queryClient.invalidateQueries({ queryKey: ['lost_reports'] });
+    }
   });
 
   const releaseItemMutation = useMutation({
@@ -456,6 +462,23 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleToggleLostVisibility = async (report) => {
+    console.log('%c🔍 [Dashboard] Toggle visibility requested', 'color: #3b82f6; font-weight: bold;', report.id, 'Current is_public:', report.is_public);
+    setActionLoading(`lost-visibility-${report.id}`);
+    try {
+      const newVisibility = report.is_public === false ? true : false;
+      console.log('%c🚀 [Dashboard] Sending update:', 'color: #f59e0b;', { id: report.id, is_public: newVisibility });
+      await lostItemStatusMutation.mutateAsync({ 
+        id: report.id, 
+        is_public: newVisibility
+      });
+    } catch (err) {
+      console.error('Lost visibility toggle failed', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const filteredItems = recentFound.filter(item => {
     if (item.status === 'released') return false;
     if (inventoryFilter === 'pending' && !['reported', 'available'].includes(item.status)) return false;
@@ -517,7 +540,20 @@ const AdminDashboard = () => {
                   isError: matchesError
                 }} />
               </TabsContent>
-              <TabsContent value="lost" className="m-0 focus-visible:outline-none"><LostReportsTab {...{filteredLostReports, matches, navigate, setSearchTerm, onUpdateReport: handleLostReportUpdate, onReviewReport: setSelectedLostReview, actionLoading, setPreviewImage, activeFilter: searchTerm}} /></TabsContent>
+              <TabsContent value="lost" className="m-0 focus-visible:outline-none">
+                <LostReportsTab {...{
+                  filteredLostReports, 
+                  matches, 
+                  navigate, 
+                  setSearchTerm, 
+                  onUpdateReport: handleLostReportUpdate, 
+                  onReviewReport: setSelectedLostReview, 
+                  onToggleVisibility: handleToggleLostVisibility,
+                  actionLoading, 
+                  setPreviewImage, 
+                  activeFilter: searchTerm
+                }} />
+              </TabsContent>
               <TabsContent value="witnesses" className="m-0 focus-visible:outline-none"><WitnessReportsTab {...{setPreviewImage, refreshTrigger: syncTriggers.witnesses}} /></TabsContent>
               <TabsContent value="history" className="m-0 focus-visible:outline-none">
                 <ActivityFeed 

@@ -10,6 +10,7 @@ const LostReportsTab = ({
   setSearchTerm,
   onUpdateReport,
   onReviewReport,
+  onToggleVisibility,
   actionLoading,
   setPreviewImage,
   activeFilter
@@ -62,7 +63,9 @@ const LostReportsTab = ({
                setSearchTerm={setSearchTerm}
                onUpdate={onUpdateReport}
                onReview={onReviewReport}
+               onToggleVisibility={onToggleVisibility}
                isUpdating={actionLoading === `lost-${report.id}`}
+               isTogglingVisibility={actionLoading === `lost-visibility-${report.id}`}
                onPreview={setPreviewImage}
              />
            ))}

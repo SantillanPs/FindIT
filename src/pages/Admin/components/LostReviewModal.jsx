@@ -12,7 +12,9 @@ import {
   History,
   ArrowRight,
   Zap,
-  Info
+  Info,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { ITEM_ATTRIBUTES } from '../../../constants/attributes';
@@ -31,7 +33,8 @@ const LostReviewModal = ({
     category: report.category || 'Miscellaneous',
     synthesized_description: report.synthesized_description || '',
     attributes: report.attributes || {},
-    ai_matching_dna: report.ai_matching_dna || { tags: [] }
+    ai_matching_dna: report.ai_matching_dna || { tags: [] },
+    is_public: report.is_public !== false
   });
 
   const handleAnalyze = async () => {
@@ -62,7 +65,7 @@ const LostReviewModal = ({
   const handlePublish = async () => {
     const payload = {
       ...formData,
-      status: 'reported'
+      status: report.status === 'pending_review' ? 'reported' : report.status
     };
 
     console.group('%c📋 [LostReview] APPROVE & PUBLISH', 'background: #065f46; color: #34d399; font-weight: bold; padding: 4px 8px; border-radius: 4px;');
@@ -195,6 +198,29 @@ const LostReviewModal = ({
                 </div>
               </div>
 
+              {/* Visibility Toggle */}
+              <div className="bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${formData.is_public ? 'bg-uni-500/10 text-uni-400' : 'bg-red-500/10 text-red-400'}`}>
+                    {formData.is_public ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-white uppercase tracking-wider">
+                      {formData.is_public ? "Public Visibility" : "Private (Hidden)"}
+                    </p>
+                    <p className="text-[9px] text-slate-500 font-medium">
+                      {formData.is_public ? "Visible to students in the public registry" : "Hidden from the public landing page"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setFormData({ ...formData, is_public: !formData.is_public })}
+                  className={`w-12 h-6 rounded-full transition-all duration-300 relative ${formData.is_public ? 'bg-uni-500' : 'bg-red-500'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${formData.is_public ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest ml-1">Synthesized Narrative</label>
                 <textarea 
@@ -248,11 +274,11 @@ const LostReviewModal = ({
             </button>
             <button 
               onClick={handlePublish}
-              disabled={isSubmitting || !formData.synthesized_description}
-              className="flex-[2] py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 disabled:opacity-30"
+              disabled={isSubmitting || (!formData.synthesized_description && report.status === 'pending_review')}
+              className="flex-[2] py-4 rounded-xl bg-uni-600 hover:bg-uni-500 text-white font-black text-[10px] uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 shadow-lg shadow-uni-500/20 disabled:opacity-30"
             >
               {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-              Approve & Publish Report
+              {report.status === 'pending_review' ? 'Approve & Publish' : 'Save Changes'}
             </button>
           </div>
         </div>
