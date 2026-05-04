@@ -49,6 +49,7 @@ const ClaimReviewModal = ({
   const [showScheduleStep, setShowScheduleStep] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [fullscreenImg, setFullscreenImg] = useState(null);
 
   if (!selectedClaim) return null;
 
@@ -189,36 +190,48 @@ const ClaimReviewModal = ({
               <div className="flex-grow overflow-y-auto no-scrollbar px-4 py-4 space-y-6 pb-24 sm:pb-4">
                   
                   {/* Visual Evidence Stack */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-1">Visual Evidence</p>
-                       <div className="rounded-xl border border-white/10 overflow-hidden divide-y divide-white/10 relative shadow-xl shadow-black/50">
+                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative">
                            {/* Original Item */}
-                           <div className="bg-[#0F172A] relative aspect-video sm:aspect-[21/9]">
+                           <div 
+                             onClick={() => selectedClaim.item_photo_url && !itemImgError && setFullscreenImg({ url: selectedClaim.item_photo_url, label: 'System Record' })}
+                             className={`group/img relative aspect-video sm:aspect-square rounded-xl border border-white/10 overflow-hidden shadow-xl bg-[#0F172A] ${selectedClaim.item_photo_url && !itemImgError ? 'cursor-zoom-in' : ''}`}
+                           >
                                 <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded-md border border-white/10 text-[8px] font-black text-white uppercase tracking-widest shadow-md">
                                      System Record
                                 </div>
                                 {selectedClaim.item_photo_url && !itemImgError ? (
-                                      <img src={selectedClaim.item_photo_url} alt="Original item" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }} />
+                                      <img src={selectedClaim.item_photo_url} alt="Original item" className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" onError={() => { imageCache.markFailed(selectedClaim.item_photo_url); setItemImgError(true); }} />
                                 ) : (
                                       <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
                                           <ImageIcon size={24} className="text-slate-800" />
                                           <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No Record Photo</p>
                                       </div>
                                 )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                                     <span className="text-[9px] font-black text-white uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg scale-90 group-hover/img:scale-100 transition-transform">Click to Expand</span>
+                                </div>
                            </div>
                            {/* Proof Item */}
-                           <div className="bg-slate-900 relative aspect-video sm:aspect-[21/9]">
+                           <div 
+                             onClick={() => selectedClaim.proof_photo_url && !proofImgError && setFullscreenImg({ url: selectedClaim.proof_photo_url, label: isIdentifiedClaim ? 'Institutional ID Card' : 'Claimant Proof' })}
+                             className={`group/img relative aspect-video sm:aspect-square rounded-xl border border-white/10 overflow-hidden shadow-xl bg-slate-900 ${selectedClaim.proof_photo_url && !proofImgError ? 'cursor-zoom-in' : ''}`}
+                           >
                                  <div className={`absolute top-2 left-2 z-10 px-2 py-0.5 backdrop-blur-md rounded-md border text-[8px] font-black uppercase tracking-widest shadow-md ${isIdentifiedClaim ? 'bg-sky-500/20 border-sky-500/30 text-sky-400' : 'bg-uni-500/20 border-uni-500/30 text-uni-400'}`}>
                                       {isIdentifiedClaim ? 'Institutional ID Card' : 'Claimant Proof'}
                                  </div>
                                  {selectedClaim.proof_photo_url && !proofImgError ? (
-                                       <img src={selectedClaim.proof_photo_url} alt="Claim proof" className="w-full h-full object-cover" onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }} />
+                                       <img src={selectedClaim.proof_photo_url} alt="Claim proof" className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" onError={() => { imageCache.markFailed(selectedClaim.proof_photo_url); setProofImgError(true); }} />
                                  ) : (
                                        <div className="w-full h-full flex flex-col items-center justify-center space-y-2 bg-white/[0.02]">
                                            <XCircle size={24} className="text-slate-800" />
                                            <p className="text-[8px] font-black text-slate-700 uppercase tracking-widest">No ID/Proof Uploaded</p>
                                        </div>
                                  )}
+                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                                     <span className="text-[9px] font-black text-white uppercase tracking-[0.2em] bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg scale-90 group-hover/img:scale-100 transition-transform">Click to Expand</span>
+                                 </div>
                             </div>
                        </div>
                   </div>
@@ -469,6 +482,49 @@ const ClaimReviewModal = ({
             </p>
           </div>
         )}
+
+        {/* Fullscreen Image Overlay */}
+        <AnimatePresence>
+          {fullscreenImg && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 sm:p-8"
+              onClick={() => setFullscreenImg(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                className="relative max-w-7xl w-full h-full flex flex-col items-center justify-center gap-4"
+              >
+                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center text-white z-10">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">Visual Evidence Review</span>
+                    <span className="text-sm font-bold text-white tracking-tight">{fullscreenImg.label}</span>
+                  </div>
+                  <button 
+                    onClick={() => setFullscreenImg(null)}
+                    className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all border border-white/10 group active:scale-90"
+                  >
+                    <X size={24} className="group-hover:rotate-90 transition-transform duration-300" />
+                  </button>
+                </div>
+                <div className="w-full h-full flex items-center justify-center mt-12">
+                  <img 
+                    src={fullscreenImg.url} 
+                    alt={fullscreenImg.label} 
+                    className="max-w-full max-h-full object-contain rounded-xl shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10 cursor-zoom-out" 
+                  />
+                </div>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  Click anywhere to close
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   );

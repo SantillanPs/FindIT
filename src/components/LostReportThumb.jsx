@@ -17,7 +17,7 @@ const LostReportThumb = ({ report, onClick }) => {
   return (
     <div 
       onClick={onClick}
-      className="group relative aspect-square rounded-2xl border border-white/10 hover:border-rose-500/40 cursor-pointer overflow-hidden bg-slate-900 active:scale-[0.97] transition-transform flex flex-col"
+      className="group relative aspect-[3/4] rounded-[1rem] border border-white/10 hover:border-rose-500/40 cursor-pointer overflow-hidden bg-slate-900 active:scale-[0.97] transition-transform flex flex-col shadow-lg"
     >
       {/* Background Image (if any) */}
       {hasPhoto && (
@@ -32,7 +32,7 @@ const LostReportThumb = ({ report, onClick }) => {
       )}
 
       {/* Main Content Wrapper */}
-      <div className={`relative z-10 flex flex-col h-full p-2.5 ${hasPhoto ? 'bg-gradient-to-t from-slate-950 via-slate-900/60 to-black/20' : 'bg-gradient-to-br from-slate-900 to-rose-950/20'}`}>
+      <div className={`relative z-10 flex flex-col h-full p-3 ${hasPhoto ? 'bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent' : 'bg-gradient-to-br from-slate-900 to-rose-950/20'}`}>
         
         {/* Top Row: Category + AI Badge */}
         <div className="flex justify-between items-start w-full">
@@ -57,28 +57,28 @@ const LostReportThumb = ({ report, onClick }) => {
         {hasPhoto && <div className="flex-grow"></div>}
 
         {/* Bottom Info Section */}
-        <div className="flex flex-col gap-0.5 mt-auto">
-          <h4 className="text-[11px] font-bold text-white line-clamp-1 tracking-tight leading-tight">
+        <div className="flex flex-col gap-0.5 mt-auto drop-shadow-md">
+          <h4 className="text-xs font-black text-white line-clamp-1 tracking-tight leading-tight mb-0.5">
             {report.title}
           </h4>
           
-          <div className="flex items-center gap-1.5 text-[8px] font-bold text-rose-300/70 uppercase tracking-wider line-clamp-1">
-            <span>{report.location}</span>
-            <span className="opacity-50">•</span>
-            <span>{formattedDate}</span>
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-rose-300/80 uppercase tracking-widest line-clamp-1">
+            <span className="truncate">{report.location}</span>
+            <span className="opacity-50 shrink-0">•</span>
+            <span className="shrink-0">{formattedDate}</span>
           </div>
 
-          <p className="text-[9px] text-slate-400 font-medium leading-snug line-clamp-2 mt-0.5 mb-0.5">
+          <p className="text-[10px] text-slate-300 font-medium leading-snug line-clamp-2 mt-1 mb-1.5">
             {report.synthesized_description || report.description}
           </p>
 
           {/* Quick Attributes Row */}
           {report.attributes && Object.keys(report.attributes).length > 0 && (
-            <div className="flex gap-1 mt-0.5 overflow-hidden h-[14px]">
+            <div className="flex gap-1.5 mt-0.5 overflow-hidden h-[18px] items-center">
                {Object.entries(report.attributes).map(([key, val]) => {
                   if (!val || val === 'Unknown' || val === 'None') return null;
                   return (
-                     <span key={key} className="text-[7px] font-black text-slate-300 bg-white/10 px-1.5 py-[1px] rounded uppercase tracking-wider whitespace-nowrap border border-white/5">
+                     <span key={key} className="text-[8px] font-black text-slate-300 bg-white/10 px-1.5 py-[2px] rounded uppercase tracking-widest whitespace-nowrap border border-white/5 backdrop-blur-sm">
                         {val}
                      </span>
                   );
