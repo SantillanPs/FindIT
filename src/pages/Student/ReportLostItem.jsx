@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 // New Components
 import ReportStepHeader from '../../components/ReportFlow/ReportStepHeader';
 import NarrativeIntakeStep from '../../components/ReportFlow/NarrativeIntakeStep';
+import DetailsStep from '../../components/ReportFlow/DetailsStep';
 import LocationModeStep from '../../components/ReportFlow/LocationModeStep';
 import ZoneSelectorStep from '../../components/ReportFlow/ZoneSelectorStep';
 import ImageStep from '../../components/ReportFlow/ImageStep';
@@ -34,7 +35,7 @@ const ReportLostItem = () => {
   
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  const totalSteps = 5;
+  const totalSteps = 6;
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -105,8 +106,8 @@ const ReportLostItem = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-12 py-10 min-h-[calc(100dvh-var(--navbar-height)-4rem)] flex flex-col px-4">
       <ReportStepHeader 
-        title="Report Lost Item"
-        label="Student Intake Mode"
+        title="Describe Your Lost Item"
+        label="Focus on physical details only."
         step={step}
         totalSteps={totalSteps}
         error={error}
@@ -125,49 +126,78 @@ const ReportLostItem = () => {
           >
             {step === 1 && (
               <NarrativeIntakeStep 
-                stepLabel="Step 1: Your Story"
+                stepLabel="Step 1: Item Description"
                 description={formData.description}
                 onChange={(val) => setFormData({...formData, description: val})}
+                onAnalysisComplete={(results) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    category: results.category || prev.category,
+                    title: results.suggested_title || prev.title,
+                    description: results.synthesized_description || prev.description,
+                    attributes: results.attributes || {}
+                  }));
+                  goToStep(2);
+                }}
                 onNext={() => goToStep(2)}
-                showAI={false}
+                showAI={true}
               />
             )}
 
             {step === 2 && (
-              <LocationModeStep
-                stepLabel="Step 2: Method"
-                title="How sure are you?"
-                description="Do you know exactly where you left it, or should we trace your steps?"
-                value={formData.locationMode}
-                onChange={(val) => setFormData({...formData, locationMode: val})}
+              <DetailsStep
+                stepLabel="Step 2: Check Details"
+                title="Is this right?"
+                description="We found these details in your description. Please check if they are correct."
+                category={formData.category}
+                titleValue={formData.title}
+                value={formData.description}
+                attributes={formData.attributes}
+                onTitleChange={(val) => setFormData({...formData, title: val})}
+                onChange={(val) => setFormData({...formData, description: val})}
+                onAttributeChange={(key, val) => setFormData({
+                  ...formData, 
+                  attributes: { ...formData.attributes, [key]: val }
+                })}
                 onNext={() => goToStep(3)}
               />
             )}
 
             {step === 3 && (
-              <ZoneSelectorStep
-                stepLabel="Step 3: Where"
-                title={formData.locationMode === 'trace' ? "Trace your path" : "Pinpoint the area"}
-                description={formData.locationMode === 'trace' ? "Select all the buildings or areas you passed through." : "Select the specific building or area where you left your item."}
-                formData={formData}
-                setFormData={setFormData}
+              <LocationModeStep
+                stepLabel="Step 3: Method"
+                title="How sure are you?"
+                description="Do you know exactly where you left it, or should we trace your steps?"
+                value={formData.locationMode}
+                onChange={(val) => setFormData({...formData, locationMode: val})}
                 onNext={() => goToStep(4)}
-                multiSelect={formData.locationMode === 'trace'}
               />
             )}
 
             {step === 4 && (
-              <TimeIntakeStep
-                stepLabel="Step 4: When"
-                value={formData.date_lost}
-                onChange={(val) => setFormData({...formData, date_lost: val})}
+              <ZoneSelectorStep
+                stepLabel="Step 4: Where"
+                title={formData.locationMode === 'trace' ? "Trace your path" : "Pinpoint the area"}
+                description={formData.locationMode === 'trace' ? "Select all the buildings or areas you passed through." : "Select the specific building or area where you left your item."}
+                formData={formData}
+                setFormData={setFormData}
                 onNext={() => goToStep(5)}
+                multiSelect={formData.locationMode === 'trace'}
               />
             )}
 
             {step === 5 && (
+              <TimeIntakeStep
+                stepLabel="Step 5: When"
+                value={formData.date_lost}
+                onChange={(val) => setFormData({...formData, date_lost: val})}
+                onNext={() => goToStep(6)}
+              />
+            )}
+
+            {step === 6 && (
               <ImageStep 
-                stepLabel="Step 5: Your Item"
+                stepLabel="Step 6: Your Item"
                 title="Got a Photo?"
                 description="Upload a photo of the item you lost — from your gallery, a screenshot, or a similar image. This will appear on the public listing to help others identify it."
                 value={formData.photo_url}

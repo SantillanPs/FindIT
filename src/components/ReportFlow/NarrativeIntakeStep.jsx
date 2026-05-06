@@ -53,10 +53,10 @@ const NarrativeIntakeStep = ({
                     {stepLabel}
                 </span>
                 <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tight leading-none italic">
-                    Tell us your <span className="text-blue-400">story.</span>
+                    Describe your <span className="text-blue-400">item.</span>
                 </h2>
                 <p className="text-slate-500 text-sm font-bold uppercase tracking-widest max-w-sm mx-auto">
-                    Just describe what happened in your own words. We'll handle the details.
+                    Mention color, brand, and what's inside.
                 </p>
             </div>
 
@@ -67,7 +67,7 @@ const NarrativeIntakeStep = ({
                         <textarea 
                             autoFocus
                             className="w-full bg-slate-900/80 backdrop-blur-xl border-2 border-white/10 rounded-[2.5rem] p-10 text-xl font-bold text-white focus:border-blue-500 transition-all outline-none placeholder:text-slate-700 min-h-[250px] resize-none leading-relaxed shadow-2xl"
-                            placeholder="I lost my black wallet near the library... I think I left it on the third-floor study table around 2 PM."
+                            placeholder="I lost a black Guess wallet with a gold zipper. It has my ID and some cash inside..."
                             value={description}
                             onChange={(e) => {
                                 onChange(e.target.value);
@@ -83,6 +83,15 @@ const NarrativeIntakeStep = ({
                             </div>
                         </div>
                     </div>
+                </div>
+                
+                <div className="flex flex-wrap justify-center gap-3 pt-4 relative z-10">
+                    {['Color', 'Brand', 'Contents', 'Unique Marks'].map(item => (
+                        <div key={item} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item}</span>
+                        </div>
+                    ))}
                 </div>
 
                 <AnimatePresence>
@@ -114,7 +123,7 @@ const NarrativeIntakeStep = ({
                             ) : (
                                 <>
                                     <Sparkles className="h-4 w-4" />
-                                    Create My Simple Story
+                                    Review My Description
                                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
